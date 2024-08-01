@@ -14,14 +14,20 @@ document.addEventListener('DOMContentLoaded', function () {
 		let loadingScreen = document.querySelector('.loading-screen');
 		let mains = document.querySelectorAll('main');
 		let sidebar = document.querySelector('.sidebar');
-
-		loadBlurEffect(loadingScreen, mains, sidebar, navbar);
-
-		State.removeNavbar(navbar, mains, sidebar);
-		setTimeout(() => { State.showNavbar(navbar, mains, sidebar); }, 1);
-
-		State.removeSidebar(sidebar);
-		setTimeout(() => { State.showSidebar(sidebar); }, 1);
+		let animation = false;
+		if (animation) {
+			loadBlurEffect(loadingScreen, mains, sidebar, navbar);
+	
+			State.removeNavbar(navbar, mains, sidebar);
+			setTimeout(() => { State.showNavbar(navbar, mains, sidebar); }, 1);
+	
+			State.removeSidebar(sidebar);
+			setTimeout(() => { State.showSidebar(sidebar); }, 1);
+		}
+		else {
+			State.showNavbar(navbar, mains, sidebar);
+			State.showSidebar(sidebar);
+		}
 
 		State.setNavbar(navbar, mains, sidebar);
 		State.setSidebar(sidebar);
@@ -93,7 +99,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 		window.addEventListener('resize', sizeBasedElements);
 		
-		setTimeout(() => { hideLoadingScreen(loadingScreen, navbar, mains, sidebar); }, 500);
+		setTimeout(() => { hideLoadingScreen(loadingScreen, navbar, mains, sidebar); }, 1);
 	}
 
 	loadDefaultHTML();
