@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepAny.AI - Admin</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-auth.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.2/color-thief.umd.js"></script>
+	<style>		
+
+ 
+    .main-container {
+			margin: clamp(0px, calc(4vh* var(--scale-factor)), calc(8vw* var(--scale-factor)));
+			width: 100vh;
+			height: 100vh;
+			justify-content: center;	
+            border: 20px;
+            border-radius: 5%;
+            font-size: 15px;
+            box-sizing: border-box;
+            
+		}
+        * {
+    margin: 0;
+    padding: 0;
+}
+
+
+
+body {
+  background-color: #f1f1f1;
+  font-family: Helvetica,Arial,Verdana;
+
+}
+.search-box,.close-icon,.search-wrapper {
+  position: relative;
+  padding: 15px;
+}
+.search-wrapper {
+  width: 50vw;
+  padding-left: 0%;
+
+}
+.search-box {
+  width: 40%;
+  border: 1px solid #ccc;
+  outline: 0;
+  border-radius: 15px;
+}
+.search-box:focus {
+  box-shadow: 0 0 15px 5px #ff8c3aca;
+  border: 2px solid #bebede;
+  
+}
+.close-icon {
+  border:1px solid transparent;
+  background-color: transparent;
+  display: inline-block;
+  vertical-align: middle;
+  outline: 0;
+  cursor: pointer;
+  size: 1vh;
+}
+.close-icon:after {
+  content: "X";
+  display: block;
+  width: 15px;
+  height: 15px;
+  position: absolute;
+  background-color: rgb(255, 126, 66);
+  z-index:1;
+  right: 35px;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+  padding: 2px;
+  border-radius: 50%;
+  text-align: center;
+  color: white;
+  font-weight: normal;
+  font-size: 12px;
+
+  cursor: pointer;
+}
+.search-box:not(:valid) ~ .close-icon {
+  display: none;
+}
+.user-table {
+    table-layout: fixed;
+    width: 100vh;
+    justify-content: center;	
+    padding-right: 6vh;
+}
+.user-table tr:nth-child(odd) {
+    background-color: rgba(255, 118, 20, 0.2);
+    justify-content: center;	
+}
+.user-table tr:nth-child(even) {
+    background-color: rgba(222, 208, 237, 0.02);
+}
+.user-table th {
+    padding: 15px 30px;
+    background-color: rgba(112, 83, 72, 0.4);
+}
+.user-table th button {
+
+    background-color: white rgba(222, 208, 237, 0.52) !important;
+    font-size: 1.5em;
+}
+.fa-edit {
+    color: rgb(242, 176, 78);
+    cursor: pointer;
+}
+.fa-user-times {
+    color: rgb(255, 235, 88);
+    cursor: pointer;
+    justify-content: center;	
+}
+#user-table-top {
+    background-color: rgba(68, 43, 22, 0.4);
+    justify-content: center;
+    font-size: 15px;
+}
+.manage-button{
+    border-color: #f1f1f1;
+    width: 4vh;
+    height: 2vw;
+   margin-left: 5vh;
+}
+
+    </style>
+</head>
+<body translate="no">
+   <main>
+    <div class="main-container"></div>
+    <div class="faded-content">
+        <div class="first-text">
+            <h1>DeepAny.<span class="text-gradient">AI</span></h1>
+            <h2 class="text-gradient">bring your imagination come to life.</h2>
+            <div class="offset-text">
+                <h1 class="offset">deepany.a<span class="no-spacing">i</span></h1>
+                <h1 class="offset">deepany.a<span class="no-spacing">i</span></h1>
+                <h1 class="offset">deepany.a<span class="no-spacing">i</span></h1>
+            </div>
+        </div>
+    </div>
+</main>
+	<script type="module" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js"></script>
+	<script type="module" src="js/defaultPageLoads/loadDefaultHTML.js"></script>
+	<script type="module" src="js/pageSpecificScripts/admin.js"></script>
+    <script type="module" src="js/firebase/firebase-auth.js"></script>
+</body>
+</html>

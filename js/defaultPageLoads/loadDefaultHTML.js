@@ -25,8 +25,10 @@ document.addEventListener('DOMContentLoaded', function () {
 			setTimeout(() => { State.showSidebar(sidebar); }, 1);
 		}
 		else {
-			State.showNavbar(navbar, mains, sidebar);
-			State.showSidebar(sidebar);
+			//State.showNavbar(navbar, mains, sidebar);
+			//State.showSidebar(sidebar);
+			setTimeout(() => { State.removeNavbar(navbar, mains, sidebar); }, 1);
+			setTimeout(() => { State.removeSidebar(sidebar); }, 1);
 		}
 
 		State.setNavbar(navbar, mains, sidebar);
@@ -82,7 +84,6 @@ document.addEventListener('DOMContentLoaded', function () {
 								<button id="registerButton">Register</button>
 								<button class="important" id="loginButton">Login</button>
 							</div>
-							<section class="layout__header_user__2N4fp "><div class="layout_header_user__y0W0A"><div class="layout_credits___9aXf"><div class="layout_plan_name__xtBaL">Free plan</div><div class="layout__credits_bar__copYC"><div class="layout_credits_bar__HR_UZ" style="width: 100%;"></div></div><div class="layout_credits_number__Y7hOA"><span>100</span> / 100 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-coins "><circle cx="8" cy="8" r="6"></circle><path d="M18.09 10.37A6 6 0 1 1 10.34 18"></path><path d="M7 6h1v4"></path><path d="m16.71 13.88.7.71-2.82 2.82"></path></svg></div></div><div class="layout_header_avatar__CjhHu"><div class="avatar____u7GMl" style="width: 36px; height: 36px; background: rgb(189, 136, 242); color: rgb(77, 15, 138);"><img src="https://lh3.googleusercontent.com/a/ACg8ocITT4wEdxUrENk_s5DJPOsAxy5c0Vi7RFwHrxro-oDadKPUZA=s96-c" width="36" height="36"></div></div></div></section>
 						</ul>
 					`);
 					navLinks = document.querySelectorAll('.navbar .nav-links');
