@@ -65,29 +65,34 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                     <div class="line"></div>
                     <div class="background-dot-container-discounts">
-                        <div id="discount-details">User information</div>
+                        <h4 id="discount-details">User information</h4>
                         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 12px; justify-content: space-between;">
                             <div>
-                                <h4 style="font-weight: 300;">Username</h4>
+                                <h4 style="font-weight: 300;margin-top: 6px;">Username</h4>
                                 <input class="profile-input" value="DuriEun"></input>
                             </div>
                             <div>
-                                <h4 style="font-weight: 300;">E-Mail Address</h4>
+                                <h4 style="font-weight: 300;margin-top: 6px;">E-Mail Address</h4>
                                 <input class="profile-input" value="durieun02@gmail.com"></input>
                             </div>
                             <div>
-                                <h4 style="font-weight: 300;">Password</h4>
+                                <h4 style="font-weight: 300;margin-top: 6px;">Password</h4>
                                 <input class="profile-input" value="******"></input>
                             </div>
                             <div>
-                                <h4 style="font-weight: 300;">Phone Number (Optional)</h4>
+                                <h4 style="font-weight: 300;margin-top: 6px;">Phone Number (Optional)</h4>
                                 <input class="profile-input" value="******"></input>
                             </div>
                         </div>
                     </div>
                     <div class="line"></div>
-                    <div id="discount-details">About Me</div>
-                    <textarea placeholder="Tell us about yourself..." maxlength="2000" class="profile-input" style="max-height: 10vh; width: -webkit-fill-available; height: -webkit-fill-available;"></textarea>
+                        <h4 id="discount-details">About Me</h4>
+                        <div style="margin-left: 12px;margin-top: 12px;">
+                            <h4 style="font-weight: 300;">About Me</h4>
+                        </div>
+                        <div style="margin-left: 12px;margin-right: 12px;width: -webkit-fill-available;height: 100%;">
+                            <textarea placeholder="Tell us about yourself..." maxlength="2000" class="profile-input" style="width: -webkit-fill-available;height: 100%;"></textarea>
+                        </div>
                 </div>
             </a>
         </div>
@@ -100,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <h4 class="plans-name-profile text-gradient">Subscription</h4>
                     </div>
                     <div class="line"></div>
-                    <div id="discount-details">Plan information</div>
+                    <h4 id="discount-details">Plan information</h4>
                     <div style="margin: 12px;">
                         <p style="font-weight: 300;">Current Plan: Premium</p>
                         <p style="font-weight: 300;">Next Billing Date: 01/01/2025</p>
@@ -108,7 +113,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <p style="font-weight: 300;">Credits Amount: 1,200</p>
                     </div>
                     <div class="line"></div>
-                    <div id="discount-details">Last payment information</div>
+                    <h4 id="discount-details">Last payment information</h4>
                     <div style="margin: 12px;">
                         <p style="font-weight: 300;">Last Payment Date: 01/01/2024</p>
                         <p style="font-weight: 300;">Last Payment Amount: $99.99</p>
