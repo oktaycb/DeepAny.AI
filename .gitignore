@@ -1,0 +1,7 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs/DeepAny.AI/FileContentIndex/f46af507-8488-493a-822c-38e84f6d057a.vsidx
+*.vsidx
+/.vs/slnx.sqlite
