@@ -11,96 +11,177 @@ document.addEventListener('DOMContentLoaded', function () {
 				switch (index) {
 					case 0:
 						mainContainer.insertAdjacentHTML('beforeend', ` 
-												<div style="display: grid;grid-template-rows: 2fr 1fr;height: -webkit-fill-available;gap: 12px;">
-													<div style="display: grid;grid-template-columns: 1fr 2fr 1fr;justify-items: center;gap: 12px;">											
-														<div class="background-container">
-															<div class="pricing">
-																<div class="pricing-content">
-																	<div class="pricing-header">
-																		<h3 class="plans-name-profile">Profile</h3>
-																	</div>
-																	<div class="line"></div>
-																	<div class="profile-link" onclick="#">
-																		<img src="../assets/profile.png" alt="Profile Image" class="profile-image">
-																	</div>
-																	<div style="align-self: center;text-align: center;margin: 12px;">
-																		<h3>Duri Eun</h3>
-																		<p style="opacity: 0.5;">durieun02@gmail.com</p>
-																	</div>
-																	<div class="line"></div>
-																	<div class="pricing-discounts">
-																		<h4 style="align-self: center;text-align: center;margin-bottom: 12px;">Generations</h4>
-																		<div style="display: grid;grid-template-columns: 1fr 1fr 1fr;justify-content: space-between;text-align: center;">
-																			<div style="border-left: 1px solid #303236;border-right: 1px solid #303236;">
-																				<p>125 Face Swap</p>
-																			</div>
-																			<div>
-																				<p>50 Inpaint</p>
-																			</div>
-																			<div style="border-left: 1px solid #303236;border-right: 1px solid #303236;">
-																				<p>252 Art</p>
-																			</div>
-																		</div>
-																	</div>
-																</div>
-															</div>
-														</div>
-														<div class="background-container">
-															<a class="pricing">
-																<div class="pricing-content">
-																	<div class="pricing-header">
-																		<h3 class="plans-name-profile">My account</h3>
-																	</div>
-																	<div class="line"></div>
-																	<div class="pricing-discounts">
-																		<div id="discount-details">User information</div>
-																		<div style="display: grid;grid-template-columns: repeat(2, 1fr);gap: 12px;margin: 12px;justify-content: space-between;">
-																			<div>
-																				<h4 style="font-weight: 200;">Username</h4>
-																				<input class="profile-input"></input>
-																			</div>
-																			<div>
-																				<h4 style="font-weight: 200;">E-Mail Adress</h4>
-																				<input class="profile-input"></input>
-																			</div>																	
-																			<div>
-																				<h4 style="font-weight: 200;">First Name</h4>
-																				<input class="profile-input"></input>
-																			</div>
-																			<div>
-																				<h4 style="font-weight: 200;">Last Name</h4>
-																				<input class="profile-input"></input>
-																			</div>
-																		</div>
-																	</div>
-																	<div class="line"></div>
-																	<textarea placeholder="Enter about yourself..." maxlength="2000" class="profile-input" style="max-height: 10vh;width: -webkit-fill-available;height: -webkit-fill-available;""></textarea>
-																</div>
-															</a>
-														</div>
-														<div class="background-container">
-															<a class="pricing">
-																<div class="pricing-content">
-																	<div class="pricing-header">
-																		<h4 class="plans-name-profile">Subscription</h4>
-																	</div>
-																</div>
-															</a>
-														</div>
-													</div>
-													
-													<div style="">											
-														<div class="background-container">
-															<a class="pricing">
-																<div class="pricing-content">
-																	<div class="pricing-header">
-																		<h4 class="plans-name-profile">Other</h4>
-																	</div>
-																</div>
-															</a>
-														</div>
-													</div>
-												</div>
+<div style="display: grid; grid-template-rows: 2fr 1fr; height: -webkit-fill-available; gap: 12px;">
+    <!-- Profile Information -->
+    <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; justify-items: center; gap: 12px;">
+        <!-- Profile Section -->
+        <div class="background-container">
+            <div class="background-dot-container">
+                <div class="background-dot-container-content">
+                    <div class="background-dot-container-header">
+                        <h3 class="plans-name-profile text-gradient">Profile</h3>
+                    </div>
+                    <div class="line"></div>
+                    <div class="profile-link" onclick="#">
+                        <img src="assets/profile.png" alt="Profile Image" class="profile-image">
+                    </div>
+                    <div style="align-self: center; text-align: center; margin: 12px;">
+                        <h3>Duri Eun</h3>
+                        <p style="opacity: 0.5; font-weight: 300;">durieun02@gmail.com</p>
+                    </div>
+                    <div class="line"></div>
+                    <div>
+                        <h4 style="align-self: center; text-align: center; margin-bottom: 12px;">Generations</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; justify-content: space-between; text-align: center;">
+                            <div style="border-left: 1px solid #303236; border-right: 1px solid #303236;">
+                                <p style="font-weight: 300;">125 Face Swap</p>
+                            </div>
+                            <div>
+                                <p style="font-weight: 300;">50 Inpaint</p>
+                            </div>
+                            <div style="border-left: 1px solid #303236; border-right: 1px solid #303236;">
+                                <p style="font-weight: 300;">252 Art</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style="align-self: center; text-align: center; margin-top: 12px; margin-bottom: 12px;">Socials</h4>
+                        <div style="display: flex; justify-content: center; gap: 12px;">
+                            <a class="text" href="https://facebook.com" target="_blank">Facebook</a>
+                            <a class="text" href="https://twitter.com" target="_blank">Twitter</a>
+                            <a class="text" href="https://linkedin.com" target="_blank">LinkedIn</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Information -->
+        <div class="background-container">
+            <a class="background-dot-container">
+                <div class="background-dot-container-content">
+                    <div class="background-dot-container-header">
+                        <h3 class="plans-name-profile text-gradient">My account</h3>
+                    </div>
+                    <div class="line"></div>
+                    <div class="background-dot-container-discounts">
+                        <div id="discount-details">User information</div>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 12px; justify-content: space-between;">
+                            <div>
+                                <h4 style="font-weight: 300;">Username</h4>
+                                <input class="profile-input" value="DuriEun"></input>
+                            </div>
+                            <div>
+                                <h4 style="font-weight: 300;">E-Mail Address</h4>
+                                <input class="profile-input" value="durieun02@gmail.com"></input>
+                            </div>
+                            <div>
+                                <h4 style="font-weight: 300;">Password</h4>
+                                <input class="profile-input" value="******"></input>
+                            </div>
+                            <div>
+                                <h4 style="font-weight: 300;">Phone Number (Optional)</h4>
+                                <input class="profile-input" value="******"></input>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="line"></div>
+                    <div id="discount-details">About Me</div>
+                    <textarea placeholder="Tell us about yourself..." maxlength="2000" class="profile-input" style="max-height: 10vh; width: -webkit-fill-available; height: -webkit-fill-available;"></textarea>
+                </div>
+            </a>
+        </div>
+
+        <!-- Subscription Information -->
+        <div class="background-container">
+            <a class="background-dot-container">
+                <div class="background-dot-container-content">
+                    <div class="background-dot-container-header">
+                        <h4 class="plans-name-profile text-gradient">Subscription</h4>
+                    </div>
+                    <div class="line"></div>
+                    <div id="discount-details">Plan information</div>
+                    <div style="margin: 12px;">
+                        <p style="font-weight: 300;">Current Plan: Premium</p>
+                        <p style="font-weight: 300;">Next Billing Date: 01/01/2025</p>
+                        <p style="font-weight: 300;">Subscription Deadline: 31/12/2024</p>
+                        <p style="font-weight: 300;">Credits Amount: 1,200</p>
+                    </div>
+                    <div class="line"></div>
+                    <div id="discount-details">Last payment information</div>
+                    <div style="margin: 12px;">
+                        <p style="font-weight: 300;">Last Payment Date: 01/01/2024</p>
+                        <p style="font-weight: 300;">Last Payment Amount: $99.99</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Comments Information -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <!-- Comments Section -->
+        <div class="background-container">
+            <a class="background-dot-container">
+                <div class="background-dot-container-content">
+                    <div class="background-dot-container-header">
+                        <h4 class="plans-name-profile text-gradient">Comments</h4>
+                    </div>
+                    <div class="line"></div>
+                    <div style="text-align: center; margin: 12px;">
+                        <p style="opacity: 0.5; font-weight: 300;">No additional information available.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Privacy Settings -->
+        <div class="background-container">
+            <a class="background-dot-container">
+                <div class="background-dot-container-content">
+                    <div class="background-dot-container-header">
+                        <h4 class="plans-name-profile text-gradient">Privacy Settings</h4>
+                    </div>
+                    <div class="line"></div>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 12px; justify-content: space-between;">
+                        <div>
+                            <h4 style="font-weight: 300;">Profile Visibility</h4>
+                            <select id="profileVisibility" class="profile-input">
+                                <option value="public">Public</option>
+                                <option value="private">Private</option>
+                                <option value="friends">Friends Only</option>
+                            </select>
+                        </div>
+                        <div>
+                            <h4 style="font-weight: 300;">Post Visibility</h4>
+                            <select id="postVisibility" class="profile-input">
+                                <option value="private">Private</option>
+                                <option value="friends">Friends Only</option>
+                                <option value="public">Public</option>
+                            </select>
+                        </div>
+                        <div>
+                            <h4 style="font-weight: 300;">Email Visibility</h4>
+                            <select id="emailVisibility" class="profile-input">
+                                <option value="private">Private</option>
+                                <option value="friends">Friends Only</option>
+                                <option value="public">Public</option>
+                            </select>
+                        </div>
+                        <div>
+                            <h4 style="font-weight: 300;">Phone Visibility</h4>
+                            <select id="phoneVisibility" class="profile-input">
+                                <option value="private">Private</option>
+                                <option value="friends">Friends Only</option>
+                                <option value="public">Public</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
 										`);
 						break;
 				}

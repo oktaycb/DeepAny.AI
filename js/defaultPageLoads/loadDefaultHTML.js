@@ -14,9 +14,9 @@ document.addEventListener('DOMContentLoaded', function () {
 		let loadingScreen = document.querySelector('.loading-screen');
 		let mains = document.querySelectorAll('main');
 		let sidebar = document.querySelector('.sidebar');
-		let animation = false;
+		let animation = true;
 		if (animation) {
-			loadBlurEffect(loadingScreen, mains, sidebar, navbar);
+			//loadBlurEffect(loadingScreen, mains, sidebar, navbar);
 	
 			State.removeNavbar(navbar, mains, sidebar);
 			setTimeout(() => { State.showNavbar(navbar, mains, sidebar); }, 1);
@@ -25,10 +25,10 @@ document.addEventListener('DOMContentLoaded', function () {
 			setTimeout(() => { State.showSidebar(sidebar); }, 1);
 		}
 		else {
-			//State.showNavbar(navbar, mains, sidebar);
-			//State.showSidebar(sidebar);
-			setTimeout(() => { State.removeNavbar(navbar, mains, sidebar); }, 1);
-			setTimeout(() => { State.removeSidebar(sidebar); }, 1);
+			State.showNavbar(navbar, mains, sidebar);
+			State.showSidebar(sidebar);
+			//setTimeout(() => { State.removeNavbar(navbar, mains, sidebar); }, 1);
+			//setTimeout(() => { State.removeSidebar(sidebar); }, 1);
 		}
 
 		State.setNavbar(navbar, mains, sidebar);
@@ -62,22 +62,22 @@ document.addEventListener('DOMContentLoaded', function () {
 					navContainer.insertAdjacentHTML('beforeend', `
 						<ul class="nav-links">
 							<li>
-								<a href="#">Services</a>
+								<a class="text" href="#">Services</a>
 								<ul class="dropdown-menu">
-									<li><a href="faceswap.html">Face Swap</a></li>
-									<li><a href="inpainter.html">Inpainter</a></li>
-									<li><a href="artgenerator.html">Art</a></li>
+									<li><a class="text" href="faceswap.html">Face Swap</a></li>
+									<li><a class="text" href="inpainter.html">Inpainter</a></li>
+									<li><a class="text" href="artgenerator.html">Art</a></li>
 								</ul>
 							</li>
 							<li>
-								<a href="#">Community</a>
+								<a class="text" href="#">Community</a>
 								<ul class="dropdown-menu">
-									<li><a href="https://x.com/zeroduri">X</a></li>
-									<li><a href="https://discord.com/invite/Vrmt8UfDK8">Discord</a></li>
-									<li><a href="https://www.reddit.com/r/bodyswapai/">Reddit</a></li>
+									<li><a class="text" href="https://x.com/zeroduri" target="_blank">X</a></li>
+									<li><a class="text" href="https://discord.com/invite/Vrmt8UfDK8" target="_blank">Discord</a></li>
+									<li><a class="text" href="https://www.reddit.com/r/bodyswapai/" target="_blank">Reddit</a></li>
 								</ul>
 							</li>
-							<li><a href="pricing.html">Pricing</a></li>
+							<li><a class="text" href="pricing.html">Pricing</a></li>
 						</ul>
 						<ul class="nav-links">
 							<div class="button-container">
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 		window.addEventListener('resize', sizeBasedElements);
 		
-		setTimeout(() => { hideLoadingScreen(loadingScreen, navbar, mains, sidebar); }, 1);
+		setTimeout(() => { hideLoadingScreen(loadingScreen, navbar, mains, sidebar); }, 500);
 	}
 
 	loadDefaultHTML();

@@ -18,16 +18,16 @@ document.addEventListener('DOMContentLoaded', function () {
 										</div>
 										
 										<div class="background-container">
-											<div class="pricing-option selected" id="subscription-mode">Subscription</div>
-											<div class="pricing-option" id="credits-mode">Credits</div>
+											<div class="background-dot-container-option selected" id="subscription-mode">Subscription</div>
+											<div class="background-dot-container-option" id="credits-mode">Credits</div>
 										</div>
 
 										<div class="background-container">
-											<div class="pricing-option selected" data-currency="USD">$</div>
-											<div class="pricing-option" data-currency="EUR">€</div>
-											<div class="pricing-option" data-currency="GBP">£</div>
-											<div class="pricing-option" data-currency="TRY">₺</div>
-											<div class="pricing-option" data-currency="BTC">₿</div>
+											<div class="background-dot-container-option selected" data-currency="USD">$</div>
+											<div class="background-dot-container-option" data-currency="EUR">€</div>
+											<div class="background-dot-container-option" data-currency="GBP">£</div>
+											<div class="background-dot-container-option" data-currency="TRY">₺</div>
+											<div class="background-dot-container-option" data-currency="BTC">₿</div>
 										</div>
 
 										<div class="background-container">
@@ -36,18 +36,18 @@ document.addEventListener('DOMContentLoaded', function () {
 										</div>
 
 										<div class="background-container">
-											<a class="pricing">
-												<div class="pricing-content">
-													<div class="pricing-header">
+											<a class="background-dot-container">
+												<div class="background-dot-container-content">
+													<div class="background-dot-container-header">
 														<h4 class="plans-name">Starter</h4>
 														<h4 class="plans-popular">Popular</h4>
 													</div>
-													<div class="pricing-price">
+													<div class="background-dot-container-price">
 														<h1 id="cost-per-day">$9.99</h1>
 														<h4 id="cost-per-day-unit" style="opacity: 0.5;">/day</h4>
 													</div>
-													<div class="pricing-link" id="purchase">Purchase</div>
-													<div class="pricing-discounts">
+													<div class="background-dot-container-link" id="purchase">Purchase</div>
+													<div class="background-dot-container-discounts">
 														<div id="discount-details">
 															The total payment is 9.99 USD.
 														</div>
@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function () {
 															You are saving 0$ with this plan...
 														</div>
 													</div>
-													<div class="pricing-features">
+													<div class="background-dot-container-features">
 														<div class="feature">
 															<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
 																<path d="M20 6 9 17l-5-5"></path>

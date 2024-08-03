@@ -91,14 +91,14 @@ document.addEventListener('DOMContentLoaded', function () {
 													<p class="subtext">Discover the leading AI platform since 2023, renowned for its ease and excellence.</p>
 													<h1 class="text-gradient" id="dynamic-text">AI-Powered Services</h1>
 													<ul class="styled-list">
-														<li><strong>Free Trial:</strong> Experience our full-featured services without cost.</li>
+														<li><strong>Daily Free Trial:</strong> Experience our full-featured services without cost.</li>
 														<li><strong>Security & Support:</strong> Your data is protected, with 24/7 support available.</li>
 														<li><strong>High Ratings:</strong> Trusted by users with a 4.9 rating on
 															<a class="trusted-link" href="https://www.trustpilot.com/review/bodyswap.me" target="_blank" rel="noopener noreferrer">Trustpilot</a>.
 														</li>
 														<li><strong>Cost-Effective:</strong> Only 1 credit per image & frame processed.</li>
 														<li><strong>Fast Processing:</strong> RTX 4090 GPUs in our servers for optimal performance.</li>
-														<li><strong>Pricing:</strong> Plans tailored to every budget ($0.1/credit), with 10 free credits daily.
+														<li><strong>Pricing:</strong> Dynamic plans tailored to every budget.
 														</li>
 													</ul>
 													<p class="subtext">Unlock the potential of AI for your projects with our reliable and affordable services.</p>

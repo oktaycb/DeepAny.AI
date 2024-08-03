@@ -12,9 +12,9 @@ document.addEventListener('DOMContentLoaded', function () {
 					
 					<h1>Admin Panel</h1>    
 					<div class="background-container">
-					<a class="pricing">
-						<div class="pricing-content">
-							<div class="pricing-header">
+					<a class="background-dot-container">
+						<div class="background-dot-container-content">
+							<div class="background-dot-container-header">
 								<h4 class="plans-name">User Management</h4>
 								<h4 class="plans-popular">Settings</h4>
 							</div>

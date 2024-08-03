@@ -39,5 +39,5 @@ export function loadBars() {
 	document.getElementById('discordButton').addEventListener('click', function () { window.open('https://discord.gg/6FTmwtaK', '_blank'); });
 	document.getElementById('twitterButton').addEventListener('click', function () { window.open('https://x.com/zeroduri', '_blank'); });
 	document.getElementById('redditButton').addEventListener('click', function () { window.open('https://www.reddit.com/r/bodyswapai/', '_blank'); });
-	document.getElementById('profileButton').addEventListener('click', function () { window.location.href = '/profile.html'; });
+	document.getElementById('profileButton').addEventListener('click', function () { window.location.href = 'profile.html'; });
 }
