@@ -26,7 +26,7 @@
     --hover-gradient-logo-color: -o-linear-gradient(45deg, rgb(180, 45, 50), rgb(204, 126, 71)); /* Opera 11.1 - 12 */
     --hover-gradient-logo-color: linear-gradient(45deg, rgb(180, 45, 50), rgb(204, 126, 71)); /* Standard */
 
-    --transition3: var(--transition3);
+    --transition3: .3s ease;
 }
 
 * {
@@ -539,6 +539,7 @@ button {
     font-weight: 400; /* Standard */
     color: hsla(180, 7%, 97%, .6); /* Standard */
     font-size: 12px; /* Standard */
+
 }
 
 .background-dot-container-features {
