@@ -29,23 +29,14 @@
 			height: 100%;
 		}
 
-		.plans-name-profile{
-			min-height: 22px;
-    		font-size: 24px;
-   			font-weight: 600;
-    		color: #ff9764;
-    		text-transform: uppercase;
-    		display: flex;
-    		align-items: center;
-			justify-content: space-between;
-    		text-align: left;
-		}
+        .uppercase {
+            text-transform: uppercase;
+        }
 
-		.profile-input-about{
-			border-radius: 5px;
-		}
+        .profile-input-about {
+            border-radius: var(--border-radius);
+        }
 		
-
 		.profile-link {
 			display: flex;
 			justify-content: center;
@@ -59,22 +50,65 @@
 			object-fit: cover;
 			border: 2px solid #000; /* Optional: for a border around the image */
 		}
+        textarea,
         .profile-input {
-            border-radius: 12px;
+            width: -webkit-fill-available; /* Non-standard, consider alternatives */
+            width: 100%; /* Fallback */
             padding: 6px;
-            opacity: 0.5;
-            color: white;
-            background: black;
+            /* appearance: none; */
+            outline: none;
+            color: var(--white);
+            box-shadow: 0 0 0 2px transparent;
+            /* Gradient Background + Gradient Border With Radius */
+            background: linear-gradient(var(--transition-angle), var(--dark) 60%, var(--dark)) padding-box, linear-gradient(var(--transition-angle), var(--transition-grey), var(--transition-grey), var(--transition-grey), var(--transition-grey)) border-box;
+            border: 1px solid transparent;
+            border-radius: var(--border-radius);
+            transition: opacity var(--transition-duration-1), --transition-red var(--transition-duration-1), --transition-orange var(--transition-duration-1), --transition-white var(--transition-duration-1), --transition-grey var(--transition-duration-1), --transition-angle var(--transition-duration-1);
         }
-		textarea{
-			border-radius: 12px;
-			padding: 12px;
-			opacity: 0.5;
-		}
-		.profile-input:focus{
-			opacity: 1;
-  			
-		}
+
+
+            textarea:hover,
+            .profile-input:hover {
+                --transition-angle: 15deg;
+                opacity: 1;
+            }
+
+            textarea:focus,
+            .profile-input:focus {
+                --transition-red: var(--white);
+                --transition-orange: var(--white);
+                --transition-white: var(--white);
+                --transition-grey: var(--white);
+                opacity: 1;
+            }
+
+        .important-outline {
+            background: linear-gradient(var(--transition-angle), var(--dark) 60%, var(--dark)) padding-box, linear-gradient(var(--transition-angle), var(--transition-red), var(--transition-orange), var(--transition-white), var(--transition-grey)) border-box;
+        }
+
+            .important-outline:focus {
+                --transition-angle: 90deg;
+                --transition-red: var(--red);
+                --transition-orange: var(--red);
+                --transition-white: var(--orange);
+                --transition-grey: var(--orange);
+                opacity: 1;
+            }
+
+        @keyframes rotate-gradient {
+            from {
+                background: linear-gradient(45deg, var(--dark) 60%, var(--dark)) padding-box, linear-gradient(90deg, var(--transition-grey), var(--transition-white), var(--transition-red), var(--transition-orange)) border-box;
+            }
+
+            to {
+                background: linear-gradient(45deg, var(--dark) 60%, var(--dark)) padding-box, linear-gradient(45deg, var(--transition-grey), var(--transition-white), var(--transition-red), var(--transition-orange)) border-box;
+            }
+        }
+
+        option {
+            background-color: var(--dark);
+            padding: 12px;
+        }
     </style>
 </head>
 <body translate="no">

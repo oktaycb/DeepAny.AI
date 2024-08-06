@@ -73,7 +73,7 @@
 
 		.card:hover {
 			background-size: 100%;
-			border-color: rgba(255, 255, 255, 0.75);
+			border-color: var(--white);
 		}
 
             .card:before {
@@ -107,13 +107,11 @@
 
 		.card-title {
 			font-size: clamp(0px, calc(4vh * var(--scale-factor)), calc(8vw * var(--scale-factor))); /* Use calc() with the variable */
-			color: white;
 			font-weight: bold;
 		}
 
 		.card-description {
 			font-size: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor))); /* Use calc() with the variable */
-			color: white;
 		}
 
 		.card-link {
@@ -195,7 +193,6 @@
 
         .trusted-link {
             text-decoration: underline;
-            color: white;
             opacity: 0.9;
             user-select: auto;
             pointer-events: auto;
