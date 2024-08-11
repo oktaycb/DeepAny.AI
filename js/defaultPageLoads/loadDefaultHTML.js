@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
 		let loadingScreen = document.querySelector('.loading-screen');
 		let mains = document.querySelectorAll('main');
 		let sidebar = document.querySelector('.sidebar');
-		let animation = true;
+		let animation = false;
 		if (animation) {
 			//loadBlurEffect(loadingScreen, mains, sidebar, navbar);
 	
@@ -30,6 +30,8 @@ document.addEventListener('DOMContentLoaded', function () {
 			//setTimeout(() => { State.removeNavbar(navbar, mains, sidebar); }, 1);
 			//setTimeout(() => { State.removeSidebar(sidebar); }, 1);
 		}
+
+		setTimeout(() => { hideLoadingScreen(loadingScreen, navbar, mains, sidebar); }, 0);
 
 		State.setNavbar(navbar, mains, sidebar);
 		State.setSidebar(sidebar);
@@ -99,8 +101,6 @@ document.addEventListener('DOMContentLoaded', function () {
 		sizeBasedElements();
 
 		window.addEventListener('resize', sizeBasedElements);
-		
-		setTimeout(() => { hideLoadingScreen(loadingScreen, navbar, mains, sidebar); }, 500);
 	}
 
 	loadDefaultHTML();

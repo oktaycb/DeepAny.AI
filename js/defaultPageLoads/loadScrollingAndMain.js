@@ -66,7 +66,7 @@ export function loadScrollingAndMain(navbar, mains, sidebar) {
 					if (clientY <= State.getActualNavbarHeight()) {
 						State.showNavbar(navbar, mains, sidebar);
 					} else if (event.type === 'click') {
-						State.removeNavbar(navbar, mains, sidebar);
+						// State.removeNavbar(navbar, mains, sidebar);
 					}
 				}
 

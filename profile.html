@@ -13,102 +13,12 @@
     <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-auth.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.2/color-thief.umd.js"></script>
-	<style>		
-		.main-container {
-			display: flex;
-			flex-direction: column;
-			margin: clamp(0px, calc(8vh* var(--scale-factor)), calc(16vw* var(--scale-factor)));
-			width: -webkit-fill-available;
-			height: -webkit-fill-available;
-			gap: 12px;
-		}
-		
+	<style>
 		.background-container {
 			margin: unset;
 			width: -webkit-fill-available;
 			height: 100%;
 		}
-
-        .uppercase {
-            text-transform: uppercase;
-        }
-
-        .profile-input-about {
-            border-radius: var(--border-radius);
-        }
-		
-		.profile-link {
-			display: flex;
-			justify-content: center;
-			margin-top: 10px;
-			cursor: pointer;
-		}
-		.profile-image {
-			width: 100px;
-			height: 100px;
-			border-radius: 50%;
-			object-fit: cover;
-			border: 2px solid #000; /* Optional: for a border around the image */
-		}
-        textarea,
-        .profile-input {
-            width: -webkit-fill-available; /* Non-standard, consider alternatives */
-            width: 100%; /* Fallback */
-            padding: 6px;
-            /* appearance: none; */
-            outline: none;
-            color: var(--white);
-            box-shadow: 0 0 0 2px transparent;
-            /* Gradient Background + Gradient Border With Radius */
-            background: linear-gradient(var(--transition-angle), var(--dark) 60%, var(--dark)) padding-box, linear-gradient(var(--transition-angle), var(--transition-grey), var(--transition-grey), var(--transition-grey), var(--transition-grey)) border-box;
-            border: 1px solid transparent;
-            border-radius: var(--border-radius);
-            transition: opacity var(--transition-duration-1), --transition-red var(--transition-duration-1), --transition-orange var(--transition-duration-1), --transition-white var(--transition-duration-1), --transition-grey var(--transition-duration-1), --transition-angle var(--transition-duration-1);
-        }
-
-
-            textarea:hover,
-            .profile-input:hover {
-                --transition-angle: 15deg;
-                opacity: 1;
-            }
-
-            textarea:focus,
-            .profile-input:focus {
-                --transition-red: var(--white);
-                --transition-orange: var(--white);
-                --transition-white: var(--white);
-                --transition-grey: var(--white);
-                opacity: 1;
-            }
-
-        .important-outline {
-            background: linear-gradient(var(--transition-angle), var(--dark) 60%, var(--dark)) padding-box, linear-gradient(var(--transition-angle), var(--transition-red), var(--transition-orange), var(--transition-white), var(--transition-grey)) border-box;
-        }
-
-            .important-outline:focus {
-                --transition-angle: 90deg;
-                --transition-red: var(--red);
-                --transition-orange: var(--red);
-                --transition-white: var(--orange);
-                --transition-grey: var(--orange);
-                opacity: 1;
-            }
-
-        @keyframes rotate-gradient {
-            from {
-                background: linear-gradient(45deg, var(--dark) 60%, var(--dark)) padding-box, linear-gradient(90deg, var(--transition-grey), var(--transition-white), var(--transition-red), var(--transition-orange)) border-box;
-            }
-
-            to {
-                background: linear-gradient(45deg, var(--dark) 60%, var(--dark)) padding-box, linear-gradient(45deg, var(--transition-grey), var(--transition-white), var(--transition-red), var(--transition-orange)) border-box;
-            }
-        }
-
-        option {
-            background-color: var(--dark);
-            padding: 12px;
-        }
     </style>
 </head>
 <body translate="no">
@@ -126,9 +36,37 @@
 			</div>
 		</div>
 	</main>
-	<script type="module" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js"></script>
+	<main>
+		<div class="main-container"></div>
+		<div class="faded-content">
+			<div class="first-text">
+				<h1>DeepAny.<span class="text-gradient">AI</span></h1>
+				<h2 class="text-gradient">bring your imagination come to life.</h2>
+				<div class="offset-text">
+					<h1 class="offset">deepany.a<span class="no-spacing">i</span></h1>
+					<h1 class="offset">deepany.a<span class="no-spacing">i</span></h1>
+					<h1 class="offset">deepany.a<span class="no-spacing">i</span></h1>
+				</div>
+			</div>
+		</div>
+	</main>
+	<main>
+		<div class="main-container"></div>
+		<div class="faded-content">
+			<div class="first-text">
+				<h1>DeepAny.<span class="text-gradient">AI</span></h1>
+				<h2 class="text-gradient">bring your imagination come to life.</h2>
+				<div class="offset-text">
+					<h1 class="offset">deepany.a<span class="no-spacing">i</span></h1>
+					<h1 class="offset">deepany.a<span class="no-spacing">i</span></h1>
+					<h1 class="offset">deepany.a<span class="no-spacing">i</span></h1>
+				</div>
+			</div>
+		</div>
+	</main>
 	<script type="module" src="js/defaultPageLoads/loadDefaultHTML.js"></script>
 	<script type="module" src="js/pageSpecificScripts/profile.js"></script>
     <script type="module" src="js/firebase/firebase-auth.js"></script>
+	<script type="module" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js"></script>
 </body>
 </html>

@@ -12,9 +12,9 @@ const loadSideBarAndNavBar = `
 			<nav class="sidebar">
 				<div style="flex: 1; justify-content: space-between;">
 					<div>
-						<button><img src="./assets/explore.svg">Explore</button>
+						<button id="exploreButton"><img src="./assets/explore.svg">Explore</button>
 						<button id="profileButton"><img src="./assets/profile.svg">Profile</button>
-						<button class="important"><img src="./assets/premium.svg">Premium</button>
+						<button id="premiumButton" class="important"><img src="./assets/premium.svg">Premium</button>
 					</div>
 					<div>
 						<button id="discordButton"><img src="./assets/discord.svg">Discord </button>
@@ -39,5 +39,7 @@ export function loadBars() {
 	document.getElementById('discordButton').addEventListener('click', function () { window.open('https://discord.gg/6FTmwtaK', '_blank'); });
 	document.getElementById('twitterButton').addEventListener('click', function () { window.open('https://x.com/zeroduri', '_blank'); });
 	document.getElementById('redditButton').addEventListener('click', function () { window.open('https://www.reddit.com/r/bodyswapai/', '_blank'); });
+	document.getElementById('exploreButton').addEventListener('click', function () { window.location.href = 'index.html'; });
 	document.getElementById('profileButton').addEventListener('click', function () { window.location.href = 'profile.html'; });
+	document.getElementById('premiumButton').addEventListener('click', function () { window.location.href = 'pricing.html'; });
 }
