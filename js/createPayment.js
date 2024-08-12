@@ -85,27 +85,26 @@ document.addEventListener("DOMContentLoaded", async function () {
 	// Capabilities data
 	const capabilities = {
 		faceSwap: {
-			name: "Face Swap Video",
-			formula: (credits) =>
-				`${Math.floor((credits * 60) / (30 * 60))} minutes of video (30fps)`,
+			name: "Video Swap",
+			formula: (credits) =>`${Math.floor((credits * 60) / (30 * 60))} minutes of vids.`,
 		},
 		imageSwap: {
 			name: "Image Swap",
-			formula: (credits) => `${credits} images`,
+			formula: (credits) => `${credits} imgs.`,
 		},
 		inpainter: {
 			name: "Inpainter",
-			formula: (credits) =>
-				`${Math.floor(credits / 4)} generations`,
+			formula: (credits, price, currencySymbol) =>
+				`process/5 credits (${currencySymbol}${price * 5}) = ${Math.floor(credits / 5)} imgs.`,
 		},
 		artGeneration: {
 			name: "Art Generation",
-			formula: (credits) => `${credits} art pieces`,
+			formula: (credits) => `${credits} imgs.`,
 		},
 	};
 
 	// Function to update the capabilities list
-	function updateCapabilityList(credits, isSubscriptionMode) {
+	function updateCapabilityList(credits, price, currencySymbol, isSubscriptionMode) {
 		const capabilityListElement = document.getElementById("capability-list");
 
 		// Clear previous content
@@ -113,10 +112,10 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 		// If in subscription mode, display unlimited for all capabilities, specific limit for video
 		if (isSubscriptionMode) {
-			const faceSwapElement = document.createElement("p");
+			const faceSwapElement = document.createElement("li");
 			faceSwapElement.classList.add("capability");
 			faceSwapElement.innerHTML = `
-            ${capabilities.faceSwap.name}: 2 hour per process (30fps)
+            ${capabilities.faceSwap.name}: 2 hour per process
         `;
 			capabilityListElement.appendChild(faceSwapElement);
 
@@ -139,7 +138,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 			const capabilityElement = document.createElement("li");
 			capabilityElement.classList.add("capability");
 			capabilityElement.innerHTML = `
-            ${capability.name}: ${capability.formula(credits)}
+            ${capability.name}: ${capability.formula(credits, price, currencySymbol)}
         `;
 			capabilityListElement.appendChild(capabilityElement);
 		});
@@ -203,7 +202,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 		// Initial prices and durations
 		let credits = [250, 500, 1000, 2500, 5000, 10000, 25000, 50000];
-		let prices = [14.99, 24.99, 44.99, 99.99, 174.99, 299.99, 624.99, 999.99];
+		let prices = [9.99, 24.99, 44.99, 99.99, 174.99, 299.99, 624.99, 999.99];
 		let durationsInDays = [1, 7, 30, 90, 365, -1];
 		let subprices = [99.99, 49.99 * durationsInDays[1], 24.99 * durationsInDays[2], 9.99 * durationsInDays[3], 4.99 * durationsInDays[4], 1499.99];
 		const durations = ["1 day", "1 week", "1 month", "3 months", "1 year", "Lifetime"];
@@ -249,9 +248,6 @@ document.addEventListener("DOMContentLoaded", async function () {
 				const creditAmount = calculateCredit(value);
 				dailyPriceAmount = creditAmount > 0 ? Math.max(0, price / creditAmount) : null;
 
-				// Update the capability list based on the current credits and mode
-				updateCapabilityList(creditAmount, isSubscriptionMode);
-
 				priceInSelectedCurrency = price;
 				if (selectedCurrency !== 'USD' && selectedCurrency !== 'BTC') {
 					priceInSelectedCurrency = price * conversionRates[selectedCurrency];
@@ -261,6 +257,9 @@ document.addEventListener("DOMContentLoaded", async function () {
 				}
 
 				displayText = `${currencySymbol}${formatNumber(dailyPriceAmount, 3)} `;
+
+				// Update the capability list based on the current credits and mode
+				updateCapabilityList(creditAmount, formatNumber(dailyPriceAmount, 3), currencySymbol, isSubscriptionMode);
 
 				const basePrice = prices[0];
 				const baseCredits = credits[0];
@@ -284,8 +283,6 @@ document.addEventListener("DOMContentLoaded", async function () {
 				const durationDays = durationsInDays[value - 1];
 				dailyPriceAmount = durationDays > 0 ? Math.max(0, price / durationDays) : null;
 
-				updateCapabilityList(0, isSubscriptionMode);
-
 				priceInSelectedCurrency = price;
 				if (selectedCurrency !== 'USD' && selectedCurrency !== 'BTC') {
 					priceInSelectedCurrency = price * conversionRates[selectedCurrency];
@@ -293,6 +290,8 @@ document.addEventListener("DOMContentLoaded", async function () {
 						dailyPriceAmount *= conversionRates[selectedCurrency];
 					}
 				}
+
+				updateCapabilityList(0, 0, 0, isSubscriptionMode);
 
 				displayText = durationDays === -1 ? `${currencySymbol}${formatNumber(priceInSelectedCurrency, 2)}` : `${currencySymbol}${formatNumber(dailyPriceAmount, 2)}`;
 				document.getElementById('cost-per-day-unit').textContent = '/day';
