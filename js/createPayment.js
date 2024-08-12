@@ -68,6 +68,123 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 	let conversionRates = await fetchConversionRates();
 
+	// SVG icons for the feature list
+	const checkmarkIcon = `
+		<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+			<path d="M20 6 9 17l-5-5"></path>
+		</svg>
+	`;
+
+	const xIcon = `
+		<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x plans_x__KKb0t">
+			<path d="M18 6 6 18"></path>
+			<path d="m6 6 12 12"></path>
+		</svg>
+	`;
+
+	// Capabilities data
+	const capabilities = {
+		faceSwap: {
+			name: "Face Swap Video",
+			formula: (credits) =>
+				`${Math.floor((credits * 60) / (30 * 60))} minutes of video (30fps)`,
+		},
+		imageSwap: {
+			name: "Image Swap",
+			formula: (credits) => `${credits} images`,
+		},
+		inpainter: {
+			name: "Inpainter",
+			formula: (credits) =>
+				`${Math.floor(credits / 4)} generations`,
+		},
+		artGeneration: {
+			name: "Art Generation",
+			formula: (credits) => `${credits} art pieces`,
+		},
+	};
+
+	// Function to update the capabilities list
+	function updateCapabilityList(credits, isSubscriptionMode) {
+		const capabilityListElement = document.getElementById("capability-list");
+
+		// Clear previous content
+		capabilityListElement.innerHTML = "";
+
+		// If in subscription mode, display unlimited for all capabilities, specific limit for video
+		if (isSubscriptionMode) {
+			const faceSwapElement = document.createElement("p");
+			faceSwapElement.classList.add("capability");
+			faceSwapElement.innerHTML = `
+            ${capabilities.faceSwap.name}: 2 hour per process (30fps)
+        `;
+			capabilityListElement.appendChild(faceSwapElement);
+
+			// Other capabilities will be shown as unlimited
+			Object.values(capabilities).forEach(capability => {
+				if (capability.name !== capabilities.faceSwap.name) {
+					const capabilityElement = document.createElement("li");
+					capabilityElement.classList.add("capability");
+					capabilityElement.innerHTML = `
+                    ${capability.name}: Unlimited
+                `;
+					capabilityListElement.appendChild(capabilityElement);
+				}
+			});
+			return;
+		}
+
+		// Loop through each capability and create the necessary HTML elements for credits mode
+		Object.values(capabilities).forEach(capability => {
+			const capabilityElement = document.createElement("li");
+			capabilityElement.classList.add("capability");
+			capabilityElement.innerHTML = `
+            ${capability.name}: ${capability.formula(credits)}
+        `;
+			capabilityListElement.appendChild(capabilityElement);
+		});
+	}
+
+	const subscriptionFeatures = [
+		{ text: "Professional account", icon: checkmarkIcon },
+		{ text: "Unlimited usage", icon: checkmarkIcon },
+		{ text: "4k resolution", icon: checkmarkIcon },
+		{ text: "Upload limit to 2 GB", icon: checkmarkIcon },
+		{ text: "6x frame limiter ", icon: checkmarkIcon },
+		{ text: "Pixel boost feature", icon: checkmarkIcon },
+		{ text: "Priority queue", icon: checkmarkIcon },
+	];
+
+	const creditFeatures = [
+		{ text: "Verified account", icon: checkmarkIcon },
+		{ text: "No deadline", icon: checkmarkIcon },
+		{ text: "HD resolution", icon: checkmarkIcon },
+		{ text: "Upload limit to 500MB", icon: checkmarkIcon },
+		{ text: "6x frame limiter ", icon: xIcon },
+		{ text: "Pixel boost feature", icon: xIcon },
+		{ text: "Priority queue", icon: xIcon },
+	];
+
+	// Function to update the feature list based on mode
+	function updateFeatureList(isCreditsMode) {
+		const featuresListElement = document.getElementById("features-list");
+		featuresListElement.innerHTML = ""; // Clear previous content
+
+		// Select the appropriate feature array based on the mode
+		const selectedFeatures = isCreditsMode ? creditFeatures : subscriptionFeatures;
+
+		// Loop through each feature and create the necessary HTML elements
+		selectedFeatures.forEach(feature => {
+			const featureElement = document.createElement("p");
+			featureElement.classList.add("feature");
+			featureElement.innerHTML = `
+            ${feature.icon}
+            ${feature.text}
+        `;
+			featuresListElement.appendChild(featureElement);
+		});
+	}
+
 	async function createPayment() {
 		// Fetch conversion rates from Frankfurter API
 		let selectedCurrency = 'USD';
@@ -85,13 +202,11 @@ document.addEventListener("DOMContentLoaded", async function () {
 		const purchase = document.getElementById("purchase");
 
 		// Initial prices and durations
-		const prices = [24.99, 49.99, 99.99, 249.99, 499.99, 799.99];
-		const subprices = [14.99, 52.5, 149.99, 224.99, 456.25, 699.99];
-		const durationsInDays = [1, 7, 30, 90, 365, -1];
-		const durations = ["1 day", "7 days", "1 month", "3 months", "1 year", "Lifetime"];
-
-		// Credits options
-		const credits = [100, 250, 1000, 5000, 20000];
+		let credits = [250, 500, 1000, 2500, 5000, 10000, 25000, 50000];
+		let prices = [14.99, 24.99, 44.99, 99.99, 174.99, 299.99, 624.99, 999.99];
+		let durationsInDays = [1, 7, 30, 90, 365, -1];
+		let subprices = [99.99, 49.99 * durationsInDays[1], 24.99 * durationsInDays[2], 9.99 * durationsInDays[3], 4.99 * durationsInDays[4], 1499.99];
+		const durations = ["1 day", "1 week", "1 month", "3 months", "1 year", "Lifetime"];
 
 		function calculatePrice(value) {
 			return prices[value - 1];
@@ -105,11 +220,11 @@ document.addEventListener("DOMContentLoaded", async function () {
 			return credits[value - 1];
 		}
 
-		function formatNumber(value) {
+		function formatNumber(value, precision) {
 			if (value === 0) return '0';
-			const precision = 2;
 			return Number(value).toFixed(precision).replace(/\.?0+$/, '');
 		}
+
 
 		function updatePrices() {
 			if (!conversionRates) return;
@@ -117,7 +232,11 @@ document.addEventListener("DOMContentLoaded", async function () {
 			updateSliderRange();
 			const value = sliderElement.value;
 			const isCreditsMode = creditsMode.classList.contains("selected");
+			const isSubscriptionMode = subscriptionMode.classList.contains("selected");
 			const currencySymbol = getCurrencySymbol(selectedCurrency);
+
+			// Update the feature list based on the mode
+			updateFeatureList(isCreditsMode);
 
 			let dailyPriceAmount;
 			let priceInSelectedCurrency;
@@ -130,6 +249,9 @@ document.addEventListener("DOMContentLoaded", async function () {
 				const creditAmount = calculateCredit(value);
 				dailyPriceAmount = creditAmount > 0 ? Math.max(0, price / creditAmount) : null;
 
+				// Update the capability list based on the current credits and mode
+				updateCapabilityList(creditAmount, isSubscriptionMode);
+
 				priceInSelectedCurrency = price;
 				if (selectedCurrency !== 'USD' && selectedCurrency !== 'BTC') {
 					priceInSelectedCurrency = price * conversionRates[selectedCurrency];
@@ -138,7 +260,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 					}
 				}
 
-				displayText = `${currencySymbol}${formatNumber(dailyPriceAmount)} `;
+				displayText = `${currencySymbol}${formatNumber(dailyPriceAmount, 3)} `;
 
 				const basePrice = prices[0];
 				const baseCredits = credits[0];
@@ -150,16 +272,19 @@ document.addEventListener("DOMContentLoaded", async function () {
 				}
 
 				document.getElementById('cost-per-day-unit').textContent = '/credit';
-				discountMessage = discount > 0 ? `You are saving ${currencySymbol}${formatNumber(discount)} with this plan...` : 'This plan has the worst discount ratio.';
-				discountDetailsElement.textContent = `Total payment is ${currencySymbol}${formatNumber(priceInSelectedCurrency)}.`;
+				discountMessage = 'You can spend your credits anytime.';
+				discountDetailsElement.textContent = `Total payment is ${currencySymbol}${formatNumber(priceInSelectedCurrency, 3)}.`;
 
 				dailyPriceAmountElement.textContent = displayText;
-				discountElement.textContent = discountMessage;
+				if (discountElement)
+					discountElement.textContent = discountMessage;
 			} else {
 				// Subscription mode
 				const price = calculateSubPrice(value);
 				const durationDays = durationsInDays[value - 1];
 				dailyPriceAmount = durationDays > 0 ? Math.max(0, price / durationDays) : null;
+
+				updateCapabilityList(0, isSubscriptionMode);
 
 				priceInSelectedCurrency = price;
 				if (selectedCurrency !== 'USD' && selectedCurrency !== 'BTC') {
@@ -169,13 +294,13 @@ document.addEventListener("DOMContentLoaded", async function () {
 					}
 				}
 
-				displayText = durationDays === -1 ? `${currencySymbol}${formatNumber(priceInSelectedCurrency)}` : `${currencySymbol}${formatNumber(dailyPriceAmount)}`;
+				displayText = durationDays === -1 ? `${currencySymbol}${formatNumber(priceInSelectedCurrency, 2)}` : `${currencySymbol}${formatNumber(dailyPriceAmount, 2)}`;
 				document.getElementById('cost-per-day-unit').textContent = '/day';
 
 				if (durationDays === -1) {
 					// Lifetime plan
 					document.getElementById('cost-per-day-unit').textContent = '';
-					discountMessage = 'The lifetime plan has the best ratio.';
+					discountMessage = 'Use our products without credit limitations.';
 					discountDetailsElement.textContent = '';
 				} else {
 					// Regular plans
@@ -187,12 +312,13 @@ document.addEventListener("DOMContentLoaded", async function () {
 						discount *= conversionRates[selectedCurrency];
 					}
 
-					discountMessage = discount > 0 ? `You are saving ${currencySymbol}${formatNumber(discount)} with this plan...` : 'This plan has the worst discount ratio.';
-					discountDetailsElement.textContent = `The total payment is ${formatNumber(priceInSelectedCurrency)} ${selectedCurrency}.`;
+					discountMessage = 'Use our products without credit limitations.';
+					discountDetailsElement.textContent = `Total payment is ${currencySymbol}${formatNumber(priceInSelectedCurrency, 3)}`;
 				}
 
 				dailyPriceAmountElement.textContent = displayText;
-				discountElement.textContent = discountMessage;
+				if (discountElement)
+					discountElement.textContent = discountMessage;
 			}
 		}
 

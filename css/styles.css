@@ -694,8 +694,28 @@ option {
     line-height: 100%;
 }
 
+
+ul {
+    list-style: none; /* Remove default list markers */
+    margin: 0px;
+}
+
+li {
+    position: relative; /* To position the custom marker */
+    padding: 0px 0px 0px clamp(0px, calc(2.5vh* var(--scale-factor)), calc(5vw* var(--scale-factor)));
+}
+
+    li::before {
+        content: '\2022'; /* Unicode for bullet point or use custom icon */
+        position: absolute;
+        left: 0; /* Adjust as needed */
+        top: 50%; /* Center vertically */
+        transform: translateY(-50%); /* Center vertically */
+        font-size: 2vh; /* Customize size */
+    }
 .discount-details {
     font-weight: 400;
+    white-space: normal;
 }
 
 .background-dot-container-features {
@@ -785,6 +805,10 @@ input[type='range'] {
     text-align: center;
 }
 
+.not-available {
+    text-decoration: line-through;
+}
+
 .background-dot-container-option {
     width: -webkit-fill-available;
     justify-content: center;
@@ -862,6 +886,7 @@ input[type='range'] {
         z-index: 0;
     }
 
+
 .background-dot-container-content {
     position: relative;
     display: flex;
@@ -871,6 +896,7 @@ input[type='range'] {
     width: 100%;
     height: 100%;
     flex-direction: column;
+    gap: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor)));
 }
 
 .background-dot-container-title {

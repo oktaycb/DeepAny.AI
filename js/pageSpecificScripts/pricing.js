@@ -9,10 +9,11 @@ document.addEventListener('DOMContentLoaded', function () {
 				case 0:
 					mainContainer.insertAdjacentHTML('beforeend', `
 										<div style="display: grid;gap: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));justify-content: center;font-weight: 600;">
-											<div style="display: flex;flex-direction: column; gap: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));width: min-content;">
+											<div style="display: flex;flex-direction: column; gap: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));">
 															<div class="background-container">
 																<p class="background-dot-container-option selected" id="credits-mode">Credits</p>
 																<p class="background-dot-container-option" id="subscription-mode">Subscription</p>
+																<p class="background-dot-container-option not-available" id="renewal-mode">Renewal</p>
 															</div>
 
 															<div class="background-container" style="grid: unset; display: grid;grid-template-columns: 1fr 1fr;">
@@ -22,16 +23,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 															<div class="background-container" style="display: flex;flex-direction: row;height: 100%;">
-																<p class="background-dot-container-option selected" data-currency="USD" style="height: 100%;">$</p>
-																<p class="background-dot-container-option" data-currency="EUR" style="height: 100%;">€</p>
-																<p class="background-dot-container-option" data-currency="GBP" style="height: 100%;">£</p>
-																<p class="background-dot-container-option" data-currency="TRY" style="height: 100%;">₺</p>
-																<p class="background-dot-container-option important-outline" data-currency="BTC" style="height: 100%;">₿</p>
+																<p class="background-dot-container-option selected" data-currency="USD" style="height: 100%;">$USD</p>
+																<p class="background-dot-container-option" data-currency="EUR" style="height: 100%;">€EUR</p>
+																<p class="background-dot-container-option" data-currency="GBP" style="height: 100%;">£GBP</p>
+																<p class="background-dot-container-option" data-currency="TRY" style="height: 100%;">₺TRY</p>
+																<p class="background-dot-container-option important-outline" data-currency="BTC" style="height: 100%;">COIN</p>
 															</div>
 												<div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
 													<div style="display: flex; gap: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor)));">
 														<a class="background-dot-container">
-															<div class="background-dot-container-content">
+															<div class="background-dot-container-content" style="min-width: clamp(0px, calc(50vh* var(--scale-factor)), calc(50vw* var(--scale-factor)));">
 																<div class="background-dot-container-header">
 																	<p class="plans-name text-gradient">Starter</p>
 																	<div class="plans-popular">
@@ -48,23 +49,10 @@ document.addEventListener('DOMContentLoaded', function () {
 																	<h4 id="discount-details">⟳ Loading...</h4>
 																	<p class="discount-details" id="discount">⟳ Loading...</p>
 																	<div class="line"></div>
-																	<div>
-																		<p class="feature">
-																			<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-																				<path d="M20 6 9 17l-5-5"></path>
-																			</svg> Unlimited Generation
-																		</p>
-																		<p class="feature">
-																			<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-																				<path d="M20 6 9 17l-5-5"></path>
-																			</svg> 24/7 Support
-																		</p>
-																		<p class="feature">
-																			<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-																				<path d="M20 6 9 17l-5-5"></path>
-																			</svg> Priority Queue
-																		</p>
-																	</div>
+																	<div id="features-list"></div>
+																	<div class="line"></div>
+																	<h4 style="margin-bottom: 1vh;">Plan Capability</h4>
+																	<ul class="background-container" id="capability-list" style="display: flow;background: transparent;"></ul>
 																</div>
 															</div>
 														</a>
