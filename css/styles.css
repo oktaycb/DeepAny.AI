@@ -632,13 +632,6 @@ option {
     -ms-transition: opacity var(--transition-duration-1);
 }
 
-    .text-gradient.change {
-        opacity: 0.2;
-        -webkit-opacity: 0.2;
-        -moz-opacity: 0.2;
-        -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=20)"; /* IE 8 */
-    }
-
 .nav-links {
     list-style-type: none;
     margin: 0;
@@ -1183,7 +1176,7 @@ input[type='range'] {
 }
 
 .subtext {
-    opacity: 0.5;
+    color: rgba(var(--white), 0.5);
 }
 
 .trusted-link {

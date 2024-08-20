@@ -3,37 +3,37 @@ import * as State from './accessVariables.js';
 // If you are looking for buttons and services li's refer to sizeBasedElements inside loadDefaultHTML.
 const websiteTitle = document.title.split('.')[0];
 const loadSideBarAndNavBar = `
-			<nav class="navbar">
-				<div class="container">
-					<div class="logo">
-						<img onclick="location.href='index.html';" style="cursor: pointer;" class="logoimg" src="assets/logo.png" alt="Logo" loading="lazy">
-						<h2 onclick="location.href='index.html';" style="cursor: pointer;">${websiteTitle}.<span class="text-gradient">AI</span></h2>
-					</div>
-				</div>
-			</nav>
-			<nav class="sidebar">
-				<div style="flex: 1; justify-content: space-between;">
-					<div>
-						<button id="exploreButton"><img src="./assets/explore.svg" loading="lazy">Explore</button>
-						<button id="profileButton"><img src="./assets/profile.svg" loading="lazy">Profile</button>
-						<button id="premiumButton" class="important"><img src="./assets/premium.svg" loading="lazy">Premium</button>
-					</div>
-					<div>
-						<button id="discordButton"><img src="./assets/discord.svg" loading="lazy">Discord </button>
-						<button id="twitterButton"><img src="./assets/x.svg" loading="lazy">X</button>
-						<button id="redditButton"><img src="./assets/reddit.svg" loading="lazy">Reddit</button>
-					</div>
-					<div>
-						<button id="contactButton"><img src="./assets/contact.svg" alt="Contact Icon" loading="lazy">Contact</button>
-						<button><img src="./assets/trophy.svg" loading="lazy">Affiliation</button>
-						<button><img src="./assets/settings.svg" loading="lazy">Settings</button>
-					</div>
-				</div>
-			</nav>
-			<div class="loading-screen">
-				<div class="loading-spinner"></div>
-			</div>
-		`;
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <img type="image/webp" onclick="location.href='index.html';" style="cursor: pointer;" class="logoimg" src="assets/logo.webp" alt="Logo" loading="lazy">
+                <h2 onclick="location.href='index.html';" style="cursor: pointer;">${websiteTitle}.<span class="text-gradient">AI</span></h2>
+            </div>
+        </div>
+    </nav>
+    <nav class="sidebar">
+        <div style="flex: 1; justify-content: space-between;">
+            <div>
+                <button id="exploreButton"><img src="./assets/explore.svg" alt="Explore Icon" loading="lazy">Explore</button>
+                <button id="profileButton"><img src="./assets/profile.svg" alt="Profile Icon" loading="lazy">Profile</button>
+                <button id="premiumButton" class="important"><img src="./assets/premium.svg" alt="Premium Icon" loading="lazy">Premium</button>
+            </div>
+            <div>
+                <button id="discordButton"><img src="./assets/discord.svg" alt="Discord Icon" loading="lazy">Discord</button>
+                <button id="twitterButton"><img src="./assets/x.svg" alt="X Icon" loading="lazy">X</button>
+                <button id="redditButton"><img src="./assets/reddit.svg" alt="Reddit Icon" loading="lazy">Reddit</button>
+            </div>
+            <div>
+                <button id="contactButton"><img src="./assets/contact.svg" alt="Contact Icon" loading="lazy">Contact</button>
+                <button><img src="./assets/trophy.svg" alt="Trophy Icon" loading="lazy">Affiliation</button>
+                <button><img src="./assets/settings.svg" alt="Settings Icon" loading="lazy">Settings</button>
+            </div>
+        </div>
+    </nav>
+    <div class="loading-screen">
+        <div class="loading-spinner"></div>
+    </div>
+`;
 
 function loadBars() {
 	document.body.insertAdjacentHTML('afterbegin', loadSideBarAndNavBar);
@@ -184,6 +184,9 @@ document.addEventListener('DOMContentLoaded', function () {
 			loadingScreen.remove();
 		}
 
+		State.showNavbar(navbar, mains, sidebar);
+		State.getAspectRatio() <= 4 / 3 ? State.removeSidebar(sidebar, hamburgerMenu) : State.showSidebar(sidebar, hamburgerMenu);
+
 		let cleanupEvents = null;
 
 		function sizeBasedElements() {
@@ -193,7 +196,7 @@ document.addEventListener('DOMContentLoaded', function () {
 			if (State.getAspectRatio() <= 4 / 3) {
 				if (!hamburgerMenu) {
 					navContainer.insertAdjacentHTML('beforeend', `
-						<div class="hamburger-menu open">
+						<div class="hamburger-menu">
 							<div class="line"></div>
 							<div class="line"></div>
 							<div class="line"></div>
@@ -262,8 +265,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
 		window.addEventListener('resize', sizeBasedElements);
 
-		State.showNavbar(navbar, mains, sidebar);
-		State.showSidebar(sidebar, hamburgerMenu);
+		// Makes a great transition use cookies to make it efficient.
+		//if (State.getAspectRatio() > 4 / 3)
+			//State.removeSidebar(sidebar, hamburgerMenu);
 	}
 
 	loadDefaultHTML();

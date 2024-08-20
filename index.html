@@ -19,11 +19,18 @@
 			margin: 0 clamp(0px, calc(4vh * var(--scale-factor)), calc(8vw * var(--scale-factor)));
 		}
 	</style>
-
 </head>
 <body translate="no">
 	<!-- Load Content Scripts -->
 	<script type="module" src="js/pageSpecificScripts/index.js" defer></script>
 	<script type="module" src="js/defaultPageLoads/loadDefaultHTML.js" defer></script>
+
+	<!-- Load Firebase Auth -->
+	<script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-app.js" defer></script>
+	<script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-firestore.js" defer></script>
+	<script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-auth.js" defer></script>
+
+	<!-- Load Firebase Auth -->
+	<script type="module" src="js/firebase/firebase-auth.js" defer></script>
 </body>
 </html>
