@@ -1,4 +1,3 @@
-// import { auth } from '../firebase/firebase-auth.js';
 import * as State from '../defaultPageLoads/accessVariables.js';
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -6,12 +5,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function updatePageContents() {
 		if (State.getAspectRatio() <= 4 / 3) {
-			pageContents = [
-				`
-                <div style="display: grid;grid-template-rows: 1fr auto;align-items: center;">
+            pageContents = [
+                `
                     <div class="start-content" id="hover-div">
-                        <p class="subtext">Leading AI platform since 2023.</p>
-                        <h1 class="text-gradient" id="dynamic-text">AI Services</h1>
+                        <p class="subtext">Discover the leading AI platform since 2023, renowned for its ease and excellence.</p>
+                        <h1 class="text-gradient" id="dynamic-text">AI-Powered Services</h1>
                         <ul class="styled-list">
                             <li><strong>Daily Free Trial:</strong> Experience our full-featured services without cost.</li>
                             <li><strong>Security & Support:</strong> Your data is protected, with 24/7 support available.</li>
@@ -23,53 +21,34 @@ document.addEventListener('DOMContentLoaded', function () {
                             <li><strong>Pricing:</strong> Dynamic plans tailored to every budget.
                             </li>
                         </ul>
-                        <p class="subtext">Reliable and affordable AI services.</p>
+                        <p class="subtext">Unlock the potential of AI for your projects with our reliable and affordable services.</p>
                         <div class="button-container">
                             <button>Try Now</button>
                             <button class="important">Purchase</button>
-                        </div>
-                    </div>
-                    <div class="end-content">
-                        <div class="bloom-effect" style="opacity: 0.5;" id="middle-bloom"></div>
-                        <img src="./assets/resize-large.webp" id="middle-img">
-                    </div>
-                </div>
-            `,
-				`
-                <div class="end-content">
-                    <h3 style="text-align: center; align-self: center;">Easy to use interface<br></h3>
-                    <h3 class="text-gradient" style="align-self: center; text-align: center; margin: 1vh; color: #999999; font-weight: 300;">Start generating now!</h3>
+                       </div>
                 </div>
                 <div class="card-container">
+                    <div class="background"></div>
                     <a href="face-swap" class="card">
                         <div class="card-content">
-                            <div>
-                                <div class="card-title">Face Swapper</div>
-                                <div class="card-description">Swap faces in your photos with ease.</div>
-                            </div>
+                            <h3>Face Swapper</h3>
                             <div class="card-link">Try Face Swapper</div>
                         </div>
                     </a>
                     <a href="inpaint" class="card">
                         <div class="card-content">
-                            <div>
-                                <div class="card-title">Inpainter</div>
-                                <div class="card-description">Remove or add elements in your images.</div>
-                            </div>
+                            <h3>Inpainter</h3>
                             <div class="card-link">Try Inpainter</div>
                         </div>
                     </a>
                     <a href="art" class="card">
                         <div class="card-content">
-                            <div>
-                                <div class="card-title">Art Generator</div>
-                                <div class="card-description">Create stunning digital artworks.</div>
-                            </div>
+                            <h3>Art Generator</h3>
                             <div class="card-link">Create Art</div>
                         </div>
                     </a>
                 </div>
-            `,
+            `
 			];
 		}
 		else {
@@ -97,10 +76,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
                     </div>
                     <div class="end-content">
-                        <div class="bloom-effect" id="middle-bloom"></div>
-                        <img src="./assets/resize-large.webp" id="wide-img">
-                        <img src="./assets/resize-middle.webp" id="middle-img">
-                        <img src="./assets/resize-long.webp" id="long-img">
+                        <img src="./assets/resize-large.webp" id="wide-img" loading="lazy">
+                        <img src="./assets/resize-middle.webp" id="middle-img" loading="lazy">
+                        <img src="./assets/resize-long.webp" id="long-img" loading="lazy">
                     </div>
                 </div>
                 <div class="card-container">
@@ -108,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <a href="face-swap" class="card">
                         <div class="card-content">
                             <div>
-                                <div class="card-title">Face Swapper</div>
+                                <h3>Face Swapper</h3>
                                 <div class="card-description">Swap faces in your photos with ease.</div>
                             </div>
                             <div class="card-link">Try Face Swapper</div>
@@ -117,7 +95,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <a href="inpaint" class="card">
                         <div class="card-content">
                             <div>
-                                <div class="card-title">Inpainter</div>
+                                <h3>Inpainter</h3>
                                 <div class="card-description">Remove or add elements in your images.</div>
                             </div>
                             <div class="card-link">Try Inpainter</div>
@@ -126,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <a href="art" class="card">
                         <div class="card-content">
                             <div>
-                                <div class="card-title">Art Generator</div>
+                                <h3>Art Generator</h3>
                                 <div class="card-description">Create stunning digital artworks.</div>
                             </div>
                             <div class="card-link">Create Art</div>

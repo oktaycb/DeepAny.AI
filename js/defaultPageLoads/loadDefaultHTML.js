@@ -6,7 +6,7 @@ const loadSideBarAndNavBar = `
 			<nav class="navbar">
 				<div class="container">
 					<div class="logo">
-						<img onclick="location.href='index.html';" style="cursor: pointer;" class="logoimg" src="assets/logo.png" alt="Logo">
+						<img onclick="location.href='index.html';" style="cursor: pointer;" class="logoimg" src="assets/logo.png" alt="Logo" loading="lazy">
 						<h2 onclick="location.href='index.html';" style="cursor: pointer;">${websiteTitle}.<span class="text-gradient">AI</span></h2>
 					</div>
 				</div>
@@ -14,19 +14,19 @@ const loadSideBarAndNavBar = `
 			<nav class="sidebar">
 				<div style="flex: 1; justify-content: space-between;">
 					<div>
-						<button id="exploreButton"><img src="./assets/explore.svg">Explore</button>
-						<button id="profileButton"><img src="./assets/profile.svg">Profile</button>
-						<button id="premiumButton" class="important"><img src="./assets/premium.svg">Premium</button>
+						<button id="exploreButton"><img src="./assets/explore.svg" loading="lazy">Explore</button>
+						<button id="profileButton"><img src="./assets/profile.svg" loading="lazy">Profile</button>
+						<button id="premiumButton" class="important"><img src="./assets/premium.svg" loading="lazy">Premium</button>
 					</div>
 					<div>
-						<button id="discordButton"><img src="./assets/discord.svg">Discord </button>
-						<button id="twitterButton"><img src="./assets/x.svg">X</button>
-						<button id="redditButton"><img src="./assets/reddit.svg">Reddit</button>
+						<button id="discordButton"><img src="./assets/discord.svg" loading="lazy">Discord </button>
+						<button id="twitterButton"><img src="./assets/x.svg" loading="lazy">X</button>
+						<button id="redditButton"><img src="./assets/reddit.svg" loading="lazy">Reddit</button>
 					</div>
 					<div>
-						<button id="contactButton"><img src="./assets/contact.svg" alt="Contact Icon">Contact</button>
-						<button><img src="./assets/trophy.svg">Affiliation</button>
-						<button><img src="./assets/settings.svg">Settings</button>
+						<button id="contactButton"><img src="./assets/contact.svg" alt="Contact Icon" loading="lazy">Contact</button>
+						<button><img src="./assets/trophy.svg" loading="lazy">Affiliation</button>
+						<button><img src="./assets/settings.svg" loading="lazy">Settings</button>
 					</div>
 				</div>
 			</nav>
@@ -48,7 +48,7 @@ function loadBars() {
 
 const swipeThreshold = 50;
 
-function loadScrollingAndMain(navbar, mains, sidebar) {
+function loadScrollingAndMain(navbar, mains, sidebar, hamburgerMenu) {
 	if (mains && mains.length > 0) {
 		mains.forEach((main, index) => {
 			main.style.display = 'flex';
@@ -119,9 +119,9 @@ function loadScrollingAndMain(navbar, mains, sidebar) {
 
 				if (clientY > State.getActualNavbarHeight()) {
 					if (!clientX) {
-						State.showSidebar(sidebar);
+						State.showSidebar(sidebar, hamburgerMenu);
 					} else if (event.type === 'click' && clientX > State.getActualSidebarWidth()) {
-						State.removeSidebar(sidebar);
+						State.removeSidebar(sidebar, hamburgerMenu);
 					}
 				}
 			}
@@ -180,9 +180,6 @@ document.addEventListener('DOMContentLoaded', function () {
 		let mains = document.querySelectorAll('main');
 		let sidebar = document.querySelector('.sidebar');
 
-		State.showNavbar(navbar, mains, sidebar);
-		State.showSidebar(sidebar);
-
 		if (loadingScreen) {
 			loadingScreen.remove();
 		}
@@ -190,20 +187,6 @@ document.addEventListener('DOMContentLoaded', function () {
 		let cleanupEvents = null;
 
 		function sizeBasedElements() {
-			hamburgerMenu = document.querySelector('.hamburger-menu');
-			navbar = document.querySelector('.navbar');
-			navLinks = document.querySelectorAll('.navbar .nav-links');
-			navContainer = document.querySelector('.navbar .container');
-			loadingScreen = document.querySelector('.loading-screen');
-			mains = document.querySelectorAll('main');
-			sidebar = document.querySelector('.sidebar');
-
-			if (cleanupEvents) {
-				cleanupEvents();
-			}
-
-			cleanupEvents = loadScrollingAndMain(navbar, mains, sidebar);
-
 			State.setNavbar(navbar, mains, sidebar);
 			State.setSidebar(sidebar);
 
@@ -218,8 +201,7 @@ document.addEventListener('DOMContentLoaded', function () {
 					`);
 					hamburgerMenu = document.querySelector('.hamburger-menu');
 					hamburgerMenu.addEventListener('click', function () {
-						this.classList.toggle('open');
-						State.getSidebarActive() ? State.removeSidebar(sidebar) : State.showSidebar(sidebar);
+						State.getSidebarActive() ? State.removeSidebar(sidebar, hamburgerMenu) : State.showSidebar(sidebar, hamburgerMenu);
 					});
 
 					if (navLinks && navLinks.length > 0) {
@@ -264,11 +246,24 @@ document.addEventListener('DOMContentLoaded', function () {
 					}
 				}
 			}
+
+			mains = document.querySelectorAll('main');
+			sidebar = document.querySelector('.sidebar');
+			navbar = document.querySelector('.navbar');
+
+			if (cleanupEvents) {
+				cleanupEvents();
+			}
+
+			cleanupEvents = loadScrollingAndMain(navbar, mains, sidebar, hamburgerMenu);
 		}
 
 		sizeBasedElements();
 
 		window.addEventListener('resize', sizeBasedElements);
+
+		State.showNavbar(navbar, mains, sidebar);
+		State.showSidebar(sidebar, hamburgerMenu);
 	}
 
 	loadDefaultHTML();

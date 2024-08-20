@@ -146,9 +146,12 @@ export function setNavbar(navbar, mains, sidebar) {
     }
 }
 
-export function showSidebar(sidebar) {
+export function showSidebar(sidebar, hamburgerMenu) {
     setSidebarActive(sidebar);
     setSidebar(sidebar);
+
+    if (hamburgerMenu)
+        hamburgerMenu.classList.add('open');
 }
 
 export function showNavbar(navbar, mains, sidebar) {
@@ -156,9 +159,12 @@ export function showNavbar(navbar, mains, sidebar) {
     setNavbar(navbar, mains, sidebar);
 }
 
-export function removeSidebar(sidebar) {
+export function removeSidebar(sidebar, hamburgerMenu) {
     setSidebarActive(false);
     setSidebar(sidebar);
+
+    if (hamburgerMenu)
+        hamburgerMenu.classList.remove('open');
 }
 
 export function removeNavbar(navbar, mains, sidebar) {

@@ -18,7 +18,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (State.getAspectRatio() <= 4 / 3) {
             pageContents = [
                 ` 
-                                            <div style="display: grid;height: -webkit-fill-available;width: -webkit-fill-available;gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));">
                                                     <!-- Profile Section -->
                                                     <div class="background-container">
                                                         <div class="background-dot-container">
@@ -29,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                                                 </div>
                                                                 <div class="line"></div>
                                                                 <div class="profile-link" onclick="#">
-                                                                    <img src="assets/profile.png" alt="Profile Image" class="profile-image">
+                                                                    <img src="assets/profile.png" alt="Profile Image" class="profile-image" loading="lazy">
                                                                 </div>
                                                                 <div style="text-align: center;">
                                                                     <h3>Duri Eun</h3>
@@ -84,10 +83,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                                             </div>
                                                         </a>
                                                     </div>
-                                            </div>
 										`,
                 ` 
-                                            <div style="display: grid;height: -webkit-fill-available;gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));">
                                                 <!-- Profile Information -->
  
                                                     <!-- Account Information -->
@@ -143,10 +140,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                                             </div>
                                                         </a>
                                                     </div>
-                                            </div>
 										`,
                 `
-                                                <div style="display: grid;grid-template-rows: repeat(2, 1fr);height: -webkit-fill-available;gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));">
                                                     <!-- Subscription Information -->
                                                     <div class="background-container">
                                                         <a class="background-dot-container">
@@ -184,7 +179,6 @@ document.addEventListener('DOMContentLoaded', function () {
                                                                 </div>
                                                             </a>
                                                         </div>
-                                                </div>
                                             `,
             ];
         }
@@ -204,7 +198,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                                                 </div>
                                                                 <div class="line"></div>
                                                                 <div class="profile-link" onclick="#">
-                                                                    <img src="assets/profile.png" alt="Profile Image" class="profile-image">
+                                                                    <img src="assets/profile.png" alt="Profile Image" class="profile-image" loading="lazy">
                                                                 </div>
                                                                 <div style="text-align: center;">
                                                                     <h3>Duri Eun</h3>
