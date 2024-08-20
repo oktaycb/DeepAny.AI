@@ -17,7 +17,7 @@ export function getCurrentMain() {
 }
 
 export function setWindowHeight(value) {
-	windowHeight = value;
+    windowHeight = value;
 }
 
 export function getWindowHeight() {
@@ -25,18 +25,23 @@ export function getWindowHeight() {
 }
 
 export function setWindowWidth(value) {
-	windowWidth = value;
+    windowWidth = value;
 }
 
 export function getWindowWidth() {
     return windowWidth;
 }
 
-export function setAspectRatio(value) {
-    aspectRatio = value;
+export function setAspectRatio() {
+    if (windowHeight != window.innerHeight || windowWidth != window.innerWidth || aspectRatio != window.innerWidth / window.innerHeight) {
+        setWindowHeight(window.innerHeight);
+        setWindowWidth(window.innerWidth);
+        aspectRatio = getWindowWidth() / getWindowHeight();
+    }
 }
 
 export function getAspectRatio() {
+    setAspectRatio();
     return aspectRatio;
 }
 
@@ -81,67 +86,165 @@ export function getNavbarHeight() {
 }
 
 export function setSidebar(sidebar) {
-	setActualSidebarWidth(sidebar ? sidebar.offsetWidth : 0);
+    setActualSidebarWidth(sidebar ? sidebar.offsetWidth : 0);
 
-	if (getSidebarActive()) {
-		sidebar.style.left = '0';
-		return;
-	}
+    const type = 0; /* 0 = to right, 1 = to left, 2 = to bottom */
 
-	if (sidebar) {
-		sidebar.style.left = -getActualSidebarWidth() + "px";
-	}
+    if (type === 2) {
+        if (getSidebarActive()) {
+            sidebar.style.top = getActualNavbarHeight() + "px";
+            return;
+        }
+
+        if (sidebar) {
+            sidebar.style.top = -getWindowHeight() + "px";
+        }
+    }
+    else if (type === 1) {
+        if (getSidebarActive()) {
+            sidebar.style.right = '0';
+            return;
+        }
+
+        if (sidebar) {
+            sidebar.style.right = -getActualSidebarWidth() + "px";
+        }
+    }
+    else if (type === 0) {
+        if (getSidebarActive()) {
+            sidebar.style.left = '0';
+            return;
+        }
+
+        if (sidebar) {
+            sidebar.style.left = -getActualSidebarWidth() + "px";
+        }
+    }
 }
 
-export function setNavbar(navbar, mains, sidebar) {
-	setActualNavbarHeight(navbar ? navbar.offsetHeight : 0);
-	setNavbarHeight(getActualNavbarHeight() && getNavbarActive() ? getActualNavbarHeight() : 0);
+export function moveMains(mains, currentMain) {
+    if (mains && mains.length > 0) {
+        mains.forEach((main, i) => {
+            const offset = (i - currentMain) * getWindowHeight();
+            main.style.top = `${offset + getNavbarHeight()}px`;
+            main.style.height = `${getWindowHeight() - getNavbarHeight()}px`;
+            main.style.width = `${getWindowWidth()}px`;
+        });
+    }
+}
 
-	if (mains && mains.length > 0) {
-		mains.forEach((main, i) => {
-			const offset = (i - currentMain) * getWindowHeight();
-			main.style.top = `${offset + getNavbarHeight()}px`;
+export function reconstructMainStyles() {
+    let mains = document.querySelectorAll('main');
+    if (mains && mains.length > 0) {
+        mains.forEach((main, i) => {
+			main.style.display = 'flex';
+            main.style.top = `${i * getWindowHeight() + getNavbarHeight()}px`;
 			main.style.height = `${getWindowHeight() - getNavbarHeight()}px`;
 			main.style.width = `${getWindowWidth()}px`;
 		});
-	}
+    }
+}
 
-	if (getNavbarActive()) {
-		navbar.style.top = '0';
+export function setNavbar(navbar, mains, sidebar) {
+    setActualNavbarHeight(navbar ? navbar.offsetHeight : 0);
+    setNavbarHeight(getActualNavbarHeight() && getNavbarActive() ? getActualNavbarHeight() : 0);
+    moveMains(mains, currentMain);
 
-		if (sidebar) {
-			sidebar.style.top = `${getNavbarHeight()}px`;
-			sidebar.style.height = `${getWindowHeight() - getNavbarHeight()}px`;
-		}
-	}
-	else {
-		if (navbar) {
-			navbar.style.top = -getActualNavbarHeight() + "px";
-		}
+    if (getNavbarActive()) {
+        navbar.style.top = '0';
 
-		if (sidebar) {
-			sidebar.style.top = 0;
-			sidebar.style.height = '100vh';
-		}
-	}
+        if (sidebar) {
+            sidebar.style.top = `${getNavbarHeight()}px`;
+            sidebar.style.height = `${getWindowHeight() - getNavbarHeight()}px`;
+        }
+    }
+    else {
+        if (navbar) {
+            navbar.style.top = -getActualNavbarHeight() + "px";
+        }
+
+        if (sidebar) {
+            sidebar.style.top = 0;
+            sidebar.style.height = '100vh';
+        }
+    }
 }
 
 export function showSidebar(sidebar) {
-	setSidebarActive(sidebar);
-	setSidebar(sidebar);
+    setSidebarActive(sidebar);
+    setSidebar(sidebar);
 }
 
 export function showNavbar(navbar, mains, sidebar) {
-	setNavbarActive(navbar);
-	setNavbar(navbar, mains, sidebar);
+    setNavbarActive(navbar);
+    setNavbar(navbar, mains, sidebar);
 }
 
 export function removeSidebar(sidebar) {
-	setSidebarActive(false);
-	setSidebar(sidebar);
+    setSidebarActive(false);
+    setSidebar(sidebar);
 }
 
 export function removeNavbar(navbar, mains, sidebar) {
-	setNavbarActive(false);
-	setNavbar(navbar, mains, sidebar);
+    setNavbarActive(false);
+    setNavbar(navbar, mains, sidebar);
+}
+
+export function cleanPages() {
+    let mains = document.querySelectorAll('main');
+    mains.forEach(main => main.remove());
+}
+
+export function createPages(contents) {
+    const numberOfPages = contents.length;
+    if (numberOfPages <= 0) return;
+
+    for (let index = 0; index < numberOfPages; index++) {
+        const mainElement = document.createElement('main');
+        const mainContainer = document.createElement('div');
+        mainContainer.classList.add('main-container');
+
+        const fadedContent = document.createElement('div');
+        fadedContent.classList.add('faded-content');
+
+        const firstText = document.createElement('div');
+        firstText.classList.add('first-text');
+
+        const h1Element = document.createElement('h1');
+        h1Element.innerHTML = 'DeepAny.<span class="text-gradient">AI</span>';
+
+        const h2Element = document.createElement('h2');
+        h2Element.classList.add('text-gradient');
+        h2Element.textContent = 'bring your imagination come to life.';
+
+        const offsetText = document.createElement('div');
+        offsetText.classList.add('offset-text');
+
+        for (let j = 0; j < 3; j++) {
+            const offsetH1 = document.createElement('h1');
+            offsetH1.classList.add('offset');
+            offsetH1.innerHTML = 'deepany.a<span class="no-spacing">i</span>';
+            offsetText.appendChild(offsetH1);
+        }
+
+        firstText.appendChild(h1Element);
+        firstText.appendChild(h2Element);
+        firstText.appendChild(offsetText);
+        fadedContent.appendChild(firstText);
+
+        mainElement.appendChild(fadedContent);
+        mainElement.appendChild(mainContainer);
+
+        document.body.appendChild(mainElement);
+    }
+}
+
+export function updateContent(contents) {
+    const mainContainers = document.querySelectorAll('.main-container');
+    mainContainers.forEach((mainContainer, index) => {
+        if (contents[index]) {
+            mainContainer.innerHTML = '';
+            mainContainer.insertAdjacentHTML('beforeend', contents[index]);
+        }
+    });
 }

@@ -1,31 +1,24 @@
 ﻿// import { auth } from '../firebase/firebase-auth.js';
 import * as State from '../defaultPageLoads/accessVariables.js';
 
-function isBanned(mainContainers) {
+function isBanned() {
     const isBanned = false;
     return isBanned;
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-	const mainContainers = document.querySelectorAll('.main-container');
+    let pageContents = [];
 
-    if (isBanned(mainContainers)) {
-        mainContainers.forEach((mainContainer) => {
-            mainContainer.innerHTML = '';
-            mainContainer.insertAdjacentHTML('beforeend', `<h1 style="text-align: center;align-content: center;width: inherit;height: inherit;">This account has been permanently banned.<h1>`);
-        });
-        return;
-    }
+    function updatePageContents() {
+        if (isBanned()) {
+            pageContents = [`<h1 style="text-align: center;align-content: center;width: inherit;height: inherit;">This account has been permanently banned.<h1>`];
+            return;
+        }
 
-	function sizeBasedElements() {
-		mainContainers.forEach((mainContainer, index) => {
-			mainContainer.innerHTML = '';
-
-			if (State.getAspectRatio() <= 4 / 3) {
-				switch (index) {
-					case 0:
-						mainContainer.insertAdjacentHTML('beforeend', ` 
-                                            <div style="display: grid;height: -webkit-fill-available;gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));">
+        if (State.getAspectRatio() <= 4 / 3) {
+            pageContents = [
+                ` 
+                                            <div style="display: grid;height: -webkit-fill-available;width: -webkit-fill-available;gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));">
                                                     <!-- Profile Section -->
                                                     <div class="background-container">
                                                         <div class="background-dot-container">
@@ -92,10 +85,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                                         </a>
                                                     </div>
                                             </div>
-										`);
-						break;
-					case 1:
-						mainContainer.insertAdjacentHTML('beforeend', ` 
+										`,
+                ` 
                                             <div style="display: grid;height: -webkit-fill-available;gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));">
                                                 <!-- Profile Information -->
  
@@ -132,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                                                     <div style="margin-left: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));;margin-top: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor)));;">
                                                                         <h4 style="font-weight: 300;">About Me</h4>
                                                                     </div>
-                                                                    <div style="font-size: 0px;margin-left: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));;margin-right: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));;width: -webkit-fill-available;height: 100%;">
+                                                                    <div style="font-size: 0px;margin-left: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));;margin-right: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));margin-bottom: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor)));width: -webkit-fill-available;height: 100%;">
                                                                         <textarea placeholder="Tell us about yourself..." maxlength="2000" style="width: -webkit-fill-available;/*height: 100%;*/"></textarea>
                                                                     </div>
                                                                 <div class="line"></div>
@@ -153,10 +144,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                                         </a>
                                                     </div>
                                             </div>
-										`);
-						break;
-                        case 2:
-                            mainContainer.insertAdjacentHTML('beforeend', `
+										`,
+                `
                                                 <div style="display: grid;grid-template-rows: repeat(2, 1fr);height: -webkit-fill-available;gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));">
                                                     <!-- Subscription Information -->
                                                     <div class="background-container">
@@ -196,14 +185,12 @@ document.addEventListener('DOMContentLoaded', function () {
                                                             </a>
                                                         </div>
                                                 </div>
-                                            `);
-                            break;
-				}
-            }
-            else {
-				switch (index) {
-					case 0:
-						mainContainer.insertAdjacentHTML('beforeend', ` 
+                                            `,
+            ];
+        }
+        else {
+            pageContents = [
+                ` 
                                             <div style="display: contents; height: -webkit-fill-available; gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));">
                                                 <!-- Profile Information -->
                                                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; justify-items: center; gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));">
@@ -272,7 +259,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                                                     <div style="margin-left: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));;margin-top: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor)));;">
                                                                         <h4 style="font-weight: 300;">About Me</h4>
                                                                     </div>
-                                                                    <div style="font-size: 0px;margin-left: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));;margin-right: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));;width: -webkit-fill-available;height: 100%;">
+                                                                    <div style="font-size: 0px;margin-left: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));;margin-right: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));margin-bottom: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor)));width: -webkit-fill-available;height: 100%;">
                                                                         <textarea placeholder="Tell us about yourself..." maxlength="2000" style="width: -webkit-fill-available;/*height: 100%;*/"></textarea>
                                                                     </div>
                                                             </div>
@@ -369,80 +356,30 @@ document.addEventListener('DOMContentLoaded', function () {
                                                     </div>
                                                 </div>
                                             </div>
-										`);
-						break;
-				}
-            }
-		});
-	}
+										`
+            ];
+        }
+    }
+
+    updatePageContents();
+
+    State.createPages(pageContents);
+    State.updateContent(pageContents);
+
+    function sizeBasedElements() {
+        const oldContentLenght = pageContents.length;
+        updatePageContents();
+        const currentContentLenght = pageContents.length;
+        if (oldContentLenght != currentContentLenght) {
+            State.cleanPages(pageContents);
+            State.createPages(pageContents);
+            State.reconstructMainStyles(pageContents);
+        }
+
+        State.updateContent(pageContents);
+    }
 
 	sizeBasedElements();
 
 	window.addEventListener('resize', sizeBasedElements);
-
-	function setupTextRotation(aspectRatio) {
-		let texts = [
-			"Enhanced Face Swapping",
-			"Advanced Inpainting",
-			"Renowned Art Generator"
-		];
-
-		if (aspectRatio <= 4 / 3) {
-			texts = [
-				"Face Swapping",
-				"Inpainting",
-				"Art Generator"
-			];
-		}
-
-		let index = 0;
-		let intervalId;
-		let isFirstHover = true;
-
-		const element = document.getElementById("dynamic-text");
-		const hoverDiv = document.getElementById("hover-div");
-
-		if (hoverDiv && element) {
-			function rotateText() {
-				element.classList.add("change");
-				setTimeout(() => {
-					element.textContent = texts[index];
-					index = (index + 1) % texts.length;
-					element.classList.remove("change");
-				}, 300);
-			}
-
-			function resetText() {
-				isFirstHover = true;
-				clearInterval(intervalId);
-				element.classList.add("change");
-				setTimeout(() => {
-					element.textContent = aspectRatio <= 4 / 3 ? "AI Services" : "AI-Powered Services";
-					element.classList.remove("change");
-				}, 300);
-			}
-
-			let timeoutId;
-
-			hoverDiv.addEventListener("mouseenter", function () {
-				clearTimeout(timeoutId);
-				timeoutId = setTimeout(() => {
-					if (isFirstHover) {
-						isFirstHover = false;
-						rotateText();
-						intervalId = setInterval(rotateText, 3000);
-					}
-				}, 600);
-			});
-
-			hoverDiv.addEventListener("mouseleave", function () {
-				clearTimeout(timeoutId);
-				timeoutId = setTimeout(() => {
-					resetText();
-				}, 600);
-			});
-		}
-	}
-
-	setupTextRotation(State.getAspectRatio());
 });

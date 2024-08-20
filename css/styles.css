@@ -67,7 +67,6 @@
     box-sizing: border-box;
     font-family: "Poppins", sans-serif;
     color: rgba(var(--white), 1);
-    white-space: nowrap;
     /* Transitions */
     transition: color var(--transition-duration-1);
     -webkit-transition: color var(--transition-duration-1);
@@ -98,6 +97,8 @@ html, body {
     justify-content: center;
     margin: clamp(0px, calc(4vh * var(--scale-factor)), calc(8vw * var(--scale-factor)));
     gap: clamp(0px, calc(4vh * var(--scale-factor)), calc(8vw * var(--scale-factor)));
+    width: inherit;
+    height: -webkit-fill-available;
 }
 
 .uppercase {
@@ -138,9 +139,11 @@ li {
     line-height: clamp(0px, calc(2.5vh * 1.75 * var(--scale-factor)), calc(5vw * 1.75 * var(--scale-factor)));
 }
 
-a {
-    text-decoration: none;
+a { 
     font-weight: 400;
+    position: relative; /* Ensure the pseudo-element is positioned relative to the link */
+    display: inline-block; /* Makes sure the pseudo-element fits the content width */
+    text-decoration: none; /* Optional: Remove default underline */
 }
 
     a.text:hover {
@@ -158,8 +161,8 @@ a {
         left: 0;
         /* Set Height & Width */
         width: 100%;
-        height: 2px;
-        background: rgba(255, 255, 255, 0.9);
+        height: 1px;
+        background: rgba(var(--white), 1);
         /* Transitions */
         transition: transform var(--transition-duration-1);
         -webkit-transition: transform var(--transition-duration-1);
@@ -173,14 +176,6 @@ a {
         -o-transform: scaleX(0);
         -ms-transform: scaleX(0);
     }
-
-.nav-links a:hover::before {
-    transform: scaleX(1);
-    -webkit-transform: scaleX(1);
-    -moz-transform: scaleX(1);
-    -o-transform: scaleX(1);
-    -ms-transform: scaleX(1);
-}
 
 main {
     display: none;
@@ -409,7 +404,7 @@ option {
     -moz-transition: top var(--transition-duration-3);
     -o-transition: top var(--transition-duration-3);
     -ms-transition: top var(--transition-duration-3);
-    padding: clamp(0px, calc(1vh * var(--scale-factor)), calc(2vw * var(--scale-factor))) clamp(0px, calc(8vh * var(--scale-factor)), calc(16vw * var(--scale-factor)));
+    padding: clamp(0px, calc(1vh * var(--scale-factor)), calc(2vw * var(--scale-factor))) clamp(0px, calc(4vh * var(--scale-factor)), calc(8vw * var(--scale-factor)));
 }
 
     .navbar:before {
@@ -419,7 +414,7 @@ option {
         left: 0;
         width: 100%;
         height: var(--border);
-        background: linear-gradient(to right, var(--transition-red), var(--red), var(--red), var(--red), var(--red), var(--red), var(--red), var(--red), var(--transition-red));
+        background: linear-gradient(to right, var(--red), var(--red), var(--red), var(--red), var(--red), var(--red), var(--red), var(--red), var(--red));
         /* Transition Effect. */
         transition: --transition-red var(--transition-duration-1);
         -webkit-transition: --transition-red var(--transition-duration-1);
@@ -475,11 +470,11 @@ option {
     z-index: 1000;
     display: flex;
     /* Transitions */
-    transition: top var(--transition-duration-3), left var(--transition-duration-3), height var(--transition-duration-3);
-    -webkit-transition: top var(--transition-duration-3), left var(--transition-duration-3), height var(--transition-duration-3);
-    -moz-transition: top var(--transition-duration-3), left var(--transition-duration-3), height var(--transition-duration-3);
-    -o-transition: top var(--transition-duration-3), left var(--transition-duration-3), height var(--transition-duration-3);
-    -ms-transition: top var(--transition-duration-3), left var(--transition-duration-3), height var(--transition-duration-3);
+    transition: top var(--transition-duration-3), right var(--transition-duration-3),left var(--transition-duration-3), height var(--transition-duration-3);
+    -webkit-transition: top var(--transition-duration-3), right var(--transition-duration-3),left var(--transition-duration-3), height var(--transition-duration-3);
+    -moz-transition: top var(--transition-duration-3), right var(--transition-duration-3),left var(--transition-duration-3), height var(--transition-duration-3);
+    -o-transition: top var(--transition-duration-3), right var(--transition-duration-3),left var(--transition-duration-3), height var(--transition-duration-3);
+    -ms-transition: top var(--transition-duration-3), right var(--transition-duration-3),left var(--transition-duration-3), height var(--transition-duration-3);
 }
 
     .sidebar:before {
@@ -614,11 +609,46 @@ option {
     list-style-type: none;
     margin: 0;
     padding: 0;
+    display: flex;
+    justify-content: space-evenly;
 }
 
     .nav-links li {
+        list-style-type: none;
         position: relative;
-        margin: 0px 8px 0px 8px;
+        padding: 0px clamp(0px, calc(2.5vh* var(--scale-factor)), calc(5vw* var(--scale-factor))) 0px 0px;
+        display: flex;
+        align-items: center;
+    }
+
+        .nav-links li:has(.dropdown-menu)::before {
+            content: "";
+            position: absolute;
+            right: 0;
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 8px solid rgba(255, 255, 255, 1); /* Default down arrow */
+            transition: transform 0.3s ease; /* Smooth transition */
+        }
+
+        .nav-links li:hover::before {
+            transform: rotate(180deg); /* Rotate the arrow 180 degrees */
+        }
+
+    .nav-links a:hover::before {
+        transform: scaleX(1);
+        -webkit-transform: scaleX(1);
+        -moz-transform: scaleX(1);
+        -o-transform: scaleX(1);
+        -ms-transform: scaleX(1);
+    }
+
+    .nav-links li:hover .dropdown-menu {
+        opacity: 1;
+        visibility: visible;
+        top: calc(100% + clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor))));
     }
 
 .dropdown-menu {
@@ -629,7 +659,6 @@ option {
     opacity: 0;
     visibility: hidden;
     background: var(--background-lighter-color);
-    padding: 0px 12px 0px 24px;
     /* Transitions */
     transition: all var(--transition-duration-1);
     -webkit-transition: all var(--transition-duration-1);
@@ -647,14 +676,8 @@ option {
         border-color: #ff7300;
     }
 
-.nav-links li:hover .dropdown-menu {
-    opacity: 1;
-    visibility: visible;
-    top: calc(100% + clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor))));
-}
-
 .dropdown-menu li {
-    margin: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));
+    margin: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor))) clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));
     width: fit-content;
     -webkit-width: -webkit-fit-content;
 }
@@ -677,7 +700,6 @@ option {
 /* background-dot-container.html */
 .background-dot-container-header {
     display: flex;
-    align-items: center;
     justify-content: space-between;
 }
 
@@ -694,25 +716,31 @@ option {
     line-height: 100%;
 }
 
+.capability {
+    font-size: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));
+    line-height: clamp(0px, calc(2vh* 2* var(--scale-factor)), calc(4vw* 2* var(--scale-factor)));
+    padding-left: clamp(0px, calc(2.5vh* var(--scale-factor)), calc(5vw* var(--scale-factor)));
+}
+
+    .capability:before {
+        content: '\2022';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 2vh;
+    }
 
 ul {
-    list-style: none; /* Remove default list markers */
+    list-style: none;
     margin: 0px;
+    padding: 0px;
 }
 
 li {
     position: relative; /* To position the custom marker */
-    padding: 0px 0px 0px clamp(0px, calc(2.5vh* var(--scale-factor)), calc(5vw* var(--scale-factor)));
 }
 
-    li::before {
-        content: '\2022'; /* Unicode for bullet point or use custom icon */
-        position: absolute;
-        left: 0; /* Adjust as needed */
-        top: 50%; /* Center vertically */
-        transform: translateY(-50%); /* Center vertically */
-        font-size: 2vh; /* Customize size */
-    }
 .discount-details {
     font-weight: 400;
     white-space: normal;
@@ -1014,16 +1042,63 @@ input[type='range'] {
             flex: 0;
         }
 
+    .sidebar {
+        width: 50vw;
+    }
+
+    .button-container {
+        width: 100%;
+    }
+
     .hamburger-menu {
+        --line-width: clamp(0px, calc(4vh * var(--scale-factor)), calc(8vw * var(--scale-factor)));
+        --line-height: clamp(0px, calc(0.5vh * var(--scale-factor)), calc(1vw * var(--scale-factor)));
+        --line-spacing: clamp(0px, calc(1vh * var(--scale-factor)), calc(2vw * var(--scale-factor)));
         padding: 0;
         cursor: pointer;
+        position: relative;
+        transition: transform 0.4s ease, height 0.4s ease; /* Increased duration */
         display: block;
+        width: var(--line-width);
+        height: calc(3 * var(--line-height) + 2 * var(--line-spacing)); /* Adjust height to fit all lines */
+        top: calc((var(--line-height) + var(--line-spacing)) * -1);
     }
 
         .hamburger-menu .line {
-            width: clamp(0px, calc(4.2vh * var(--scale-factor)), calc(8.4vw * var(--scale-factor)));
-            height: clamp(0px, calc(0.6vh * var(--scale-factor)), calc(1.2vw * var(--scale-factor)));
-            margin: clamp(2px, calc(2vw * var(--scale-factor)), 5px);
+            border: var(--border) solid rgba(var(--white), 255);
+            background: rgba(var(--white), 255);
+            width: var(--line-width);
+            height: var(--line-height);
+            position: absolute;
+            right: 0;
+            transition: all 0.3s ease;
+            transform-origin: center; /* Ensures rotation happens around the center */
+        }
+
+            .hamburger-menu .line:nth-child(1) {
+                top: 0;
+            }
+
+            .hamburger-menu .line:nth-child(2) {
+                top: calc(var(--line-height) + var(--line-spacing));
+            }
+
+            .hamburger-menu .line:nth-child(3) {
+                top: calc(2 * (var(--line-height) + var(--line-spacing)));
+            }
+
+        .hamburger-menu.open .line:nth-child(1) {
+            transform: rotate(45deg);
+            top: calc(50% - (var(--line-height) / 2));
+        }
+
+        .hamburger-menu.open .line:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-menu.open .line:nth-child(3) {
+            transform: rotate(-45deg);
+            top: calc(50% - (var(--line-height) / 2));
         }
 
     .logo h1 {

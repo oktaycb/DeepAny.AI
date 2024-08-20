@@ -17,6 +17,7 @@ export function loadScrollingAndMain(navbar, mains, sidebar) {
 		let touchStartTime = 0;
 
 		function showMain(index, transitionDuration = 250) {
+			console.log(mains.length);
 			if (index >= 0 && index < mains.length && !scrolling) {
 				scrolling = true;
 				const wentDown = index >= State.getCurrentMain();
@@ -32,7 +33,7 @@ export function loadScrollingAndMain(navbar, mains, sidebar) {
 			}
 		}
 
-		document.addEventListener('keydown', (event) => {
+		const handleKeydown = (event) => {
 			if (!scrolling) {
 				if (event.key === 'ArrowDown' || event.key === 'ArrowRight') {
 					event.preventDefault();
@@ -42,12 +43,12 @@ export function loadScrollingAndMain(navbar, mains, sidebar) {
 					showMain(State.getCurrentMain() - 1);
 				}
 			}
-		});
+		};
 
-		document.addEventListener('wheel', (event) => {
-			if (event.ctrlKey) 
+		const handleWheel = (event) => {
+			if (event.ctrlKey)
 				return;
-			
+
 			if (!scrolling) {
 				if (event.deltaY > 0) {
 					showMain(State.getCurrentMain() + 1);
@@ -55,9 +56,9 @@ export function loadScrollingAndMain(navbar, mains, sidebar) {
 					showMain(State.getCurrentMain() - 1);
 				}
 			}
-		});
+		};
 
-		function handleEvent(event) {
+		const handleEvent = (event) => {
 			if (event) {
 				const clientY = event.type === 'touchstart' ? event.touches[0].clientY : event.clientY;
 				const clientX = event.type === 'touchstart' ? event.touches[0].clientX : event.clientX;
@@ -78,9 +79,20 @@ export function loadScrollingAndMain(navbar, mains, sidebar) {
 					}
 				}
 			}
-		}
+		};
 
-		function handleSwipe() {
+		const handleTouchMove = (event) => {
+			touchEndY = event.changedTouches[0].clientY;
+			handleSwipe();
+		};
+
+		const handleTouchStart = (event) => {
+			handleEvent(event);
+			touchStartY = event.touches[0].clientY;
+			touchStartTime = Date.now();
+		};
+
+		const handleSwipe = () => {
 			const touchDistance = touchEndY - touchStartY;
 			const touchDuration = Date.now() - touchStartTime;
 			if (Math.abs(touchDistance) > swipeThreshold && touchDuration < 500) {
@@ -90,19 +102,22 @@ export function loadScrollingAndMain(navbar, mains, sidebar) {
 					showMain(State.getCurrentMain() - 1);
 				}
 			}
-		}
+		};
 
+		document.addEventListener('keydown', handleKeydown);
+		document.addEventListener('wheel', handleWheel);
 		document.addEventListener('click', handleEvent);
 		document.addEventListener('mousemove', handleEvent);
-		document.addEventListener('touchmove', (event) => {
-			touchEndY = event.changedTouches[0].clientY;
-			handleSwipe();
-		});
+		document.addEventListener('touchmove', handleTouchMove);
+		document.addEventListener('touchstart', handleTouchStart);
 
-		document.addEventListener('touchstart', (event) => {
-			handleEvent(event);
-			touchStartY = event.touches[0].clientY;
-			touchStartTime = Date.now();
-		});
+		return function cleanup() {
+			document.removeEventListener('keydown', handleKeydown);
+			document.removeEventListener('wheel', handleWheel);
+			document.removeEventListener('click', handleEvent);
+			document.removeEventListener('mousemove', handleEvent);
+			document.removeEventListener('touchmove', handleTouchMove);
+			document.removeEventListener('touchstart', handleTouchStart);
+		};
 	}
 }

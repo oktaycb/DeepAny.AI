@@ -1,7 +1,15 @@
 import { auth, serversRef } from './firebase/firebase-config.js';
 import { getCache, setCache } from './timeLimitedCache.js';
+import * as State from './defaultPageLoads/accessVariables.js';
 
 document.addEventListener("DOMContentLoaded", async function () {
+	// TODO: Recieve prices from the server itself.
+	let credits = [100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000];
+	let prices = [9.99, 14.99, 24.99, 44.99, 99.99, 174.99, 299.99, 624.99, 999.99];
+	let durationsInDays = [1, 7, 30, 90, 365, -1];
+	let subprices = [19.99, 9.99 * durationsInDays[1], 4.99 * durationsInDays[2], 3.49 * durationsInDays[3], 1.99 * durationsInDays[4], 1399.99];
+	const durations = ["1 day", "1 week", "1 month", "3 months", "1 year", "Lifetime"];
+
 	async function fetchServerAddressAPI() {
 		const cacheKey = 'serverAddressAPI';
 		const cachedAddress = getCache(cacheKey);
@@ -68,39 +76,25 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 	let conversionRates = await fetchConversionRates();
 
-	// SVG icons for the feature list
-	const checkmarkIcon = `
-		<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-			<path d="M20 6 9 17l-5-5"></path>
-		</svg>
-	`;
+	const checkmarkIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>`;
+	const xIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x plans_x__KKb0t"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>`;
 
-	const xIcon = `
-		<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x plans_x__KKb0t">
-			<path d="M18 6 6 18"></path>
-			<path d="m6 6 12 12"></path>
-		</svg>
-	`;
+	const SingleCreditFPS = 120;
+	const creditPerFrames = 60;
+	const FPS = 30;
+	const minute = 60 /*seconds*/ * 1 /*minute*/;
+	const creditVideo = creditPerFrames / SingleCreditFPS;
+	const creditPerInpaint = 2;
+	const creditPerArtGeneration = 1;
 
-	// Capabilities data
-	const capabilities = {
-		faceSwap: {
-			name: "Video Swap",
-			formula: (credits) =>`${Math.floor((credits * 60) / (30 * 60))} minutes of vids.`,
-		},
-		imageSwap: {
-			name: "Image Swap",
-			formula: (credits) => `${credits} imgs.`,
-		},
-		inpainter: {
-			name: "Inpainter",
-			formula: (credits, price, currencySymbol) =>
-				`process/5 credits (${currencySymbol}${price * 5}) = ${Math.floor(credits / 5)} imgs.`,
-		},
-		artGeneration: {
-			name: "Art Generation",
-			formula: (credits) => `${credits} imgs.`,
-		},
+	// Helper function to calculate credits based on state
+	const getCapabilities = (isAspectRatioLow, price, currencySymbol) => {
+		return {
+			faceSwap: { name: "Video Swap", formula: (credits) => isAspectRatioLow ? `${Math.floor((credits * 60) / (FPS * minute))} mins` : `${creditVideo} cred (${currencySymbol}${price * creditVideo})/${creditPerFrames} fps (${Math.floor((credits * SingleCreditFPS) / (FPS * minute))} mins)` },
+			imageSwap: { name: "Image Swap", formula: (credits) => isAspectRatioLow ? `${Math.floor(credits)} process` : `1 cred (${currencySymbol}${price})/face swap (${Math.floor(credits)})` },
+			inpainter: { name: "Inpainter", formula: (credits) => isAspectRatioLow ? `${Math.floor(credits / creditPerInpaint)} process` : `${creditPerInpaint} creds (${currencySymbol}${price * creditPerInpaint})/inpaint (${Math.floor(credits / creditPerInpaint)})` },
+			artGeneration: { name: "Art", formula: (credits) => isAspectRatioLow ? `${Math.floor(credits)} process` : `${creditPerArtGeneration} cred (${currencySymbol}${price})/art (${Math.floor(credits)})` }
+		};
 	};
 
 	// Function to update the capabilities list
@@ -110,13 +104,14 @@ document.addEventListener("DOMContentLoaded", async function () {
 		// Clear previous content
 		capabilityListElement.innerHTML = "";
 
+		const capabilities = getCapabilities(State.getAspectRatio() <= 4 / 3, price, currencySymbol);
+
 		// If in subscription mode, display unlimited for all capabilities, specific limit for video
 		if (isSubscriptionMode) {
 			const faceSwapElement = document.createElement("li");
 			faceSwapElement.classList.add("capability");
 			faceSwapElement.innerHTML = `
-            ${capabilities.faceSwap.name}: 2 hour per process
-        `;
+            ${capabilities.faceSwap.name}: 2 hour per process`;
 			capabilityListElement.appendChild(faceSwapElement);
 
 			// Other capabilities will be shown as unlimited
@@ -184,57 +179,65 @@ document.addEventListener("DOMContentLoaded", async function () {
 		});
 	}
 
+	function calculatePrice(value) {
+		return prices[value - 1];
+	}
+
+	function calculateSubPrice(value) {
+		return subprices[value - 1];
+	}
+
+	function calculateCredit(value) {
+		return credits[value - 1];
+	}
+
+	function formatNumber(value, currency) {
+		// Determine the locale based on the currency
+		let locale;
+		switch (currency) {
+			case 'USD':
+				locale = 'en-US'; // United States Dollar
+				break;
+			case 'EUR':
+				locale = 'de-DE'; // Euro
+				break;
+			case 'GBP':
+				locale = 'en-GB'; // British Pound
+				break;
+			case 'TRY':
+				locale = 'tr-TR'; // Turkish Lira
+				break;
+			default:
+				locale = 'en-US'; // Default to US English
+		}
+
+		// Format the number based on the determined locale
+		return new Intl.NumberFormat(locale, {
+			style: 'decimal',
+			minimumFractionDigits: 2,
+			maximumFractionDigits: 2,
+		}).format(value);
+	}
+
 	async function createPayment() {
-		// Fetch conversion rates from Frankfurter API
 		let selectedCurrency = 'USD';
 
-		// These data's are needed in server to determine the payment type.
 		const sliderElement = document.getElementById("slider");
 		const subscriptionMode = document.getElementById("subscription-mode");
 		const creditsMode = document.getElementById("credits-mode");
-
-		// These data's are not usefull for server-side but client-side, helps user to select a better plan.
 		const currencyOptions = document.querySelectorAll(".background-dot-container-option[data-currency]");
 		const dailyPriceAmountElement = document.getElementById("cost-per-day");
 		const discountElement = document.getElementById("discount");
 		const discountDetailsElement = document.getElementById("discount-details");
 		const purchase = document.getElementById("purchase");
 
-		// Initial prices and durations
-		let credits = [250, 500, 1000, 2500, 5000, 10000, 25000, 50000];
-		let prices = [9.99, 24.99, 44.99, 99.99, 174.99, 299.99, 624.99, 999.99];
-		let durationsInDays = [1, 7, 30, 90, 365, -1];
-		let subprices = [99.99, 49.99 * durationsInDays[1], 24.99 * durationsInDays[2], 9.99 * durationsInDays[3], 4.99 * durationsInDays[4], 1499.99];
-		const durations = ["1 day", "1 week", "1 month", "3 months", "1 year", "Lifetime"];
-
-		function calculatePrice(value) {
-			return prices[value - 1];
-		}
-
-		function calculateSubPrice(value) {
-			return subprices[value - 1];
-		}
-
-		function calculateCredit(value) {
-			return credits[value - 1];
-		}
-
-		function formatNumber(value, precision) {
-			if (value === 0) return '0';
-			return Number(value).toFixed(precision).replace(/\.?0+$/, '');
-		}
-
-
 		function updatePrices() {
-			if (!conversionRates) return;
-
 			updateSliderRange();
 			const value = sliderElement.value;
 			const isCreditsMode = creditsMode.classList.contains("selected");
 			const isSubscriptionMode = subscriptionMode.classList.contains("selected");
 			const currencySymbol = getCurrencySymbol(selectedCurrency);
 
-			// Update the feature list based on the mode
 			updateFeatureList(isCreditsMode);
 
 			let dailyPriceAmount;
@@ -242,49 +245,45 @@ document.addEventListener("DOMContentLoaded", async function () {
 			let displayText;
 			let discountMessage = '';
 
-			// Calculate cost per day and discount based on mode
 			if (isCreditsMode) {
 				const price = calculatePrice(value);
 				const creditAmount = calculateCredit(value);
 				dailyPriceAmount = creditAmount > 0 ? Math.max(0, price / creditAmount) : null;
 
 				priceInSelectedCurrency = price;
-				if (selectedCurrency !== 'USD' && selectedCurrency !== 'BTC') {
+				if (selectedCurrency !== 'USD' && selectedCurrency !== 'BTC' && conversionRates) {
 					priceInSelectedCurrency = price * conversionRates[selectedCurrency];
 					if (dailyPriceAmount !== null) {
 						dailyPriceAmount *= conversionRates[selectedCurrency];
 					}
 				}
 
-				displayText = `${currencySymbol}${formatNumber(dailyPriceAmount, 3)} `;
-
-				// Update the capability list based on the current credits and mode
-				updateCapabilityList(creditAmount, formatNumber(dailyPriceAmount, 3), currencySymbol, isSubscriptionMode);
+				displayText = `${currencySymbol}${formatNumber(dailyPriceAmount, selectedCurrency)} `;
+				updateCapabilityList(creditAmount, formatNumber(dailyPriceAmount, selectedCurrency), currencySymbol, isSubscriptionMode);
 
 				const basePrice = prices[0];
 				const baseCredits = credits[0];
 				const totalBasePrice = (basePrice / baseCredits) * credits;
-				let discount = Math.max(0, totalBasePrice - price); // Ensure discount is not negative
+				let discount = Math.max(0, totalBasePrice - price);
 
-				if (selectedCurrency !== 'USD' && selectedCurrency !== 'BTC') {
+				if (selectedCurrency !== 'USD' && selectedCurrency !== 'BTC' && conversionRates) {
 					discount *= conversionRates[selectedCurrency];
 				}
 
 				document.getElementById('cost-per-day-unit').textContent = '/credit';
 				discountMessage = 'You can spend your credits anytime.';
-				discountDetailsElement.textContent = `Total payment is ${currencySymbol}${formatNumber(priceInSelectedCurrency, 3)}.`;
+				discountDetailsElement.textContent = `Total payment is ${currencySymbol}${formatNumber(priceInSelectedCurrency, selectedCurrency)}.`;
 
 				dailyPriceAmountElement.textContent = displayText;
 				if (discountElement)
 					discountElement.textContent = discountMessage;
 			} else {
-				// Subscription mode
 				const price = calculateSubPrice(value);
 				const durationDays = durationsInDays[value - 1];
 				dailyPriceAmount = durationDays > 0 ? Math.max(0, price / durationDays) : null;
 
 				priceInSelectedCurrency = price;
-				if (selectedCurrency !== 'USD' && selectedCurrency !== 'BTC') {
+				if (selectedCurrency !== 'USD' && selectedCurrency !== 'BTC' && conversionRates) {
 					priceInSelectedCurrency = price * conversionRates[selectedCurrency];
 					if (dailyPriceAmount !== null) {
 						dailyPriceAmount *= conversionRates[selectedCurrency];
@@ -293,26 +292,24 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 				updateCapabilityList(0, 0, 0, isSubscriptionMode);
 
-				displayText = durationDays === -1 ? `${currencySymbol}${formatNumber(priceInSelectedCurrency, 2)}` : `${currencySymbol}${formatNumber(dailyPriceAmount, 2)}`;
+				displayText = durationDays === -1 ? `${currencySymbol}${formatNumber(priceInSelectedCurrency, selectedCurrency)}` : `${currencySymbol}${formatNumber(dailyPriceAmount, selectedCurrency)}`;
 				document.getElementById('cost-per-day-unit').textContent = '/day';
 
 				if (durationDays === -1) {
-					// Lifetime plan
 					document.getElementById('cost-per-day-unit').textContent = '';
 					discountMessage = 'Use our products without credit limitations.';
 					discountDetailsElement.textContent = '';
 				} else {
-					// Regular plans
-					const daysInPeriod = durationsInDays[0]; // Assuming daily is always the first period
+					const daysInPeriod = durationsInDays[0];
 					const costForPeriod = prices[0] * (durationDays / daysInPeriod);
 					let discount = costForPeriod - price;
 
-					if (selectedCurrency !== 'USD' && selectedCurrency !== 'BTC') {
+					if (selectedCurrency !== 'USD' && selectedCurrency !== 'BTC' && conversionRates) {
 						discount *= conversionRates[selectedCurrency];
 					}
 
 					discountMessage = 'Use our products without credit limitations.';
-					discountDetailsElement.textContent = `Total payment is ${currencySymbol}${formatNumber(priceInSelectedCurrency, 3)}`;
+					discountDetailsElement.textContent = `Total payment is ${currencySymbol}${formatNumber(priceInSelectedCurrency, selectedCurrency)}`;
 				}
 
 				dailyPriceAmountElement.textContent = displayText;
@@ -322,17 +319,10 @@ document.addEventListener("DOMContentLoaded", async function () {
 		}
 
 		function getCurrencySymbol(currency) {
-			const symbols = {
-				USD: '$',
-				EUR: '€',
-				GBP: '£',
-				TRY: '₺',
-				BTC: '$',
-			};
+			const symbols = { USD: '$', EUR: '€', GBP: '£', TRY: '₺', BTC: '₿' };
 			return symbols[currency] || currency;
 		}
 
-		// Set event listeners for currency options
 		currencyOptions.forEach(option => {
 			option.addEventListener("click", () => {
 				currencyOptions.forEach(opt => opt.classList.remove("selected"));
@@ -345,18 +335,14 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 		function updateSliderRange() {
 			const isCreditsMode = creditsMode.classList.contains("selected");
-
-			if (isCreditsMode) {
+			if (isCreditsMode) 
 				sliderElement.max = credits.length;
-			} else {
-				sliderElement.max = durations.length;
-			}
-
+			else sliderElement.max = durations.length;
+			
 			// Ensure the current value is within the new range
 			const currentValue = sliderElement.value;
-			if (currentValue > sliderElement.max) {
+			if (currentValue > sliderElement.max) 
 				sliderElement.value = sliderElement.max;
-			}
 		}
 
 		function updateSliderValue() {
@@ -389,18 +375,11 @@ document.addEventListener("DOMContentLoaded", async function () {
 			updateSliderValue();
 		});
 
-		// Initial slider range update
 		updateSliderRange();
-
-		// Initial update
 		updateSliderValue();
 
-		// User clicked on purchase button
-		purchase.addEventListener("click", async () => {
-			await handleBuyNow();
-		});
+		purchase.addEventListener("click", async () => { await handleBuyNow(); });
 
-		// Function to handle charge creation and payment
 		async function handleBuyNow() {
 			{
 				try {

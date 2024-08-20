@@ -2,7 +2,9 @@ import { auth } from '../firebase/firebase-config.js';
 import { hideLoadingScreen } from './hideLoadingScreen.js';
 import { loadBars } from './loadBars.js';
 import { loadBlurEffect } from './loadBlurEffect.js';
+import { loadScrollingAndMain } from './loadScrollingAndMain.js';
 import * as State from './accessVariables.js';
+
 document.addEventListener('DOMContentLoaded', function () {
 	function loadDefaultHTML() {
 		loadBars();
@@ -23,36 +25,53 @@ document.addEventListener('DOMContentLoaded', function () {
 	
 			State.removeSidebar(sidebar);
 			setTimeout(() => { State.showSidebar(sidebar); }, 1);
+			//setTimeout(() => { State.getAspectRatio() <= 4 / 3 ? State.removeSidebar(sidebar) : State.showSidebar(sidebar); }, 1);
 		}
 		else {
 			State.showNavbar(navbar, mains, sidebar);
 			State.showSidebar(sidebar);
+			//State.getAspectRatio() <= 4 / 3 ? State.removeSidebar(sidebar) : State.showSidebar(sidebar);
+
 			//setTimeout(() => { State.removeNavbar(navbar, mains, sidebar); }, 1);
 			//setTimeout(() => { State.removeSidebar(sidebar); }, 1);
 		}
 
-		setTimeout(() => { hideLoadingScreen(loadingScreen, navbar, mains, sidebar); }, 0);
+		hideLoadingScreen(loadingScreen, navbar, mains, sidebar);
 
-		State.setNavbar(navbar, mains, sidebar);
-		State.setSidebar(sidebar);
+		let cleanupEvents = null;
 
 		function sizeBasedElements() {
-			State.setWindowHeight(window.innerHeight);
-			State.setWindowWidth(window.innerWidth);
-			State.setAspectRatio(State.getWindowWidth() / State.getWindowHeight());
+			hamburgerMenu = document.querySelector('.hamburger-menu');
+			navbar = document.querySelector('.navbar');
+			navLinks = document.querySelectorAll('.navbar .nav-links');
+			navContainer = document.querySelector('.navbar .container');
+			loadingScreen = document.querySelector('.loading-screen');
+			mains = document.querySelectorAll('main');
+			sidebar = document.querySelector('.sidebar');
+
+			if (cleanupEvents) {
+				cleanupEvents();
+			}
+
+			cleanupEvents = loadScrollingAndMain(navbar, mains, sidebar);
+
 			State.setNavbar(navbar, mains, sidebar);
 			State.setSidebar(sidebar);
 
 			if (State.getAspectRatio() <= 4 / 3) {
 				if (!hamburgerMenu) {
 					navContainer.insertAdjacentHTML('beforeend', `
-						<div class="hamburger-menu">
+						<div class="hamburger-menu open">
 							<div class="line"></div>
 							<div class="line"></div>
 							<div class="line"></div>
 						</div>
 					`);
 					hamburgerMenu = document.querySelector('.hamburger-menu');
+					hamburgerMenu.addEventListener('click', function () {
+						this.classList.toggle('open');
+						State.getSidebarActive() ? State.removeSidebar(sidebar) : State.showSidebar(sidebar);
+					});
 
 					if (navLinks && navLinks.length > 0) {
 						navLinks.forEach(navLink => navLink.remove());
@@ -62,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function () {
 			} else {
 				if (!navLinks || navLinks.length === 0) {
 					navContainer.insertAdjacentHTML('beforeend', `
-						<ul class="nav-links">
+						<ul class="nav-links" style="display: grid;grid-template-columns: 2fr 1fr 2fr;justify-items: center;">
 							<li>
 								<a class="text" href="#">Services</a>
 								<ul class="dropdown-menu">
@@ -81,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function () {
 							</li>
 							<li><a class="text" href="pricing.html">Pricing</a></li>
 						</ul>
-						<ul class="nav-links">
+						<ul class="nav-links" style="display: flex;flex-direction: column;align-items: flex-end;">
 							<div class="button-container">
 								<button id="registerButton">Register</button>
 								<button class="important" id="loginButton">Login</button>

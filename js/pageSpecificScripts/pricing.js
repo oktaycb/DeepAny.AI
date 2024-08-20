@@ -1,24 +1,16 @@
+import * as State from '../defaultPageLoads/accessVariables.js';
+
 document.addEventListener('DOMContentLoaded', function () {
-	const mainContainers = document.querySelectorAll('.main-container');
+    let pageContents = [];
 
-	function sizeBasedElements() {
-		mainContainers.forEach((mainContainer, index) => {
-			mainContainer.innerHTML = '';
-
-			switch (index) {
-				case 0:
-					mainContainer.insertAdjacentHTML('beforeend', `
+    function updatePageContents() {
+			pageContents = [`
 										<div style="display: grid;gap: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));justify-content: center;font-weight: 600;">
 											<div style="display: flex;flex-direction: column; gap: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));">
 															<div class="background-container">
 																<p class="background-dot-container-option selected" id="credits-mode">Credits</p>
 																<p class="background-dot-container-option" id="subscription-mode">Subscription</p>
 																<p class="background-dot-container-option not-available" id="renewal-mode">Renewal</p>
-															</div>
-
-															<div class="background-container" style="grid: unset; display: grid;grid-template-columns: 1fr 1fr;">
-																<input type="range" id="slider" min="1" max="6" step="1" value="1"></input>
-																<p class="slider-value">1 day</p>
 															</div>
 
 
@@ -29,10 +21,17 @@ document.addEventListener('DOMContentLoaded', function () {
 																<p class="background-dot-container-option" data-currency="TRY" style="height: 100%;">₺TRY</p>
 																<p class="background-dot-container-option important-outline" data-currency="BTC" style="height: 100%;">COIN</p>
 															</div>
+
+
 												<div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
 													<div style="display: flex; gap: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor)));">
 														<a class="background-dot-container">
 															<div class="background-dot-container-content" style="min-width: clamp(0px, calc(50vh* var(--scale-factor)), calc(50vw* var(--scale-factor)));">
+															<div class="background-container" style="grid: unset; display: grid;grid-template-columns: 1fr 1fr;">
+																<input type="range" id="slider" min="1" max="6" step="1" value="1"></input>
+																<p class="slider-value">1 day</p>
+															</div>
+																	<div class="line"></div>
 																<div class="background-dot-container-header">
 																	<p class="plans-name text-gradient">Starter</p>
 																	<div class="plans-popular">
@@ -52,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function () {
 																	<div id="features-list"></div>
 																	<div class="line"></div>
 																	<h4 style="margin-bottom: 1vh;">Plan Capability</h4>
-																	<ul class="background-container" id="capability-list" style="display: flow;background: transparent;"></ul>
+																	<ul id="capability-list" style="display: flow;background: transparent;"></ul>
 																</div>
 															</div>
 														</a>
@@ -60,10 +59,25 @@ document.addEventListener('DOMContentLoaded', function () {
 												</div>
 											</div>
 										</div>
-									`);
-					break;
-			}
-		});
+									`];
+    }
+
+    updatePageContents();
+
+	State.createPages(pageContents);
+	State.updateContent(pageContents);
+
+	function sizeBasedElements() {
+		const oldContentLenght = pageContents.length;
+		updatePageContents();
+		const currentContentLenght = pageContents.length;
+		if (oldContentLenght != currentContentLenght) {
+			State.cleanPages(pageContents);
+			State.createPages(pageContents);
+			State.reconstructMainStyles(pageContents);
+		}
+
+		State.updateContent(pageContents);
 	}
 
 	sizeBasedElements();

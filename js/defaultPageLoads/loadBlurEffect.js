@@ -1,5 +1,5 @@
 export function loadBlurEffect(loadingScreen, mains, sidebar, navbar) {
-const speedBlurAmount = 0.5;
+    const speedBlurAmount = 2;
     const softBlurAmount = 12;
     const initialBlurAmount = 100 / softBlurAmount;
     const decreaseAmount = 1 / softBlurAmount;
