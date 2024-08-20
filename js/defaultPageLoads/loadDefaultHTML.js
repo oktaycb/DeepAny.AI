@@ -1,9 +1,172 @@
-import { auth } from '../firebase/firebase-config.js';
-import { hideLoadingScreen } from './hideLoadingScreen.js';
-import { loadBars } from './loadBars.js';
-import { loadBlurEffect } from './loadBlurEffect.js';
-import { loadScrollingAndMain } from './loadScrollingAndMain.js';
 import * as State from './accessVariables.js';
+
+// If you are looking for buttons and services li's refer to sizeBasedElements inside loadDefaultHTML.
+const websiteTitle = document.title.split('.')[0];
+const loadSideBarAndNavBar = `
+			<nav class="navbar">
+				<div class="container">
+					<div class="logo">
+						<img onclick="location.href='index.html';" style="cursor: pointer;" class="logoimg" src="assets/logo.png" alt="Logo">
+						<h2 onclick="location.href='index.html';" style="cursor: pointer;">${websiteTitle}.<span class="text-gradient">AI</span></h2>
+					</div>
+				</div>
+			</nav>
+			<nav class="sidebar">
+				<div style="flex: 1; justify-content: space-between;">
+					<div>
+						<button id="exploreButton"><img src="./assets/explore.svg">Explore</button>
+						<button id="profileButton"><img src="./assets/profile.svg">Profile</button>
+						<button id="premiumButton" class="important"><img src="./assets/premium.svg">Premium</button>
+					</div>
+					<div>
+						<button id="discordButton"><img src="./assets/discord.svg">Discord </button>
+						<button id="twitterButton"><img src="./assets/x.svg">X</button>
+						<button id="redditButton"><img src="./assets/reddit.svg">Reddit</button>
+					</div>
+					<div>
+						<button id="contactButton"><img src="./assets/contact.svg" alt="Contact Icon">Contact</button>
+						<button><img src="./assets/trophy.svg">Affiliation</button>
+						<button><img src="./assets/settings.svg">Settings</button>
+					</div>
+				</div>
+			</nav>
+			<div class="loading-screen">
+				<div class="loading-spinner"></div>
+			</div>
+		`;
+
+function loadBars() {
+	document.body.insertAdjacentHTML('afterbegin', loadSideBarAndNavBar);
+	document.getElementById('contactButton').addEventListener('click', function () { window.location.href = 'mailto:durieun02@gmail.com'; });
+	document.getElementById('discordButton').addEventListener('click', function () { window.open('https://discord.gg/6FTmwtaK', '_blank'); });
+	document.getElementById('twitterButton').addEventListener('click', function () { window.open('https://x.com/zeroduri', '_blank'); });
+	document.getElementById('redditButton').addEventListener('click', function () { window.open('https://www.reddit.com/r/bodyswapai/', '_blank'); });
+	document.getElementById('exploreButton').addEventListener('click', function () { window.location.href = 'index.html'; });
+	document.getElementById('profileButton').addEventListener('click', function () { window.location.href = 'profile.html'; });
+	document.getElementById('premiumButton').addEventListener('click', function () { window.location.href = 'pricing.html'; });
+}
+
+const swipeThreshold = 50;
+
+function loadScrollingAndMain(navbar, mains, sidebar) {
+	if (mains && mains.length > 0) {
+		mains.forEach((main, index) => {
+			main.style.display = 'flex';
+			main.style.top = `${index * State.getWindowHeight() + State.getNavbarHeight()}px`;
+			main.style.height = `${State.getWindowHeight() - State.getNavbarHeight()}px`;
+			main.style.width = `${State.getWindowWidth()}px`;
+		});
+
+		let scrolling = false;
+		let touchStartY = 0;
+		let touchEndY = 0;
+		let touchStartTime = 0;
+
+		function showMain(index, transitionDuration = 250) {
+			console.log(mains.length);
+			if (index >= 0 && index < mains.length && !scrolling) {
+				scrolling = true;
+				const wentDown = index >= State.getCurrentMain();
+				State.setCurrentMain(index);
+				if (wentDown) {
+					State.removeNavbar(navbar, mains, sidebar);
+				} else {
+					State.showNavbar(navbar, mains, sidebar);
+				}
+				setTimeout(() => {
+					scrolling = false;
+				}, transitionDuration);
+			}
+		}
+
+		const handleKeydown = (event) => {
+			if (!scrolling) {
+				if (event.key === 'ArrowDown' || event.key === 'ArrowRight') {
+					event.preventDefault();
+					showMain(State.getCurrentMain() + 1);
+				} else if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') {
+					event.preventDefault();
+					showMain(State.getCurrentMain() - 1);
+				}
+			}
+		};
+
+		const handleWheel = (event) => {
+			if (event.ctrlKey)
+				return;
+
+			if (!scrolling) {
+				if (event.deltaY > 0) {
+					showMain(State.getCurrentMain() + 1);
+				} else if (event.deltaY < 0) {
+					showMain(State.getCurrentMain() - 1);
+				}
+			}
+		};
+
+		const handleEvent = (event) => {
+			if (event) {
+				const clientY = event.type === 'touchstart' ? event.touches[0].clientY : event.clientY;
+				const clientX = event.type === 'touchstart' ? event.touches[0].clientX : event.clientX;
+
+				if (clientX > State.getActualSidebarWidth()) {
+					if (clientY <= State.getActualNavbarHeight()) {
+						State.showNavbar(navbar, mains, sidebar);
+					} else if (event.type === 'click') {
+						// State.removeNavbar(navbar, mains, sidebar);
+					}
+				}
+
+				if (clientY > State.getActualNavbarHeight()) {
+					if (!clientX) {
+						State.showSidebar(sidebar);
+					} else if (event.type === 'click' && clientX > State.getActualSidebarWidth()) {
+						State.removeSidebar(sidebar);
+					}
+				}
+			}
+		};
+
+		const handleTouchMove = (event) => {
+			touchEndY = event.changedTouches[0].clientY;
+			handleSwipe();
+		};
+
+		const handleTouchStart = (event) => {
+			handleEvent(event);
+			touchStartY = event.touches[0].clientY;
+			touchStartTime = Date.now();
+		};
+
+		const handleSwipe = () => {
+			const touchDistance = touchEndY - touchStartY;
+			const touchDuration = Date.now() - touchStartTime;
+			if (Math.abs(touchDistance) > swipeThreshold && touchDuration < 500) {
+				if (touchDistance < 0) {
+					showMain(State.getCurrentMain() + 1);
+				} else {
+					showMain(State.getCurrentMain() - 1);
+				}
+			}
+		};
+
+		document.addEventListener('keydown', handleKeydown);
+		document.addEventListener('wheel', handleWheel);
+		document.addEventListener('click', handleEvent);
+		document.addEventListener('mousemove', handleEvent);
+		document.addEventListener('touchmove', handleTouchMove);
+		document.addEventListener('touchstart', handleTouchStart);
+
+		return function cleanup() {
+			document.removeEventListener('keydown', handleKeydown);
+			document.removeEventListener('wheel', handleWheel);
+			document.removeEventListener('click', handleEvent);
+			document.removeEventListener('mousemove', handleEvent);
+			document.removeEventListener('touchmove', handleTouchMove);
+			document.removeEventListener('touchstart', handleTouchStart);
+		};
+	}
+}
 
 document.addEventListener('DOMContentLoaded', function () {
 	function loadDefaultHTML() {
@@ -16,27 +179,13 @@ document.addEventListener('DOMContentLoaded', function () {
 		let loadingScreen = document.querySelector('.loading-screen');
 		let mains = document.querySelectorAll('main');
 		let sidebar = document.querySelector('.sidebar');
-		let animation = false;
-		if (animation) {
-			//loadBlurEffect(loadingScreen, mains, sidebar, navbar);
-	
-			State.removeNavbar(navbar, mains, sidebar);
-			setTimeout(() => { State.showNavbar(navbar, mains, sidebar); }, 1);
-	
-			State.removeSidebar(sidebar);
-			setTimeout(() => { State.showSidebar(sidebar); }, 1);
-			//setTimeout(() => { State.getAspectRatio() <= 4 / 3 ? State.removeSidebar(sidebar) : State.showSidebar(sidebar); }, 1);
-		}
-		else {
-			State.showNavbar(navbar, mains, sidebar);
-			State.showSidebar(sidebar);
-			//State.getAspectRatio() <= 4 / 3 ? State.removeSidebar(sidebar) : State.showSidebar(sidebar);
 
-			//setTimeout(() => { State.removeNavbar(navbar, mains, sidebar); }, 1);
-			//setTimeout(() => { State.removeSidebar(sidebar); }, 1);
-		}
+		State.showNavbar(navbar, mains, sidebar);
+		State.showSidebar(sidebar);
 
-		hideLoadingScreen(loadingScreen, navbar, mains, sidebar);
+		if (loadingScreen) {
+			loadingScreen.remove();
+		}
 
 		let cleanupEvents = null;
 

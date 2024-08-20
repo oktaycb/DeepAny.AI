@@ -88,37 +88,13 @@ export function getNavbarHeight() {
 export function setSidebar(sidebar) {
     setActualSidebarWidth(sidebar ? sidebar.offsetWidth : 0);
 
-    const type = 0; /* 0 = to right, 1 = to left, 2 = to bottom */
-
-    if (type === 2) {
-        if (getSidebarActive()) {
-            sidebar.style.top = getActualNavbarHeight() + "px";
-            return;
-        }
-
-        if (sidebar) {
-            sidebar.style.top = -getWindowHeight() + "px";
-        }
+    if (getSidebarActive()) {
+        sidebar.style.left = '0';
+        return;
     }
-    else if (type === 1) {
-        if (getSidebarActive()) {
-            sidebar.style.right = '0';
-            return;
-        }
 
-        if (sidebar) {
-            sidebar.style.right = -getActualSidebarWidth() + "px";
-        }
-    }
-    else if (type === 0) {
-        if (getSidebarActive()) {
-            sidebar.style.left = '0';
-            return;
-        }
-
-        if (sidebar) {
-            sidebar.style.left = -getActualSidebarWidth() + "px";
-        }
+    if (sidebar) {
+        sidebar.style.left = -getActualSidebarWidth() + "px";
     }
 }
 
