@@ -76,9 +76,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
                     </div>
                     <div class="end-content">
-                        <img src="./assets/resize-large.webp" id="wide-img" loading="lazy">
-                        <img src="./assets/resize-middle.webp" id="middle-img" loading="lazy">
-                        <img src="./assets/resize-long.webp" id="long-img" loading="lazy">
+                        <img src="./assets/resize-large-1.webp" id="resize-large" loading="lazy" alt="Wide Image Example">
+                        <img src="./assets/resize-middle-1.webp" id="resize-middle" loading="lazy" alt="Medium Image Example">
+                        <img src="./assets/resize-long-1.webp" id="resize-long" loading="lazy" alt="Long Image Example">
                     </div>
                 </div>
                 <div class="card-container">
@@ -118,20 +118,75 @@ document.addEventListener('DOMContentLoaded', function () {
 
     updatePageContents();
 
+    const sizeCache = {};
+
+    function getClosestSize(dimension) {
+        const availableSizes = [128, 256, 512, 768];
+        return availableSizes.reduce((prev, curr) =>
+            Math.abs(curr - dimension) < Math.abs(prev - dimension) ? curr : prev
+        );
+    }
+
+    function retrieveImages(id) {
+        const img = document.getElementById(id);
+
+        if (!img) {
+            console.error(`Image with id ${id} not found.`);
+            return;
+        }
+
+        img.addEventListener('load', function () {
+            const rect = img.getBoundingClientRect();
+            const rectWidth = rect.width;
+            const rectHeight = rect.height;
+
+            const largerDimension = Math.max(rectWidth, rectHeight);
+            if (!sizeCache[id]) {
+                const closestSize = getClosestSize(largerDimension);
+                const newSrc = `./assets/${id}-${closestSize}.webp`;
+                const newSrcset = `${newSrc} ${closestSize}w`;
+                const newSizes = `${closestSize}px`;
+
+                sizeCache[id] = { src: newSrc, srcset: newSrcset, sizes: newSizes };
+
+                img.src = sizeCache[id].src;
+                img.srcset = sizeCache[id].srcset;
+                img.sizes = sizeCache[id].sizes;
+            } else {
+                img.src = sizeCache[id].src;
+                img.srcset = sizeCache[id].srcset;
+                img.sizes = sizeCache[id].sizes;
+            }
+        }, { once: true });
+    }
+
     State.createPages(pageContents);
     State.updateContent(pageContents);
 
-    function sizeBasedElements() {
-        const oldContentLenght = pageContents.length;
-        updatePageContents();
-        const currentContentLenght = pageContents.length;
-        if (oldContentLenght != currentContentLenght) {
-            State.cleanPages(pageContents);
-            State.createPages(pageContents);
-            State.reconstructMainStyles(pageContents);
-        }
+    let isUpdated = null;
 
-        State.updateContent(pageContents);
+    function sizeBasedElements() {
+        const currentAspectRatio = State.getAspectRatio();
+        const shouldUpdate = currentAspectRatio > 4 / 3;
+        if (isUpdated === null || isUpdated !== shouldUpdate) {
+            isUpdated = shouldUpdate;
+            const oldContentLength = pageContents.length;
+            updatePageContents();
+            const currentContentLength = pageContents.length;
+
+            if (oldContentLength !== currentContentLength) {
+                State.cleanPages(pageContents);
+                State.createPages(pageContents);
+                State.reconstructMainStyles(pageContents);
+            }
+
+            State.updateContent(pageContents);
+            if (shouldUpdate) {
+                retrieveImages('resize-middle');
+                retrieveImages('resize-long');
+                retrieveImages('resize-large');
+            }
+        }
     }
 
     sizeBasedElements();

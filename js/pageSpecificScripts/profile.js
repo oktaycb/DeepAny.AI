@@ -1,4 +1,4 @@
-﻿// import { auth } from '../firebase/firebase-auth.js';
+﻿// import { auth } from '../firebase/authentication.js';
 import * as State from '../defaultPageLoads/accessVariables.js';
 
 function isBanned() {

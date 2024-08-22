@@ -3,21 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeepAny.AI - Pricing</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-auth.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.2/color-thief.umd.js"></script>
+    <title>DeepAny.AI</title>
+    <link rel="stylesheet" href="css/styles.css" media="print" onload="this.media='all'">
 </head>
 <body translate="no">
-    <div id="paymentContainer" style="margin: 0; padding: 0; overflow: hidden; display: none; width: 100%; height: 100vh; position: absolute; z-index: 99999;"></div>
-    <script type="module" src="js/pageSpecificScripts/pricing.js"></script>
-    <script type="module" src="js/defaultPageLoads/loadDefaultHTML.js"></script>
-    <script type="module" src="js/createPayment.js"></script>
+    <script type="module" src="js/pageSpecificScripts/pricing.js" defer></script>
+    <script type="module" src="js/defaultPageLoads/loadDefaultHTML.js" defer></script>
+    <script type="module" src="js/firebase/authentication.js" defer></script>
 </body>
 </html>

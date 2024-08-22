@@ -1,36 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>DeepAny.AI</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="description" content="DeepAny.AI: Your go-to platform for advanced AI solutions and services. Explore our innovative technology and cutting-edge tools designed to help you achieve your goals.">
+    <title>DeepAny.AI</title>
+    <link rel="stylesheet" href="css/styles.css" media="print" onload="this.media='all'">
+    <style>
+        .main-container {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-flex-direction: column;
+            -ms-flex-direction: column;
+            flex-direction: column;
+            margin: 0 clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));
+            width: auto;
+        }
 
-	<!-- Preconnect to important origins -->
-	<link rel="preconnect" href="https://www.gstatic.com">
+            .main-container > :first-child {
+                -webkit-box-flex: 1;
+                -ms-flex: 1 1 auto;
+                flex: 1 1 auto;
+            }
 
-	<!-- Load main stylesheet with media attribute to prevent blocking -->
-	<link rel="stylesheet" href="css/styles.css" media="print" onload="this.media='all'">
-
-	<!-- Inline Critical CSS -->
-	<style>
-		.main-container {
-			display: grid;
-			grid-template-rows: 1fr auto;
-			margin: 0 clamp(0px, calc(4vh * var(--scale-factor)), calc(8vw * var(--scale-factor)));
-		}
-	</style>
+            .main-container > :last-child {
+                -webkit-box-flex: 0;
+                -ms-flex: 0 0 auto;
+                flex: 0 0 auto;
+            }
+    </style>
 </head>
 <body translate="no">
-	<!-- Load Content Scripts -->
-	<script type="module" src="js/pageSpecificScripts/index.js" defer></script>
-	<script type="module" src="js/defaultPageLoads/loadDefaultHTML.js" defer></script>
-
-	<!-- Load Firebase Auth -->
-	<script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-app.js" defer></script>
-	<script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-firestore.js" defer></script>
-	<script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-auth.js" defer></script>
-
-	<!-- Load Firebase Auth -->
-	<script type="module" src="js/firebase/firebase-auth.js" defer></script>
+    <script type="module" src="js/pageSpecificScripts/index.js" defer></script>
+    <script type="module" src="js/defaultPageLoads/loadDefaultHTML.js" defer></script>
+    <script type="module" src="js/firebase/authentication.js" defer></script>
 </body>
 </html>

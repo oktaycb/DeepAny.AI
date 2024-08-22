@@ -1,5 +1,7 @@
 import * as State from './accessVariables.js';
 
+//console.log("[LOADING] loadDefaultHTML.js");
+
 // If you are looking for buttons and services li's refer to sizeBasedElements inside loadDefaultHTML.
 const websiteTitle = document.title.split('.')[0];
 const loadSideBarAndNavBar = `
@@ -41,9 +43,9 @@ function loadBars() {
 	document.getElementById('discordButton').addEventListener('click', function () { window.open('https://discord.gg/6FTmwtaK', '_blank'); });
 	document.getElementById('twitterButton').addEventListener('click', function () { window.open('https://x.com/zeroduri', '_blank'); });
 	document.getElementById('redditButton').addEventListener('click', function () { window.open('https://www.reddit.com/r/bodyswapai/', '_blank'); });
-	document.getElementById('exploreButton').addEventListener('click', function () { window.location.href = 'index.html'; });
-	document.getElementById('profileButton').addEventListener('click', function () { window.location.href = 'profile.html'; });
-	document.getElementById('premiumButton').addEventListener('click', function () { window.location.href = 'pricing.html'; });
+	document.getElementById('exploreButton').addEventListener('click', function () { window.location.href = 'index.html'; localStorage.setItem('usedSidebar', '1'); });
+	document.getElementById('profileButton').addEventListener('click', function () { window.location.href = 'profile.html'; localStorage.setItem('usedSidebar', '1'); });
+	document.getElementById('premiumButton').addEventListener('click', function () { window.location.href = 'pricing.html'; localStorage.setItem('usedSidebar', '1'); });
 }
 
 const swipeThreshold = 50;
@@ -63,7 +65,7 @@ function loadScrollingAndMain(navbar, mains, sidebar, hamburgerMenu) {
 		let touchStartTime = 0;
 
 		function showMain(index, transitionDuration = 250) {
-			console.log(mains.length);
+			//console.log(mains.length);
 			if (index >= 0 && index < mains.length && !scrolling) {
 				scrolling = true;
 				const wentDown = index >= State.getCurrentMain();
@@ -185,7 +187,6 @@ document.addEventListener('DOMContentLoaded', function () {
 		}
 
 		State.showNavbar(navbar, mains, sidebar);
-		State.getAspectRatio() <= 4 / 3 ? State.removeSidebar(sidebar, hamburgerMenu) : State.showSidebar(sidebar, hamburgerMenu);
 
 		let cleanupEvents = null;
 
@@ -195,6 +196,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 			if (State.getAspectRatio() <= 4 / 3) {
 				if (!hamburgerMenu) {
+					document.documentElement.classList.add('aspect-4-3');
 					navContainer.insertAdjacentHTML('beforeend', `
 						<div class="hamburger-menu">
 							<div class="line"></div>
@@ -213,7 +215,9 @@ document.addEventListener('DOMContentLoaded', function () {
 					}
 				}
 			} else {
+
 				if (!navLinks || navLinks.length === 0) {
+					document.documentElement.classList.remove('aspect-4-3');
 					navContainer.insertAdjacentHTML('beforeend', `
 						<ul class="nav-links" style="display: grid;grid-template-columns: 2fr 1fr 2fr;justify-items: center;">
 							<li>
@@ -260,15 +264,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
 			cleanupEvents = loadScrollingAndMain(navbar, mains, sidebar, hamburgerMenu);
 		}
+		const usedSidebar = localStorage.getItem('usedSidebar');
+		if (usedSidebar === 'keepSideBar')
+			State.removeSidebar(sidebar, hamburgerMenu);
 
 		sizeBasedElements();
 
 		window.addEventListener('resize', sizeBasedElements);
 
-		// Makes a great transition use cookies to make it efficient.
-		//if (State.getAspectRatio() > 4 / 3)
-			//State.removeSidebar(sidebar, hamburgerMenu);
+		if (usedSidebar === '1') {
+			State.removeSidebar(sidebar, hamburgerMenu);
+			localStorage.setItem('usedSidebar', 'keepSideBar');
+		}
 	}
 
 	loadDefaultHTML();
 });
+
+//console.log("[LOADED] loadDefaultHTML.js");

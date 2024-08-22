@@ -1,4 +1,4 @@
-import { auth, serversRef } from './firebase/firebase-config.js';
+import { auth, serversRef, doc, getDoc } from './firebase/initialiseFirebase.js'
 import { getCache, setCache } from './timeLimitedCache.js';
 import * as State from './defaultPageLoads/accessVariables.js';
 
@@ -18,20 +18,18 @@ document.addEventListener("DOMContentLoaded", async function () {
 			return cachedAddress;
 		}
 
-		const serverDoc = await serversRef.doc('3050-1').get();
-		if (serverDoc.exists) {
-			const serverAddress = serverDoc.data()['serverAdress-API'];
-			setCache(cacheKey, serverAddress || null, 7 * 24 * 60 * 60 * 1000); 
+		const serverDocRef = doc(serversRef, '3050-1');
+		const serverDocSnapshot = await getDoc(serverDocRef);
+
+		if (serverDocSnapshot.exists()) {
+			const serverAddress = serverDocSnapshot.data()['serverAdress-API'];
+			setCache(cacheKey, serverAddress || null, 7 * 24 * 60 * 60 * 1000);
 			return serverAddress || null;
-		} 
+		}
 
 		return null;
 	}
 
-	// Use the function to fetch the server address
-	const serverAddressAPI = await fetchServerAddressAPI();
-
-	// Use the function to fetch the server address
 	async function fetchServerAddressPAYTR() {
 		const cacheKey = 'serverAddressPAYTR';
 		const cachedAddress = getCache(cacheKey);
@@ -40,17 +38,19 @@ document.addEventListener("DOMContentLoaded", async function () {
 			return cachedAddress;
 		}
 
-		const serverDoc = await serversRef.doc('3050-1').get();
-		if (serverDoc.exists) {
-			const serverAddress = serverDoc.data()['serverAdress-PAYTR'];
-			setCache(cacheKey, serverAddress || null, 7 * 24 * 60 * 60 * 1000); 
+		const serverDocRef = doc(serversRef, '3050-1');
+		const serverDocSnapshot = await getDoc(serverDocRef);
+
+		if (serverDocSnapshot.exists()) {
+			const serverAddress = serverDocSnapshot.data()['serverAdress-PAYTR'];
+			setCache(cacheKey, serverAddress || null, 7 * 24 * 60 * 60 * 1000);
 			return serverAddress || null;
 		}
 
 		return null;
 	}
 
-	// Use the function to fetch the server address
+	const serverAddressAPI = await fetchServerAddressAPI();
 	const serverAddressPAYTR = await fetchServerAddressPAYTR();
 
 	// Use the function to fetch the server address
@@ -65,7 +65,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 		try {
 			const response = await fetch('https://api.frankfurter.app/latest?from=USD');
 			const data = await response.json();
-			setCache(cacheKey, data.rates, 1 * 24 * 60 * 60 * 1000); 
+			setCache(cacheKey, data.rates, 1 * 24 * 60 * 60 * 1000);
 			return data.rates;
 		} catch (error) {
 			console.error("Error fetching conversion rates:", error);
@@ -335,13 +335,13 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 		function updateSliderRange() {
 			const isCreditsMode = creditsMode.classList.contains("selected");
-			if (isCreditsMode) 
+			if (isCreditsMode)
 				sliderElement.max = credits.length;
 			else sliderElement.max = durations.length;
-			
+
 			// Ensure the current value is within the new range
 			const currentValue = sliderElement.value;
-			if (currentValue > sliderElement.max) 
+			if (currentValue > sliderElement.max)
 				sliderElement.value = sliderElement.max;
 		}
 
@@ -381,69 +381,67 @@ document.addEventListener("DOMContentLoaded", async function () {
 		purchase.addEventListener("click", async () => { await handleBuyNow(); });
 
 		async function handleBuyNow() {
-			{
-				try {
-					const user = await new Promise((resolve) => {
-						const unsubscribe = auth.onAuthStateChanged((user) => {
-							unsubscribe(); // Unsubscribe once we have the user object
-							resolve(user);
-						});
+			try {
+				const user = await new Promise((resolve) => {
+					const unsubscribe = auth.onAuthStateChanged((user) => {
+						unsubscribe(); // Unsubscribe once we have the user object
+						resolve(user);
 					});
+				});
 
-					// Check the selected mode
-					let selectedMode = '';
-					if (subscriptionMode.classList.contains("selected")) {
-						selectedMode = 'subscription';
-					} else {
-						selectedMode = 'credits';
-					}
+				// Check the selected mode
+				let selectedMode = '';
+				if (subscriptionMode.classList.contains("selected")) {
+					selectedMode = 'subscription';
+				} else {
+					selectedMode = 'credits';
+				}
 
-					// Check if the user is authenticated
-					if (user) {
-						const requestData = {
-							userId: auth.currentUser.uid,
-							userEmail: auth.currentUser.email,
-							selectedCurrency: selectedCurrency,
-							sliderElement: sliderElement.value,
-							selectedMode: selectedMode,
-						};
+				// Check if the user is authenticated
+				if (user) {
+					const requestData = {
+						userId: auth.currentUser.uid,
+						userEmail: auth.currentUser.email,
+						selectedCurrency: selectedCurrency,
+						sliderElement: sliderElement.value,
+						selectedMode: selectedMode,
+					};
 
-						if (selectedCurrency !== 'BTC') {
-							const cardResponse = await fetch(serverAddressPAYTR + '/create-charge-2', {
-								method: 'POST',
-								headers: { 'Content-Type': 'application/json' },
-								body: JSON.stringify(requestData)
-							});
+					if (selectedCurrency !== 'BTC') {
+						const cardResponse = await fetch(serverAddressPAYTR + '/create-charge-2', {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify(requestData)
+						});
 
-							const cardHtml = await cardResponse.text();
-							if (cardHtml.error) {
-								alert(cardHtml.error);
-							} else {
-								document.getElementById('paymentContainer').style.display = 'block';
-								document.getElementById('paymentContainer').innerHTML = cardHtml;
-							}
+						const cardHtml = await cardResponse.text();
+						if (cardHtml.error) {
+							alert(cardHtml.error);
 						} else {
-							// Pay with coin.
-							const coinResponse = await fetch(serverAddressAPI + '/create-charge-new', {
-								method: 'POST',
-								headers: { 'Content-Type': 'application/json' },
-								body: JSON.stringify(requestData)
-							});
+							document.getElementById('paymentContainer').style.display = 'block';
+							document.getElementById('paymentContainer').innerHTML = cardHtml;
+						}
+					} else {
+						// Pay with coin.
+						const coinResponse = await fetch(serverAddressAPI + '/create-charge-new', {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify(requestData)
+						});
 
-							const coinData = await coinResponse.json();
-							console.log('Response from server:', coinData);
+						const coinData = await coinResponse.json();
+						//console.log('Response from server:', coinData);
 
-							if (coinData.data && coinData.data.hosted_url) {
-								// Open the Coinbase Commerce payment page in a new tab
-								window.open(coinData.data.hosted_url, '_blank');
-							} else {
-								alert(coinData.error);
-							}
+						if (coinData.data && coinData.data.hosted_url) {
+							// Open the Coinbase Commerce payment page in a new tab
+							window.open(coinData.data.hosted_url, '_blank');
+						} else {
+							alert(coinData.error);
 						}
 					}
-				} catch (error) {
-					console.error('Error checking referral:', error);
 				}
+			} catch (error) {
+				console.error('Error checking referral:', error);
 			}
 		}
 	}

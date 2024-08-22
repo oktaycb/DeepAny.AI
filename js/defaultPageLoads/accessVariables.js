@@ -152,6 +152,8 @@ export function showSidebar(sidebar, hamburgerMenu) {
 
     if (hamburgerMenu)
         hamburgerMenu.classList.add('open');
+
+    localStorage.removeItem('usedSidebar');
 }
 
 export function showNavbar(navbar, mains, sidebar) {
@@ -165,6 +167,8 @@ export function removeSidebar(sidebar, hamburgerMenu) {
 
     if (hamburgerMenu)
         hamburgerMenu.classList.remove('open');
+
+    localStorage.setItem('usedSidebar', 'keepSideBar');
 }
 
 export function removeNavbar(navbar, mains, sidebar) {
