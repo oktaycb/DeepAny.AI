@@ -2,34 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="DeepAny.AI: Your go-to platform for advanced AI solutions and services. Explore our innovative technology and cutting-edge tools designed to help you achieve your goals.">
     <title>DeepAny.AI</title>
-    <link rel="stylesheet" href="css/styles.css" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="css/styles.css">
     <style>
         .main-container {
-            display: -webkit-box;
-            display: -ms-flexbox;
-            display: -webkit-flex;
-            display: flex;
-            -webkit-flex-direction: column;
-            -ms-flex-direction: column;
-            flex-direction: column;
+            display: grid;
+            grid-template-rows: 1fr auto;
             margin: 0 clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));
             width: auto;
         }
-
-            .main-container > :first-child {
-                -webkit-box-flex: 1;
-                -ms-flex: 1 1 auto;
-                flex: 1 1 auto;
-            }
-
-            .main-container > :last-child {
-                -webkit-box-flex: 0;
-                -ms-flex: 0 0 auto;
-                flex: 0 0 auto;
-            }
     </style>
 </head>
 <body translate="no">

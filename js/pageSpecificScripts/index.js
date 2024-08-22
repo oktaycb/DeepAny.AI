@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             <li><strong>Pricing:</strong> Dynamic plans tailored to every budget.
                             </li>
                         </ul>
-                        <p class="subtext">Unlock the potential of AI for your projects with our reliable and affordable services.</p>
+                        <p class="subtext" style="padding-bottom: 0.5vh;">Unlock the potential of AI for your projects with our reliable and affordable services.</p>
                         <div class="button-container">
                             <button>Try Now</button>
                             <button class="important">Purchase</button>
@@ -31,19 +31,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div class="background"></div>
                     <a href="face-swap" class="card">
                         <div class="card-content">
-                            <h3>Face Swapper</h3>
+                            <div>Face Swapper</div>
                             <div class="card-link">Try Face Swapper</div>
                         </div>
                     </a>
                     <a href="inpaint" class="card">
                         <div class="card-content">
-                            <h3>Inpainter</h3>
+                            <div>Inpainter</div>
                             <div class="card-link">Try Inpainter</div>
                         </div>
                     </a>
                     <a href="art" class="card">
                         <div class="card-content">
-                            <h3>Art Generator</h3>
+                            <div>Art Generator</div>
                             <div class="card-link">Create Art</div>
                         </div>
                     </a>
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             <li><strong>Pricing:</strong> Dynamic plans tailored to every budget.
                             </li>
                         </ul>
-                        <p class="subtext">Unlock the potential of AI for your projects with our reliable and affordable services.</p>
+                        <p class="subtext" style="padding-bottom: 0.5vh;">Unlock the potential of AI for your projects with our reliable and affordable services.</p>
                         <div class="button-container">
                             <button>Try Now</button>
                             <button class="important">Purchase</button>
@@ -86,8 +86,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     <a href="face-swap" class="card">
                         <div class="card-content">
                             <div>
-                                <h3>Face Swapper</h3>
-                                <div class="card-description">Swap faces in your photos with ease.</div>
+								<div class="card-title">Face Swapper</div>
+								<div class="card-description">Swap faces in your photos with ease.</div>
                             </div>
                             <div class="card-link">Try Face Swapper</div>
                         </div>
@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <a href="inpaint" class="card">
                         <div class="card-content">
                             <div>
-                                <h3>Inpainter</h3>
+                                <div class="card-title">Inpainter</div>
                                 <div class="card-description">Remove or add elements in your images.</div>
                             </div>
                             <div class="card-link">Try Inpainter</div>
@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <a href="art" class="card">
                         <div class="card-content">
                             <div>
-                                <h3>Art Generator</h3>
+                                <div class="card-title">Art Generator</div>
                                 <div class="card-description">Create stunning digital artworks.</div>
                             </div>
                             <div class="card-link">Create Art</div>

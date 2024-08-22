@@ -43,9 +43,9 @@ function loadBars() {
 	document.getElementById('discordButton').addEventListener('click', function () { window.open('https://discord.gg/6FTmwtaK', '_blank'); });
 	document.getElementById('twitterButton').addEventListener('click', function () { window.open('https://x.com/zeroduri', '_blank'); });
 	document.getElementById('redditButton').addEventListener('click', function () { window.open('https://www.reddit.com/r/bodyswapai/', '_blank'); });
-	document.getElementById('exploreButton').addEventListener('click', function () { window.location.href = 'index.html'; localStorage.setItem('usedSidebar', '1'); });
-	document.getElementById('profileButton').addEventListener('click', function () { window.location.href = 'profile.html'; localStorage.setItem('usedSidebar', '1'); });
-	document.getElementById('premiumButton').addEventListener('click', function () { window.location.href = 'pricing.html'; localStorage.setItem('usedSidebar', '1'); });
+	document.getElementById('exploreButton').addEventListener('click', function () { window.location.href = 'index.html'; localStorage.setItem('sidebarState', 'removeSidebar'); });
+	document.getElementById('profileButton').addEventListener('click', function () { window.location.href = 'profile.html'; localStorage.setItem('sidebarState', 'removeSidebar'); });
+	document.getElementById('premiumButton').addEventListener('click', function () { window.location.href = 'pricing.html'; localStorage.setItem('sidebarState', 'removeSidebar'); });
 }
 
 const swipeThreshold = 50;
@@ -264,17 +264,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
 			cleanupEvents = loadScrollingAndMain(navbar, mains, sidebar, hamburgerMenu);
 		}
-		const usedSidebar = localStorage.getItem('usedSidebar');
-		if (usedSidebar === 'keepSideBar')
+
+		if (!localStorage.getItem('sidebarStateInitialized')) {
+			if (State.getAspectRatio() <= 4 / 3) {
+				localStorage.setItem('sidebarState', 'keepSideBar');
+			}
+
+			localStorage.setItem('sidebarStateInitialized', 'true');
+		}
+
+		const sidebarState = localStorage.getItem('sidebarState');
+		if (sidebarState === 'keepSideBar')
 			State.removeSidebar(sidebar, hamburgerMenu);
 
 		sizeBasedElements();
 
 		window.addEventListener('resize', sizeBasedElements);
 
-		if (usedSidebar === '1') {
+		if (sidebarState === 'removeSidebar') {
 			State.removeSidebar(sidebar, hamburgerMenu);
-			localStorage.setItem('usedSidebar', 'keepSideBar');
+			localStorage.setItem('sidebarState', 'keepSideBar');
 		}
 	}
 
