@@ -1,6 +1,8 @@
 // initialiseFirebase.js
 let firebaseModules = null;
 
+//console.log("[LOADING] initiliseFirebase.js");
+
 export async function getFirebaseModules() {
     if (firebaseModules) {
         return firebaseModules;
@@ -42,3 +44,5 @@ export async function getFirebaseModules() {
 
     return firebaseModules;
 }
+
+//console.log("[LOADED] initiliseFirebase.js");

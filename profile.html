@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <title>DeepAny.AI</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeepAny.AI</title>
-    <link rel="stylesheet" href="css/styles.css" media="print" onload="this.media='all'">
+    <meta name="description" content="Manage your DeepAny.AI profile. Update your account details, review your activity, and customize your AI experience to suit your needs.">
+    <link rel="stylesheet" href="css/styles.css">
     <style>
         .background-container {
             margin: unset;
@@ -14,6 +15,7 @@
     </style>
 </head>
 <body translate="no">
+    <div class="loading-screen"><div class="loading-spinner"></div></div>
     <script type="module" src="js/pageSpecificScripts/profile.js" defer></script>
     <script type="module" src="js/defaultPageLoads/loadDefaultHTML.js" defer></script>
     <script type="module" src="js/firebase/authentication.js" defer></script>

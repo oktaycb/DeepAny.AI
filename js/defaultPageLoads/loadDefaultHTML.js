@@ -1,51 +1,38 @@
-import * as State from './accessVariables.js';
+﻿import {
+	getWindowHeight,
+	getNavbarHeight,
+	getActualSidebarWidth,
+	getActualNavbarHeight,
+	getWindowWidth,
+	getCurrentMain,
+	setCurrentMain,
+	removeNavbar,
+	showNavbar,
+	getAspectRatio,
+	setNavbar,
+	setSidebar,
+	showSidebar,
+	removeSidebar,
+	getSidebarActive
+} from './accessVariables.js';
 
 //console.log("[LOADING] loadDefaultHTML.js");
 
-// If you are looking for buttons and services li's refer to sizeBasedElements inside loadDefaultHTML.
 const websiteTitle = document.title.split('.')[0];
 const loadSideBarAndNavBar = `
     <nav class="navbar">
         <div class="container">
             <div class="logo">
-                <img type="image/webp" onclick="location.href='index.html';" style="cursor: pointer;" class="logoimg" src="assets/logo.webp" alt="Logo" loading="lazy">
+                <img type="image/webp" onclick="location.href='index.html';" style="cursor: pointer;" class="logoimg" src="assets/logo.webp" alt="Logo" loading="eager">
                 <h2 onclick="location.href='index.html';" style="cursor: pointer;">${websiteTitle}.<span class="text-gradient">AI</span></h2>
             </div>
         </div>
     </nav>
-    <nav class="sidebar">
-        <div style="flex: 1; justify-content: space-between;">
-            <div>
-                <button id="exploreButton"><img src="./assets/explore.svg" alt="Explore Icon" loading="lazy">Explore</button>
-                <button id="profileButton"><img src="./assets/profile.svg" alt="Profile Icon" loading="lazy">Profile</button>
-                <button id="premiumButton" class="important"><img src="./assets/premium.svg" alt="Premium Icon" loading="lazy">Premium</button>
-            </div>
-            <div>
-                <button id="discordButton"><img src="./assets/discord.svg" alt="Discord Icon" loading="lazy">Discord</button>
-                <button id="twitterButton"><img src="./assets/x.svg" alt="X Icon" loading="lazy">X</button>
-                <button id="redditButton"><img src="./assets/reddit.svg" alt="Reddit Icon" loading="lazy">Reddit</button>
-            </div>
-            <div>
-                <button id="contactButton"><img src="./assets/contact.svg" alt="Contact Icon" loading="lazy">Contact</button>
-                <button><img src="./assets/trophy.svg" alt="Trophy Icon" loading="lazy">Affiliation</button>
-                <button><img src="./assets/settings.svg" alt="Settings Icon" loading="lazy">Settings</button>
-            </div>
-        </div>
-    </nav>
-    <div class="loading-screen">
-        <div class="loading-spinner"></div>
-    </div>
+    <nav class="sidebar"></nav>
 `;
 
 function loadBars() {
-	document.body.insertAdjacentHTML('afterbegin', loadSideBarAndNavBar);
-	document.getElementById('contactButton').addEventListener('click', function () { window.location.href = 'mailto:durieun02@gmail.com'; });
-	document.getElementById('discordButton').addEventListener('click', function () { window.open('https://discord.gg/6FTmwtaK', '_blank'); });
-	document.getElementById('twitterButton').addEventListener('click', function () { window.open('https://x.com/zeroduri', '_blank'); });
-	document.getElementById('redditButton').addEventListener('click', function () { window.open('https://www.reddit.com/r/bodyswapai/', '_blank'); });
-	document.getElementById('exploreButton').addEventListener('click', function () { window.location.href = 'index.html'; localStorage.setItem('sidebarState', 'removeSidebar'); });
-	document.getElementById('profileButton').addEventListener('click', function () { window.location.href = 'profile.html'; localStorage.setItem('sidebarState', 'removeSidebar'); });
-	document.getElementById('premiumButton').addEventListener('click', function () { window.location.href = 'pricing.html'; localStorage.setItem('sidebarState', 'removeSidebar'); });
+	document.body.insertAdjacentHTML('beforebegin', loadSideBarAndNavBar);
 }
 
 const swipeThreshold = 50;
@@ -54,9 +41,9 @@ function loadScrollingAndMain(navbar, mains, sidebar, hamburgerMenu) {
 	if (mains && mains.length > 0) {
 		mains.forEach((main, index) => {
 			main.style.display = 'flex';
-			main.style.top = `${index * State.getWindowHeight() + State.getNavbarHeight()}px`;
-			main.style.height = `${State.getWindowHeight() - State.getNavbarHeight()}px`;
-			main.style.width = `${State.getWindowWidth()}px`;
+			main.style.top = `${index * getWindowHeight() + getNavbarHeight()}px`;
+			main.style.height = `${getWindowHeight() - getNavbarHeight()}px`;
+			main.style.width = `${getWindowWidth()}px`;
 		});
 
 		let scrolling = false;
@@ -68,12 +55,12 @@ function loadScrollingAndMain(navbar, mains, sidebar, hamburgerMenu) {
 			//console.log(mains.length);
 			if (index >= 0 && index < mains.length && !scrolling) {
 				scrolling = true;
-				const wentDown = index >= State.getCurrentMain();
-				State.setCurrentMain(index);
+				const wentDown = index >= getCurrentMain();
+				setCurrentMain(index);
 				if (wentDown) {
-					State.removeNavbar(navbar, mains, sidebar);
+					removeNavbar(navbar, mains, sidebar);
 				} else {
-					State.showNavbar(navbar, mains, sidebar);
+					showNavbar(navbar, mains, sidebar);
 				}
 				setTimeout(() => {
 					scrolling = false;
@@ -85,10 +72,10 @@ function loadScrollingAndMain(navbar, mains, sidebar, hamburgerMenu) {
 			if (!scrolling) {
 				if (event.key === 'ArrowDown' || event.key === 'ArrowRight') {
 					event.preventDefault();
-					showMain(State.getCurrentMain() + 1);
+					showMain(getCurrentMain() + 1);
 				} else if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') {
 					event.preventDefault();
-					showMain(State.getCurrentMain() - 1);
+					showMain(getCurrentMain() - 1);
 				}
 			}
 		};
@@ -99,9 +86,9 @@ function loadScrollingAndMain(navbar, mains, sidebar, hamburgerMenu) {
 
 			if (!scrolling) {
 				if (event.deltaY > 0) {
-					showMain(State.getCurrentMain() + 1);
+					showMain(getCurrentMain() + 1);
 				} else if (event.deltaY < 0) {
-					showMain(State.getCurrentMain() - 1);
+					showMain(getCurrentMain() - 1);
 				}
 			}
 		};
@@ -111,19 +98,19 @@ function loadScrollingAndMain(navbar, mains, sidebar, hamburgerMenu) {
 				const clientY = event.type === 'touchstart' ? event.touches[0].clientY : event.clientY;
 				const clientX = event.type === 'touchstart' ? event.touches[0].clientX : event.clientX;
 
-				if (clientX > State.getActualSidebarWidth()) {
-					if (clientY <= State.getActualNavbarHeight()) {
-						State.showNavbar(navbar, mains, sidebar);
+				if (clientX > getActualSidebarWidth()) {
+					if (clientY <= getActualNavbarHeight()) {
+						showNavbar(navbar, mains, sidebar);
 					} else if (event.type === 'click') {
-						// State.removeNavbar(navbar, mains, sidebar);
+						// removeNavbar(navbar, mains, sidebar);
 					}
 				}
 
-				if (clientY > State.getActualNavbarHeight()) {
+				if (clientY > getActualNavbarHeight()) {
 					if (!clientX) {
-						State.showSidebar(sidebar, hamburgerMenu);
-					} else if (event.type === 'click' && clientX > State.getActualSidebarWidth()) {
-						State.removeSidebar(sidebar, hamburgerMenu);
+						showSidebar(sidebar, hamburgerMenu);
+					} else if (event.type === 'click' && clientX > getActualSidebarWidth()) {
+						removeSidebar(sidebar, hamburgerMenu);
 					}
 				}
 			}
@@ -145,9 +132,9 @@ function loadScrollingAndMain(navbar, mains, sidebar, hamburgerMenu) {
 			const touchDuration = Date.now() - touchStartTime;
 			if (Math.abs(touchDistance) > swipeThreshold && touchDuration < 500) {
 				if (touchDistance < 0) {
-					showMain(State.getCurrentMain() + 1);
+					showMain(getCurrentMain() + 1);
 				} else {
-					showMain(State.getCurrentMain() - 1);
+					showMain(getCurrentMain() - 1);
 				}
 			}
 		};
@@ -174,29 +161,40 @@ document.addEventListener('DOMContentLoaded', function () {
 	function loadDefaultHTML() {
 		loadBars();
 
+		if (!localStorage.getItem('sidebarStateInitialized') && getAspectRatio() <= 4 / 3) {
+			localStorage.setItem('sidebarState', 'keepSideBar');
+
+			let sidebarImages = document.querySelectorAll('.sidebar img');
+			sidebarImages.forEach(image => {
+				image.setAttribute('loading', 'lazy');
+			});
+
+			localStorage.setItem('sidebarStateInitialized', 'true');
+		}
+
 		let hamburgerMenu = document.querySelector('.hamburger-menu');
 		let navbar = document.querySelector('.navbar');
 		let navLinks = document.querySelectorAll('.navbar .nav-links');
 		let navContainer = document.querySelector('.navbar .container');
-		let loadingScreen = document.querySelector('.loading-screen');
 		let mains = document.querySelectorAll('main');
 		let sidebar = document.querySelector('.sidebar');
 
-		if (loadingScreen) {
-			loadingScreen.remove();
-		}
-
-		State.showNavbar(navbar, mains, sidebar);
+		showNavbar(navbar, mains, sidebar);
 
 		let cleanupEvents = null;
+		let bAspectRatio = getAspectRatio() <= 4 / 3;
 
 		function sizeBasedElements() {
-			State.setNavbar(navbar, mains, sidebar);
-			State.setSidebar(sidebar);
+			bAspectRatio = getAspectRatio() <= 4 / 3;
+			if (bAspectRatio)
+				document.documentElement.classList.add('aspect-4-3');
+			else document.documentElement.classList.remove('aspect-4-3');
 
-			if (State.getAspectRatio() <= 4 / 3) {
+			setNavbar(navbar, mains, sidebar);
+			setSidebar(sidebar);
+
+			if (bAspectRatio) {
 				if (!hamburgerMenu) {
-					document.documentElement.classList.add('aspect-4-3');
 					navContainer.insertAdjacentHTML('beforeend', `
 						<div class="hamburger-menu">
 							<div class="line"></div>
@@ -206,7 +204,7 @@ document.addEventListener('DOMContentLoaded', function () {
 					`);
 					hamburgerMenu = document.querySelector('.hamburger-menu');
 					hamburgerMenu.addEventListener('click', function () {
-						State.getSidebarActive() ? State.removeSidebar(sidebar, hamburgerMenu) : State.showSidebar(sidebar, hamburgerMenu);
+						getSidebarActive() ? removeSidebar(sidebar, hamburgerMenu) : showSidebar(sidebar, hamburgerMenu);
 					});
 
 					if (navLinks && navLinks.length > 0) {
@@ -215,9 +213,7 @@ document.addEventListener('DOMContentLoaded', function () {
 					}
 				}
 			} else {
-
 				if (!navLinks || navLinks.length === 0) {
-					document.documentElement.classList.remove('aspect-4-3');
 					navContainer.insertAdjacentHTML('beforeend', `
 						<ul class="nav-links" style="display: grid;grid-template-columns: 2fr 1fr 2fr;justify-items: center;">
 							<li>
@@ -265,26 +261,28 @@ document.addEventListener('DOMContentLoaded', function () {
 			cleanupEvents = loadScrollingAndMain(navbar, mains, sidebar, hamburgerMenu);
 		}
 
-		if (!localStorage.getItem('sidebarStateInitialized')) {
-			if (State.getAspectRatio() <= 4 / 3) {
-				localStorage.setItem('sidebarState', 'keepSideBar');
-			}
-
-			localStorage.setItem('sidebarStateInitialized', 'true');
-		}
+		if (bAspectRatio)
+			document.documentElement.classList.add('aspect-4-3');
+		else document.documentElement.classList.remove('aspect-4-3');
 
 		const sidebarState = localStorage.getItem('sidebarState');
 		if (sidebarState === 'keepSideBar')
-			State.removeSidebar(sidebar, hamburgerMenu);
+			removeSidebar(sidebar, hamburgerMenu);
+		else if (sidebarState === null)
+			showSidebar(sidebar, hamburgerMenu);
 
 		sizeBasedElements();
 
 		window.addEventListener('resize', sizeBasedElements);
 
 		if (sidebarState === 'removeSidebar') {
-			State.removeSidebar(sidebar, hamburgerMenu);
+			removeSidebar(sidebar, hamburgerMenu);
 			localStorage.setItem('sidebarState', 'keepSideBar');
 		}
+
+		const loadingScreen = document.querySelector('.loading-screen');
+		if (loadingScreen) 
+			loadingScreen.remove();
 	}
 
 	loadDefaultHTML();

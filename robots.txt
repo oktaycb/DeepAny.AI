@@ -1,0 +1,7 @@
+# robots.txt file for DeepAny.AI
+# Created in the the year 2024
+# Anime kizlari gercektir! (ve robotlar)
+
+User-agent: *
+Disallow: /admin/
+Disallow: /api/

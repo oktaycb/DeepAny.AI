@@ -1,10 +1,12 @@
-import * as State from '../defaultPageLoads/accessVariables.js';
+import { createPages, cleanPages, updateContent, reconstructMainStyles, getAspectRatio } from '../defaultPageLoads/accessVariables.js';
+
+//console.log("[LOADED] index.js");
 
 document.addEventListener('DOMContentLoaded', function () {
     let pageContents = [];
 
     function updatePageContents() {
-		if (State.getAspectRatio() <= 4 / 3) {
+		if (getAspectRatio() <= 4 / 3) {
             pageContents = [
                 `
                     <div class="start-content" id="hover-div">
@@ -31,19 +33,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div class="background"></div>
                     <a href="face-swap" class="card">
                         <div class="card-content">
-                            <div>Face Swapper</div>
+                            <div class="card-title">Face Swapper</div>
                             <div class="card-link">Try Face Swapper</div>
                         </div>
                     </a>
                     <a href="inpaint" class="card">
                         <div class="card-content">
-                            <div>Inpainter</div>
+                            <div class="card-title">Inpainter</div>
                             <div class="card-link">Try Inpainter</div>
                         </div>
                     </a>
                     <a href="art" class="card">
                         <div class="card-content">
-                            <div>Art Generator</div>
+                            <div  class="card-title">Art Generator</div>
                             <div class="card-link">Create Art</div>
                         </div>
                     </a>
@@ -76,9 +78,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
                     </div>
                     <div class="end-content">
-                        <img src="./assets/resize-large-1.webp" id="resize-large" loading="lazy" alt="Wide Image Example">
-                        <img src="./assets/resize-middle-1.webp" id="resize-middle" loading="lazy" alt="Medium Image Example">
-                        <img src="./assets/resize-long-1.webp" id="resize-long" loading="lazy" alt="Long Image Example">
+                        <img src="./assets/resize-large-1.webp" id="resize-large" loading="eager" alt="Wide Image Example">
+                        <img src="./assets/resize-middle-1.webp" id="resize-middle" loading="eager" alt="Medium Image Example">
+                        <img src="./assets/resize-long-1.webp" id="resize-long" loading="eager" alt="Long Image Example">
                     </div>
                 </div>
                 <div class="card-container">
@@ -110,8 +112,8 @@ document.addEventListener('DOMContentLoaded', function () {
                             <div class="card-link">Create Art</div>
                         </div>
                     </a>
-                </div>
-            `
+                </div> 
+                `
             ];
 		}
     }
@@ -129,11 +131,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function retrieveImages(id) {
         const img = document.getElementById(id);
-
-        if (!img) {
-            console.error(`Image with id ${id} not found.`);
+        if (!img) 
             return;
-        }
 
         img.addEventListener('load', function () {
             const rect = img.getBoundingClientRect();
@@ -160,13 +159,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }, { once: true });
     }
 
-    State.createPages(pageContents);
-    State.updateContent(pageContents);
+    createPages(pageContents);
 
     let isUpdated = null;
 
     function sizeBasedElements() {
-        const currentAspectRatio = State.getAspectRatio();
+        const currentAspectRatio = getAspectRatio();
         const shouldUpdate = currentAspectRatio > 4 / 3;
         if (isUpdated === null || isUpdated !== shouldUpdate) {
             isUpdated = shouldUpdate;
@@ -175,12 +173,12 @@ document.addEventListener('DOMContentLoaded', function () {
             const currentContentLength = pageContents.length;
 
             if (oldContentLength !== currentContentLength) {
-                State.cleanPages(pageContents);
-                State.createPages(pageContents);
-                State.reconstructMainStyles(pageContents);
+                cleanPages(pageContents);
+                createPages(pageContents);
+                reconstructMainStyles(pageContents);
             }
 
-            State.updateContent(pageContents);
+            updateContent(pageContents);
             if (shouldUpdate) {
                 retrieveImages('resize-middle');
                 retrieveImages('resize-long');
@@ -189,7 +187,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    sizeBasedElements();
-
+    window.addEventListener('load', sizeBasedElements);
     window.addEventListener('resize', sizeBasedElements);
 });
