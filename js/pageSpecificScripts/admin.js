@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 			switch (index) {
 				case 0:
-					mainContainer.insertAdjacentHTML('beforeend', `
+                    mainContainer.insertAdjacentHTML('afterbegin', `
 					<div class="main-container">   
 					
 					<h1>Admin Panel</h1>    

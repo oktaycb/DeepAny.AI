@@ -18,23 +18,6 @@
 
 //console.log("[LOADING] loadDefaultHTML.js");
 
-const websiteTitle = document.title.split('.')[0];
-const loadSideBarAndNavBar = `
-    <nav class="navbar">
-        <div class="container">
-            <div class="logo">
-                <img type="image/webp" onclick="location.href='index.html';" style="cursor: pointer;" class="logoimg" src="assets/logo.webp" alt="Logo" loading="eager">
-                <h2 onclick="location.href='index.html';" style="cursor: pointer;">${websiteTitle}.<span class="text-gradient">AI</span></h2>
-            </div>
-        </div>
-    </nav>
-    <nav class="sidebar"></nav>
-`;
-
-function loadBars() {
-	document.body.insertAdjacentHTML('beforebegin', loadSideBarAndNavBar);
-}
-
 const swipeThreshold = 50;
 
 function loadScrollingAndMain(navbar, mains, sidebar, hamburgerMenu) {
@@ -157,10 +140,22 @@ function loadScrollingAndMain(navbar, mains, sidebar, hamburgerMenu) {
 	}
 }
 
+function loadBars() {
+	document.body.insertAdjacentHTML('afterbegin', `
+				<nav class="navbar">
+					<div class="container">
+						<div class="logo">
+							<img onclick="location.href='index.html';" style="cursor: pointer;" alt="DeepAny.AI Logo" width="clamp(0px, calc(6vh * var(--scale-factor)), calc(12vw * var(--scale-factor)))" height="auto" loading="eager">
+							<h2 onclick="location.href='index.html';" style="cursor: pointer;" translate="no">${document.title.split('.')[0]}.<span class="text-gradient" translate="no">${document.title.split('.')[1]}</span></h2>
+						</div>
+					</div>
+				</nav>
+				<nav class="sidebar"></nav>
+			`);
+}
+
 document.addEventListener('DOMContentLoaded', function () {
 	function loadDefaultHTML() {
-		loadBars();
-
 		if (!localStorage.getItem('sidebarStateInitialized') && getAspectRatio() <= 4 / 3) {
 			localStorage.setItem('sidebarState', 'keepSideBar');
 
@@ -172,14 +167,14 @@ document.addEventListener('DOMContentLoaded', function () {
 			localStorage.setItem('sidebarStateInitialized', 'true');
 		}
 
+		loadBars();
+
 		let hamburgerMenu = document.querySelector('.hamburger-menu');
 		let navbar = document.querySelector('.navbar');
 		let navLinks = document.querySelectorAll('.navbar .nav-links');
 		let navContainer = document.querySelector('.navbar .container');
 		let mains = document.querySelectorAll('main');
 		let sidebar = document.querySelector('.sidebar');
-
-		showNavbar(navbar, mains, sidebar);
 
 		let cleanupEvents = null;
 		let bAspectRatio = getAspectRatio() <= 4 / 3;
@@ -227,9 +222,9 @@ document.addEventListener('DOMContentLoaded', function () {
 							<li>
 								<a class="text" href="#">Community</a>
 								<ul class="dropdown-menu">
-									<li><a class="text" href="https://x.com/zeroduri" target="_blank">X</a></li>
-									<li><a class="text" href="https://discord.com/invite/Vrmt8UfDK8" target="_blank">Discord</a></li>
-									<li><a class="text" href="https://www.reddit.com/r/bodyswapai/" target="_blank">Reddit</a></li>
+									<li><a class="text" href="https://x.com/zeroduri" target="_blank" translate="no">X</a></li>
+									<li><a class="text" href="https://discord.com/invite/Vrmt8UfDK8" target="_blank" translate="no">Discord</a></li>
+									<li><a class="text" href="https://www.reddit.com/r/bodyswapai/" target="_blank" translate="no">Reddit</a></li>
 								</ul>
 							</li>
 							<li><a class="text" href="pricing.html">Pricing</a></li>
@@ -268,9 +263,8 @@ document.addEventListener('DOMContentLoaded', function () {
 		const sidebarState = localStorage.getItem('sidebarState');
 		if (sidebarState === 'keepSideBar')
 			removeSidebar(sidebar, hamburgerMenu);
-		else if (sidebarState === null)
-			showSidebar(sidebar, hamburgerMenu);
-
+		else showSidebar(sidebar, hamburgerMenu);
+			
 		sizeBasedElements();
 
 		window.addEventListener('resize', sizeBasedElements);
@@ -280,9 +274,7 @@ document.addEventListener('DOMContentLoaded', function () {
 			localStorage.setItem('sidebarState', 'keepSideBar');
 		}
 
-		const loadingScreen = document.querySelector('.loading-screen');
-		if (loadingScreen) 
-			loadingScreen.remove();
+		document.documentElement.classList.remove('loading-screen');
 	}
 
 	loadDefaultHTML();

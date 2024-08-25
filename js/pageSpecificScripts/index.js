@@ -1,8 +1,9 @@
-import { createPages, cleanPages, updateContent, reconstructMainStyles, getAspectRatio } from '../defaultPageLoads/accessVariables.js';
+import { createPages, updateContent, getAspectRatio, getSizeCache } from '../defaultPageLoads/accessVariables.js';
 
 //console.log("[LOADED] index.js");
 
 document.addEventListener('DOMContentLoaded', function () {
+    let imagesSizeCache = [];
     let pageContents = [];
 
     function updatePageContents() {
@@ -53,7 +54,19 @@ document.addEventListener('DOMContentLoaded', function () {
             `
 			];
 		}
-		else {
+        else {
+            if (!Object.keys(imagesSizeCache).length)
+                imagesSizeCache = getSizeCache();
+
+            const getImageSrc = (key) => {
+                const initialImages = `./assets/${key}-1.webp`;
+                if (Object.keys(imagesSizeCache).length && imagesSizeCache[key] !== null && imagesSizeCache[key].src !== null) {
+                    return imagesSizeCache[key].src;
+                }
+
+                return initialImages;
+            };
+
             pageContents = [
                 `
                 <div style="display: flex;gap: clamp(0px, calc(12vh* var(--scale-factor)), calc(24vw* var(--scale-factor)));justify-content: space-between;align-items: center;">
@@ -78,9 +91,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
                     </div>
                     <div class="end-content">
-                        <img src="./assets/resize-large-1.webp" id="resize-large" loading="eager" alt="Wide Image Example">
-                        <img src="./assets/resize-middle-1.webp" id="resize-middle" loading="eager" alt="Medium Image Example">
-                        <img src="./assets/resize-long-1.webp" id="resize-long" loading="eager" alt="Long Image Example">
+                        <img src="${getImageSrc('resize-large')}" id="resize-large" loading="eager" alt="Wide Image Example">
+                        <img src="${getImageSrc('resize-middle')}" id="resize-middle" loading="eager" alt="Medium Image Example">
+                        <img src="${getImageSrc('resize-long')}" id="resize-long" loading="eager" alt="Long Image Example">
                     </div>
                 </div>
                 <div class="card-container">
@@ -118,54 +131,19 @@ document.addEventListener('DOMContentLoaded', function () {
 		}
     }
 
-    updatePageContents();
-
-    const sizeCache = {};
-
-    function getClosestSize(dimension) {
-        const availableSizes = [128, 256, 512, 768];
-        return availableSizes.reduce((prev, curr) =>
-            Math.abs(curr - dimension) < Math.abs(prev - dimension) ? curr : prev
-        );
-    }
-
-    function retrieveImages(id) {
-        const img = document.getElementById(id);
-        if (!img) 
-            return;
-
-        img.addEventListener('load', function () {
-            const rect = img.getBoundingClientRect();
-            const rectWidth = rect.width;
-            const rectHeight = rect.height;
-
-            const largerDimension = Math.max(rectWidth, rectHeight);
-            if (!sizeCache[id]) {
-                const closestSize = getClosestSize(largerDimension);
-                const newSrc = `./assets/${id}-${closestSize}.webp`;
-                const newSrcset = `${newSrc} ${closestSize}w`;
-                const newSizes = `${closestSize}px`;
-
-                sizeCache[id] = { src: newSrc, srcset: newSrcset, sizes: newSizes };
-
-                img.src = sizeCache[id].src;
-                img.srcset = sizeCache[id].srcset;
-                img.sizes = sizeCache[id].sizes;
-            } else {
-                img.src = sizeCache[id].src;
-                img.srcset = sizeCache[id].srcset;
-                img.sizes = sizeCache[id].sizes;
-            }
-        }, { once: true });
-    }
-
-    createPages(pageContents);
-
     let isUpdated = null;
+    let cleanPages = null, reconstructMainStyles = null;
 
-    function sizeBasedElements() {
+    async function sizeBasedElements() {
         const currentAspectRatio = getAspectRatio();
         const shouldUpdate = currentAspectRatio > 4 / 3;
+
+        window.onload = async function () {
+            const modules = await import('../defaultPageLoads/accessVariables.js');
+            cleanPages = modules.cleanPages;
+            reconstructMainStyles = modules.reconstructMainStyles;
+        };
+
         if (isUpdated === null || isUpdated !== shouldUpdate) {
             isUpdated = shouldUpdate;
             const oldContentLength = pageContents.length;
@@ -173,13 +151,24 @@ document.addEventListener('DOMContentLoaded', function () {
             const currentContentLength = pageContents.length;
 
             if (oldContentLength !== currentContentLength) {
-                cleanPages(pageContents);
+                if (oldContentLength > 0) {
+                    if (!cleanPages) {
+                        const { cleanPages } = await import('../defaultPageLoads/accessVariables.js');
+                        cleanPages(pageContents);
+                    } else cleanPages(pageContents);
+                }
                 createPages(pageContents);
-                reconstructMainStyles(pageContents);
+                if (oldContentLength > 0) {
+                    if (!reconstructMainStyles) {
+                        const { reconstructMainStyles } = await import('../defaultPageLoads/accessVariables.js');
+                        reconstructMainStyles(pageContents);
+                    } else reconstructMainStyles(pageContents);
+                }
             }
 
             updateContent(pageContents);
-            if (shouldUpdate) {
+            if (shouldUpdate && !Object.keys(imagesSizeCache).length) {
+                const { retrieveImages } = await import('../defaultPageLoads/accessVariables.js');
                 retrieveImages('resize-middle');
                 retrieveImages('resize-long');
                 retrieveImages('resize-large');
@@ -187,6 +176,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    window.addEventListener('load', sizeBasedElements);
+    sizeBasedElements();
+
     window.addEventListener('resize', sizeBasedElements);
 });
