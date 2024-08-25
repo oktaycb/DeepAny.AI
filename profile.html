@@ -1,10 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="background: rgba(24, 24, 24, 1);" class="loading-screen">
 <head>
     <title>DeepAny.AI</title>
+
+    <link rel="icon" href="assets/icon.ico" type="image/x-icon" title="DeepAny.AI Favicon">
+    <link rel="canonical" href="https://www.deepany.ai/profile">
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Manage your DeepAny.AI profile. Update your account details, review your activity, and customize your AI experience to suit your needs.">
+    <meta name="keywords" content="AI, DeepAny, bodyswap, technology, services, solutions">
+
+    
+    <link rel="stylesheet" href="css/loading.css">
+
+    <link rel="preload" href="assets/logo.webp" as="image">
+    <link rel="preload" href="css/pxiEyp8kv8JHgFVrJJfecg.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+    <link rel="preload" href="css/pxiByp8kv8JHgFVrLCz7Z1xlFQ.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+
+    
     <link rel="stylesheet" href="css/styles.css">
     <style>
         .background-container {
@@ -13,11 +27,12 @@
             height: 100%;
         }
     </style>
-</head>
-<body translate="no">
-    <div class="loading-screen"><div class="loading-spinner"></div></div>
+
     <script type="module" src="js/pageSpecificScripts/profile.js" defer></script>
     <script type="module" src="js/defaultPageLoads/loadDefaultHTML.js" defer></script>
+</head>
+<body lang="en" translate="yes">
     <script type="module" src="js/firebase/authentication.js" defer></script>
+    <script src="js/defaultPageLoads/autoTranslate.js" async></script>
 </body>
 </html>

@@ -990,18 +990,7 @@ input[type='range'] {
 }
 
 .offset {
-    animation: fadeLetterIn 2s cubic-bezier(0.33, 1, 0.68, 1);
     letter-spacing: calc(6vw * var(--scale-factor));
-}
-
-@keyframes fadeLetterIn {
-    0% {
-        letter-spacing: 0px;
-    }
-
-    100% {
-        letter-spacing: calc(6vw * var(--scale-factor));
-    }
 }
 
 .faded-content {
