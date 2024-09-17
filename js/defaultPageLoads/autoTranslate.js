@@ -33,7 +33,7 @@ function googleTranslateElementInit() {
                     if (mutation.addedNodes.length > 0) {
                         var selectElement = document.querySelector("#google_translate_element select");
                         if (selectElement) {
-                            selectElement.selectedIndex = 1;
+                            selectElement.selectedIndex = 1; // Select browser default langugage. (0 is english)
                             selectElement.dispatchEvent(new Event('change'));
                             observer.disconnect();
                             resolve();

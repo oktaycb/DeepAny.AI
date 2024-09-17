@@ -11,28 +11,408 @@
     <meta name="description" content="Manage your DeepAny.AI profile. Update your account details, review your activity, and customize your AI experience to suit your needs.">
     <meta name="keywords" content="AI, DeepAny, bodyswap, technology, services, solutions">
 
-    
-    <link rel="stylesheet" href="css/loading.css">
-
+    <link id="loading-stylesheet" rel="stylesheet" href="css/loading.css">
     <link rel="preload" href="assets/logo.webp" as="image">
     <link rel="preload" href="css/pxiEyp8kv8JHgFVrJJfecg.woff2" as="font" type="font/woff2" crossorigin="anonymous">
     <link rel="preload" href="css/pxiByp8kv8JHgFVrLCz7Z1xlFQ.woff2" as="font" type="font/woff2" crossorigin="anonymous">
 
-    
     <link rel="stylesheet" href="css/styles.css">
     <style>
         .background-container {
             margin: unset;
-            width: -webkit-fill-available;
+            width: 100%;
             height: 100%;
         }
     </style>
-
-    <script type="module" src="js/pageSpecificScripts/profile.js" defer></script>
-    <script type="module" src="js/defaultPageLoads/loadDefaultHTML.js" defer></script>
 </head>
-<body lang="en" translate="yes">
-    <script type="module" src="js/firebase/authentication.js" defer></script>
-    <script src="js/defaultPageLoads/autoTranslate.js" async></script>
+<body lang="en">
+    <script type="module" defer>
+        import { loadPageContent } from './js/defaultPageLoads/loadDefaultHTML.js';
+        import { cacheImage, handleImageUpload } from './js/functions.js';
+
+        const cachedUserData = JSON.parse(localStorage.getItem('cachedUserData'));
+
+        document.addEventListener('DOMContentLoaded', function () {
+            function updateMainContent(screenMode, pageContent) {
+                pageContent.length = 0;
+
+                if (!cachedUserData) {
+                    pageContent.push(`
+                        <div style="display: flex;flex-direction: column;align-items: center;justify-content: center;gap: 1vh;">
+                            <h1>Account does not exist.</h1>
+                        </div>
+                        `);
+                    return;
+                }
+
+                if (screenMode !== 1) {
+                    pageContent.push(` 
+                                                    <div class="background-container">
+                                                        <div class="background-dot-container">
+                                                            <div class="background-dot-container-content">
+                                                                <div class="flex-column background-dot-container-header">
+                                                                    <h3 class="uppercase text-gradient">Profile</h3>
+                                                                    <p>Here you can manage your profile.</p>
+                                                                </div>
+                                                                <div class="line"></div>
+                                                                <div class="profile-link" onclick="#">
+                                                                    <img src="assets/profile.png" alt="Profile Image" class="profile-image">
+                                                                </div>
+                                                                <div style="text-align: center;">
+                                                                    <h3 id="displayName"></h3>
+                                                                    <p style="opacity: 0.5; font-weight: 300;">durieun02@gmail.com</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+ 
+                                                    <div class="background-container">
+                                                        <a class="background-dot-container">
+                                                            <div class="background-dot-container-content">
+                                                                <div class="flex-column background-dot-container-header">
+                                                                    <h3 class="uppercase text-gradient">Privacy</h3>
+                                                                    <p>Here you can manage your privacy.</p>
+                                                                </div>
+                                                                <div class="line"></div>
+                                                                <div style="display: grid; grid-template-columns: repeat(1, 1fr); gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor))); margin: clamp(0px, calc(1vh * var(--scale-factor)), calc(2vw * var(--scale-factor))) clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor))); justify-content: space-between;">
+                                                                    <div style="font-size: 0px;">
+                                                                        <h4 style="font-weight: 300;">Profile Visibility</h4>
+                                                                        <select id="profileVisibility">
+                                                                            <option value="public">Public</option>
+                                                                            <option value="private">Private</option>
+                                                                            <option value="friends">Friends Only</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div style="font-size: 0px;">
+                                                                        <h4 style="font-weight: 300;">Post Visibility</h4>
+                                                                        <select id="postVisibility">
+                                                                            <option value="private">Private</option>
+                                                                            <option value="friends">Friends Only</option>
+                                                                            <option value="public">Public</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div style="font-size: 0px;">
+                                                                        <h4 style="font-weight: 300;">Email Visibility</h4>
+                                                                        <select id="emailVisibility">
+                                                                            <option value="private">Private</option>
+                                                                            <option value="friends">Friends Only</option>
+                                                                            <option value="public">Public</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div style="font-size: 0px;">
+                                                                        <h4 style="font-weight: 300;">Phone Visibility</h4>
+                                                                        <select id="phoneVisibility">
+                                                                            <option value="private">Private</option>
+                                                                            <option value="friends">Friends Only</option>
+                                                                            <option value="public">Public</option>
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </a>
+                                                    </div>
+										`,
+                                                    ` <div class="background-container">
+                                                        <a class="background-dot-container">
+                                                            <div class="background-dot-container-content">
+                                                                <div class="flex-column background-dot-container-header">
+                                                                    <h3 class="uppercase text-gradient">Account</h3>
+                                                                    <p>Here you can manage your account.</p>
+                                                                </div>
+                                                                <div class="line"></div>
+                                                                    <h4>User information</h4>
+                                                                    <div style="display: grid; grid-template-columns: repeat(1, 1fr); gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor))); margin: clamp(0px, calc(1vh * var(--scale-factor)), calc(2vw * var(--scale-factor))) clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor))); justify-content: space-between;">
+                                                                        <div style="font-size: 0px;">
+                                                                            <h4 style="font-weight: 300;">Username</h4>
+                                                                            <input value="Duri Eun"></input>
+                                                                        </div>
+                                                                        <div style="font-size: 0px;">
+                                                                            <h4 style="font-weight: 300;">Email Address</h4>
+                                                                            <input value="durieun02@gmail.com"></input>
+                                                                        </div>
+                                                                        <div style="font-size: 0px;">
+                                                                            <h4 style="font-weight: 300;">Password</h4>
+                                                                            <input value="******"></input>
+                                                                        </div>
+                                                                        <div style="font-size: 0px;">
+                                                                            <h4 style="font-weight: 300;">Phone Number</h4>
+                                                                            <input value="******"></input>
+                                                                        </div>
+                                                                    </div>
+                                                                <div class="line"></div>
+                                                                    <h4>About Me</h4>
+                                                                    <div style="margin-left: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));;margin-top: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor)));;">
+                                                                        <h4 style="font-weight: 300;">About Me</h4>
+                                                                    </div>
+                                                                    <div style="font-size: 0px;margin-left: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));;margin-right: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));margin-bottom: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor)));width: -webkit-fill-available;height: 100%;">
+                                                                        <textarea placeholder="Tell us about yourself..." maxlength="2000" style="width: 100%;height: 100%;"></textarea>
+                                                                    </div>
+                                                                <div class="line"></div>
+                                                                <div style="margin-left: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));;margin-top: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor)));;"> 
+                                                                    <h4 style="font-weight: 300;">Referral link</h4>
+                                                                    <div style="display: flex;flex-direction: column;gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));">
+                                                                        <div style="display: flex;flex-direction: row;gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));">
+                                                                            <input class="important-outline" value="https://deepany.ai/register?referral=KYN1HG"></input>
+                                                                            <button>Copy</input>
+                                                                        </div>
+                                                                    <div style="display: flex;flex-direction: row;gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));">
+                                                                            <button style="width: 100%">Referral Credits</input>
+                                                                            <button style="width: 100%">Daily Credits</input>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </a>
+                                                    </div>
+										`,
+                        ` 
+                                                    <div class="background-container">
+                                                        <a class="background-dot-container">
+                                                            <div class="background-dot-container-content">
+                                                                <div class="flex-column background-dot-container-header">
+                                                                    <h3 class="uppercase text-gradient">Billing</h3>
+                                                                    <p>Here you can manage your billing.</p>
+                                                                </div>
+                                                                <div class="line"></div>
+                                                                <h4>Plan</h4>
+                                                                <div style="margin: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));">
+                                                                    <p style="font-weight: 300;">Subscription: 01/01/2024</p>
+                                                                </div>
+                                                                <div class="line"></div>
+                                                                <h4>Invoices</h4>
+                                                                <div style="margin: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));">
+                                                                    <p style="font-weight: 300;">Payment Date: 01/01/2024</p>
+                                                                    <p style="font-weight: 300;">Payment Amount: $99.99</p>
+                                                                </div>
+                                                            </div>
+                                                        </a>
+                                                    </div>
+                                                        <div class="background-container">
+                                                            <a class="background-dot-container">
+                                                                <div class="background-dot-container-content">
+                                                                    <div class="flex-column background-dot-container-header">
+                                                                        <h3 class="uppercase text-gradient">Comments</h3>
+                                                                        <p>Here you can see your comments.</p>
+                                                                    </div>
+                                                                    <div class="line"></div>
+                                                                    <div style="text-align: center; margin: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));">
+                                                                        <p style="opacity: 0.5; font-weight: 300;">No additional information available.</p>
+                                                                    </div>
+                                                                </div>
+                                                            </a>
+                                                        </div>
+                                            `);
+                } else {
+                    pageContent.push(` 
+                                            <div style="display: contents; height: -webkit-fill-available; gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));">
+                                                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor))); height: 100%;">
+                                                    <!-- Profile Section -->
+                                                    <div class="background-container">
+                                                        <div class="background-dot-container">
+                                                            <div class="background-dot-container-content">
+                                                                <div class="flex-column background-dot-container-header">
+                                                                    <h3 class="uppercase text-gradient">Profile</h3>
+                                                                    <p>Here you can manage your profile.</p>
+                                                                </div>
+                                                                <div class="line"></div>
+                                                                <div class="profile-link">
+                                                                    <img id="profileImage" alt="Profile Image" class="profile-image">
+                                                                </div>
+                                                                <div style="text-align: center;">
+                                                                    <h3 id="displayName"></h3>
+                                                                    <p id="emailAddress" style="opacity: 0.5; font-weight: 300;"></p>
+                                                                </div>
+                                                                <div class="line"></div>
+                                                                <h4 style="font-weight: 300;">Referral link</h4>
+                                                                <div style="display: flex; flex-direction: column; gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));">
+                                                                    <div style="display: flex; flex-direction: row; gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));">
+                                                                        <input id="referralLink" class="important-outline" value="https://deepany.ai/register?referral=KYN1HG" readonly>
+                                                                        <button id="copyButton">Copy</button>
+                                                                    </div>
+                                                                    <div style="display: flex; flex-direction: row; gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));">
+                                                                        <button style="width: -webkit-fill-available">Referral Credits</button>
+                                                                        <button style="width: -webkit-fill-available">Daily Credits</button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+
+                                                    <div class="background-container">
+                                                        <a class="background-dot-container">
+                                                            <div class="background-dot-container-content">
+                                                                <div class="flex-column background-dot-container-header">
+                                                                    <h3 class="uppercase text-gradient">Account</h3>
+                                                                    <p>Here you can manage your account.</p>
+                                                                </div>
+                                                                <div class="line"></div>
+                                                                    <h4>User information</h4>
+                                                                    <div style="display: grid; grid-template-columns: repeat(1, 1fr); gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor))); margin: clamp(0px, calc(1vh * var(--scale-factor)), calc(2vw * var(--scale-factor))) clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor))); justify-content: space-between;">
+                                                                    <div style="font-size: 0px;">
+                                                                        <h4 style="font-weight: 300;">Username</h4>
+                                                                        <input id="username" value="" readonly="">
+                                                                    </div>
+                                                                    <div style="font-size: 0px;">
+                                                                        <h4 style="font-weight: 300;">Email Address</h4>
+                                                                        <input id="email" value="" readonly="">
+                                                                    </div>
+                                                                           <div style="font-size: 0px;">
+                                                                        <h4 style="font-weight: 300;">Password</h4>
+                                                                        <input id="password" type="password" value="******" readonly="">
+                                                                    </div>
+                                                                    <div style="font-size: 0px;">
+                                                                        <h4 style="font-weight: 300;">Phone Number</h4>
+                                                                        <input id="phoneNumber" value="******" readonly="">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </a>
+                                                    </div>
+
+                                                    <div class="background-container">
+                                                        <a class="background-dot-container">
+                                                            <div class="background-dot-container-content">
+                                                                <div class="flex-column background-dot-container-header">
+                                                                    <h3 class="uppercase text-gradient">Billing</h3>
+                                                                    <p>Here you can manage your billing.</p>
+                                                                </div>
+                                                                <div class="line"></div>
+                                                                <h4>Plan</h4>
+                                                                <div style="margin: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));">
+                                                                    <p style="font-weight: 300;">Subscription: 01/01/2024</p>
+                                                                </div>
+                                                                <div class="line"></div>
+                                                                <h4>Invoices</h4>
+                                                                <div style="margin: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));">
+                                                                    <p style="font-weight: 300;">Payment Date: 01/01/2024</p>
+                                                                    <p style="font-weight: 300;">Payment Amount: $99.99</p>
+                                                                </div>
+                                                            </div>
+                                                        </a>
+                                                    </div>
+                                                </div>
+
+                                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor))); height: 100%;">
+                                                    <!-- Comments Section -->
+                                                    <div class="background-container">
+                                                        <a class="background-dot-container">
+                                                            <div class="background-dot-container-content">
+                                                                <div class="flex-column background-dot-container-header">
+                                                                    <h3 class="uppercase text-gradient">About Me</h3>
+                                                                    <p>You can tell us about yourself here.</p>
+                                                                </div>
+                                                                <div class="line"></div>
+                                                                <h4>About Me</h4>
+                                                                <div style="margin-left: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));;margin-top: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor)));;">
+                                                                    <h4 style="font-weight: 300;">About Me</h4>
+                                                                </div>
+                                                                <div style="font-size: 0px;margin-left: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));;margin-right: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));margin-bottom: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor)));width: -webkit-fill-available;height: 100%;">
+                                                                    <textarea placeholder="Tell us about yourself..." maxlength="2000" style="width: -webkit-fill-available;/*height: 100%;*/"></textarea>
+                                                                </div>
+                                                            </div>
+                                                        </a>
+                                                    </div>
+
+                                                    <div class="background-container">
+                                                        <a class="background-dot-container">
+                                                            <div class="background-dot-container-content">
+                                                                <div class="flex-column background-dot-container-header">
+                                                                    <h3 class="uppercase text-gradient">Privacy</h3>
+                                                                    <p>Here you can manage your privacy.</p>
+                                                                </div>
+                                                                <div class="line"></div>
+                                                                <h4>Privacy</h4>
+                                                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor))); margin: clamp(0px, calc(1vh * var(--scale-factor)), calc(2vw * var(--scale-factor))) clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor))); justify-content: space-between;">
+                                                                    <div style="font-size: 0px;">
+                                                                        <h4 style="font-weight: 300;">Profile Visibility</h4>
+                                                                        <select id="profileVisibility">
+                                                                            <option value="public">Public</option>
+                                                                            <option value="private">Private</option>
+                                                                            <option value="friends">Friends Only</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div style="font-size: 0px;">
+                                                                        <h4 style="font-weight: 300;">Post Visibility</h4>
+                                                                        <select id="postVisibility">
+                                                                            <option value="private">Private</option>
+                                                                            <option value="friends">Friends Only</option>
+                                                                            <option value="public">Public</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div style="font-size: 0px;">
+                                                                        <h4 style="font-weight: 300;">Email Visibility</h4>
+                                                                        <select id="emailVisibility">
+                                                                            <option value="private">Private</option>
+                                                                            <option value="friends">Friends Only</option>
+                                                                            <option value="public">Public</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div style="font-size: 0px;">
+                                                                        <h4 style="font-weight: 300;">Phone Visibility</h4>
+                                                                        <select id="phoneVisibility">
+                                                                            <option value="private">Private</option>
+                                                                            <option value="friends">Friends Only</option>
+                                                                            <option value="public">Public</option>
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+										`);
+                }
+            }
+
+            loadPageContent(updateMainContent);
+
+            if (!cachedUserData) {
+                const registerButton = document.getElementById("loginButton");
+                if (registerButton) 
+                    registerButton.click();
+                return;
+            }
+
+            document.getElementById("copyButton").addEventListener("click", () => {
+                const linkElement = document.getElementById('referralLink');
+                linkElement.select();
+                linkElement.setSelectionRange(0, linkElement.value.length);
+
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(linkElement.value).then(() => {}).catch(err => { alert('Failed to copy link:', err); });
+                } else {
+                    try {
+                        document.execCommand('copy');
+                    } catch (err) { alert('Failed to copy link:', err); }
+                }
+            });
+
+            document.getElementById("displayName").textContent = cachedUserData.displayName;
+            document.getElementById("emailAddress").textContent = cachedUserData.email;
+
+            handleImageUpload('profileImage', 'profileImageBase64');
+
+            const cachedImage = localStorage.getItem('profileImageBase64');
+            const profileImageElement = document.getElementById('profileImage');
+
+            if (cachedImage) {
+                profileImageElement.src = cachedImage;
+            } else {
+                cacheImage(cachedUserData.photoURL, function (base64Image) {
+                    localStorage.setItem('profileImageBase64', base64Image);
+                    profileImageElement.src = base64Image;
+                }, 2, 1000, true);
+            }
+
+            profileImageElement.onerror = function () {
+                profileImageElement.src = 'assets/profile.webp';
+            };
+
+            document.getElementById("username").value = cachedUserData.displayName;
+            document.getElementById("email").value = cachedUserData.email;
+        });
+    </script>
 </body>
 </html>

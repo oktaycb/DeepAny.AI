@@ -1,47 +1,51 @@
-﻿@property --transition-white {
-    syntax: '<color>';
-    initial-value: rgba(216, 216, 216, 1);
-    inherits: false;
+﻿.center, .profile-link {
+    align-self: center
 }
 
-@property --transition-grey {
-    syntax: '<color>';
-    initial-value: rgba(64, 64, 64, 1);
-    inherits: false;
+.center, .first-text, .slider-value, button, a.button {
+    text-align: center
 }
 
-@property --transition-red {
-    syntax: '<color>';
-    initial-value: rgba(255, 64, 64, 1);
-    inherits: false;
+.main-container, body, main {
+    overflow: hidden
 }
 
-@property --transition-orange {
-    syntax: '<color>';
-    initial-value: rgba(255, 128, 32, 1);
-    inherits: false;
+body, h1, h2, h3, h4, p {
+    margin: 0
 }
 
-@property --transition-angle {
-    syntax: '<angle>';
-    initial-value: 165deg;
-    inherits: false;
+*, input, select, textarea {
+    color: rgba(var(--white),1)
+}
+
+.sidebar, main {
+    max-width: 100vw;
+    max-height: 100vh
+}
+
+.text-gradient, a.text:hover {
+    -webkit-text-fill-color: transparent
+}
+
+.dropdown-menu a, a {
+    text-decoration: none
+}
+
+.plans-name, .uppercase {
+    text-transform: uppercase; font-weight: 700
 }
 
 :root {
-    /* Transitions */
     --transition-duration-5: calc(1s) ease;
     --transition-duration-4: calc(0.8s) ease;
     --transition-duration-3: calc(0.6s) ease;
     --transition-duration-2: calc(0.4s) ease;
     --transition-duration-1: calc(0.2s) ease;
-    /* Colors */
-    --white: 216, 216, 216;
+    --white: 216,216,216;
     --dark: rgba(32, 32, 32, 1);
-    --grey: 64, 64, 64;
+    --grey: 64,64,64;
     --red: rgba(255, 64, 64, 1);
     --orange: rgba(255, 128, 32, 1);
-    /* Colors */
     --background-color: rgba(16,16,16,1);
     --background-lighter-color: rgba(24,24,24,1);
     --background-transparent-color: rgba(32,32,32,.5);
@@ -53,203 +57,208 @@
     --border: 1px;
     --border-radius: clamp(0px, calc(1.2vh * var(--scale-factor)), calc(2.4vw * var(--scale-factor)));
     --ease-time: 0.5s;
-    --gradient-logo-color: -webkit-linear-gradient(45deg, var(--red), var(--orange)); /* Safari 5.1 - 6.0 */
-    --gradient-logo-color: -moz-linear-gradient(45deg, var(--red), var(--orange)); /* FF 3.6 - 15 */
-    --gradient-logo-color: -o-linear-gradient(45deg, var(--red), var(--orange)); /* Opera 11.1 - 12 */
+    --gradient-logo-color: -webkit-linear-gradient(45deg, var(--red), var(--orange));
+    --gradient-logo-color: -moz-linear-gradient(45deg, var(--red), var(--orange));
+    --gradient-logo-color: -o-linear-gradient(45deg, var(--red), var(--orange));
     --gradient-logo-color: linear-gradient(45deg, var(--red), var(--orange));
-    --hover-gradient-logo-color: -webkit-linear-gradient(45deg, rgb(180, 45, 50), rgb(204, 126, 71)); /* Safari 5.1 - 6.0 */
-    --hover-gradient-logo-color: -moz-linear-gradient(45deg, rgb(180, 45, 50), rgb(204, 126, 71)); /* FF 3.6 - 15 */
-    --hover-gradient-logo-color: -o-linear-gradient(45deg, rgb(180, 45, 50), rgb(204, 126, 71)); /* Opera 11.1 - 12 */
-    --hover-gradient-logo-color: linear-gradient(45deg, rgb(180, 45, 50), rgb(204, 126, 71));
+    --hover-gradient-logo-color: -webkit-linear-gradient(45deg, rgb(180, 45, 50), rgb(204, 126, 71));
+    --hover-gradient-logo-color: -moz-linear-gradient(45deg, rgb(180, 45, 50), rgb(204, 126, 71));
+    --hover-gradient-logo-color: -o-linear-gradient(45deg, rgb(180, 45, 50), rgb(204, 126, 71));
+    --hover-gradient-logo-color: linear-gradient(45deg, rgb(180, 45, 50), rgb(204, 126, 71))
 }
 
 @font-face {
-    font-family: 'Poppins';
+    font-family: Poppins;
     font-style: normal;
     font-weight: 400;
     font-display: block;
     src: url('pxiEyp8kv8JHgFVrJJfecg.woff2') format('woff2');
-    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD
 }
 
 @font-face {
-    font-family: 'Poppins';
+    font-family: Poppins;
     font-style: normal;
     font-weight: 700;
     font-display: block;
     src: url('pxiByp8kv8JHgFVrLCz7Z1xlFQ.woff2') format('woff2');
-    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD
+}
+
+@property --transition-white {
+    syntax: '<color>';
+    initial-value: rgba(216,216,216,1);
+    inherits: false
+}
+
+@property --transition-grey {
+    syntax: '<color>';
+    initial-value: rgba(64,64,64,1);
+    inherits: false
+}
+
+@property --transition-red {
+    syntax: '<color>';
+    initial-value: rgba(255,64,64,1);
+    inherits: false
+}
+
+@property --transition-orange {
+    syntax: '<color>';
+    initial-value: rgba(255,128,32,1);
+    inherits: false
+}
+
+@property --transition-angle {
+    syntax: '<angle>';
+    initial-value: 165deg;
+    inherits: false
 }
 
 * {
     box-sizing: border-box;
-    font-family: "Poppins", sans-serif;
-    color: rgba(var(--white), 1);
-    /* Transitions */
+    font-family: Poppins,sans-serif;
     transition: color var(--transition-duration-1);
     -webkit-transition: color var(--transition-duration-1);
     -moz-transition: color var(--transition-duration-1);
     -o-transition: color var(--transition-duration-1);
-    -ms-transition: color var(--transition-duration-1);
+    -ms-transition: color var(--transition-duration-1)
 }
 
 .card-link, .card-link * {
-    color: black !important;
+    color: #000 !important
 }
 
 .subtext, .subtext * {
-    color: rgba(var(--white), 0.75) !important;
+    color: rgba(var(--white),.75) !important
 }
 
-    *:not(.card-link):hover {
-        color: white;
+.important, :not(.card-link):hover {
+    color: #fff
+}
+
+::-webkit-scrollbar {
+    width: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: rgba(var(--white), 1);
+    border: clamp(0px, calc(0.5vh * var(--scale-factor)), calc(1.5vw * var(--scale-factor))) solid transparent;
+    border-radius: var(--border-radius);
+    background-clip: padding-box;
+}
+
+    ::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(var(--white), 0.8);
     }
+
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
 
 body {
-    margin: 0;
-    overflow: hidden;
     position: unset !important;
     min-height: unset !important;
-}
-
-.skiptranslate {
-    display: none !important;
-    position: absolute;
-}
-
-.goog-tooltip {
-    display: none !important;
-    position: absolute;
-}
-
-    .goog-tooltip:hover {
-        display: none !important;
-        position: absolute;
-    }
-
-.goog-text-highlight {
-    background-color: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    position: absolute;
-}
-
-.VIpgJd-yAWNEb-VIpgJd-fmcmS-sn54Q {
-    background-color: unset !important;
-    box-shadow: unset !important;
-    box-sizing: unset !important;
-    -webkit-box-sizing: unset !important;
-    -moz-box-sizing: unset !important;
-    position: unset !important;
+    top: unset !important
 }
 
 main {
     display: none;
     position: absolute;
-    max-width: 100vw;
-    max-height: 100vh;
-    background: transparent;
-    /* Transitions */
-    transition: top var(--transition-duration-3), height var(--transition-duration-3);
-    -webkit-transition: top var(--transition-duration-3), height var(--transition-duration-3);
-    -moz-transition: top var(--transition-duration-3), height var(--transition-duration-3);
-    -o-transition: top var(--transition-duration-3), height var(--transition-duration-3);
-    -ms-transition: top var(--transition-duration-3), height var(--transition-duration-3);
-    overflow: hidden;
-    z-index: 1;
+    background: 0 0;
+    transition: top var(--transition-duration-3),height var(--transition-duration-3);
+    -webkit-transition: top var(--transition-duration-3),height var(--transition-duration-3);
+    -moz-transition: top var(--transition-duration-3),height var(--transition-duration-3);
+    -o-transition: top var(--transition-duration-3),height var(--transition-duration-3);
+    -ms-transition: top var(--transition-duration-3),height var(--transition-duration-3);
+    z-index: 1
+}
+
+.nav-links li, a, li {
+    position: relative
 }
 
 .main-container {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    margin: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));
-    gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));
+    margin: clamp(0px,calc(2vh * var(--scale-factor)),calc(4vw * var(--scale-factor)));
+    gap: clamp(0px,calc(2vh * var(--scale-factor)),calc(4vw * var(--scale-factor)));
     width: inherit;
     height: auto;
-    overflow: hidden;
-    z-index: 1;
+    z-index: 1
 }
 
 .flex-column {
     display: flex;
-    flex-direction: column;
-}
-
-.uppercase {
-    text-transform: uppercase;
-}
-
-h1, h2, h3, h4, p {
-    margin: 0;
+    flex-direction: column
 }
 
 h1 {
     font-size: clamp(0px, calc(6vh * var(--scale-factor)), calc(12vw * var(--scale-factor)));
-    line-height: clamp(0px, calc(6vh * 1.1 * var(--scale-factor)), calc(12vw * 1.1 * var(--scale-factor)));
+    line-height: clamp(0px, calc(6vh * 1.1 * var(--scale-factor)), calc(12vw * var(--scale-factor) * 1.1))
 }
 
 h2 {
     font-size: clamp(0px, calc(5vh * var(--scale-factor)), calc(10vw * var(--scale-factor)));
-    line-height: clamp(0px, calc(5vh * 1.33 * var(--scale-factor)), calc(10vw * 1.33 * var(--scale-factor)));
+    line-height: clamp(0px, calc(5vh * 1.33 * var(--scale-factor)), calc(10vw * var(--scale-factor) * 1.33))
 }
 
 h3 {
     font-size: clamp(0px, calc(4vh * var(--scale-factor)), calc(8vw * var(--scale-factor)));
-    line-height: clamp(0px, calc(4vh * 1.33 * var(--scale-factor)), calc(8vw * 1.33 * var(--scale-factor)));
+    line-height: clamp(0px, calc(4vh * 1.33 * var(--scale-factor)), calc(8vw * var(--scale-factor) * 1.33))
 }
 
 h4 {
     font-size: clamp(0px, calc(2.5vh * var(--scale-factor)), calc(5vw * var(--scale-factor)));
-    line-height: clamp(0px, calc(2.5vh * 1.33 * var(--scale-factor)), calc(5vw * 1.33 * var(--scale-factor)));
+    line-height: clamp(0px, calc(2.5vh * 1.33 * var(--scale-factor)), calc(5vw * var(--scale-factor) * 1.33))
 }
 
 p {
     font-size: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));
-    line-height: clamp(0px, calc(2vh * 1.33 * var(--scale-factor)), calc(4vw * 1.33 * var(--scale-factor)));
+    line-height: clamp(0px, calc(2vh * 1.5 * var(--scale-factor)), calc(4vw * var(--scale-factor) * 1.5))
+}
+
+button, a.button, input, li, select, textarea {
+    font-size: clamp(0px, calc(2.5vh * var(--scale-factor)), calc(5vw * var(--scale-factor)))
 }
 
 li {
-    font-size: clamp(0px, calc(2.5vh * var(--scale-factor)), calc(5vw * var(--scale-factor)));
-    line-height: clamp(0px, calc(2.5vh * 1.75 * var(--scale-factor)), calc(5vw * 1.75 * var(--scale-factor)));
+    line-height: clamp(0px, calc(2.5vh * 1.75 * var(--scale-factor)), calc(5vw * var(--scale-factor) * 1.75))
 }
 
-a { 
+a {
     font-weight: 400;
-    position: relative; /* Ensure the pseudo-element is positioned relative to the link */
-    display: inline-block; /* Makes sure the pseudo-element fits the content width */
-    text-decoration: none; /* Optional: Remove default underline */
+    display: inline-block
 }
 
     a.text:hover {
         color: #f97b06;
-        background: linear-gradient(31deg, #f97b06 25%, #ff0000);
-        -webkit-background-clip: text; /* Chrome, Safari */
-        -webkit-text-fill-color: transparent; /* Chrome, Safari */
+        background: linear-gradient(31deg,#f97b06 25%,red);
+        -webkit-background-clip: text
+    }
+
+    a.text::before, input[type=range]:focus {
+        background: rgba(var(--white),1)
     }
 
     a.text::before {
-        /* Set Position */
         content: '';
         position: absolute;
         bottom: 0;
         left: 0;
-        /* Set Height & Width */
         width: 100%;
         height: 1px;
-        background: rgba(var(--white), 1);
-        /* Transitions */
         transition: transform var(--transition-duration-1);
         -webkit-transition: transform var(--transition-duration-1);
         -moz-transition: transform var(--transition-duration-1);
         -o-transition: transform var(--transition-duration-1);
         -ms-transition: transform var(--transition-duration-1);
-        /* Transform */
         transform: scaleX(0);
         -webkit-transform: scaleX(0);
         -moz-transform: scaleX(0);
         -o-transform: scaleX(0);
-        -ms-transform: scaleX(0);
+        -ms-transform: scaleX(0)
     }
 
 .button-container {
@@ -261,10 +270,10 @@ a {
     -moz-justify-content: flex-start;
     -ms-justify-content: flex-start;
     width: 75%;
-    gap: clamp(0px, calc(1vh * var(--scale-factor)), calc(12vw * var(--scale-factor)));
+    gap: clamp(0px,calc(1vh * var(--scale-factor)),calc(12vw * var(--scale-factor)))
 }
 
-button {
+button, a.button {
     display: flex;
     -moz-display: flex;
     -ms-display: flex;
@@ -277,167 +286,152 @@ button {
     -moz-align-items: center;
     -ms-align-items: center;
     white-space: nowrap;
-    text-align: center;
     border: var(--border) solid;
     border-radius: var(--border-radius);
     border-color: rgba(var(--grey), 1);
     cursor: pointer;
     font-weight: 500;
-    background: linear-gradient(45deg, rgba(24,24,24,1) 60%, rgba(24,24,24,1));
-    height: clamp(0px, calc(6vh * var(--scale-factor)), calc(12vw * var(--scale-factor)));
+    background: linear-gradient(45deg,#181818 60%,#181818);
+    height: clamp(0px,calc(6vh * var(--scale-factor)),calc(12vw * var(--scale-factor)));
     width: 30%;
-    font-size: clamp(0px, calc(2.5vh * var(--scale-factor)), calc(5vw * var(--scale-factor)));
+    min-width: fit-content;
     padding: 0;
-    /* Transitions */
+    outline: none; /* Removes the default focus outline */
     transition: all var(--transition-duration-1);
     -webkit-transition: all var(--transition-duration-1);
     -moz-transition: all var(--transition-duration-1);
     -o-transition: all var(--transition-duration-1);
-    -ms-transition: all var(--transition-duration-1);
+    -ms-transition: all var(--transition-duration-1)
 }
 
-    button svg {
-        margin-right: calc(1vh * var(--scale-factor));
-        width: calc(2.5vh * var(--scale-factor));
-        opacity: 0.75;
-        -webkit-opacity: 0.75;
-        -moz-opacity: 0.75;
+.button-click-animation {
+    border-color: green;
+    animation: borderAnimation 0.5s ease-out forwards;
+}
+
+/* Keyframes for border animation */
+@keyframes borderAnimation {
+    0% {
+        border-color: green;
     }
 
-    button:hover svg {
-        opacity: 1;
-        -webkit-opacity: 1;
-        -moz-opacity: 1;
-        -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)"; /* IE 8 */
+    100% {
+        border-color: inherit;
     }
+}
 
-    .important {
-        background: var(--gradient-logo-color);
-        border-color: rgba(var(--white), 1);
-        color: white;
-    }
+button svg, a.button svg {
+    margin-right: calc(1vh * var(--scale-factor));
+    width: calc(2.5vh * var(--scale-factor));
+    opacity: .75;
+    -webkit-opacity: 0.75;
+    -moz-opacity: 0.75
+}
 
-.profile-input-about {
-    border-radius: var(--border-radius);
+button:hover svg, a.button:hover svg {
+    opacity: 1;
+    -webkit-opacity: 1;
+    -moz-opacity: 1
+}
+
+button:hover, a.button:hover {
+    background: var(--hover-gradient-logo-color);
+    transition: background .3s ease,border-color .3s ease,color var(--transition-duration-1);
+    -webkit-transition: background .3s ease,border-color .3s ease,color var(--transition-duration-1);
+    -moz-transition: background .3s ease,border-color .3s ease,color var(--transition-duration-1);
+    -o-transition: background .3s ease,border-color .3s ease,color var(--transition-duration-1);
+    -ms-transition: background .3s ease,border-color .3s ease,color var(--transition-duration-1)
+}
+
+button:disabled, a.button:disabled {
+    background: var(--background-disabled-color);
+    color: var(--text-disabled-color);
+    cursor: not-allowed;
+    opacity: .6;
+    -webkit-opacity: 0.6;
+    -moz-opacity: 0.6
+}
+
+.sidebar button, .sidebar a.button {
+    margin: clamp(0px,calc(.75vh * var(--scale-factor)),calc(1.5vw * var(--scale-factor))) 0;
+    white-space: nowrap;
+    justify-content: left;
+    padding-left: clamp(0px,calc(1.5vh * var(--scale-factor)),calc(3vw * var(--scale-factor)));
+    width: 100%;
+}
+
+.important, a.button.important {
+    background: var(--gradient-logo-color);
+}
+
+.card:hover, .end-content img:hover, .important, a.button.important, button:hover, a.button:hover {
+    border-color: rgba(var(--white),1)
+}
+
+.background-container, .profile-input-about {
+    border-radius: var(--border-radius)
 }
 
 .profile-link {
-    align-self: center;
-    cursor: pointer;
+    cursor: pointer
 }
 
 .profile-image {
-    width: clamp(0px, calc(17vh * var(--scale-factor)), calc(34vw * var(--scale-factor)));
-    height: clamp(0px, calc(17vh * var(--scale-factor)), calc(34vw * var(--scale-factor)));
+    width: clamp(0px,calc(17vh * var(--scale-factor)),calc(34vw * var(--scale-factor)));
+    height: clamp(0px,calc(17vh * var(--scale-factor)),calc(34vw * var(--scale-factor)));
     border-radius: 50%;
-    object-fit: cover;
+    object-fit: cover
 }
 
-select, textarea, input {
-    width: -webkit-fill-available; /* Non-standard, consider alternatives */
-    width: 100%; /* Fallback */
-    font-size: clamp(0px, calc(2.5vh * var(--scale-factor)), calc(5vw * var(--scale-factor))); /* Use calc() with the variable */
-    line-height: clamp(0px, calc(2.5vh * 1.33 * var(--scale-factor)), calc(5vw * 1.33 * var(--scale-factor))); /* Use calc() with the variable */
-    height: clamp(0px, calc(11vh * var(--scale-factor)), calc(22vw * var(--scale-factor)));
-    padding-left: clamp(0px, calc(1vh * var(--scale-factor)), calc(2vw * var(--scale-factor)));
-    padding-right: clamp(0px, calc(1vh * var(--scale-factor)), calc(2vw * var(--scale-factor)));
+input, select, textarea {
+    width: 100%;
+    line-height: clamp(0px, calc(2.5vh * 1.33 * var(--scale-factor)), calc(5vw * 1.33 * var(--scale-factor)));
+    height: clamp(0px,calc(11vh * var(--scale-factor)),calc(22vw * var(--scale-factor)));
+    padding-left: clamp(0px,calc(1vh * var(--scale-factor)),calc(2vw * var(--scale-factor)));
+    padding-right: clamp(0px,calc(1vh * var(--scale-factor)),calc(2vw * var(--scale-factor)));
     appearance: none;
-    outline: none;
-    color: rgba(var(--white), 1);
-    /* Gradient Background + Gradient Border With Radius */
-    background: linear-gradient(var(--transition-angle), var(--dark) 60%, var(--dark)) padding-box, linear-gradient(var(--transition-angle), var(--transition-grey), var(--transition-grey), var(--transition-grey), var(--transition-grey)) border-box;
+    outline: 0;
     border: var(--border) solid transparent;
     border-radius: var(--border-radius);
-    transition: --transition-angle var(--transition-duration-5), opacity var(--transition-duration-5), --transition-red var(--transition-duration-5), --transition-orange var(--transition-duration-5), --transition-white var(--transition-duration-5), --transition-grey var(--transition-duration-5);
+    background: linear-gradient(var(--transition-angle),var(--dark) 60%,var(--dark)) padding-box,linear-gradient(var(--transition-angle),var(--transition-grey),var(--transition-grey),var(--transition-grey),var(--transition-grey)) border-box
 }
 
-select, input {
-    height: clamp(0px, calc(6vh * var(--scale-factor)), calc(12vw * var(--scale-factor)));
+input, select {
+    height: clamp(0px,calc(6vh * var(--scale-factor)),calc(12vw * var(--scale-factor)))
 }
 
-    select:focus,
-    textarea:focus,
-    input:focus {
+    input:focus, select:focus, textarea:focus {
         --transition-red: rgba(var(--white), 1);
         --transition-orange: rgba(var(--white), 1);
         --transition-white: rgba(var(--white), 1);
-        --transition-grey: rgba(var(--white), 1);
+        --transition-grey: rgba(var(--white), 1)
     }
 
 option {
     background-color: var(--dark);
-    padding: clamp(0px, calc(4vh * var(--scale-factor)), calc(8vw * var(--scale-factor)));
+    padding: clamp(0px,calc(4vh * var(--scale-factor)),calc(8vw * var(--scale-factor)))
 }
 
 .important-outline {
-    background: linear-gradient(var(--transition-angle), var(--dark) 60%, var(--dark)) padding-box, linear-gradient(var(--transition-angle), var(--transition-red), var(--transition-orange), var(--transition-white), var(--transition-grey)) border-box;
     border: var(--border) solid transparent;
-    border-radius: var(--border-radius);
-    transition: --transition-angle var(--transition-duration-5), opacity var(--transition-duration-5), --transition-red var(--transition-duration-5), --transition-orange var(--transition-duration-5), --transition-white var(--transition-duration-5), --transition-grey var(--transition-duration-5);
-    -webkit-transition: --transition-angle var(--transition-duration-5), opacity var(--transition-duration-5), --transition-red var(--transition-duration-5), --transition-orange var(--transition-duration-5), --transition-white var(--transition-duration-5), --transition-grey var(--transition-duration-5);
-    -moz-transition: --transition-angle var(--transition-duration-5), opacity var(--transition-duration-5), --transition-red var(--transition-duration-5), --transition-orange var(--transition-duration-5), --transition-white var(--transition-duration-5), --transition-grey var(--transition-duration-5);
-    -o-transition: --transition-angle var(--transition-duration-5), opacity var(--transition-duration-5), --transition-red var(--transition-duration-5), --transition-orange var(--transition-duration-5), --transition-white var(--transition-duration-5), --transition-grey var(--transition-duration-5);
-    -ms-transition: --transition-angle var(--transition-duration-5), opacity var(--transition-duration-5), --transition-red var(--transition-duration-5), --transition-orange var(--transition-duration-5), --transition-white var(--transition-duration-5), --transition-grey var(--transition-duration-5);
+    border-radius: var(--border-radius)
 }
 
-    .important-outline:hover {
-        --transition-angle: 15deg;
-    }
-
-    .important-outline:focus {
-        --transition-angle: 90deg;
-        --transition-red: var(--red);
-        --transition-orange: var(--red);
-        --transition-white: var(--orange);
-        --transition-grey: rgba(var(--white), 1);
-    }
-
-    .important-outline.selected {
-        --transition-angle: 90deg;
-        --transition-red: var(--red);
-        --transition-orange: var(--red);
-        --transition-white: var(--orange);
-        --transition-grey: rgba(var(--white), 1);
-    }
-
 .important-border {
-    /* Gradient Background + Gradient Border With Radius */
-    background: linear-gradient(180deg, rgba(34,36,38,1) 60%, rgba(34,36,38,1)) padding-box, linear-gradient(to right, var(--transition-red), var(--transition-orange), var(--transition-grey), var(--transition-grey)) border-box;
+    background: linear-gradient(180deg,#222426 60%,#222426) padding-box,linear-gradient(to right,var(--transition-red),var(--transition-orange),var(--transition-grey),var(--transition-grey)) border-box;
     background-repeat: round;
     background-size: 100%;
     border: var(--border) solid transparent;
     border-radius: var(--border-radius);
-    /* Transition Effect. */
     transition: --transition-red var(--transition-duration-1);
     -webkit-transition: --transition-red var(--transition-duration-1);
     -moz-transition: --transition-red var(--transition-duration-1);
     -o-transition: --transition-red var(--transition-duration-1);
-    -ms-transition: --transition-red var(--transition-duration-1);
+    -ms-transition: --transition-red var(--transition-duration-1)
 }
 
-    .important-border:before {
-        --transition-red: rgba(var(--white), 1);
-    }
-
-    button:hover {
-        background: var(--hover-gradient-logo-color);
-        border-color: rgba(var(--white), 1);
-        /* Transitions */
-        transition: background 0.3s ease, border-color 0.3s ease, color var(--transition-duration-1);
-        -webkit-transition: background 0.3s ease, border-color 0.3s ease, color var(--transition-duration-1);
-        -moz-transition: background 0.3s ease, border-color 0.3s ease, color var(--transition-duration-1);
-        -o-transition: background 0.3s ease, border-color 0.3s ease, color var(--transition-duration-1);
-        -ms-transition: background 0.3s ease, border-color 0.3s ease, color var(--transition-duration-1);
-    }
-
-    button:disabled {
-        background: var(--background-disabled-color);
-        color: var(--text-disabled-color);
-        cursor: not-allowed;
-        opacity: 0.6;
-        -webkit-opacity: 0.6;
-        -moz-opacity: 0.6;
-        -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=60)"; /* IE 8 */
+    .important-border:before, .navbar:hover:before {
+        --transition-red: rgba(var(--white), 1)
     }
 
 .navbar {
@@ -445,162 +439,131 @@ option {
     position: fixed;
     width: 100vw;
     z-index: 1001;
-    /* Transitions */
     transition: top var(--transition-duration-3);
     -webkit-transition: top var(--transition-duration-3);
     -moz-transition: top var(--transition-duration-3);
     -o-transition: top var(--transition-duration-3);
     -ms-transition: top var(--transition-duration-3);
-    padding: clamp(0px, calc(1vh * var(--scale-factor)), calc(2vw * var(--scale-factor))) clamp(0px, calc(4vh * var(--scale-factor)), calc(8vw * var(--scale-factor)));
+    padding: clamp(0px,calc(1vh * var(--scale-factor)),calc(2vw * var(--scale-factor))) clamp(0px,calc(4vh * var(--scale-factor)),calc(8vw * var(--scale-factor)))
 }
+
+    .background, .background::before, .navbar:before {
+        position: absolute;
+        left: 0
+    }
 
     .navbar:before {
         content: "";
-        position: absolute;
         bottom: calc(var(--border) * -1);
-        left: 0;
         width: 100%;
         height: var(--border);
-        background: linear-gradient(to right, var(--red), var(--red), var(--red), var(--red), var(--red), var(--red), var(--red), var(--red), var(--red));
-        /* Transition Effect. */
+        background: linear-gradient(to right,var(--red),var(--red),var(--red),var(--red),var(--red),var(--red),var(--red),var(--red),var(--red));
         transition: --transition-red var(--transition-duration-1);
         -webkit-transition: --transition-red var(--transition-duration-1);
         -moz-transition: --transition-red var(--transition-duration-1);
         -o-transition: --transition-red var(--transition-duration-1);
-        -ms-transition: --transition-red var(--transition-duration-1);
-    }
-
-    .navbar:hover:before {
-        --transition-red: rgba(var(--white), 1);
+        -ms-transition: --transition-red var(--transition-duration-1)
     }
 
 .background {
-    background-color: rgb(28, 28, 28);
+    background-color: #1c1c1c;
     width: 100vw;
     height: 100vh;
-    position: absolute;
-    margin-top: max(calc(-2vh * var(--scale-factor)), calc(-4vw * var(--scale-factor)));
-    left: 0;
+    margin-top: max(calc(-2vh * var(--scale-factor)),calc(-4vw * var(--scale-factor)))
 }
-
 
     .background::before {
         content: '';
         display: block;
         height: calc(var(--border) * 1);
-        background: rgba(var(--grey), 1);
+        background: rgba(var(--grey),1);
         width: 100%;
-        position: absolute;
         top: calc(var(--border) * -1);
-        left: 0;
-        /* Transitions */
         transition: background var(--transition-duration-1);
         -webkit-transition: background var(--transition-duration-1);
         -moz-transition: background var(--transition-duration-1);
         -o-transition: background var(--transition-duration-1);
-        -ms-transition: background var(--transition-duration-1);
+        -ms-transition: background var(--transition-duration-1)
     }
-
-/* .background:hover::before {
-        background: rgba(var(--white), 1);
-    }*/
 
 .sidebar {
     background: var(--background-lighter-color);
-    max-width: 100vw;
-    max-height: 100vh;
     padding: clamp(0px, calc(2vw * var(--scale-factor)), 12px);
     position: fixed;
-    width: clamp(0px, calc(25vh * var(--scale-factor)), calc(50vw * var(--scale-factor)));
+    width: clamp(0px,calc(25vh * var(--scale-factor)),calc(25vw * var(--scale-factor)));
     z-index: 1000;
     display: flex;
-    /* Transitions */
-    transition: top var(--transition-duration-3), right var(--transition-duration-3),left var(--transition-duration-3), height var(--transition-duration-3);
-    -webkit-transition: top var(--transition-duration-3), right var(--transition-duration-3),left var(--transition-duration-3), height var(--transition-duration-3);
-    -moz-transition: top var(--transition-duration-3), right var(--transition-duration-3),left var(--transition-duration-3), height var(--transition-duration-3);
-    -o-transition: top var(--transition-duration-3), right var(--transition-duration-3),left var(--transition-duration-3), height var(--transition-duration-3);
-    -ms-transition: top var(--transition-duration-3), right var(--transition-duration-3),left var(--transition-duration-3), height var(--transition-duration-3);
+    transition: height var(--transition-duration-3),top var(--transition-duration-3),left var(--transition-duration-3);
+    -webkit-transition: height var(--transition-duration-3),top var(--transition-duration-3),left var(--transition-duration-3);
+    -moz-transition: height var(--transition-duration-3),top var(--transition-duration-3),left var(--transition-duration-3);
+    -o-transition: height var(--transition-duration-3),top var(--transition-duration-3),left var(--transition-duration-3);
+    -ms-transition: height var(--transition-duration-3),top var(--transition-duration-3),left var(--transition-duration-3)
 }
 
 .aspect-4-3 .sidebar {
-    width: 50vw;
+    width: 100vw
 }
 
+.sidebar:before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: calc(var(--border) * -1);
+    width: calc(var(--border) * 1);
+    height: 100vh;
+    background: linear-gradient(to bottom,var(--red),var(--orange),var(--transition-grey),var(--transition-grey));
+    z-index: 1;
+    transition: --transition-grey var(--transition-duration-1);
+    -webkit-transition: --transition-grey var(--transition-duration-1);
+    -moz-transition: --transition-grey var(--transition-duration-1);
+    -o-transition: --transition-grey var(--transition-duration-1);
+    -ms-transition: --transition-grey var(--transition-duration-1)
+}
 
-    .sidebar:before {
-        content: "";
-        position: absolute;
-        top: 0;
-        right: calc(var(--border) * -1);
-        width: calc(var(--border) * 1);
-        height: 100vh;
-        background: linear-gradient(to bottom, var(--red), var(--orange), var(--transition-grey), var(--transition-grey));
-        z-index: 1;
-        /* Transition Effect. */
-        transition: --transition-grey var(--transition-duration-1);
-        -webkit-transition: --transition-grey var(--transition-duration-1);
-        -moz-transition: --transition-grey var(--transition-duration-1);
-        -o-transition: --transition-grey var(--transition-duration-1);
-        -ms-transition: --transition-grey var(--transition-duration-1);
-    }
+.background-dot-container:hover, .sidebar:hover:before {
+    --transition-grey: rgba(var(--white), 1)
+}
 
-    .sidebar:hover:before {
-        --transition-grey: rgba(var(--white), 1);
-    }
-
-    .sidebar button {
-        margin: clamp(0px, calc(.75vh * var(--scale-factor)), calc(1.5vw * var(--scale-factor))) 0;
-        white-space: nowrap;
-        justify-content: left;
-        padding-left: clamp(0px, calc(1.5vh * var(--scale-factor)), calc(3vw * var(--scale-factor)));
-        width: -webkit-fill-available;
-        width: -moz-available;
-        width: -ms-available;
-        width: fill-available;
-    }
-
-    .sidebar div {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 100%;
-    }
-
-.container {
+.sidebar div {
     display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%
+}
+
+.aspect-4-3 .nav-links.open, .container {
+    display: flex
 }
 
     .container > * {
         flex: 1;
         display: flex;
         justify-content: center;
-        align-items: center;
+        align-items: center
     }
 
 .logo {
     display: flex;
-    align-items: center;
+    align-items: center
 }
 
     .logo img {
         content: url('../assets/logo.webp');
-        width: clamp(0px, calc(6vh * var(--scale-factor)), calc(12vw * var(--scale-factor)));
-        margin-right: clamp(0px, calc(0.5vh * var(--scale-factor)), calc(1vw * var(--scale-factor)));
-        max-height: 100%;
+        width: clamp(0px,calc(6vh * var(--scale-factor)),calc(12vw * var(--scale-factor)));
+        margin-right: clamp(0px,calc(.5vh * var(--scale-factor)),calc(1vw * var(--scale-factor)));
+        max-height: 100%
     }
 
 .text-gradient {
     background-image: var(--gradient-logo-color);
     -webkit-background-clip: text;
     background-clip: text;
-    -webkit-text-fill-color: transparent;
     font-weight: 700;
-    /* Transitions */
     transition: opacity var(--transition-duration-1);
     -webkit-transition: opacity var(--transition-duration-1);
     -moz-transition: opacity var(--transition-duration-1);
     -o-transition: opacity var(--transition-duration-1);
-    -ms-transition: opacity var(--transition-duration-1);
+    -ms-transition: opacity var(--transition-duration-1)
 }
 
 .nav-links {
@@ -608,15 +571,14 @@ option {
     margin: 0;
     padding: 0;
     display: flex;
-    justify-content: space-evenly;
+    justify-content: space-evenly
 }
 
     .nav-links li {
         list-style-type: none;
-        position: relative;
-        padding: 0px clamp(0px, calc(2.5vh* var(--scale-factor)), calc(5vw* var(--scale-factor))) 0px 0px;
+        padding: 0 clamp(0px,calc(2.5vh* var(--scale-factor)),calc(5vw* var(--scale-factor))) 0 0;
         display: flex;
-        align-items: center;
+        align-items: center
     }
 
         .nav-links li:has(.dropdown-menu)::before {
@@ -627,12 +589,12 @@ option {
             height: 0;
             border-left: 4px solid transparent;
             border-right: 4px solid transparent;
-            border-top: 8px solid rgba(255, 255, 255, 1); /* Default down arrow */
-            transition: transform 0.3s ease; /* Smooth transition */
+            border-top: 8px solid #fff;
+            transition: transform .3s
         }
 
         .nav-links li:hover::before {
-            transform: rotate(180deg); /* Rotate the arrow 180 degrees */
+            transform: rotate(180deg)
         }
 
     .nav-links a:hover::before {
@@ -640,13 +602,13 @@ option {
         -webkit-transform: scaleX(1);
         -moz-transform: scaleX(1);
         -o-transform: scaleX(1);
-        -ms-transform: scaleX(1);
+        -ms-transform: scaleX(1)
     }
 
     .nav-links li:hover .dropdown-menu {
         opacity: 1;
         visibility: visible;
-        top: calc(100% + clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor))));
+        top: calc(100% + clamp(0px,calc(2vh* var(--scale-factor)),calc(4vw* var(--scale-factor))))
     }
 
 .dropdown-menu {
@@ -657,7 +619,6 @@ option {
     opacity: 0;
     visibility: hidden;
     background: var(--background-lighter-color);
-    /* Transitions */
     transition: all var(--transition-duration-1);
     -webkit-transition: all var(--transition-duration-1);
     -moz-transition: all var(--transition-duration-1);
@@ -666,219 +627,238 @@ option {
     border: var(--border) solid;
     border-radius: var(--border-radius);
     max-height: 212px;
-    overflow-y: auto;
+    overflow-y: auto
 }
 
     .dropdown-menu:hover {
         background: var(--background-hover-color);
-        border-color: #ff7300;
+        border-color: #ff7300
     }
 
-.dropdown-menu li {
-    margin: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor))) clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));
-    width: fit-content;
-    -webkit-width: -webkit-fit-content;
-}
-
-.dropdown-menu a {
-    text-decoration: none;
-    /* Transitions */
-    transition: color var(--transition-duration-1);
-    -webkit-transition: color var(--transition-duration-1);
-    -moz-transition: color var(--transition-duration-1);
-    -o-transition: color var(--transition-duration-1);
-    -ms-transition: color var(--transition-duration-1);
-    white-space: nowrap;
-}
-
-    .dropdown-menu a:hover {
-        color: orange;
+    .dropdown-menu li {
+        margin: clamp(0px,calc(1vh* var(--scale-factor)),calc(2vw* var(--scale-factor))) clamp(0px,calc(2vh* var(--scale-factor)),calc(4vw* var(--scale-factor)));
+        width: fit-content;
+        -webkit-width: -webkit-fit-content
     }
 
-/* background-dot-container.html */
+    .dropdown-menu a {
+        transition: color var(--transition-duration-1);
+        -webkit-transition: color var(--transition-duration-1);
+        -moz-transition: color var(--transition-duration-1);
+        -o-transition: color var(--transition-duration-1);
+        -ms-transition: color var(--transition-duration-1);
+        white-space: nowrap
+    }
+
+        .dropdown-menu a:hover {
+            color: orange
+        }
+
 .background-dot-container-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between
 }
 
 .background-dot-container-price {
     display: flex;
     align-items: baseline;
-    -webkit-align-items: baseline;
+    -webkit-align-items: baseline
 }
 
 .line {
-    margin-top: clamp(0px, calc(1.5vh * var(--scale-factor)), calc(3vw * var(--scale-factor)));
-    margin-bottom: clamp(0px, calc(1.5vh * var(--scale-factor)), calc(3vw * var(--scale-factor)));
-    border: var(--border) solid rgba(var(--grey), 1);
-    line-height: 100%;
+    margin-top: clamp(0px,calc(1.5vh * var(--scale-factor)),calc(3vw * var(--scale-factor)));
+    margin-bottom: clamp(0px,calc(1.5vh * var(--scale-factor)),calc(3vw * var(--scale-factor)));
+    border: var(--border) solid rgba(var(--grey),1);
+    line-height: 100%
 }
 
-.capability {
-    font-size: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));
-    line-height: clamp(0px, calc(2vh* 2* var(--scale-factor)), calc(4vw* 2* var(--scale-factor)));
-    padding-left: clamp(0px, calc(2.5vh* var(--scale-factor)), calc(5vw* var(--scale-factor)));
+.background-dot-container:before, .card:before {
+    content: "";
+    top: 8px;
+    left: 8px;
+    bottom: 0;
+    background-image: url('data:image/svg+xml,%3Csvg%20width%3D%2712%27%20height%3D%2712%27%20viewBox%3D%270%200%2020%2020%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cg%20fill%3D%27rgba(255%2C%20255%2C%20255%2C%200.2)%27%20fill-opacity%3D%271%27%20fill-rule%3D%27evenodd%27%3E%3Ccircle%20cx%3D%273%27%20cy%3D%273%27%20r%3D%271%27/%3E%3C/g%3E%3C/svg%3E');
+    background-repeat: space;
+    right: 0
 }
-
-    .capability:before {
-        content: '\2022';
-        position: absolute;
-        left: 0;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 2vh;
-    }
 
 ul {
     list-style: none;
-    margin: 0px;
-    padding: 0px;
-}
-
-li {
-    position: relative; /* To position the custom marker */
+    margin: 0;
+    padding: 0
 }
 
 .discount-details {
     font-weight: 400;
-    white-space: normal;
+    white-space: normal
 }
 
 .background-dot-container-features {
     padding: 0;
-    color: #f7f8f8;
+    color: #f7f8f8
 }
 
-.feature {
-    padding: 0px 0px 0px clamp(0px, calc(4vh* var(--scale-factor)), calc(8vw* var(--scale-factor)));
-    font-weight: 500;
+.zoom-indicator-container {
+    position: absolute;
+    top: 2vh;
+    left: 2vh;
+    z-index: 99999
+}
+
+.indicator {
+    background-color: var(--background-color);
+    border: var(--border) solid;
+    border-color: rgba(var(--grey),1);
+    border-radius: clamp(0px,1.2vh,2.4vw);
+    padding: .75vh 1.5vh;
+    margin-bottom: 1vh;
     position: relative;
+    transition: opacity .3s ease-in-out;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 1vh
+}
+
+.background-container, .background-dot-container-content {
+    gap: clamp(0px,calc(1vh* var(--scale-factor)),calc(2vw* var(--scale-factor)));
+    display: flex
+}
+
+.indicator p {
+    margin-right: 4vh
+}
+
+.indicator button, .indicator p {
+    font-size: clamp(0px, 2vh, 4vw);
+    line-height: clamp(0px, calc(2vh * 1.33), calc(4vw * 1.33));
+    height: auto;
+    padding: revert
+}
+.feature {
+    display: flex;
+    align-items: center; /* Vertically center the content */
+    font-weight: 500;
+    gap: clamp(0px,calc(0.5vh * var(--scale-factor)),calc(1vw * var(--scale-factor)));;
 }
 
     .feature svg {
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        margin: auto;
+        width: clamp(0px,calc(2.5vh * var(--scale-factor)),calc(5vw * var(--scale-factor))); /* Set desired width and height */
+        height: clamp(0px,calc(2.5vh * var(--scale-factor)),calc(5vw * var(--scale-factor)));
     }
 
+.capability {
+    display: flex;
+    align-items: center; /* Vertically center the content */
+    font-weight: 500;
+    font-size: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));
+    line-height: clamp(0px, calc(2vh* 1.5* var(--scale-factor)), calc(4vw* var(--scale-factor)* 1.5))
+}
+
+    .capability:before {
+        content: '\2022';
+        font-size: 2vh;
+        display: inline-block;
+        text-align: center; /* Center the bullet inside its space */
+        width: clamp(0px,calc(2.5vh * var(--scale-factor)),calc(5vw * var(--scale-factor))); /* Set desired width and height */
+    }
+
+
 .plans-name {
-    text-transform: uppercase;
     color: #ff9764;
-    font-weight: 600;
+    font-weight: 600
 }
 
 .plans-popular {
-    background: linear-gradient(45deg, rgba(34,36,38,1) 60%, rgba(34,36,38,1)) padding-box, rgba(var(--grey), 1) border-box;
+    background: linear-gradient(45deg,#222426 60%,#222426) padding-box,rgba(var(--grey),1) border-box;
     background-repeat: round;
     background-size: 100%;
     border: var(--border) solid transparent;
     border-radius: var(--border-radius);
-    padding: 0 clamp(0px, calc(1.2vh* var(--scale-factor)), calc(2.4vw* var(--scale-factor)));
+    padding: 0 clamp(0px,calc(1.2vh* var(--scale-factor)),calc(2.4vw* var(--scale-factor)))
 }
 
 .background-container {
     background: #232426;
-    border-radius: var(--border-radius);
-    display: flex;
     -webkit-align-items: center;
     max-width: 100%;
     height: fit-content;
-    padding: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor)));
+    padding: clamp(0px,calc(1vh* var(--scale-factor)),calc(2vw* var(--scale-factor)));
     border: var(--border) solid #3c3f44;
     align-items: center;
-    justify-content: space-between;
-    gap: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor)));
+    justify-content: space-between
 }
 
-input[type='range'] {
-    height: clamp(0px, calc(1.5vh / 1.5* var(--scale-factor)), calc(3vw/ 1.5* var(--scale-factor)));
+input[type=range] {
+    height: clamp(0px,calc(1.5vh / 1.5* var(--scale-factor)),calc(3vw/ 1.5* var(--scale-factor)));
     width: 100%;
     border-radius: var(--border-radius);
-    background: rgba(var(--white), .75);
-    outline: none;
+    background: rgba(var(--white),.75);
+    outline: 0;
     appearance: none;
-    transition: all var(--transition-duration-1);
+    transition: all var(--transition-duration-1)
 }
 
-    input[type='range']:hover {
-        height: clamp(0px, calc(3vh/ 1.5* var(--scale-factor)), calc(6vw/ 1.5* var(--scale-factor)));
+    input[type=range]:hover {
+        height: clamp(0px,calc(3vh/ 1.5* var(--scale-factor)),calc(6vw/ 1.5* var(--scale-factor)))
     }
 
-    input[type='range']:focus {
-        background: rgba(var(--white), 1);
-    }
-
-    input[type='range']::-webkit-slider-thumb {
+    input[type=range]::-webkit-slider-thumb {
         -webkit-appearance: none;
         appearance: none;
-        width: clamp(0px, calc(3vh/ 1.5* var(--scale-factor)), calc(6vw/ 1.5* var(--scale-factor)));
-        height: clamp(0px, calc(3vh/ 1.5* var(--scale-factor)), calc(6vw/ 1.5* var(--scale-factor)));
+        width: clamp(0px,calc(3vh/ 1.5* var(--scale-factor)),calc(6vw/ 1.5* var(--scale-factor)));
+        height: clamp(0px,calc(3vh/ 1.5* var(--scale-factor)),calc(6vw/ 1.5* var(--scale-factor)));
         border-radius: 50%;
-        background-color: white;
+        background-color: #fff;
         opacity: 1;
         cursor: pointer;
-        transition: all var(--transition-duration-1);
+        transition: all var(--transition-duration-1)
     }
 
-        input[type='range']::-webkit-slider-thumb:hover {
-            box-shadow: 0px 0px 0px clamp(0px, calc(1.5vh/ 1.5* var(--scale-factor)), calc(3vw/ 1.5* var(--scale-factor))) rgba(var(--grey), .5);
+        input[type=range]::-webkit-slider-thumb:hover {
+            box-shadow: 0 0 0 clamp(0px,calc(1.5vh/ 1.5* var(--scale-factor)),calc(3vw/ 1.5* var(--scale-factor))) rgba(var(--grey),.5)
         }
 
-
-.slider-value {
-    text-align: center;
-}
-
 .not-available {
-    text-decoration: line-through;
+    text-decoration: line-through
 }
 
 .background-dot-container-option {
     width: -webkit-fill-available;
     justify-content: center;
     border-radius: var(--border-radius);
-    border: var(--border) solid rgba(var(--grey), .0);
+    border: var(--border) solid rgba(var(--grey),0);
     cursor: pointer;
-    padding: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor))) clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor)));
+    padding: clamp(0px,calc(1vh* var(--scale-factor)),calc(2vw* var(--scale-factor))) clamp(0px,calc(1vh* var(--scale-factor)),calc(2vw* var(--scale-factor)));
     line-height: 100%;
     overflow: hidden;
     user-select: none;
     appearance: none;
-    outline: none;
-    /* Transitions */
-    transition: background-color var(--transition-duration-1), border-color var(--transition-duration-1), --transition-angle var(--transition-duration-5), opacity var(--transition-duration-5), --transition-red var(--transition-duration-5), --transition-orange var(--transition-duration-5), --transition-white var(--transition-duration-5), --transition-grey var(--transition-duration-5);
-    -webkit-transition: background-color var(--transition-duration-1), border-color var(--transition-duration-1), --transition-angle var(--transition-duration-5), opacity var(--transition-duration-5), --transition-red var(--transition-duration-5), --transition-orange var(--transition-duration-5), --transition-white var(--transition-duration-5), --transition-grey var(--transition-duration-5);
-    -moz-transition: background-color var(--transition-duration-1), border-color var(--transition-duration-1), --transition-angle var(--transition-duration-5), opacity var(--transition-duration-5), --transition-red var(--transition-duration-5), --transition-orange var(--transition-duration-5), --transition-white var(--transition-duration-5), --transition-grey var(--transition-duration-5);
-    -o-transition: background-color var(--transition-duration-1), border-color var(--transition-duration-1), --transition-angle var(--transition-duration-5), opacity var(--transition-duration-5), --transition-red var(--transition-duration-5), --transition-orange var(--transition-duration-5), --transition-white var(--transition-duration-5), --transition-grey var(--transition-duration-5);
-    -ms-transition: background-color var(--transition-duration-1), border-color var(--transition-duration-1), --transition-angle var(--transition-duration-5), opacity var(--transition-duration-5), --transition-red var(--transition-duration-5), --transition-orange var(--transition-duration-5), --transition-white var(--transition-duration-5), --transition-grey var(--transition-duration-5);
+    outline: 0;
     display: flex;
     align-items: center;
-    -webkit-align-items: center;
+    -webkit-align-items: center
 }
+
     .background-dot-container-option.selected:not(.important-outline) {
         border-color: #e68858;
         background: rgb(230 181 88 / 20%);
-        color: white;
+        color: #fff
     }
 
     .background-dot-container-option:hover {
-        background-color: #3c3f44;
+        background-color: #3c3f44
     }
 
 .background-dot-container {
-    /* Set Position & Limits */
     position: relative;
     overflow: hidden;
     flex: 1;
-    /* Gradient Background + Gradient Border With Radius */
-    background: linear-gradient(45deg, rgba(34,36,38,1) 60%, rgba(34,36,38,1)) padding-box, linear-gradient(to bottom, var(--transition-red), var(--transition-orange), var(--transition-grey), var(--transition-grey)) border-box;
+    background: linear-gradient(45deg,#222426 60%,#222426) padding-box,linear-gradient(to bottom,var(--transition-red),var(--transition-orange),var(--transition-grey),var(--transition-grey)) border-box;
     background-repeat: round;
     background-size: 100%;
     border: var(--border) solid transparent;
     border-radius: var(--border-radius);
-    /* Set Height & Width. */
     width: 100%;
     height: 100%;
     width: -webkit-fill-available;
@@ -887,262 +867,208 @@ input[type='range'] {
     height: -moz-available;
     width: -o-fill-available;
     height: -o-fill-available;
-    /* Transition Effect. */
     transition: --transition-grey var(--transition-duration-1);
     -webkit-transition: --transition-grey var(--transition-duration-1);
     -moz-transition: --transition-grey var(--transition-duration-1);
     -o-transition: --transition-grey var(--transition-duration-1);
-    -ms-transition: --transition-grey var(--transition-duration-1);
+    -ms-transition: --transition-grey var(--transition-duration-1)
 }
 
-    .background-dot-container:hover {
-        --transition-grey: rgba(var(--white), 1);
-    }
-
     .background-dot-container:before {
-        content: "";
         position: absolute;
-        top: 8px;
-        left: 8px;
-        right: 0;
-        bottom: 0;
-        opacity: 0.7;
-        background-image: url('data:image/svg+xml,%3Csvg%20width%3D%2712%27%20height%3D%2712%27%20viewBox%3D%270%200%2020%2020%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cg%20fill%3D%27rgba(255%2C%20255%2C%20255%2C%200.2)%27%20fill-opacity%3D%271%27%20fill-rule%3D%27evenodd%27%3E%3Ccircle%20cx%3D%273%27%20cy%3D%273%27%20r%3D%271%27/%3E%3C/g%3E%3C/svg%3E');
-        background-repeat: space;
-        z-index: 0;
+        opacity: .7;
+        z-index: 0
     }
-
 
 .background-dot-container-content {
     position: relative;
-    display: flex;
-    padding: clamp(0px, calc(3vh * var(--scale-factor)), calc(6vw * var(--scale-factor)));
-    background: linear-gradient(45deg, rgba(0, 0, 0, .5) 60%, rgba(0, 0, 0, .1));
+    padding: clamp(0px,calc(3vh * var(--scale-factor)),calc(6vw * var(--scale-factor)));
+    background: linear-gradient(45deg,rgba(0,0,0,.5) 60%,rgba(0,0,0,.1));
     z-index: 1;
     width: 100%;
     height: 100%;
-    flex-direction: column;
-    gap: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor)));
+    flex-direction: column
 }
 
-.background-dot-container-title {
+#resize-large, #resize-long, .card:before, .faded-content, .offset-text {
+    position: absolute
+}
+
+.background-dot-container-title, .card-title {
     font-size: clamp(0px, calc(4vh * var(--scale-factor)), calc(8vw * var(--scale-factor)));
-    font-weight: bold;
+    font-weight: 700
 }
 
-.background-dot-container-description {
-    font-size: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));
+.background-dot-container-description, .background-dot-container-link, .card-description {
+    font-size: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)))
+}
+
+.background-dot-container-link, .card-link {
+    font-weight: 500;
+    color: #000;
+    text-align: center;
+    cursor: pointer
 }
 
 .background-dot-container-link {
-    font-size: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));
     text-decoration: none;
     background: #e9ecec;
-    color: black;
-    box-shadow: 0 1px 1px rgba(0, 0, 0, .07);
+    box-shadow: 0 1px 1px rgba(0,0,0,.07);
     border-radius: var(--border-radius);
-    height: clamp(0px, calc(4vh * var(--scale-factor)), calc(8vw * var(--scale-factor)));
-    padding: 0 clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));
-    align-content: center;
-    text-align: center;
-    font-weight: 500;
-    cursor: pointer;
+    height: clamp(0px,calc(4vh * var(--scale-factor)),calc(8vw * var(--scale-factor)));
+    padding: 0 clamp(0px,calc(2vh * var(--scale-factor)),calc(4vw * var(--scale-factor)));
+    align-content: center
 }
 
-    .background-dot-container-link:hover {
-        opacity: 0.75;
-    }
+.card, .card:hover {
+    background-size: 100%
+}
+
+.background-dot-container-link:hover, .card-link:hover {
+    opacity: .75
+}
 
 @keyframes fadeIn {
     to {
-        opacity: 1;
+        opacity: 1
     }
 }
 
-.center {
-    text-align: center;
-    align-self: center;
-}
-
-/* Main */
 .first-text {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    text-align: center;
     align-items: center;
-    line-height: unset; /* Reset line height to default */
+    line-height: unset
 }
 
     .first-text h1 {
         font-size: clamp(2px, calc(10vw * var(--scale-factor)), 999px);
-        line-height: unset; /* Reset line height to default */
+        line-height: unset
     }
 
     .first-text h2 {
         margin-top: 0;
         font-size: clamp(2px, calc(1.6vw * var(--scale-factor)), 999px);
-        line-height: unset; /* Reset line height to default */
+        line-height: unset
     }
 
-.offset-text {
-    position: absolute;
-}
-
 .offset {
-    letter-spacing: calc(6vw * var(--scale-factor));
+    letter-spacing: calc(6vw * var(--scale-factor))
 }
 
 .faded-content {
-    position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
-    opacity: 0.05;
+    transform: translate(-50%,-50%);
+    opacity: .05;
     user-select: none;
     pointer-events: none;
-    z-index: 0;
+    z-index: 0
 }
 
 .offset .no-spacing {
-    letter-spacing: 0;
+    letter-spacing: 0
 }
 
-.offset-text h1:nth-child(1) {
-    opacity: 0.2;
+.offset-text h1:first-child, .offset-text h1:nth-child(3) {
+    opacity: .2
 }
 
 .offset-text h1:nth-child(2) {
-    opacity: 0.1;
-}
-
-.offset-text h1:nth-child(3) {
-    opacity: 0.2;
+    opacity: .1
 }
 
 .end-content {
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: center
 }
 
     .end-content img {
         border: var(--border) solid;
         border-radius: var(--border-radius);
-        border-color: rgba(187, 90, 0, 0.75);
+        border-color: rgba(var(--grey),1);
+        box-shadow: 0 0 240px 1px rgb(255 0 128 / 25%);
         -webkit-user-select: none;
         -moz-user-select: none;
         object-fit: cover;
-        transition: all .22s ease-in-out;
+        transition: .22s ease-in-out
     }
 
         .end-content img:hover {
-            border-color: #ff7300;
+            box-shadow: 0 0 300px 12px rgb(255 0 128 / 25%)
         }
 
 .card-container {
     display: flex;
-    height: clamp(0px, calc(25vh* var(--scale-factor)), calc(50vw* var(--scale-factor)));
-    gap: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));
+    height: clamp(0px,calc(25vh* var(--scale-factor)),calc(50vw* var(--scale-factor)));
+    gap: clamp(0px,calc(2vh* var(--scale-factor)),calc(4vw* var(--scale-factor)))
 }
 
 .card {
     border: var(--border) solid;
     border-radius: var(--border-radius);
-    border-color: rgba(var(--grey), 1);
+    border-color: rgba(var(--grey),1);
+    transition: .3s ease-in-out;
     background-repeat: round;
-    background-size: 100%;
-    transition: all .3s ease-in-out;
     overflow: hidden;
     height: 100%;
-    flex: 1;
+    flex: 1
 }
-
-    .card:hover {
-        background-size: 100%;
-        border-color: rgba(var(--white), 1);
-    }
-
-    .card:before {
-        content: "";
-        position: absolute;
-        top: 8px;
-        left: 8px;
-        right: 0;
-        bottom: 0;
-        background-image: url('data:image/svg+xml,%3Csvg%20width%3D%2712%27%20height%3D%2712%27%20viewBox%3D%270%200%2020%2020%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cg%20fill%3D%27rgba(255%2C%20255%2C%20255%2C%200.2)%27%20fill-opacity%3D%271%27%20fill-rule%3D%27evenodd%27%3E%3Ccircle%20cx%3D%273%27%20cy%3D%273%27%20r%3D%271%27/%3E%3C/g%3E%3C/svg%3E');
-        background-repeat: space;
-    }
 
 .card-content {
     position: relative;
     display: flex;
-    padding: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));
-    background: linear-gradient(45deg, rgba(0, 0, 0, .5) 60%, rgba(0, 0, 0, .1));
+    padding: clamp(0px,calc(2vh * var(--scale-factor)),calc(4vw * var(--scale-factor)));
+    background: linear-gradient(45deg,rgba(0,0,0,.5) 60%,rgba(0,0,0,.1));
     align-items: flex-start;
     flex-direction: column;
     justify-content: space-between;
-    height: inherit;
+    height: inherit
 }
 
     .card-content:hover {
-        background: linear-gradient(45deg, rgb(255 128 0 / 15%) 50%, rgb(255 128 0 / 45%) 120%);
+        background: linear-gradient(45deg,rgb(255 128 0 / 15%) 50%,rgb(255 128 0 / 45%) 120%)
     }
 
-.card-title {
-    font-size: clamp(0px, calc(4vh * var(--scale-factor)), calc(8vw * var(--scale-factor))); /* Use calc() with the variable */
-    font-weight: bold;
-}
-
-.card-description {
-    font-size: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor))); /* Use calc() with the variable */
-}
 .card-link {
     font-size: clamp(0px, calc(2.5vh * var(--scale-factor)), calc(4.5vw * var(--scale-factor)));
-    font-weight: 500;
     border: #e9ecec;
-    background: rgba(var(--white), 1);
-    color: black;
+    background: rgba(var(--white),1);
     border-radius: var(--border-radius);
-    padding: 0 clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));
-    text-align: center;
-    cursor: pointer;
+    padding: 0 clamp(0px,calc(2vh * var(--scale-factor)),calc(4vw * var(--scale-factor)))
 }
 
-    .card-link:hover {
-        opacity: 0.75;
-    }
-
 #resize-middle {
-    width: clamp(0px, calc(25vw * var(--scale-factor)), calc(37.5vh * var(--scale-factor)));
-    z-index: 2;
+    width: clamp(0px,calc(25vw * var(--scale-factor)),calc(37.5vh * var(--scale-factor)));
+    z-index: 2
 }
 
 #resize-long {
-    width: clamp(0px, calc(18vw * var(--scale-factor)), calc(27vh * var(--scale-factor)));
-    position: absolute;
+    width: clamp(0px,calc(18vw * var(--scale-factor)),calc(27vh * var(--scale-factor)));
     transform: translateX(65%) translateY(-35%);
-    z-index: 1;
+    z-index: 1
 }
 
 #resize-large {
-    width: clamp(0px, calc(13.5vw * var(--scale-factor)), calc(20.25vh * var(--scale-factor)));
-    position: absolute;
+    width: clamp(0px,calc(13.5vw * var(--scale-factor)),calc(20.25vh * var(--scale-factor)));
     transform: translateX(-75%) translateY(-150%);
-    z-index: 3;
+    z-index: 3
 }
+
 .trusted-link {
     text-decoration: underline;
     user-select: auto;
-    pointer-events: auto;
+    pointer-events: auto
 }
 
-    .aspect-4-3 .styled-list {
-        list-style-type: none;
-        text-align: left;
-        padding: 0px;
-        margin: 0px;
-    }
+.aspect-4-3 .styled-list {
+    list-style-type: none;
+    text-align: left;
+    padding: 0;
+    margin: 0
+}
 
 .aspect-4-3 .card-container {
     height: auto;
@@ -1152,7 +1078,7 @@ input[type='range'] {
     display: flex;
     -webkit-flex-direction: column;
     -ms-flex-direction: column;
-    flex-direction: column;
+    flex-direction: column
 }
 
 .aspect-4-3 .card-content {
@@ -1164,7 +1090,7 @@ input[type='range'] {
     -moz-align-items: center;
     display: grid;
     grid-template-columns: 4fr 3fr;
-    align-items: center;
+    align-items: center
 }
 
 .aspect-4-3 .start-content {
@@ -1173,20 +1099,20 @@ input[type='range'] {
     -webkit-flex-direction: column;
     flex-direction: column;
     -webkit-justify-content: center;
-    justify-content: center;
+    justify-content: center
 }
 
 .aspect-4-3 .container {
     justify-content: space-between;
-    align-items: center;
+    align-items: center
 }
 
     .aspect-4-3 .container > * {
-        flex: 0;
+        flex: 0
     }
 
 .aspect-4-3 .button-container {
-    width: 100%;
+    width: 100%
 }
 
 .aspect-4-3 .hamburger-menu {
@@ -1196,65 +1122,93 @@ input[type='range'] {
     padding: 0;
     cursor: pointer;
     position: relative;
-    -webkit-transition: -webkit-transform 0.4s ease, height 0.4s ease;
-    transition: transform 0.4s ease, height 0.4s ease;
+    -webkit-transition: -webkit-transform .4s,height .4s;
+    transition: transform .4s,height .4s;
     display: block;
     width: var(--line-width);
     height: calc(3 * var(--line-height) + 2 * var(--line-spacing));
-    top: calc((var(--line-height) + var(--line-spacing)) * -1);
+    top: calc((var(--line-height) + var(--line-spacing)) * -1)
 }
 
     .aspect-4-3 .hamburger-menu .line {
         border: var(--border) solid;
-        border-color: rgba(var(--white), 255);
-        background: rgba(var(--white), 255);
+        border-color: rgba(var(--white),255);
+        background: rgba(var(--white),255);
         width: var(--line-width);
         position: absolute;
         right: 0;
-        -webkit-transition: all 0.3s ease;
-        transition: all 0.3s ease;
+        -webkit-transition: .3s;
+        transition: .3s;
         -webkit-transform-origin: center;
-        transform-origin: center;
+        transform-origin: center
     }
 
-        .aspect-4-3 .hamburger-menu .line:nth-child(1) {
-            top: 0;
+        .aspect-4-3 .hamburger-menu .line:first-child {
+            top: 0
         }
 
         .aspect-4-3 .hamburger-menu .line:nth-child(2) {
-            top: calc(var(--line-height) + var(--line-spacing));
+            top: calc(var(--line-height) + var(--line-spacing))
         }
 
         .aspect-4-3 .hamburger-menu .line:nth-child(3) {
-            top: calc(2 * (var(--line-height) + var(--line-spacing)));
+            top: calc(2 * (var(--line-height) + var(--line-spacing)))
         }
 
-    .aspect-4-3 .hamburger-menu.open .line:nth-child(1) {
+    .aspect-4-3 .hamburger-menu.open .line:first-child {
         transform: rotate(45deg);
-        top: calc(50% - (var(--line-height) / 2));
+        top: calc(50% - (var(--line-height)/ 2))
     }
 
     .aspect-4-3 .hamburger-menu.open .line:nth-child(2) {
-        opacity: 0;
+        opacity: 0
     }
 
     .aspect-4-3 .hamburger-menu.open .line:nth-child(3) {
         transform: rotate(-45deg);
-        top: calc(50% - (var(--line-height) / 2));
+        top: calc(50% - (var(--line-height)/ 2))
     }
 
 .aspect-4-3 .logo h1 {
-    padding: 0;
+    padding: 0
 }
 
 .aspect-4-3 .nav-links {
-    display: none;
+    display: none
 }
 
-    .aspect-4-3 .nav-links.open {
-        display: flex;
+    .aspect-4-3 .nav-links li {
+        margin: 10px 0
     }
 
-    .aspect-4-3 .nav-links li {
-        margin: 10px 0;
+.important-outline, input, select, textarea {
+    transition: --transition-angle var(--transition-duration-5),opacity var(--transition-duration-5),--transition-red var(--transition-duration-5),--transition-orange var(--transition-duration-5),--transition-white var(--transition-duration-5),--transition-grey var(--transition-duration-5)
+}
+
+    .important-outline:hover {
+        --transition-angle: 15deg
     }
+
+    .important-outline.selected, .important-outline:focus {
+        --transition-angle: 90deg;
+        --transition-red: var(--red);
+        --transition-orange: var(--red);
+        --transition-white: var(--orange);
+        --transition-grey: rgba(var(--white), 1)
+    }
+
+.background-dot-container-option {
+    transition: background-color var(--transition-duration-1),border-color var(--transition-duration-1),--transition-angle var(--transition-duration-5),opacity var(--transition-duration-5),--transition-red var(--transition-duration-5),--transition-orange var(--transition-duration-5),--transition-white var(--transition-duration-5),--transition-grey var(--transition-duration-5);
+    -webkit-transition: background-color var(--transition-duration-1),border-color var(--transition-duration-1),--transition-angle var(--transition-duration-5),opacity var(--transition-duration-5),--transition-red var(--transition-duration-5),--transition-orange var(--transition-duration-5),--transition-white var(--transition-duration-5),--transition-grey var(--transition-duration-5);
+    -moz-transition: background-color var(--transition-duration-1),border-color var(--transition-duration-1),--transition-angle var(--transition-duration-5),opacity var(--transition-duration-5),--transition-red var(--transition-duration-5),--transition-orange var(--transition-duration-5),--transition-white var(--transition-duration-5),--transition-grey var(--transition-duration-5);
+    -o-transition: background-color var(--transition-duration-1),border-color var(--transition-duration-1),--transition-angle var(--transition-duration-5),opacity var(--transition-duration-5),--transition-red var(--transition-duration-5),--transition-orange var(--transition-duration-5),--transition-white var(--transition-duration-5),--transition-grey var(--transition-duration-5);
+    -ms-transition: background-color var(--transition-duration-1),border-color var(--transition-duration-1),--transition-angle var(--transition-duration-5),opacity var(--transition-duration-5),--transition-red var(--transition-duration-5),--transition-orange var(--transition-duration-5),--transition-white var(--transition-duration-5),--transition-grey var(--transition-duration-5)
+}
+
+.important-outline {
+    background: linear-gradient(var(--transition-angle),var(--dark) 60%,var(--dark)) padding-box,linear-gradient(var(--transition-angle),var(--transition-red),var(--transition-orange),var(--transition-white),var(--transition-grey)) border-box;
+    -webkit-transition: --transition-angle var(--transition-duration-5),opacity var(--transition-duration-5),--transition-red var(--transition-duration-5),--transition-orange var(--transition-duration-5),--transition-white var(--transition-duration-5),--transition-grey var(--transition-duration-5);
+    -moz-transition: --transition-angle var(--transition-duration-5),opacity var(--transition-duration-5),--transition-red var(--transition-duration-5),--transition-orange var(--transition-duration-5),--transition-white var(--transition-duration-5),--transition-grey var(--transition-duration-5);
+    -o-transition: --transition-angle var(--transition-duration-5),opacity var(--transition-duration-5),--transition-red var(--transition-duration-5),--transition-orange var(--transition-duration-5),--transition-white var(--transition-duration-5),--transition-grey var(--transition-duration-5);
+    -ms-transition: --transition-angle var(--transition-duration-5),opacity var(--transition-duration-5),--transition-red var(--transition-duration-5),--transition-orange var(--transition-duration-5),--transition-white var(--transition-duration-5),--transition-grey var(--transition-duration-5)
+}

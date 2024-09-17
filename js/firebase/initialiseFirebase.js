@@ -1,8 +1,6 @@
 // initialiseFirebase.js
 let firebaseModules = null;
 
-//console.log("[LOADING] initiliseFirebase.js");
-
 export async function getFirebaseModules() {
     if (firebaseModules) {
         return firebaseModules;
@@ -45,4 +43,7 @@ export async function getFirebaseModules() {
     return firebaseModules;
 }
 
-//console.log("[LOADED] initiliseFirebase.js");
+export async function getDocSnapshot(collectionId, documentId) {
+    const { db, doc, getDoc, collection } = await getFirebaseModules();
+    return await getDoc(doc(collection(db, collectionId), documentId));
+}
