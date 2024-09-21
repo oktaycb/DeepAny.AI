@@ -162,14 +162,14 @@ export function loadPageContent(updateMainContent) {
 			<div class="nav-links" style="display: flex;justify-content: center;gap: clamp(0px, calc(1vh * var(--scale-factor)), calc(2vw * var(--scale-factor)));">
 				<button id="registerButton">Register</button>
 				<button class="important" id="loginButton">Login</button>
-				<section id="userLayout" style="display: flex;gap: clamp(0px, calc(1vh * var(--scale-factor)), calc(2vw * var(--scale-factor)));align-items: center;">
+				<a href="/profile" id="userLayout" style="display: flex;gap: clamp(0px, calc(1vh * var(--scale-factor)), calc(2vw * var(--scale-factor)));align-items: center;">
                     <img alt="Profile Image" class="profile-image" style="width: clamp(0px, calc(6vh* var(--scale-factor)), calc(14vw* var(--scale-factor)));height: clamp(0px, calc(6vh* var(--scale-factor)), calc(14vw* var(--scale-factor)));">
 					<div style="display: flex;flex-direction: column;">
-						<p>Duri Eun</p>
+						<p class="username">Duri Eun</p>
                         <div class="line" style="margin: unset;"></div>
-						<p>100 Credits</p>
+						<p id="creditsAmount">100 Credits</p>
 					</div>
-				</section>
+				</a>
 			</div>
 		`);
 				navLinks = document.querySelectorAll('.navbar .nav-links');

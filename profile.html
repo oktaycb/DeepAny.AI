@@ -72,7 +72,7 @@
                                                                     <img id="profileImage" alt="Profile Image" class="profile-image">
                                                                 </div>
                                                                 <div style="text-align: center;">
-                                                                    <h3 id="displayName"></h3>
+                                                                    <h3 class="username"></h3>
                                                                     <p id="emailAddress" style="opacity: 0.5; font-weight: 300;"></p>
                                                                 </div>
                                                             </div>
@@ -137,7 +137,7 @@
                                                                     <div style="display: grid; grid-template-columns: repeat(1, 1fr); gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor))); margin: clamp(0px, calc(1vh * var(--scale-factor)), calc(2vw * var(--scale-factor))) clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor))); justify-content: space-between;">
                                                                         <div style="font-size: 0px;">
                                                                             <h4 style="font-weight: 300;">Username</h4>
-                                                                            <input id="username" value="" readonly="">
+                                                                            <input class="username" value="" readonly="">
                                                                         </div>
                                                                         <div style="font-size: 0px;">
                                                                             <h4 style="font-weight: 300;">Email Address</h4>
@@ -232,7 +232,7 @@
                                                                     <img id="profileImage" alt="Profile Image" class="profile-image">
                                                                 </div>
                                                                 <div style="text-align: center;">
-                                                                    <h3 id="displayName"></h3>
+                                                                    <h3 class="username"></h3>
                                                                     <p id="emailAddress" style="opacity: 0.5; font-weight: 300;"></p>
                                                                 </div>
                                                                 <div class="line"></div>
@@ -264,7 +264,7 @@
                                                                     <div style="display: grid; grid-template-columns: repeat(1, 1fr); gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor))); margin: clamp(0px, calc(1vh * var(--scale-factor)), calc(2vw * var(--scale-factor))) clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor))); justify-content: space-between;">
                                                                     <div style="font-size: 0px;">
                                                                         <h4 style="font-weight: 300;">Username</h4>
-                                                                        <input id="username" value="" readonly="">
+                                                                        <input class="username" value="" readonly="">
                                                                     </div>
                                                                     <div style="font-size: 0px;">
                                                                         <h4 style="font-weight: 300;">Email Address</h4>
@@ -382,9 +382,6 @@
             loadPageContent(updateMainContent);
 
             if (!cachedUserData) {
-                const registerButton = document.getElementById("loginButton");
-                if (registerButton) 
-                    registerButton.click();
                 return;
             }
 
@@ -402,28 +399,9 @@
                 }
             });
 
-            document.getElementById("displayName").textContent = cachedUserData.displayName;
-            document.getElementById("emailAddress").textContent = cachedUserData.email;
-
             handleImageUpload('profileImage', 'profileImageBase64');
 
-            const cachedImage = localStorage.getItem('profileImageBase64');
-            const profileImageElement = document.getElementById('profileImage');
-
-            if (cachedImage) {
-                profileImageElement.src = cachedImage;
-            } else {
-                retrieveImageFromURL(cachedUserData.photoURL, function (base64Image) {
-                    localStorage.setItem('profileImageBase64', base64Image);
-                    profileImageElement.src = base64Image;
-                }, 2, 1000, true);
-            }
-
-            profileImageElement.onerror = function () {
-                profileImageElement.src = 'assets/profile.webp';
-            };
-
-            document.getElementById("username").value = cachedUserData.displayName;
+            document.getElementById("emailAddress").textContent = cachedUserData.email;
             document.getElementById("email").value = cachedUserData.email;
         });
     </script>

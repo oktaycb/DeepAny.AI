@@ -30,56 +30,74 @@ async function handleUserLoggedIn(user) {
     const userId = user.uid;
 
     try {
-        const userDocSnap = await getDocSnapshot('users', userId);
-        if (userDocSnap && userDocSnap.exists()) {
-            console.log("User document:", userDocSnap.data());
-        } else {
-            console.log("No user document found.");
-            console.log("Document doesn't exist, creating a new one: ", user.displayName);
+        function setUser(userData) {
+            const credits = document.getElementById('creditsAmount');
+            credits.textContent = credits.textContent.replace(/\d+/, userData.credits);
 
-            async function registerUser() {
-                try {
-                    async function getServerAddressAPI() {
-                        return await fetchServerAddress(getDocSnapshot('servers', '3050-1'), 'API');
-                    }
-
-                    const [userIpAddress, uniqueId, serverAddressAPI] = await Promise.all([
-                        getUserIpAddress(),
-                        ensureUniqueId(),
-                        getServerAddressAPI()
-                    ]);
-
-                    const url = new URL(window.location.href);
-                    const referral = url.searchParams.get('referral');
-
-                    const response = await fetch(`${serverAddressAPI}/create-user`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            userId,
-                            email: user.email,
-                            username: user.displayName,
-                            phoneNumber: user.phoneNumber,
-                            emailVerified: user.emailVerified,
-                            isAnonymous: user.isAnonymous,
-                            userIpAddress,
-                            uniqueId,
-                            referral,
-                        }),
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
-                    }
-
-                    return await response.json();
-                } catch (error) {
-                    console.error('Error during user registration:', error);
-                    return null;
-                }
+            const usernames = document.getElementsByClassName('username');
+            for (let username of usernames) {
+                console.log(username);
+                username.textContent = userData.username;
+                username.value = userData.username;
             }
+        }
 
-            const data = await registerUser();
+        const cachedUserDocument = localStorage.getItem('cachedUserDocument');
+        if (cachedUserDocument) {
+            const userData = JSON.parse(cachedUserDocument);
+            setUser(userData);
+        } else {
+            const userDocSnap = await getDocSnapshot('users', userId);
+            if (userDocSnap && userDocSnap.exists()) {
+                const userData = userDocSnap.data();
+                localStorage.setItem(`cachedUserDocument`, JSON.stringify(userData));
+                setUser(userData);
+            } else {
+                async function registerUser() {
+                    try {
+                        async function getServerAddressAPI() {
+                            return await fetchServerAddress(getDocSnapshot('servers', '3050-1'), 'API');
+                        }
+
+                        const [userIpAddress, uniqueId, serverAddressAPI] = await Promise.all([
+                            getUserIpAddress(),
+                            ensureUniqueId(),
+                            getServerAddressAPI()
+                        ]);
+
+                        const url = new URL(window.location.href);
+                        const referral = url.searchParams.get('referral');
+
+                        const response = await fetch(`${serverAddressAPI}/create-user`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                userId,
+                                email: user.email,
+                                username: user.displayName,
+                                phoneNumber: user.phoneNumber,
+                                emailVerified: user.emailVerified,
+                                isAnonymous: user.isAnonymous,
+                                userIpAddress,
+                                uniqueId,
+                                referral,
+                            }),
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+
+                        return await response.json();
+                    } catch (error) {
+                        console.error('Error during user registration:', error);
+                        return null;
+                    }
+                }
+
+                await registerUser();
+                location.reload();
+            }
         }
     } catch (error) {
         console.error("Error getting user document:", error);
@@ -123,7 +141,7 @@ async function handleLoggedOutState() {
 
                 const cachedUserData = JSON.stringify(userCopy);
                 localStorage.setItem('cachedUserData', cachedUserData);
-                handleUserLoggedIn(userCopy);
+                location.reload();
             } catch (error) { console.error("Google sign-in error:", error); }
         });
     }
@@ -149,7 +167,6 @@ async function handleLoggedOutState() {
                 delete userCopy.reloadUserInfo;
                 delete userCopy.auth;
                 localStorage.setItem('cachedUserData', JSON.stringify(userCopy));
-                handleUserLoggedIn(userCopy);
                 location.reload();
             } catch (error) { console.error("Registration error:", error); }
         });
