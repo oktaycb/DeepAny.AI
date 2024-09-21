@@ -22,17 +22,16 @@
 <body lang="en">
     <div id="paymentContainer" style="margin: 0; padding: 0; overflow: hidden; display: none; width: 100%; height: 100vh; position: absolute; z-index: 99999;"></div>
     <script type="module" defer>
+        import { getScreenMode, ScreenMode } from './js/defaultPageLoads/accessVariables.js';
         import { loadPageContent } from './js/defaultPageLoads/loadDefaultHTML.js';
         import { getFirebaseModules, getDocSnapshot } from './js/firebase/initialiseFirebase.js';
         import { fetchConversionRates, fetchServerAddress } from './js/functions.js';
 
-        //console.log("[LOADED] index.js");
-
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', async function () {
             function updateMainContent(screenMode, pageContent) {
                 pageContent.length = 0;
-                pageContent.push(`<div style="display: grid;gap: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));justify-content: center;font-weight: 600;">
-                                                            <div style="display: flex;flex-direction: column; gap: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));">
+                pageContent.push(`<div id="baseContainer" style="display: grid;gap: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));justify-content: center;font-weight: 600;height: 100%;">
+                                                            <div style="display: flex;flex-direction: column; gap: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));height: inherit;">
                                                                             <div class="background-container">
                                                                                 <p class="background-dot-container-option selected" id="credits-mode">Credits</p>
                                                                                 <p class="background-dot-container-option" id="subscription-mode">Subscription</p>
@@ -40,17 +39,17 @@
                                                                             </div>
 
 
-                                                                            <div class="background-container" style="display: flex;flex-direction: row;height: 100%;">
-                                                                                <p class="background-dot-container-option selected" data-currency="USD" style="height: 100%;">$USD</p>
-                                                                                <p class="background-dot-container-option" data-currency="EUR" style="height: 100%;">€EUR</p>
-                                                                                <p class="background-dot-container-option" data-currency="GBP" style="height: 100%;">£GBP</p>
-                                                                                <p class="background-dot-container-option" data-currency="TRY" style="height: 100%;">₺TRY</p>
-                                                                                <p class="background-dot-container-option important-outline" data-currency="BTC" style="height: 100%;">COIN</p>
+                                                                            <div class="background-container">
+                                                                                <p class="background-dot-container-option selected" data-currency="USD">$USD</p>
+                                                                                <p class="background-dot-container-option" data-currency="EUR">€EUR</p>
+                                                                                <p class="background-dot-container-option" data-currency="GBP">£GBP</p>
+                                                                                <p class="background-dot-container-option" data-currency="TRY" >₺TRY</p>
+                                                                                <p class="background-dot-container-option important-outline" data-currency="BTC">COIN</p>
                                                                             </div>
 
 
-                                                                <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
-                                                                    <div style="display: flex; gap: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor)));">
+                                                                <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;height: 100%;">
+                                                                    <div style="display: flex; gap: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor)));height: 100%;">
                                                                         <a class="background-dot-container">
                                                                             <div class="background-dot-container-content" style="min-width: clamp(0px, calc(50vh* var(--scale-factor)), calc(50vw* var(--scale-factor)));">
                                                                             <div class="background-container" style="grid: unset; display: grid;grid-template-columns: 1fr 1fr;">
@@ -99,9 +98,7 @@
             }
 
             loadPageContent(updateMainContent);
-        });
 
-        document.addEventListener("DOMContentLoaded", async function () {
             // TODO: Recieve prices from the server itself.
             const credits = [100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000];
             const prices = [9.99, 19.99, 24.99, 44.99, 99.99, 174.99, 299.99, 624.99, 999.99];
@@ -138,31 +135,29 @@
             });
 
             const state = JSON.parse(localStorage.getItem('pageState') || '{}');
-            if (state) {
-                if (state.selectedMode) {
-                    document.querySelectorAll('.background-dot-container-option').forEach(el => el.classList.remove('selected'));
-                    document.getElementById(state.selectedMode).classList.add('selected');
-                }
 
-                if (state.selectedCurrency) {
-                    document.querySelectorAll('.background-dot-container-option[data-currency]').forEach(el => el.classList.remove('selected'));
-                    document.querySelector(`[data-currency="${state.selectedCurrency}"]`).classList.add('selected');
-                }
-
-                const slider = document.getElementById('slider');
-                if (slider) {
-                    slider.value = state.sliderValue || '1';
-                    slider.max = state.sliderMax || '9';
-                }
-
-                document.getElementById('cost-per-day').innerText = state.costPerDay || '';
-                document.getElementById('discount-details').innerText = state.discountDetails || '';
-                document.getElementById('discount').innerText = state.discount || '';
-                document.getElementById('toggle-description').textContent = state.toggleDescriptionText || "+";
-                document.getElementById('fps-slider').value = state.fpsSlider || '';
-                document.getElementById('fps-value').textContent = state.fpsValueDisplay || '';
-
+            if (state.selectedMode) {
+                document.querySelectorAll('.background-dot-container-option').forEach(el => el.classList.remove('selected'));
+                document.getElementById(state.selectedMode).classList.add('selected');
             }
+
+            if (state.selectedCurrency) {
+                document.querySelectorAll('.background-dot-container-option[data-currency]').forEach(el => el.classList.remove('selected'));
+                document.querySelector(`[data-currency="${state.selectedCurrency}"]`).classList.add('selected');
+            }
+
+            const slider = document.getElementById('slider');
+            if (slider) {
+                slider.value = state.sliderValue || '1';
+                slider.max = state.sliderMax || '9';
+            }
+
+            document.getElementById('cost-per-day').innerText = state.costPerDay || '';
+            document.getElementById('discount-details').innerText = state.discountDetails || '';
+            document.getElementById('discount').innerText = state.discount || '';
+            document.getElementById('toggle-description').textContent = state.toggleDescriptionText || "+";
+            document.getElementById('fps-slider').value = state.fpsSlider || 30;
+            document.getElementById('fps-value').textContent = state.fpsValueDisplay || '30 FPS';
 
             const checkmarkIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>`;
             const xIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x plans_x__KKb0t"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>`;
@@ -215,7 +210,7 @@
                                 : `${creditPerInpaint} creds (${inpaintPrice})/inpaint (${Math.floor(credits / creditPerInpaint)})`
                         },
                         artGeneration: {
-                            name: "Art",
+                            name: "Art Generator",
                             formula: credits => shortDescription
                                 ? `${Math.floor(credits)} process`
                                 : `${creditPerArtGeneration} cred (${artPrice})/art (${Math.floor(credits)})`
@@ -275,57 +270,41 @@
             function calculateCredit(value) {  return credits[value - 1]; }
 
             function updatePlan(plan) {
-                const planNameElement = document.getElementById('plan-name');
-                const popularTagElement = document.getElementById('popular-tag');
-
-                planNameElement.textContent = plan.name;
-
-                if (plan.isPopular) {
-                    popularTagElement.style.display = 'block'; 
-                } else {
-                    popularTagElement.style.display = 'none';
-                }
+                document.getElementById('plan-name').textContent = plan.name;
+                document.getElementById('popular-tag').style.display = plan.isPopular ? 'block' : 'none'; 
             }
 
             function formatNumber(value, currency, show99, minimumFractionDigits = 0, maximumFractionDigits = 3) {
                 let locale;
 
-                switch (currency) {
-                    case 'USD':
-                        locale = 'en-US';
-                        break;
-                    case 'EUR':
-                        locale = 'de-DE';
-                        break;
-                    case 'GBP':
-                        locale = 'en-GB';
-                        break;
-                    case 'TRY':
-                        locale = 'tr-TR'; 
-                        break;
-                    default:
-                        locale = 'en-US';
+                switch (currency)
+                {
+                    case 'USD': locale = 'en-US'; break;
+                    case 'EUR': locale = 'de-DE'; break;
+                    case 'GBP': locale = 'en-GB'; break;
+                    case 'TRY': locale = 'tr-TR'; break;
+                    default: locale = 'en-US';
                 }
 
                 if (show99 && locale === 'en-US') {
                     value = Math.floor(value) + 0.99;
                 } else if (locale !== 'en-US') {
                     if (value >= 1000) {
+                        value = Math.round(value) - 0.01;
                         minimumFractionDigits = 0;
                         maximumFractionDigits = 4;
-                        value = Math.floor(value) - 1 + 0.99;
-                    } else if (value >= 500) {
+                    } else if (value >= 750) {
+                        value = Math.round(value / 100) * 100 - 0.01;
                         minimumFractionDigits = 0;
                         maximumFractionDigits = 4;
-                        value = Math.floor(value) - 1 + 0.99;
                     } else if (value >= 100) {
+                        value = Math.floor(value / 10) * 10 - 0.01;
                         minimumFractionDigits = 0;
                         maximumFractionDigits = 4;
-                        value = Math.floor(value) - 1 + 0.99;
                     } else if (value >= 5) {
+                        value = Math.round(value) - 0.01;
                         minimumFractionDigits = 0;
                         maximumFractionDigits = 4;
-                        value = Math.floor(value) - 1 + 0.99;
                     } else if (value >= 0.5) {
                         const factor = 10;
                         value = (Math.floor(value * factor) / factor) - 0.01;
@@ -342,6 +321,10 @@
             let createdEvent = false;
 
             async function createPayment() {
+                const baseContainer = document.getElementById("baseContainer");
+                baseContainer.style.justifyContent = getScreenMode() !== ScreenMode.PC ? 'stretch' : 'center';
+                baseContainer.style.height = getScreenMode() !== ScreenMode.PC ? '%100' : 'auto';
+
                 const selectedCurrencyElement = document.querySelector('.background-dot-container-option.selected[data-currency]');
                 let selectedCurrency = selectedCurrencyElement ? selectedCurrencyElement.getAttribute('data-currency') : 'USD';
 
@@ -405,16 +388,15 @@
                             priceInSelectedCurrency = convertCurrency(price);
                             dailyPriceAmount = dailyPriceAmount !== null ? convertCurrency(dailyPriceAmount) : null;
 
-                            const newFPS = parseInt(fpsSlider.value, 10);
-                            fpsValueDisplay.textContent = `${newFPS} FPS`;
-                            FPS = newFPS;
+                            fpsValueDisplay.textContent = `${fpsSlider.value} FPS`;
+                            FPS = fpsSlider.value;
                             updateCapabilityList(formatNumber(dailyPriceAmount, selectedCurrency), currencySymbol, false, creditAmount);
 
                             fpsSlider.style.display = 'block';
                             fpsValueDisplay.style.display = 'block';
                             toggleDescriptionButton.style.display = 'block';
                             if (!createdEvent) {
-                                toggleDescriptionButton.addEventListener("click", function () {
+                                toggleDescriptionButton.addEventListener('click', function () {
                                     isShortDescription = !isShortDescription;
                                     this.textContent = isShortDescription ? "+" : "-";
                                     updateCapabilityList(formatNumber(dailyPriceAmount, selectedCurrency), currencySymbol, false, creditAmount);
@@ -478,7 +460,7 @@
                 }
 
                 currencyOptions.forEach(option => {
-                    option.addEventListener("click", () => {
+                    option.addEventListener('click', () => {
                         const newCurrency = option.getAttribute("data-currency");
                         if (newCurrency !== selectedCurrency) {
                             currencyOptions.forEach(opt => opt.classList.remove("selected"));
@@ -490,8 +472,7 @@
                 });
 
                 function updateSliderRange() {
-                    const isCreditsMode = creditsMode.classList.contains("selected");
-                    if (isCreditsMode)
+                    if (creditsMode.classList.contains("selected"))
                         sliderElement.max = credits.length;
                     else sliderElement.max = durations.length;
 
@@ -514,8 +495,8 @@
 
                 sliderElement.addEventListener("input", updateSliderValue);
 
-                let currentMode = state.selectedMode; 
-                subscriptionMode.addEventListener("click", () => {
+                let currentMode = state.selectedMode;
+                subscriptionMode.addEventListener('click', () => {
                     if (currentMode !== 'subscription-mode') {
                         subscriptionMode.classList.add("selected");
                         creditsMode.classList.remove("selected");
@@ -525,7 +506,7 @@
                     }
                 });
 
-                creditsMode.addEventListener("click", () => {
+                creditsMode.addEventListener('click', () => {
                     if (currentMode !== 'credits-mode') {
                         creditsMode.classList.add("selected");
                         subscriptionMode.classList.remove("selected");
@@ -538,13 +519,13 @@
                 updateSliderRange();
                 updateSliderValue();
 
-                purchase.addEventListener("click", async () => { await handleBuyNow(); });
+                purchase.addEventListener('click', async () => { await handleBuyNow(); });
 
                 async function handleBuyNow() {
                     try {
                         const user = await new Promise((resolve) => {
                             const unsubscribe = auth.onAuthStateChanged((user) => {
-                                unsubscribe(); // Unsubscribe once we have the user object
+                                unsubscribe();
                                 resolve(user);
                             });
                         });
@@ -552,7 +533,6 @@
                         let selectedMode = subscriptionMode.classList.contains("selected") ? 'subscription' : 'credits';
 
                         if (user) {
-                            // Todo: actually use the cached data.
                             const { auth } = await getFirebaseModules();
                             const requestData = {
                                 userId: auth.currentUser.uid,

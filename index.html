@@ -7,7 +7,7 @@
     <link rel="canonical" href="https://www.deepany.ai">
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="DeepAny.AI: Your go-to platform for advanced AI solutions and services. Explore our innovative technology and cutting-edge tools designed to help you achieve your goals.">
     <meta name="keywords" content="ai, deepany, bodyswap, art generator, face swap, inpainter">
     
@@ -15,12 +15,8 @@
 
     <script>
         (function () {
-            const preloadDone = 'preloadDone';
-            if (localStorage.getItem(preloadDone) || window.innerWidth / window.innerHeight <= 4 / 3) {
-                const currentScript = document.currentScript;
-                if (currentScript) {
-                    currentScript.remove();
-                }
+            if (localStorage.getItem('preloadDone') || window.innerWidth / window.innerHeight <= 4 / 3) {
+                document.currentScript.remove();
                 return;
             }
 
@@ -38,7 +34,7 @@
                 document.head.appendChild(link);
             });
 
-            localStorage.setItem(preloadDone, 'true');
+            localStorage.setItem('preloadDone', 'true');
         })();
     </script>
 

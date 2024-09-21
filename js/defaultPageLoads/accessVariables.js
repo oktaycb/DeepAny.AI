@@ -158,7 +158,7 @@ export function setNavbar(navbar, mains, sidebar) {
         navbar.style.top = '0';
 
         if (sidebar) {
-            if (getScreenMode() === 1)
+            if (getScreenMode() === ScreenMode.PC) 
                 sidebar.style.top = `${getNavbarHeight()}px`;
             sidebar.style.height = `${getWindowHeight() - getNavbarHeight()}px`;
         }

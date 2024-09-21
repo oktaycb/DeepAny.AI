@@ -22,7 +22,7 @@ export function getCache(key) {
     return item.value;
 }
 
-export function cacheImage(photoURL, callback, retries = 2, delay = 1000, createBase64 = false) {
+export function retrieveImageFromURL(photoURL, callback, retries = 2, delay = 1000, createBase64 = false) {
     fetch(photoURL)
         .then(response => {
             if (response.ok) {
@@ -30,7 +30,7 @@ export function cacheImage(photoURL, callback, retries = 2, delay = 1000, create
             } else if (response.status === 429 && retries > 0) {
                 setTimeout(() => {
                     console.log(`Retrying... Attempts left: ${retries}`);
-                    cacheImage(photoURL, callback, retries - 1, delay * 2, createBase64);
+                    retrieveImageFromURL(photoURL, callback, retries - 1, delay * 2, createBase64);
                 }, delay);
             } else {
                 throw new Error(`Failed to fetch image: ${response.status}`);
@@ -54,7 +54,7 @@ export function cacheImage(photoURL, callback, retries = 2, delay = 1000, create
 
 export function handleImageUpload(imgElementId, storageKey) {
     const imgElement = document.getElementById(imgElementId);
-    imgElement.addEventListener("click", function () {
+    imgElement.addEventListener('click', function () {
         const inputElement = document.createElement("input");
         inputElement.type = "file";
         inputElement.accept = "image/*";

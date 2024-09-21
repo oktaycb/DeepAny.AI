@@ -28,7 +28,7 @@
 <body lang="en">
     <script type="module" defer>
         import { loadPageContent } from './js/defaultPageLoads/loadDefaultHTML.js';
-        import { cacheImage, handleImageUpload } from './js/functions.js';
+        import { retrieveImageFromURL, handleImageUpload } from './js/functions.js';
 
         const cachedUserData = JSON.parse(localStorage.getItem('cachedUserData'));
 
@@ -37,11 +37,24 @@
                 pageContent.length = 0;
 
                 if (!cachedUserData) {
-                    pageContent.push(`
-                        <div style="display: flex;flex-direction: column;align-items: center;justify-content: center;gap: 1vh;">
-                            <h1>Account does not exist.</h1>
-                        </div>
+                    if (screenMode !== 1) {
+                        pageContent.push(`
+                            <div style="display: flex;flex-direction: column;justify-content: center;gap: 1vh;align-items: center;text-align: center;">
+                                <h2>Account does not exist.</h2>
+                            </div>
+                            <div style="display: flex;justify-content: center;gap: clamp(0px, calc(1vh * var(--scale-factor)), calc(12vw * var(--scale-factor)));">
+                                <button id="registerButton">Register</button>
+                                <button class="important" id="loginButton">Login</button>
+                            </div>
                         `);
+                    }
+                    else {
+                        pageContent.push(`
+                            <div style="display: flex;flex-direction: column;justify-content: center;gap: 1vh;align-items: center;text-align: center;">
+                                <h1>Account does not exist.</h1>
+                            </div>
+                        `);
+                    }
                     return;
                 }
 
@@ -56,11 +69,11 @@
                                                                 </div>
                                                                 <div class="line"></div>
                                                                 <div class="profile-link" onclick="#">
-                                                                    <img src="assets/profile.png" alt="Profile Image" class="profile-image">
+                                                                    <img id="profileImage" alt="Profile Image" class="profile-image">
                                                                 </div>
                                                                 <div style="text-align: center;">
                                                                     <h3 id="displayName"></h3>
-                                                                    <p style="opacity: 0.5; font-weight: 300;">durieun02@gmail.com</p>
+                                                                    <p id="emailAddress" style="opacity: 0.5; font-weight: 300;"></p>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -124,19 +137,19 @@
                                                                     <div style="display: grid; grid-template-columns: repeat(1, 1fr); gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor))); margin: clamp(0px, calc(1vh * var(--scale-factor)), calc(2vw * var(--scale-factor))) clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor))); justify-content: space-between;">
                                                                         <div style="font-size: 0px;">
                                                                             <h4 style="font-weight: 300;">Username</h4>
-                                                                            <input value="Duri Eun"></input>
+                                                                            <input id="username" value="" readonly="">
                                                                         </div>
                                                                         <div style="font-size: 0px;">
                                                                             <h4 style="font-weight: 300;">Email Address</h4>
-                                                                            <input value="durieun02@gmail.com"></input>
+                                                                            <input id="email" value="" readonly="">
                                                                         </div>
-                                                                        <div style="font-size: 0px;">
+                                                                               <div style="font-size: 0px;">
                                                                             <h4 style="font-weight: 300;">Password</h4>
-                                                                            <input value="******"></input>
+                                                                            <input id="password" type="password" value="******" readonly="">
                                                                         </div>
                                                                         <div style="font-size: 0px;">
                                                                             <h4 style="font-weight: 300;">Phone Number</h4>
-                                                                            <input value="******"></input>
+                                                                            <input id="phoneNumber" value="******" readonly="">
                                                                         </div>
                                                                     </div>
                                                                 <div class="line"></div>
@@ -144,7 +157,7 @@
                                                                     <div style="margin-left: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));;margin-top: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor)));;">
                                                                         <h4 style="font-weight: 300;">About Me</h4>
                                                                     </div>
-                                                                    <div style="font-size: 0px;margin-left: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));;margin-right: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));margin-bottom: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor)));width: -webkit-fill-available;height: 100%;">
+                                                                    <div style="font-size: 0px;margin-left: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));;margin-right: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));margin-bottom: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor)));width: auto;height: 100%;">
                                                                         <textarea placeholder="Tell us about yourself..." maxlength="2000" style="width: 100%;height: 100%;"></textarea>
                                                                     </div>
                                                                 <div class="line"></div>
@@ -152,8 +165,8 @@
                                                                     <h4 style="font-weight: 300;">Referral link</h4>
                                                                     <div style="display: flex;flex-direction: column;gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));">
                                                                         <div style="display: flex;flex-direction: row;gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));">
-                                                                            <input class="important-outline" value="https://deepany.ai/register?referral=KYN1HG"></input>
-                                                                            <button>Copy</input>
+                                                                            <input id="referralLink" class="important-outline" value="https://deepany.ai/register?referral=KYN1HG" readonly>
+                                                                            <button id="copyButton">Copy</button>
                                                                         </div>
                                                                     <div style="display: flex;flex-direction: row;gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));">
                                                                             <button style="width: 100%">Referral Credits</input>
@@ -204,7 +217,7 @@
                                             `);
                 } else {
                     pageContent.push(` 
-                                            <div style="display: contents; height: -webkit-fill-available; gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));">
+                                            <div style="display: contents; height: 100%; gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));">
                                                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor))); height: 100%;">
                                                     <!-- Profile Section -->
                                                     <div class="background-container">
@@ -230,8 +243,8 @@
                                                                         <button id="copyButton">Copy</button>
                                                                     </div>
                                                                     <div style="display: flex; flex-direction: row; gap: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));">
-                                                                        <button style="width: -webkit-fill-available">Referral Credits</button>
-                                                                        <button style="width: -webkit-fill-available">Daily Credits</button>
+                                                                        <button style="width: 100%">Referral Credits</button>
+                                                                        <button style="width: 100%">Daily Credits</button>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -307,8 +320,8 @@
                                                                 <div style="margin-left: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));;margin-top: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor)));;">
                                                                     <h4 style="font-weight: 300;">About Me</h4>
                                                                 </div>
-                                                                <div style="font-size: 0px;margin-left: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));;margin-right: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));margin-bottom: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor)));width: -webkit-fill-available;height: 100%;">
-                                                                    <textarea placeholder="Tell us about yourself..." maxlength="2000" style="width: -webkit-fill-available;/*height: 100%;*/"></textarea>
+                                                                <div style="font-size: 0px;margin-left: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));;margin-right: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));margin-bottom: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor)));width: 100%;height: 100%;">
+                                                                    <textarea placeholder="Tell us about yourself..." maxlength="2000" style="width: 100%;/*height: 100%;*/"></textarea>
                                                                 </div>
                                                             </div>
                                                         </a>
@@ -375,7 +388,7 @@
                 return;
             }
 
-            document.getElementById("copyButton").addEventListener("click", () => {
+            document.getElementById("copyButton").addEventListener('click', () => {
                 const linkElement = document.getElementById('referralLink');
                 linkElement.select();
                 linkElement.setSelectionRange(0, linkElement.value.length);
@@ -400,7 +413,7 @@
             if (cachedImage) {
                 profileImageElement.src = cachedImage;
             } else {
-                cacheImage(cachedUserData.photoURL, function (base64Image) {
+                retrieveImageFromURL(cachedUserData.photoURL, function (base64Image) {
                     localStorage.setItem('profileImageBase64', base64Image);
                     profileImageElement.src = base64Image;
                 }, 2, 1000, true);

@@ -1,5 +1,5 @@
 import { getFirebaseModules, getDocSnapshot } from './initialiseFirebase.js';
-import { cacheImage, getUserIpAddress, ensureUniqueId, fetchServerAddress } from '../functions.js';
+import { retrieveImageFromURL, getUserIpAddress, ensureUniqueId, fetchServerAddress } from '../functions.js';
 
 async function handleUserLoggedIn(user) {
     if (!user) return;
@@ -10,12 +10,29 @@ async function handleUserLoggedIn(user) {
     if (loginButton) loginButton.remove();
     if (registerButton) registerButton.remove();
 
+    function setCachedImageForElements(className, storageKey) {
+        const imgElements = document.getElementsByClassName(className);
+        const cachedImage = localStorage.getItem(storageKey);
+
+        if (cachedImage) {
+            for (let imgElement of imgElements) {
+                imgElement.src = cachedImage;
+            }
+        } else {
+            for (let imgElement of imgElements) {
+                imgElement.src = 'assets/profile.webp';
+            }
+        }
+    }
+
+    setCachedImageForElements('profile-image', 'profileImageBase64');
+
     const userId = user.uid;
 
     try {
         const userDocSnap = await getDocSnapshot('users', userId);
         if (userDocSnap && userDocSnap.exists()) {
-            console.log("User document:", docSnap.data());
+            console.log("User document:", userDocSnap.data());
         } else {
             console.log("No user document found.");
             console.log("Document doesn't exist, creating a new one: ", user.displayName);
@@ -70,11 +87,14 @@ async function handleUserLoggedIn(user) {
 }
 
 async function handleLoggedOutState() {
+    const userLayout = document.getElementById("userLayout");
+    if (userLayout) userLayout.remove();
+
     const loginButton = document.getElementById("loginButton");
     const registerButton = document.getElementById("registerButton");
 
     if (loginButton) {
-        loginButton.addEventListener("click", async (event) => {
+        loginButton.addEventListener('click', async (event) => {
             event.preventDefault();
 
             try {
@@ -94,23 +114,22 @@ async function handleLoggedOutState() {
                 delete userCopy.reloadUserInfo;
                 delete userCopy.auth;
 
-                let cachedImage = localStorage.getItem('profileImageBase64');
-                if (!cachedImage) {
-                    cacheImage(userCopy.photoURL, function (base64Image) {
+                if (!localStorage.getItem('profileImageBase64')) {
+                    const base64Image = await retrieveImageFromURL(userCopy.photoURL, 2, 1000, true);
+                    if (base64Image) {
                         localStorage.setItem('profileImageBase64', base64Image);
-                    }, 2, 1000, true);
+                    }
                 }
 
                 const cachedUserData = JSON.stringify(userCopy);
                 localStorage.setItem('cachedUserData', cachedUserData);
                 handleUserLoggedIn(userCopy);
-                location.reload();
             } catch (error) { console.error("Google sign-in error:", error); }
         });
     }
 
     if (registerButton) {
-        registerButton.addEventListener("click", async (event) => {
+        registerButton.addEventListener('click', async (event) => {
             event.preventDefault();
 
             try {

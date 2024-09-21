@@ -35,6 +35,10 @@ body, h1, h2, h3, h4, p {
     text-transform: uppercase; font-weight: 700
 }
 
+html, body {
+    touch-action: none;
+}
+
 :root {
     --transition-duration-5: calc(1s) ease;
     --transition-duration-4: calc(0.8s) ease;
@@ -57,6 +61,9 @@ body, h1, h2, h3, h4, p {
     --border: 1px;
     --border-radius: clamp(0px, calc(1.2vh * var(--scale-factor)), calc(2.4vw * var(--scale-factor)));
     --ease-time: 0.5s;
+    --line-width: clamp(0px, calc(4vh* var(--scale-factor)), calc(8vw* var(--scale-factor)));
+    --line-height: clamp(0px, calc(0.5vh* var(--scale-factor)), calc(1vw* var(--scale-factor)));
+    --line-spacing: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor)));
     --gradient-logo-color: -webkit-linear-gradient(45deg, var(--red), var(--orange));
     --gradient-logo-color: -moz-linear-gradient(45deg, var(--red), var(--orange));
     --gradient-logo-color: -o-linear-gradient(45deg, var(--red), var(--orange));
@@ -219,7 +226,7 @@ p {
     line-height: clamp(0px, calc(2vh * 1.5 * var(--scale-factor)), calc(4vw * var(--scale-factor) * 1.5))
 }
 
-button, a.button, input, li, select, textarea {
+button, a.button, input, li, a, select, textarea {
     font-size: clamp(0px, calc(2.5vh * var(--scale-factor)), calc(5vw * var(--scale-factor)))
 }
 
@@ -444,7 +451,7 @@ option {
     -moz-transition: top var(--transition-duration-3);
     -o-transition: top var(--transition-duration-3);
     -ms-transition: top var(--transition-duration-3);
-    padding: clamp(0px,calc(1vh * var(--scale-factor)),calc(2vw * var(--scale-factor))) clamp(0px,calc(4vh * var(--scale-factor)),calc(8vw * var(--scale-factor)))
+    padding: clamp(0px,calc(1vh * var(--scale-factor)),calc(2vw * var(--scale-factor))) clamp(0px,calc(2vh * var(--scale-factor)),calc(4vw * var(--scale-factor)))
 }
 
     .background, .background::before, .navbar:before {
@@ -488,7 +495,7 @@ option {
 
 .sidebar {
     background: var(--background-lighter-color);
-    padding: clamp(0px, calc(2vw * var(--scale-factor)), 12px);
+    padding: clamp(0px, calc(2vh * var(--scale-factor)), calc(4vw * var(--scale-factor)));
     position: fixed;
     width: clamp(0px,calc(25vh * var(--scale-factor)),calc(25vw * var(--scale-factor)));
     z-index: 1000;
@@ -587,9 +594,9 @@ option {
             right: 0;
             width: 0;
             height: 0;
-            border-left: 4px solid transparent;
-            border-right: 4px solid transparent;
-            border-top: 8px solid #fff;
+            border-left: clamp(0px,calc(0.75vh * var(--scale-factor)),calc(1.5vw * var(--scale-factor))) solid transparent;
+            border-right: clamp(0px,calc(0.75vh * var(--scale-factor)),calc(1.5vw * var(--scale-factor))) solid transparent;
+            border-top: clamp(0px,calc(1.5vh * var(--scale-factor)),calc(3vw * var(--scale-factor))) solid #fff;
             transition: transform .3s
         }
 
@@ -665,13 +672,6 @@ option {
     -webkit-align-items: baseline
 }
 
-.line {
-    margin-top: clamp(0px,calc(1.5vh * var(--scale-factor)),calc(3vw * var(--scale-factor)));
-    margin-bottom: clamp(0px,calc(1.5vh * var(--scale-factor)),calc(3vw * var(--scale-factor)));
-    border: var(--border) solid rgba(var(--grey),1);
-    line-height: 100%
-}
-
 .background-dot-container:before, .card:before {
     content: "";
     top: 8px;
@@ -705,36 +705,37 @@ ul {
     z-index: 99999
 }
 
-.indicator {
-    background-color: var(--background-color);
-    border: var(--border) solid;
-    border-color: rgba(var(--grey),1);
-    border-radius: clamp(0px,1.2vh,2.4vw);
-    padding: .75vh 1.5vh;
-    margin-bottom: 1vh;
-    position: relative;
-    transition: opacity .3s ease-in-out;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 1vh
-}
-
 .background-container, .background-dot-container-content {
     gap: clamp(0px,calc(1vh* var(--scale-factor)),calc(2vw* var(--scale-factor)));
     display: flex
 }
 
+
+.indicator {
+    background-color: var(--background-color);
+    border: var(--border) solid;
+    border-color: rgba(var(--grey),1);
+    border-radius: clamp(0px,1.2vh,2.4vw);
+    padding: .75vh 1.5vw;
+    position: relative;
+    transition: opacity .3s ease-in-out;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 1vw
+}
+
+    .indicator button, .indicator p {
+        font-size: clamp(0px, 2vh, 4vw);
+        line-height: clamp(0px, calc(2vh * 1.33), calc(4vw * 1.33));
+        height: auto;
+        padding: revert
+    }
+
 .indicator p {
     margin-right: 4vh
 }
 
-.indicator button, .indicator p {
-    font-size: clamp(0px, 2vh, 4vw);
-    line-height: clamp(0px, calc(2vh * 1.33), calc(4vw * 1.33));
-    height: auto;
-    padding: revert
-}
 .feature {
     display: flex;
     align-items: center; /* Vertically center the content */
@@ -850,6 +851,16 @@ input[type=range] {
         background-color: #3c3f44
     }
 
+#userLayout {
+    cursor: pointer;
+    border-radius: var(--border-radius);
+    padding: 0.25vh 1vh
+}
+
+#userLayout:hover {
+    background-color: rgba(var(--grey), 1)
+}
+
 .background-dot-container {
     position: relative;
     overflow: hidden;
@@ -861,8 +872,6 @@ input[type=range] {
     border-radius: var(--border-radius);
     width: 100%;
     height: 100%;
-    width: -webkit-fill-available;
-    height: -webkit-fill-available;
     width: -moz-available;
     height: -moz-available;
     width: -o-fill-available;
@@ -1115,16 +1124,41 @@ input[type=range] {
     width: 100%
 }
 
+.aspect-4-3 .indicator {
+    background-color: unset;
+    border: unset;
+    padding: unset;
+    position: relative;
+    transition: opacity .3s ease-in-out;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 1vw
+}
+
+    .aspect-4-3 .indicator button, .aspect-4-3 .indicator p {
+        font-size: clamp(0px,calc(3vh * var(--scale-factor)),calc(6vw * var(--scale-factor)));
+        width: var(--line-width);
+        height: var(--line-width);
+        line-height: unset;
+        padding: unset;
+    }
+
+.line {
+    margin-top: clamp(0px,calc(1.5vh * var(--scale-factor)),calc(3vw * var(--scale-factor)));
+    margin-bottom: clamp(0px,calc(1.5vh * var(--scale-factor)),calc(3vw * var(--scale-factor)));
+    border: var(--border) solid rgba(var(--grey),1);
+    line-height: 100%
+}
+
 .aspect-4-3 .hamburger-menu {
-    --line-width: clamp(0px, calc(4vh * var(--scale-factor)), calc(8vw * var(--scale-factor)));
-    --line-height: clamp(0px, calc(0.5vh * var(--scale-factor)), calc(1vw * var(--scale-factor)));
-    --line-spacing: clamp(0px, calc(1vh * var(--scale-factor)), calc(2vw * var(--scale-factor)));
-    padding: 0;
     cursor: pointer;
     position: relative;
     -webkit-transition: -webkit-transform .4s,height .4s;
     transition: transform .4s,height .4s;
     display: block;
+    padding-top: clamp(0px,calc(1.5vh * var(--scale-factor)),calc(3vw * var(--scale-factor)));
+    padding-bottom: clamp(0px,calc(1.5vh * var(--scale-factor)),calc(3vw * var(--scale-factor)));
     width: var(--line-width);
     height: calc(3 * var(--line-height) + 2 * var(--line-spacing));
     top: calc((var(--line-height) + var(--line-spacing)) * -1)
