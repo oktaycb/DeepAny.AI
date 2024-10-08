@@ -1,3 +1,5 @@
+
+
 export function setCache(key, value, ttl) {
     const now = new Date();
     const item = {
@@ -21,6 +23,28 @@ export function getCache(key) {
     }
     return item.value;
 }
+
+export const resizeImage = (base64, width, height) => {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = base64;
+
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = width;
+            canvas.height = height;
+
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL());
+        };
+
+        img.onerror = (error) => {
+            reject(`Image resizing failed: ${error}`);
+        };
+    });
+};
 
 export function retrieveImageFromURL(photoURL, callback, retries = 2, delay = 1000, createBase64 = false) {
     fetch(photoURL)
@@ -52,6 +76,7 @@ export function retrieveImageFromURL(photoURL, callback, retries = 2, delay = 10
         });
 }
 
+/* Use resizeImage here!!! */
 export function handleImageUpload(imgElementId, storageKey) {
     const imgElement = document.getElementById(imgElementId);
     imgElement.addEventListener('click', function () {
@@ -118,6 +143,27 @@ export async function getUserIpAddress() {
         console.error('All attempts to fetch IP address failed:', error);
         return null;
     }
+}
+
+export function getPageName() {
+    const url = window.location.pathname;
+    const pathArray = url.split('/');
+    return pathArray[pathArray.length - 1] || 'default';
+}
+
+export async function fetchServerAddresses(snapshotPromise, skipSlowServers = false) {
+    const cacheKey = getPageName() + '-serverAddresses';
+    const cachedAddresses = getCache(cacheKey);
+    if (cachedAddresses) return cachedAddresses;
+
+    const snapshot = await snapshotPromise;
+    let serverAddresses = snapshot.docs.map((doc) => doc.data()['serverAdress-DF']).filter(Boolean);
+
+    if (skipSlowServers)
+        serverAddresses = serverAddresses.filter(address => !address.includes("3050"));
+
+    setCache(cacheKey, serverAddresses, 7 * 24 * 60 * 60 * 1000);
+    return serverAddresses;
 }
 
 export async function fetchServerAddress(snapshotPromise, fieldId) {

@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en" style="background: rgba(24, 24, 24, 1);" class="loading-screen">
 <head>
-    <title>DeepAny.AI</title>
+    <title>DeepAny.AI: Pricing</title>
 
     <link rel="icon" href="assets/icon.ico" type="image/x-icon" title="DeepAny.AI Favicon">
     <link rel="canonical" href="https://www.deepany.ai/pricing">
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="Discover the best pricing plans for DeepAny.AI. Choose from a variety of options tailored to your needs, and get access to advanced AI tools and services at competitive rates.">
     <meta name="keywords" content="AI, DeepAny, bodyswap, technology, services, solutions">
 
@@ -30,76 +30,75 @@
         document.addEventListener('DOMContentLoaded', async function () {
             function updateMainContent(screenMode, pageContent) {
                 pageContent.length = 0;
-                pageContent.push(`<div id="baseContainer" style="display: grid;gap: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));justify-content: center;font-weight: 600;height: 100%;">
-                                                            <div style="display: flex;flex-direction: column; gap: clamp(0px, calc(2vh* var(--scale-factor)), calc(4vw* var(--scale-factor)));height: inherit;">
-                                                                            <div class="background-container">
-                                                                                <p class="background-dot-container-option selected" id="credits-mode">Credits</p>
-                                                                                <p class="background-dot-container-option" id="subscription-mode">Subscription</p>
-                                                                                <p class="background-dot-container-option not-available" id="renewal-mode">Renewal</p>
-                                                                            </div>
-
-
-                                                                            <div class="background-container">
-                                                                                <p class="background-dot-container-option selected" data-currency="USD">$USD</p>
-                                                                                <p class="background-dot-container-option" data-currency="EUR">€EUR</p>
-                                                                                <p class="background-dot-container-option" data-currency="GBP">£GBP</p>
-                                                                                <p class="background-dot-container-option" data-currency="TRY" >₺TRY</p>
-                                                                                <p class="background-dot-container-option important-outline" data-currency="BTC">COIN</p>
-                                                                            </div>
-
-
-                                                                <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;height: 100%;">
-                                                                    <div style="display: flex; gap: clamp(0px, calc(1vh* var(--scale-factor)), calc(2vw* var(--scale-factor)));height: 100%;">
-                                                                        <a class="background-dot-container">
-                                                                            <div class="background-dot-container-content" style="min-width: clamp(0px, calc(50vh* var(--scale-factor)), calc(50vw* var(--scale-factor)));">
-                                                                            <div class="background-container" style="grid: unset; display: grid;grid-template-columns: 1fr 1fr;">
-                                                                                <input type="range" id="slider" min="1" max="9" step="1" value="1"></input>
-                                                                                <p class="slider-value">1 day</p>
-                                                                            </div>
-                                                                                    <div class="line"></div>
-                                                                                    <div class="background-dot-container-header">
-                                                                                      <p class="plans-name text-gradient" id="plan-name">Starter</p>
-                                                                                      <div class="plans-popular" id="popular-tag" style="display: none;">
-                                                                                        <p class="plans-name text-gradient">Popular</p>
-                                                                                      </div>
-                                                                                    </div>
-                                                                                <div class="background-dot-container-price">
-                                                                                    <h1 id="cost-per-day">Loading...</h1>
-                                                                                    <h4 id="cost-per-day-unit" style="opacity: 0.5;">/day</h4>
-                                                                                </div>
-                                                                                <div class="background-dot-container-link" id="purchase">Purchase</div>
-                                                                                <div>
-                                                                                    <div class="line"></div>
-                                                                                    <h4 id="discount-details">Loading...</h4>
-                                                                                    <p class="discount-details" id="discount">Loading...</p>
-                                                                                    <div class="line"></div>
-                                                                                    <div style="display: flex;gap: 0.5vh;align-items: center;">
-                                                                                        <p class="uppercase text-gradient">Privileges</p>
-                                                                                    </div>
-                                                                                    <div id="features-list"></div>
-                                                                                    <div class="line"></div>
-                                                                                    <div style="display: flex;gap: 0.5vh;align-items: center;">
-                                                                                        <p class="uppercase text-gradient">Plan Capability</p>
-                                                                                        <p id="toggle-description" class="text-gradient" style="cursor: pointer;">+</p>
-                                                                                    </div>
-                                                                                        <div style="display: grid;grid-template-columns: 1fr auto;align-items: center;gap: 1vh;">
-                                                                                            <input type="range" id="fps-slider" min="15" max="60" step="1" value="30">
-                                                                                            <p id="fps-value">30 FPS</p>
+                pageContent.push(`<div id="baseContainer" class="centered-container long">
+                                                                        <div style="display: flex;flex-direction: column; gap: calc((2vh* var(--scale-factor-h) + 4vw / 2 * var(--scale-factor-w)));">
+                                                                                        <div class="background-container">
+                                                                                            <p class="background-dot-container-option" id="credits-mode">Credits</p>
+                                                                                            <p class="background-dot-container-option" id="subscription-mode">Subscription</p>
+                                                                                            <p class="background-dot-container-option not-available" id="renewal-mode">Renewal</p>
                                                                                         </div>
-                                                                                    <ul id="capability-list" style="display: flow;background: transparent;"></ul>
+
+
+                                                                                        <div class="background-container">
+                                                                                            <p class="background-dot-container-option" data-currency="USD" translate="no">$USD</p>
+                                                                                            <p class="background-dot-container-option" data-currency="EUR" translate="no">€EUR</p>
+                                                                                            <p class="background-dot-container-option" data-currency="GBP" translate="no">£GBP</p>
+                                                                                            <p class="background-dot-container-option" data-currency="TRY" translate="no">₺TRY</p>
+                                                                                            <p class="background-dot-container-option important-outline" data-currency="BTC" translate="no">COIN</p>
+                                                                                        </div>
+
+
+                                                                            <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;height: 100%;">
+                                                                                <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
+                                                                                    <a class="background-dot-container">
+                                                                                        <div class="background-dot-container-content" style="min-width: calc((50vh* var(--scale-factor-h) + 50vw / 2 * var(--scale-factor-w)));">
+                                                                                        <div class="background-container" style="grid: unset; display: grid;grid-template-columns: 1fr 1fr;">
+                                                                                            <input type="range" id="slider" min="1" max="9" step="1" value="1"></input>
+                                                                                            <p class="slider-value">1 day</p>
+                                                                                        </div>
+                                                                                                <div class="line"></div>
+                                                                                                <div class="background-dot-container-header">
+                                                                                                  <p class="plans-name text-gradient" id="plan-name">Starter</p>
+                                                                                                  <div class="plans-popular" id="popular-tag" style="display: none;">
+                                                                                                    <p class="plans-name text-gradient">Popular</p>
+                                                                                                  </div>
+                                                                                                </div>
+                                                                                            <div class="background-dot-container-price">
+                                                                                                <h1 id="cost-per-day" translate="no">Loading...</h1>
+                                                                                                <h4 id="cost-per-day-unit" style="opacity: 0.5;">/day</h4>
+                                                                                            </div>
+                                                                                            <div class="background-dot-container-link" id="purchase">Purchase</div>
+                                                                                            <div>
+                                                                                                <div class="line"></div>
+                                                                                                <h4 id="discount-details">Loading...</h4>
+                                                                                                <p class="discount-details" id="discount">Loading...</p>
+                                                                                                <div class="line"></div>
+                                                                                                <div style="display: flex;gap: 0.5vh;align-items: center;">
+                                                                                                    <p class="uppercase text-gradient">Privileges</p>
+                                                                                                </div>
+                                                                                                <div id="features-list"></div>
+                                                                                                <div class="line"></div>
+                                                                                                <div style="display: flex;gap: 0.5vh;align-items: center;">
+                                                                                                    <p class="uppercase text-gradient">Plan Capability</p>
+                                                                                                    <p id="toggle-description" class="text-gradient" style="cursor: pointer;">+</p>
+                                                                                                </div>
+                                                                                                    <div style="display: grid;grid-template-columns: 1fr auto;align-items: center;gap: 1vh;">
+                                                                                                        <input type="range" id="fps-slider" min="15" max="60" step="1" value="30">
+                                                                                                        <p id="fps-value">30 FPS</p>
+                                                                                                    </div>
+                                                                                                <ul id="capability-list" style="display: flow;background: transparent;"></ul>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </a>
                                                                                 </div>
                                                                             </div>
-                                                                        </a>
+                                                                        </div>
                                                                     </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    `);
+                                                                `);
             }
 
             loadPageContent(updateMainContent);
 
-            // TODO: Recieve prices from the server itself.
             const credits = [100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000];
             const prices = [9.99, 19.99, 24.99, 44.99, 99.99, 174.99, 299.99, 624.99, 999.99];
             const durationsInDays = [1, 7, 30, 90, 365, -1];
@@ -131,6 +130,7 @@
                     fpsSlider: document.getElementById('fps-slider').value,
                     fpsValueDisplay: document.getElementById('fps-value').textContent,
                 };
+
                 localStorage.setItem('pageState', JSON.stringify(state));
             });
 
@@ -161,8 +161,8 @@
 
             const checkmarkIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>`;
             const xIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x plans_x__KKb0t"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>`;
-            let SingleCreditFPS = 120, creditPerFrames = 120, FPS = 30, seconds = 60;
-            const creditVideo = creditPerFrames / SingleCreditFPS;
+            let SingleCreditForTotalFrameAmount = 120, creditPerTotalFrames = 120, FPS = 30, seconds = 60;
+            const creditVideo = creditPerTotalFrames / SingleCreditForTotalFrameAmount;
             const creditPerInpaint = 2, creditPerArtGeneration = 1;
 
             let isShortDescription = document.getElementById('toggle-description').textContent === "+";
@@ -194,8 +194,8 @@
                         faceSwap: {
                             name: "Video Swap",
                             formula: credits => shortDescription
-                                ? `${Math.floor((credits * SingleCreditFPS) / (FPS * seconds))} mins`
-                                : `${creditVideo} credit (${creditVideoPrice})/${creditPerFrames} fps (${Math.floor((credits * SingleCreditFPS) / (FPS * seconds))} mins)`
+                                ? `${Math.floor((credits * SingleCreditForTotalFrameAmount) / (FPS * seconds))} mins`
+                                : `${creditVideo} credit (${creditVideoPrice})/${creditPerTotalFrames} fps (${Math.floor((credits * SingleCreditForTotalFrameAmount) / (FPS * seconds))} mins)`
                         },
                         imageSwap: {
                             name: "Image Swap",
@@ -203,8 +203,8 @@
                                 ? `${Math.floor(credits)} process`
                                 : `1 cred (${currencySymbol}${price})/image (${Math.floor(credits)})`
                         },
-                        inpainter: {
-                            name: "Inpainter",
+                        inpaint: {
+                            name: "Inpaint",
                             formula: credits => shortDescription
                                 ? `${Math.floor(credits / creditPerInpaint)} process`
                                 : `${creditPerInpaint} creds (${inpaintPrice})/inpaint (${Math.floor(credits / creditPerInpaint)})`
@@ -222,8 +222,8 @@
 
                 if (isSubscriptionMode) {
                     capabilityListElement.innerHTML = `
-            <li class="capability">${capabilities.faceSwap.name}: 2 hours per process</li>
-            ${Object.values(capabilities).map(capability =>
+                        <li class="capability">${capabilities.faceSwap.name}: 2 hours per process</li>
+                        ${Object.values(capabilities).map(capability =>
                         capability.name !== capabilities.faceSwap.name
                             ? `<li class="capability">${capability.name}: Unlimited</li>`
                             : ''
@@ -267,18 +267,17 @@
 
             function calculatePrice(value) { return prices[value - 1]; }
             function calculateSubPrice(value) { return subprices[value - 1]; }
-            function calculateCredit(value) {  return credits[value - 1]; }
+            function calculateCredit(value) { return credits[value - 1]; }
 
             function updatePlan(plan) {
                 document.getElementById('plan-name').textContent = plan.name;
-                document.getElementById('popular-tag').style.display = plan.isPopular ? 'block' : 'none'; 
+                document.getElementById('popular-tag').style.display = plan.isPopular ? 'block' : 'none';
             }
 
             function formatNumber(value, currency, show99, minimumFractionDigits = 0, maximumFractionDigits = 3) {
                 let locale;
 
-                switch (currency)
-                {
+                switch (currency) {
                     case 'USD': locale = 'en-US'; break;
                     case 'EUR': locale = 'de-DE'; break;
                     case 'GBP': locale = 'en-GB'; break;
@@ -313,7 +312,7 @@
                     }
                 }
 
-                const options = {  style: 'decimal', minimumFractionDigits, maximumFractionDigits, };
+                const options = { style: 'decimal', minimumFractionDigits, maximumFractionDigits, };
                 const formattedValue = new Intl.NumberFormat(locale, options).format(value);
                 return locale === 'en-US' ? formattedValue : `${formattedValue}~`;
             }
@@ -321,10 +320,6 @@
             let createdEvent = false;
 
             async function createPayment() {
-                const baseContainer = document.getElementById("baseContainer");
-                baseContainer.style.justifyContent = getScreenMode() !== ScreenMode.PC ? 'stretch' : 'center';
-                baseContainer.style.height = getScreenMode() !== ScreenMode.PC ? '%100' : 'auto';
-
                 const selectedCurrencyElement = document.querySelector('.background-dot-container-option.selected[data-currency]');
                 let selectedCurrency = selectedCurrencyElement ? selectedCurrencyElement.getAttribute('data-currency') : 'USD';
 
@@ -582,5 +577,6 @@
             window.addEventListener('resize', createPayment);
         });
     </script>
+    <script src="js/defaultPageLoads/autoTranslate.js" defer></script>
 </body>
 </html>

@@ -14,6 +14,10 @@ export const ScreenMode = Object.freeze({
     PC: 1,
 });
 
+export function dispatchEvent(event) {
+    window.dispatchEvent(new Event(event));
+}
+
 export function getScreenMode() {
     const aspectRatio = getAspectRatio();
     if (aspectRatio < 4 / 5) return ScreenMode.PHONE;
@@ -112,7 +116,7 @@ export function setSidebar(sidebar) {
             return;
         }
 
-        if (sidebar) 
+        if (sidebar)
             sidebar.style.right = -sidebar.offsetWidth + "px";
     }
     else if (type === 0) {
@@ -121,7 +125,7 @@ export function setSidebar(sidebar) {
             return;
         }
 
-        if (sidebar) 
+        if (sidebar)
             sidebar.style.left = -sidebar.offsetWidth + 'px';
     }
 }
@@ -141,7 +145,7 @@ export function reconstructMainStyles() {
     let mains = document.querySelectorAll('main');
     if (mains && mains.length > 0) {
         mains.forEach((main, i) => {
-            main.style.display = 'flex';
+            main.style.display = 'grid';
             main.style.top = `${i * getWindowHeight() + getNavbarHeight()}px`;
             main.style.height = `${getWindowHeight() - getNavbarHeight()}px`;
             main.style.width = `${getWindowWidth()}px`;
@@ -158,7 +162,7 @@ export function setNavbar(navbar, mains, sidebar) {
         navbar.style.top = '0';
 
         if (sidebar) {
-            if (getScreenMode() === ScreenMode.PC) 
+            if (getScreenMode() === ScreenMode.PC)
                 sidebar.style.top = `${getNavbarHeight()}px`;
             sidebar.style.height = `${getWindowHeight() - getNavbarHeight()}px`;
         }
@@ -189,24 +193,38 @@ export function showSidebar(sidebar, hamburgerMenu) {
         const loadSideBar = `
 				<div style="flex: 1; justify-content: space-between;">
                     <div>
-                        <a class="button" id="exploreButton" href="/">
+                        <a class="button" id="exploreButton" href=".">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M12 0C5.38318 0 0 5.38318 0 12C0 18.6168 5.38318 24 12 24C18.6164 24 23.9992 18.6168 23.9992 12C23.9992 5.38318 18.6164 0 12 0ZM17.9313 6.83591L14.1309 13.8977C14.0788 13.9945 13.9995 14.0742 13.9023 14.1264L6.84094 17.9263C6.75694 17.9714 6.66559 17.9932 6.57463 17.9932C6.42889 17.9932 6.28489 17.9369 6.1767 17.8285C6.00097 17.653 5.96129 17.3828 6.07896 17.1641L9.87858 10.1029C9.93084 10.0059 10.0104 9.9262 10.1074 9.87413L17.1695 6.07413C17.3882 5.95626 17.658 5.99613 17.8339 6.17167C18.0093 6.34741 18.0494 6.61721 17.9313 6.83591Z" fill="white"/>
                                 <path d="M12.0136 10.6924C11.2898 10.6924 10.7031 11.2784 10.7031 12.0023C10.7031 12.7259 11.2899 13.3129 12.0136 13.3129C12.7367 13.3129 13.3235 12.7259 13.3235 12.0023C13.3235 11.2784 12.7367 10.6924 12.0136 10.6924Z" fill="white"/>
                             </svg>
                             Explore
                         </a>
-                        <a class="button" id="profileButton" href="/profile">
+                        <a class="button" id="profileButton" href="profile">
                             <svg width="24" height="24" viewBox="0 0 11 13" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path fill-rule="evenodd" clip-rule="evenodd" d="M6.95279 0.554203C7.03413 0.600771 7.09797 0.674016 7.13412 0.762255C7.17027 0.850494 7.17664 0.948642 7.15223 1.04104L6.04556 5.21405H10.0834C10.1646 5.21405 10.244 5.23846 10.3119 5.28427C10.3798 5.33008 10.4332 5.3953 10.4655 5.47191C10.4979 5.54851 10.5077 5.63317 10.4939 5.71547C10.4801 5.79778 10.4432 5.87414 10.3878 5.93516L4.55444 12.3635C4.4909 12.4337 4.40632 12.4799 4.31423 12.4948C4.22214 12.5097 4.12785 12.4924 4.04645 12.4457C3.96504 12.3989 3.90123 12.3255 3.86521 12.237C3.82919 12.1486 3.82305 12.0503 3.84777 11.9578L4.95444 7.78539H0.916643C0.835442 7.78538 0.756011 7.76097 0.688116 7.71516C0.620221 7.66935 0.56682 7.60413 0.534478 7.52752C0.502135 7.45092 0.492261 7.36626 0.506068 7.28396C0.519876 7.20166 0.556763 7.1253 0.612197 7.06427L6.44556 0.635914C6.5091 0.566 6.59356 0.519971 6.68548 0.505163C6.77741 0.490354 6.87151 0.507618 6.95279 0.554203Z" fill="white"/>
                             </svg>
                             Profile
                         </a>
-                        <a class="button important" id="premiumButton" href="/pricing">
+                        <a class="button important" id="premiumButton" href="pricing">
                             <svg width="24" height="24" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path id="Vector" d="M15.8533 5.76333L12.1773 2.08733C12.0843 1.99433 11.9588 1.94183 11.8278 1.94083L4.23825 1.88283C4.10425 1.88183 3.97575 1.93433 3.88075 2.02933L0.14625 5.76383C-0.04875 5.95933 -0.04875 6.27533 0.14625 6.47083L7.64625 13.9708C7.84175 14.1663 8.15825 14.1663 8.35325 13.9708L15.8533 6.47083C16.0488 6.27533 16.0488 5.95883 15.8533 5.76333ZM12.9533 6.47433L9.37725 10.0858C9.18275 10.2823 8.86625 10.2838 8.66975 10.0893C8.47325 9.89483 8.47175 9.57833 8.66625 9.38183L11.9038 6.11333L10.8098 4.94733C10.6183 4.74883 10.6243 4.43183 10.8233 4.24033C10.9203 4.14633 11.0513 4.09683 11.1858 4.10083C11.3208 4.10483 11.4483 4.16333 11.5393 4.26283L12.9633 5.78133C13.1463 5.97733 13.1423 6.28333 12.9533 6.47433Z" fill="white"/>
                             </svg>
                             Premium
+                        </a>
+                    </div>
+                    <div>
+                        <a class="button" id="faceSwapButton" href="face-swap">
+                            <svg class="svg-icon" width="24" height="24" style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M848 64h-84c-7.2 0-14.3 2.7-19.8 8.2-5.5 5.5-8.2 12.6-8.2 19.8 0 7.2 2.7 14.3 8.2 19.8 5.5 5.5 12.6 8.2 19.8 8.2h84v84c0 7.2 2.7 14.3 8.2 19.8 5.5 5.5 12.6 8.2 19.8 8.2s14.3-2.7 19.8-8.2c5.5-5.5 8.2-12.6 8.2-19.8v-84c0-30.9-25.1-56-56-56zM876 512c-7.2 0-14.3 2.7-19.8 8.2-5.5 5.5-8.2 12.6-8.2 19.8v84h-84c-7.2 0-14.3 2.7-19.8 8.2-1.5 1.5-2.3 3.4-3.4 5.2-31.6-30.4-67.1-55.4-106.4-72C714.2 517.7 764.7 426 749.2 323c-14.6-96.7-89.6-177.5-185.3-197.5-17.6-3.7-35-5.4-51.9-5.4-132.6 0-240 107.4-240 240 0 87.6 47.5 163.5 117.6 205.4-39.2 16.6-74.8 41.6-106.4 72-1.1-1.8-1.9-3.7-3.4-5.2-5.5-5.5-12.6-8.2-19.8-8.2h-84v-84c0-7.2-2.7-14.3-8.2-19.8-5.5-5.5-12.6-8.2-19.8-8.2s-14.3 2.7-19.8 8.2c-5.5 5.5-8.2 12.6-8.2 19.8v84c0 30.9 25.1 56 56 56h69c-46.8 60.6-79.3 136.5-89.5 221.3-3.8 31.2 21.1 58.7 52.5 58.7h608c31.4 0 56.2-27.6 52.5-58.7-10.2-84.9-42.7-160.8-89.5-221.4h69c30.9 0 56-25.1 56-56v-84c0-7.2-2.7-14.3-8.2-19.8-5.5-5.5-12.6-8.2-19.8-8.2zM211.5 905c16.9-132.8 93.3-242.9 199.9-288 19.4-8.2 32.6-26.7 34.1-47.7 1.5-21.1-9-41.1-27.2-52C361.8 483.6 328 424.7 328 360c0-101.5 82.5-184 184-184 13.4 0 27 1.4 40.4 4.3 72.1 15.1 130.3 77.2 141.4 151.1 11.4 75.5-22.4 146.8-88.2 186-18.1 10.8-28.6 30.9-27.2 52 1.5 21.1 14.6 39.5 34.1 47.7C719 661.9 795.3 771.7 812.4 904l-600.9 1zM148 232c7.2 0 14.3-2.7 19.8-8.2 5.5-5.5 8.2-12.6 8.2-19.8v-84h84c7.2 0 14.3-2.7 19.8-8.2 5.5-5.5 8.2-12.6 8.2-19.8 0-7.2-2.7-14.3-8.2-19.8-5.5-5.5-12.6-8.2-19.8-8.2h-84c-30.9 0-56 25.1-56 56v84c0 7.2 2.7 14.3 8.2 19.8 5.5 5.5 12.6 8.2 19.8 8.2z" fill="white"/></svg>
+                            Face Swap
+                        </a>
+                        <a class="button" id="inpaintButton" href="inpaint">
+                            <svg class="svg-icon" width="24" height="24" style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M991.776 535.2c0-25.632-9.984-49.76-28.064-67.872L588.992 92.128c-36.256-36.288-99.488-36.288-135.744-0.032L317.408 227.808c-37.408 37.408-37.44 98.336-0.032 135.776l374.656 375.136c18.144 18.144 42.24 28.128 67.936 28.128 25.632 0 49.728-9.984 67.84-28.096l35.328-35.296 26.112 26.144c12.512 12.512 12.512 32.768 1.856 43.584l-95.904 82.048c-12.448 12.544-32.736 12.48-45.248 0l-245.536-245.824 0 0-3.2-3.2c-37.44-37.408-98.336-37.472-135.744-0.096l-9.632 9.632L294.4 554.336c-6.24-6.24-14.432-9.376-22.624-9.376-8.192 0-16.384 3.136-22.656 9.376 0 0 0 0.032-0.032 0.032l-22.56 22.56c0 0 0 0 0 0l-135.872 135.712c-37.408 37.408-37.44 98.304-0.032 135.776l113.12 113.184c18.688 18.688 43.296 28.064 67.872 28.064 24.576 0 49.152-9.344 67.904-28.032l135.808-135.712c0.032-0.032 0.032-0.096 0.064-0.128l22.528-22.496c6.016-6.016 9.376-14.112 9.376-22.624 0-8.48-3.36-16.64-9.344-22.624l-96.896-96.96 9.6-9.6c12.48-12.544 32.768-12.48 45.248 0.032l0-0.032 3.2 3.2 0 0.032 245.568 245.856c18.944 18.912 43.872 28.256 68.544 28.256 24.032 0 47.808-8.896 65.376-26.56l95.904-82.048c37.44-37.408 37.472-98.336 0.032-135.808l-26.112-26.112 55.232-55.168C981.76 584.928 991.776 560.832 991.776 535.2zM362.144 848.544c-0.032 0.032-0.032 0.096-0.064 0.128l-67.776 67.712c-12.48 12.416-32.864 12.448-45.312 0L135.904 803.2c-12.48-12.48-12.48-32.768 0-45.28l67.904-67.84 0 0 67.936-67.84 158.336 158.432L362.144 848.544zM918.368 557.824l-135.808 135.68c-12.064 12.096-33.152 12.096-45.216-0.032L362.656 318.368c-12.48-12.512-12.48-32.8 0-45.28l135.84-135.712C504.544 131.328 512.576 128 521.12 128s16.608 3.328 22.624 9.344l374.688 375.2c6.016 6.016 9.344 14.048 9.344 22.592C927.776 543.712 924.448 551.744 918.368 557.824z" fill="white"/><path d="M544.448 186.72c-12.352-12.672-32.64-12.832-45.248-0.48-12.64 12.384-12.832 32.64-0.48 45.248l322.592 329.216c6.24 6.368 14.528 9.6 22.848 9.6 8.096 0 16.16-3.04 22.4-9.152 12.64-12.352 12.8-32.608 0.448-45.248L544.448 186.72z" fill="white"/></svg>
+                            Inpaint
+                        </a>
+                        <a class="button" id="artGeneratorButton" href="art-generator">
+                            <svg class="svg-icon"  width="24" height="24" style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M512 1024C229.888 1024 0 794.112 0 512S229.888 0 512 0s512 229.888 512 512c0 104.96-44.544 180.736-132.096 225.28-52.736 26.624-109.056 29.696-159.232 31.744-60.928 3.072-99.328 6.144-117.76 37.376-13.312 22.528-3.584 41.984 12.8 71.68 15.36 27.136 36.352 65.024 7.168 100.352-33.28 40.448-82.944 45.568-122.88 45.568z m0-970.24c-252.928 0-458.24 205.824-458.24 458.24s205.824 458.24 458.24 458.24c41.984 0 66.56-7.68 81.408-26.112 5.12-6.144 2.56-13.312-12.288-40.448-16.384-29.696-41.472-74.752-12.288-124.928 33.792-57.856 98.304-60.928 161.28-63.488 46.592-2.048 94.72-4.608 137.216-26.112 69.12-35.328 102.912-93.184 102.912-177.664 0-252.416-205.312-457.728-458.24-457.728z" fill="white" /><path d="M214.016 455.68m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M384 244.736m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M645.12 229.376m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M804.352 426.496m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white"/></svg>
+                            Art Generator
                         </a>
                     </div>
 					<div>
@@ -236,7 +254,7 @@ export function showSidebar(sidebar, hamburgerMenu) {
 							</svg>
 							Contact
 						</button>
-						<a class="button" href="/">
+						<a class="button disabled" href=".">
 							<svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
 							<g id="Layer 2">
 							<path id="Vector" d="M7.15112 10.9938L3.47837 10.5042C2.75859 10.4061 2.09857 10.051 1.62009 9.50438C1.14162 8.95779 0.876977 8.25658 0.875 7.53016V3.5C0.875397 3.1023 1.03356 2.721 1.31478 2.43978C1.596 2.15856 1.9773 2.0004 2.375 2H5.375C5.54228 1.99988 5.7048 2.05573 5.83666 2.15866C5.96853 2.26159 6.06217 2.40568 6.10266 2.56799L7.97766 10.068C8.00524 10.1786 8.00728 10.294 7.98361 10.4055C7.95994 10.5169 7.91119 10.6216 7.84105 10.7114C7.77092 10.8012 7.68124 10.8739 7.57883 10.9239C7.47642 10.9739 7.36397 10.9999 7.25 11L7.15112 10.9938ZM2.375 7.53016C2.37601 7.89334 2.50838 8.24389 2.74766 8.5171C2.98695 8.79031 3.317 8.96773 3.67688 9.0166L6.25427 9.36085L4.78943 3.5H2.37537L2.375 7.53016Z" fill="#D1D1D1"/>
@@ -246,7 +264,7 @@ export function showSidebar(sidebar, hamburgerMenu) {
 							</svg>
 							Affiliation
 						</a>
-						<a class="button" href="/settings">
+						<a class="button disabled" href="settings">
 							<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
 							<g clip-path="url(#clip0_3128_4961)">
 							<path d="M18.975 8.95L17.0812 7.05625V4.375C17.0805 3.98567 16.9256 3.61247 16.6503 3.33717C16.375 3.06187 16.0018 2.90691 15.6125 2.90625H12.9312L11.0375 1.0125C10.7613 0.739223 10.3885 0.585937 9.99995 0.585938C9.61143 0.585938 9.23861 0.739223 8.96245 1.0125L7.0687 2.90625H4.38745C3.99812 2.90691 3.62492 3.06187 3.34962 3.33717C3.07432 3.61247 2.91936 3.98567 2.9187 4.375V7.05625L1.02495 8.95C0.888287 9.08601 0.779841 9.24769 0.705842 9.42573C0.631843 9.60378 0.59375 9.79469 0.59375 9.9875C0.59375 10.1803 0.631843 10.3712 0.705842 10.5493C0.779841 10.7273 0.888287 10.889 1.02495 11.025L2.9187 12.925V15.6C2.91845 15.7929 2.95628 15.9841 3.03 16.1624C3.10372 16.3407 3.2119 16.5027 3.34834 16.6391C3.48477 16.7755 3.64678 16.8837 3.82509 16.9575C4.0034 17.0312 4.1945 17.069 4.38745 17.0688H7.0687L8.96245 18.9625C9.09846 19.0992 9.26013 19.2076 9.43818 19.2816C9.61623 19.3556 9.80714 19.3937 9.99995 19.3937C10.1928 19.3937 10.3837 19.3556 10.5617 19.2816C10.7398 19.2076 10.9014 19.0992 11.0375 18.9625L12.9312 17.0688H15.6125C15.8054 17.069 15.9965 17.0312 16.1748 16.9575C16.3531 16.8837 16.5151 16.7755 16.6516 16.6391C16.788 16.5027 16.8962 16.3407 16.9699 16.1624C17.0436 15.9841 17.0814 15.7929 17.0812 15.6V12.925L18.975 11.025C19.1116 10.889 19.2201 10.7273 19.2941 10.5493C19.3681 10.3712 19.4062 10.1803 19.4062 9.9875C19.4062 9.79469 19.3681 9.60378 19.2941 9.42573C19.2201 9.24769 19.1116 9.08601 18.975 8.95ZM9.99995 13.125C9.38188 13.125 8.7777 12.9417 8.26379 12.5983C7.74989 12.255 7.34935 11.7669 7.11283 11.1959C6.8763 10.6249 6.81442 9.99653 6.935 9.39034C7.05558 8.78415 7.3532 8.22733 7.79024 7.79029C8.22728 7.35325 8.7841 7.05563 9.39029 6.93505C9.99648 6.81447 10.6248 6.87635 11.1958 7.11288C11.7669 7.3494 12.2549 7.74994 12.5983 8.26384C12.9417 8.77775 13.125 9.38193 13.125 10C13.125 10.8288 12.7957 11.6237 12.2097 12.2097C11.6236 12.7958 10.8288 13.125 9.99995 13.125Z" fill="white"/>
@@ -258,7 +276,7 @@ export function showSidebar(sidebar, hamburgerMenu) {
 				</div>
 				`;
 
-        sidebar.innerHTML = loadSideBar; ['exploreButton', 'profileButton', 'premiumButton'].forEach(id => document.getElementById(id).addEventListener('click', () => localStorage.setItem('sidebarState', 'removeSidebar')));
+        sidebar.innerHTML = loadSideBar;['exploreButton', 'profileButton', 'premiumButton', 'faceSwapButton', 'inpaintButton', 'artGeneratorButton'].forEach(id => document.getElementById(id).addEventListener('click', () => localStorage.setItem('sidebarState', 'removeSidebar')));
         sidebarLoaded = true;
     }
 }
@@ -312,6 +330,7 @@ export function createPages(contents) {
 
         const h2Element = document.createElement('h2');
         h2Element.classList.add('text-gradient');
+        h2Element.setAttribute('translate', 'no');
         h2Element.textContent = 'bring your imagination come to life.';
 
         const offsetText = document.createElement('div');
@@ -346,7 +365,7 @@ export function setupMainSize(mainQuery) {
         return;
 
     mainQuery.forEach((main, index) => {
-        main.style.display = 'flex';
+        main.style.display = 'grid';
         main.style.top = `${index * getWindowHeight() + getNavbarHeight()}px`;
         main.style.height = `${getWindowHeight() - getNavbarHeight()}px`;
         main.style.width = `${getWindowWidth()}px`;
@@ -357,7 +376,7 @@ export function setupMainSize(mainQuery) {
 const swipeThreshold = 50;
 
 export function loadScrollingAndMain(navbar, mainQuery, sidebar, hamburgerMenu) {
-    if (!mainQuery || !mainQuery.length )
+    if (!mainQuery || !mainQuery.length)
         return;
 
     let scrolling = false;
@@ -488,7 +507,6 @@ export function retrieveImages(id) {
     };
 
     if (sizeCache[id]) {
-        // If cache exists, use it
         const { src, srcset, sizes } = sizeCache[id];
         applyImageAttributes(src, srcset, sizes);
     } else {
@@ -525,7 +543,41 @@ export function getSizeCache() {
     return sizeCache;
 }
 
-export function showZoomIndicator(event, scaleFactor) {
+function getValueBasedOnAspectRatio() {
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    const aspectRatio = windowWidth / windowHeight;
+    const maxAspectRatio = 0.5;
+    const minAspectRatio = 0.25;
+
+    let value = Math.max(0, Math.min(1, aspectRatio / maxAspectRatio));
+    if (aspectRatio < minAspectRatio) {
+        value = minAspectRatio / maxAspectRatio;
+    }
+
+    return Math.min(1, value);
+}
+
+// Attach event listeners for each element with the tooltip
+document.querySelectorAll('*[tooltip]').forEach(item => {
+    item.addEventListener('mouseenter', function () {
+        const tooltip = this.querySelector('.tooltip');
+        if (tooltip) {
+            adjustTooltipPosition(tooltip);
+        }
+    });
+});
+
+export function setScaleFactors(scaleFactorHeight, scaleFactorWidth, scaleFactorHeightMultiplier = 3, scaleFactorWidthMultiplier = 0) {
+    let value = getValueBasedOnAspectRatio();
+    value = Math.pow(value, 0.5) / 2;
+    scaleFactorHeightMultiplier *= value;
+    scaleFactorWidthMultiplier *= value;
+    document.documentElement.style.setProperty('--scale-factor-h', scaleFactorHeight * scaleFactorHeightMultiplier);
+    document.documentElement.style.setProperty('--scale-factor-w', scaleFactorWidth * scaleFactorWidthMultiplier);
+}
+
+export function showZoomIndicator(event, scaleFactorHeight, scaleFactorWidth) {
     let container = document.getElementById('zoom-indicator-container');
     if (!container) {
         container = document.createElement('div');
@@ -547,7 +599,6 @@ export function showZoomIndicator(event, scaleFactor) {
         notification.appendChild(messageElement);
     }
 
-    // Create +, -, and reset buttons
     let minusButton = notification.querySelector('.zoom-minus');
     let plusButton = notification.querySelector('.zoom-plus');
 
@@ -565,23 +616,27 @@ export function showZoomIndicator(event, scaleFactor) {
         notification.appendChild(plusButton);
     }
 
-    notification.style.opacity = 1;
-
     minusButton.onclick = () => {
-        scaleFactor = clamp((scaleFactor || 1) - 0.05, 0.1, 1);
-        document.documentElement.style.setProperty('--scale-factor', scaleFactor);
-        localStorage.setItem('scaleFactor', scaleFactor);
-        showZoomIndicator(`${Math.round(scaleFactor * 100)}%`, scaleFactor);
+        scaleFactorHeight = clamp((scaleFactorHeight || 1) - 0.05, 0.1, 1);
+        scaleFactorWidth = clamp((scaleFactorWidth || 1) - 0.05, 0.1, 1);
+        setScaleFactors(scaleFactorHeight, scaleFactorWidth);
+        localStorage.setItem('scaleFactorHeight', scaleFactorHeight);
+        localStorage.setItem('scaleFactorWidth', scaleFactorWidth);
+        showZoomIndicator(`${Math.round(scaleFactorHeight * 100)}%`, scaleFactorHeight, scaleFactorWidth);
         setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 100);
     };
 
     plusButton.onclick = () => {
-        scaleFactor = clamp((scaleFactor || 1) + 0.05, 0.1, 1);
-        document.documentElement.style.setProperty('--scale-factor', scaleFactor);
-        localStorage.setItem('scaleFactor', scaleFactor);
-        showZoomIndicator(`${Math.round(scaleFactor * 100)}%`, scaleFactor);
+        scaleFactorHeight = clamp((scaleFactorHeight || 1) + 0.05, 0.1, 1);
+        scaleFactorWidth = clamp((scaleFactorWidth || 1) + 0.05, 0.1, 1);
+        setScaleFactors(scaleFactorHeight, scaleFactorWidth);
+        localStorage.setItem('scaleFactorHeight', scaleFactorHeight);
+        localStorage.setItem('scaleFactorWidth', scaleFactorWidth);
+        showZoomIndicator(`${Math.round(scaleFactorHeight * 100)}%`, scaleFactorHeight, scaleFactorWidth);
         setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 100);
     };
+
+    notification.style.opacity = 1;
 
     document.addEventListener('click', (event) => {
         if (!container.contains(event.target)) {
@@ -589,7 +644,5 @@ export function showZoomIndicator(event, scaleFactor) {
         }
     });
 
-    messageElement.innerText = `${Math.round(scaleFactor * 100)}%`;
+    messageElement.innerText = `${Math.round(scaleFactorHeight * 100)}%`;
 }
-
-//console.log("[LOADED] accesVariables.js");

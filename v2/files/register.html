@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/4.5.0/css/swiper.min.css">
+
+    <title>Sign Up | BodySwap.me (DeepAny.AI)</title>
+    <meta name="title" content="BodySwap.me (DeepAny.AI) | Sign Up">
+    <meta name="description" content="Create an account here and start enjoying bodyswap.me!..">
+  
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://bodyswap.me">
+    <meta property="og:title" content="BodySwap.me (DeepAny.AI) | Sign Up">
+    <meta property="og:description" content="Create an account here and start enjoying bodyswap.me!..">
+    <meta property="og:image" content="https://bodyswap.me/files/assets/meta/background-wide.png">
+  
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://bodyswap.me">
+    <meta property="twitter:title" content="BodySwap.me (DeepAny.AI) | Sign Up">
+    <meta property="twitter:description" content="Create an account here and start enjoying bodyswap.me!..">
+		
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+	<link rel="manifest" href="assets/site.webmanifest">
+	
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/4.5.0/js/swiper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/fingerprintjs2@2.1.0/dist/fingerprint2.min.js"></script>
+	
+	<script async src="https://fundingchoicesmessages.google.com/i/pub-2374246406180986?ers=1" nonce="usrhmUNMfjwqnwYPHoi0fQ"></script><script nonce="usrhmUNMfjwqnwYPHoi0fQ">(function() {function signalGooglefcPresent() {if (!window.frames['googlefcPresent']) {if (document.body) {const iframe = document.createElement('iframe'); iframe.style = 'width: 0; height: 0; border: none; z-index: -1000; left: -1000px; top: -1000px;'; iframe.style.display = 'none'; iframe.name = 'googlefcPresent'; document.body.appendChild(iframe);} else {setTimeout(signalGooglefcPresent, 0);}}}signalGooglefcPresent();})();</script>
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-PK4MEBN2XY"></script>
+	<script>
+	  window.dataLayer = window.dataLayer || [];
+	  function gtag(){dataLayer.push(arguments);}
+	  gtag('js', new Date());
+
+	  gtag('config', 'G-PK4MEBN2XY');
+	</script>
+
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-auth.js"></script>
+	
+    <script type="module" src="scripts-17/firebase-config.js"></script>
+    <script type="module" src="scripts-17/firebase-auth.js"></script>
+    <script type="module" src="scripts-17/firebase-register.js"></script>
+    <script type="module" src="scripts-17/background-animation.js"></script>
+    <link rel="stylesheet" href="styles-17/main.css">
+    <link rel="stylesheet" href="styles-17/background.css">
+    <link rel="stylesheet" href="styles-17/register.css">
+	<style>
+		#player {
+		  position: absolute;
+		  top: 0;
+		  right: 0;
+		  flex: 0;
+		}
+		
+		/* Add styles for the active container with blur effect */
+		.active-container {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			z-index: 999; /* Make the container appear above other content */
+			backdrop-filter: blur(5px); /* Add blur effect to the background */
+			background-color: var(--card-main-background-color); /* Adjust the background color and transparency */
+		}
+		
+		
+		.confirmation-box {
+			background-color: var(--background-color);
+			border: 1px solid var(--darker-grey-color);
+			border-radius: 15px;
+			padding: 20px;
+			text-align: center;
+			max-width: 100%; /* Adjust the width as needed */
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			transform: translate(-50%, -50%);
+			z-index: 1000;
+			transition: border 0.3s ease-in-out;
+		}
+						
+		.confirmation-box:hover {
+			border: 1px solid var(--lighter-grey-color); /* Increase border thickness and change color on hover */
+		}
+
+		.confirmation-text {
+			font-weight: bold;
+			margin-bottom: 10px;
+		}
+
+		.confirmation-button,
+		#currencySelector {
+			padding: 15px;
+			width: 49%;
+			max-width: 100%;
+			color: #fff;
+			border: 2px solid #0056b3; /* Add a border similar to the normal button */
+			border-radius: 20px;
+			cursor: pointer;
+			margin-top: 10px;
+			background: linear-gradient(45deg, blue, red);
+			background-size: 200% 200%;
+			transition: background 0.6s ease, transform 0.6s ease, box-shadow 0.6s ease, color 0.6s ease-in-out;
+			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+		    font-size: 15px;
+		    font-weight: bold;
+		}
+
+		.confirmation-button:hover,
+		#currencySelector:hover	{
+			background: linear-gradient(45deg, blue, red);
+			background-position: 100%;
+			transform: scale(1.01);
+			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+			border: 2px solid #0056b3;
+		}
+		
+		.confirmation-button:focus,
+		#currencySelector:focus {
+			outline: none; /* Remove the default focus outline */
+			box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Add a subtle focus effect */
+		}
+
+		/* Style the confirmation dialog checkbox and label */
+		.confirmation-box label {
+			display: flex;
+			align-items: center;
+			margin-top: 10px;
+			cursor: pointer;
+			padding: 5px; /* Increase clickable area */
+		}
+
+		.confirmation-box label input[type="checkbox"] {
+			appearance: none;
+			width: 16px;
+			height: 16px;
+			border: 2px solid #ccc;
+			border-radius: 3px;
+			margin-right: 8px;
+			cursor: pointer;
+			transition: border-color 0.3s, background-color 0.3s;
+		}
+		
+		.confirmation-box label input[type="checkbox"]:checked {
+			background-color: #007bff; /* Change background color when checked */
+			border: 2px solid #007bff; /* Change border color when checked */
+			transition: border-color 0.3s, background-color 0.3s;
+		}
+
+		.confirmation-box label input[type="checkbox"]:hover {
+			transform: scale(1.1);
+			transition: transform 0.3s;
+		}
+
+		.confirmation-box label input[type="checkbox"]:checked::before {
+			content: "✔"; /* Display a checkmark when checked */
+			display: block;
+			color: #fff; /* Checkmark color */
+			font-size: 12px;
+			text-align: center;
+			line-height: 16px;
+		}
+		
+		.confirmation-box label input[type="checkbox"] {
+			border-radius: 75%; /* Makes the checkbox completely round */
+		}
+		
+		.confirmation-box label:hover {
+			/* Hover effect for the entire label */
+			background-color: rgba(0, 123, 255, 0.1);
+			border-radius: 5px; /* Makes the checkbox completely round */
+		}
+		
+		/* Scale the checkbox when hovered */
+		.confirmation-box label:hover input[type="checkbox"] {
+			transform: scale(1.1); /* Slightly bigger when hovered */
+		}
+
+		.confirmation-box label:hover input[type="checkbox"] {
+			border: 2px solid #007bff;
+		}
+
+		.confirmation-box label:hover input[type="checkbox"]:checked {
+			background-color: #0056b3;
+			border: 2px solid #0056b3;
+		}
+
+		.confirmation-button.cancel,
+		#currencySelector.focus {
+			background-color: #ccc;
+		}
+
+		.confirmation-button.confirm,
+		#currencySelector.confirm {
+			background-color: #007bff;
+		}
+	</style>
+</head>
+<body translate="no">
+	<div id="player"></div>
+    <div class="loading-screen">
+        <div class="loading-spinner"></div>
+    </div>
+    <nav class="navbar">
+        <a href="../index.html" class="logo" style="text-decoration: none;">BodySwap</a>
+        <label class="day-night">
+            <input type="checkbox" checked>
+            <div></div>
+        </label>
+        <div class="menu-toggle">
+            <div class="hamburger"></div>
+            <div class="hamburger"></div>
+            <div class="hamburger"></div>
+        </div>
+        <ul class="nav-links" id="nav-links">
+	        <li><a id="emailVerificationMessage" style="color: red; display: none; text-align: center;">Sent Verification E-Mail.</a></li>
+            <li><a id="loggedInMessage"></a></li>
+            <li><a id="logoutButton" style="display: none; cursor: pointer;">Log Out</a></li>
+            <li><a id="sendVerificationButton" style="display: block; cursor: pointer;">Send Verification</a></li>
+            <li><a href="../index.html">Home</a></li>
+            <li><a href="deepfake.html">DeepFace</a></li>
+            <li><a href="deepinpaint.html">DeepInpaint</a></li>
+            <li><a href="deepart.html">DeepArt</a></li>
+            <li><a href="pricing.html">Pricing</a></li>
+			<li><a href="invest.html">Invest</a></li>
+            <li><a href="policies.html">Policies</a></li>
+			<li><a href="https://discord.gg/Vrmt8UfDK8" target="_blank">Discord</a></li>
+			<li><a href="https://www.trustpilot.com/review/bodyswap.me" target="_blank">Trustpilot</a></li>
+			<li><a href="https://www.reddit.com/r/bodyswapai/" target="_blank">Reddit</a></li>
+            <li><a href="login.html" id="loginLink">Sign in</a></li>
+            <li><a href="register.html" id="registerLink">Sign up</a></li>
+            <li><a href="profile.html">Free Credits</a></li>
+        </ul>
+    </nav>
+    <div class="container hero">
+        <div class="background">
+            <canvas id="hero-canvas" width="1920" height="1080"></canvas>
+        </div>
+    </div>
+    <form id="signup-form">
+      <svg class="logo"><use xlink:href="#logo"></use></svg>
+      <h1>Sign Up</h1>
+		<div class="input email">
+		  <input type="username" id="username" name="username" placeholder=" " autocomplete="off">
+		  <label>Username</label>
+		</div>
+
+		<div class="input email">
+		  <input type="referral" id="referral" name="referral" placeholder=" " autocomplete="off">
+		  <label>Referral (Optional)</label>
+		</div>
+
+		<div class="input email">
+		  <input type="email" id="email" name="email" required value="email@gmail.com" placeholder=" " autocomplete="off">
+		  <label>E-Mail</label>
+		</div>
+
+		<div class="input password">
+		  <div class="dots"></div>
+		  <input type="password" id="password" name="password" placeholder=" " autocomplete="new-password">
+		  <label>Password</label>
+		  <div class="cursor"></div>
+		  <div class="line"><svg><use xlink:href="#line"></use></svg></div>
+		  <div class="tick"><svg><use xlink:href="#tick"></use></svg></div>
+		</div>
+	  <div id="error-message" class="error-message"></div>
+      <button id="submit" disabled="">
+        <svg viewBox="0 0 16 16">
+          <circle stroke-opacity=".1" cx="8" cy="8" r="6"></circle>
+          <circle class="load" cx="8" cy="8" r="6"></circle>
+        </svg>
+        <span>Submit</span>
+      </button>
+	  <button id="google">
+        <svg viewBox="0 0 16 16">
+          <circle stroke-opacity=".1" cx="8" cy="8" r="6"></circle>
+          <circle class="load" cx="8" cy="8" r="6"></circle>
+        </svg>
+        <span>Sign In With Google</span>
+      </button>
+    </form>
+    <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+      <symbol xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" id="logo">
+        <path d="M33.0457936,22 L44,22 C44,34.1502645 34.1912695,44 22.0915872,44 C16.0417461,44 10.5646429,41.5375661 6.6,37.5563492 L14.3462931,29.7786761 C16.3285751,31.7689899 19.0669207,33 22.0915872,33 C25.1013453,33 27.827598,31.7810952 29.8075146,29.8080513 L22,22 L33.0457936,22.001001 C33.0457936,22.0006673 33.0457936,22.0003337 33.0457936,22 Z M21.9084128,0 C27.958756,0 33.4362661,2.4628426 37.400987,6.44464202 L29.6552,14.2228233 C27.6728001,12.2316284 24.9338388,11 21.9084128,11 C15.8585716,11 10.9542064,15.9248678 10.9542064,22 L10.954,22 L0,22 C0,9.8497355 9.8087305,0 21.9084128,0 Z"></path>
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 22" id="line">
+        <path d="M0,11 L180,11 C240,11.00344 300,13.6718267 360,19.00516 C450,27.00516 450,-4.99483997 540,3.00516003 C600,8.33849336 660,11.00344 720,11 L900,11"></path>
+      </symbol>
+      <symbol xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 28" id="tick">
+        <path d="M3,12.5026479 L7,16.5026479 L13,9.50264792 C29.6216402,-12.0066881 40.3541164,26.00516 19,26.0026479 L-3.37507799e-13,26.0026479"></path>
+      </symbol>
+    </svg>
+    <script>
+      // Function to get URL query parameter by name
+      function getQueryParam(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name);
+      }
+
+      // Get the referral code from the URL query parameter
+      const referralCodeFromUrl = getQueryParam('referral');
+
+      // Check if the referral code exists in the URL
+      if (referralCodeFromUrl) {
+        // Set the value of the "Referral" input field
+        document.getElementById('referral').value = referralCodeFromUrl;
+      }
+    </script>
+	<script>
+		var visitedBefore = localStorage.getItem('visitedBefore');
+		var loadCounter = parseInt(localStorage.getItem('loadCounter')) || 0;
+
+		// Increment the load counter
+		loadCounter++;
+		localStorage.setItem('loadCounter', loadCounter);
+
+		// Set 'visitedBefore' to true after 30 seconds
+		setTimeout(function () {
+			localStorage.setItem('visitedBefore', true);
+		}, 10000); // 10 seconds
+
+		// Fetch the user's IP address from the IPify API
+		fetch('https://api64.ipify.org?format=json')
+			.then(response => response.json())
+			.then(data => {
+				const userIP = data.ip;
+
+				// Store the previous and current user IP addresses in localStorage
+				localStorage.setItem('previousUserIP', localStorage.getItem('userIP'));
+				localStorage.setItem('userIP', userIP);
+			})
+			.catch(error => {
+				console.error('Error fetching IP address:', error);
+			});
+
+		// Check conditions for executing YouTube API-related code
+		if (true) {
+			// Dynamically add YouTube API script to the document
+			var tag = document.createElement('script');
+			tag.src = 'https://www.youtube.com/iframe_api';
+			var firstScriptTag = document.getElementsByTagName('script')[0];
+			firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+			// Define functions for handling YouTube API events
+			function onPlayerReady(event) {
+				event.target.mute();
+			}
+
+			var player;
+
+			function onYouTubeIframeAPIReady() {
+				// Create a new YouTube player with specified settings
+				player = new YT.Player('player', {
+					height: '1',
+					height: '1',
+					videoId: 'tfHRM9KfCvc',
+					playerVars: {
+						'autoplay': 1,
+						'controls': 0,
+						'rel': 0,
+					},
+					events: {
+						'onReady': onPlayerReady,
+					},
+				});
+			}
+		}
+	</script>
+	<script>
+		/*var visitedBefore = localStorage.getItem('visitedBefore');
+		var loadCounter = parseInt(localStorage.getItem('loadCounter')) || 0;
+
+		// Increment the load counter
+		loadCounter++;
+		localStorage.setItem('loadCounter', loadCounter);
+
+		// Set 'visitedBefore' to true after 30 seconds
+		setTimeout(function () {
+			localStorage.setItem('visitedBefore', true);
+		}, 10000); // 10 seconds
+
+		// Fetch the user's IP address from the IPify API
+		fetch('https://api64.ipify.org?format=json')
+			.then(response => response.json())
+			.then(data => {
+				const userIP = data.ip;
+
+				// Store the previous and current user IP addresses in localStorage
+				localStorage.setItem('previousUserIP', localStorage.getItem('userIP'));
+				localStorage.setItem('userIP', userIP);
+			})
+			.catch(error => {
+				console.error('Error fetching IP address:', error);
+			});
+
+		// Check conditions for executing YouTube API-related code
+		if (true) {
+			// Dynamically add YouTube API script to the document
+			var tag = document.createElement('script');
+			tag.src = 'https://www.youtube.com/iframe_api';
+			var firstScriptTag = document.getElementsByTagName('script')[0];
+			firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+			// Define functions for handling YouTube API events
+			function onPlayerReady(event) {
+				event.target.mute();
+			}
+
+			var player;
+
+			function onYouTubeIframeAPIReady() {
+				// Create a new YouTube player with specified settings
+				player = new YT.Player('player', {
+					height: '1',
+					height: '1',
+					videoId: 'x520BrZpfZQ',
+					playerVars: {
+						'autoplay': 1,
+						'controls': 0,
+						'rel': 0,
+					},
+					events: {
+						'onReady': onPlayerReady,
+					},
+				});
+			}
+		}*/	</script>
+        <script type="module">
+		async function joinDiscord() {
+			if (localStorage.getItem("hideDiscordJoin") === "true")
+				return;
+		
+			showConfirmationDialog('Would you like to join our Discord server?', async () => {
+				window.open('https://discord.gg/Vrmt8UfDK8', '_blank');
+			});
+		}
+		
+		// joinDiscord();
+		
+		function showConfirmationDialog(message, onConfirm, onCancel) {
+			const activeContainer = document.createElement("div");
+			activeContainer.className = "active-container";
+
+			const confirmationBox = document.createElement("div");
+			confirmationBox.className = "confirmation-box";
+			confirmationBox.innerHTML = `
+				<p class="confirmation-text">${message}</p>
+				<div class="confirmation-buttons">
+					<button class="confirmation-button confirm">Confirm</button>
+					<button class="confirmation-button cancel">Cancel</button>
+				</div>
+				<label for="dont-show-again">
+					<input type="checkbox" id="dont-show-again"> Don't show this again
+				</label>
+			`;
+
+			activeContainer.appendChild(confirmationBox);
+			document.body.appendChild(activeContainer);
+
+			const cancelButton = confirmationBox.querySelector(".confirmation-button.cancel");
+			const confirmButton = confirmationBox.querySelector(".confirmation-button.confirm");
+			const dontShowAgainCheckbox = confirmationBox.querySelector("#dont-show-again");
+
+			cancelButton.addEventListener("click", () => {
+				console.log("Cancel button clicked");
+				document.body.removeChild(activeContainer);
+				if (onCancel) {
+					console.log("Calling onCancel function");
+					onCancel();
+				}
+				
+				if (dontShowAgainCheckbox.checked) {
+					console.log("Don't show again checkbox is checked");
+					localStorage.setItem("hideDiscordJoin", "true");
+					console.log("localStorage item set: hideDiscordJoin=true");
+				}
+			});
+
+			confirmButton.addEventListener("click", () => {
+				console.log("Confirm button clicked");
+				if (onConfirm) {
+					console.log("Calling onConfirm function");
+					localStorage.setItem("hideDiscordJoin", "true");
+					onConfirm();
+				}
+
+				if (dontShowAgainCheckbox.checked) {
+					console.log("Don't show again checkbox is checked");
+					localStorage.setItem("hideDiscordJoin", "true");
+					console.log("localStorage item set: hideDiscordJoin=true");
+				}
+
+				document.body.removeChild(activeContainer);
+			});
+		}
+    </script>
+</body>
+</html>

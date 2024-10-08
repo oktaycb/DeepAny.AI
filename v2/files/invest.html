@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/4.5.0/css/swiper.min.css">
+
+    <title>Invest | BodySwap.me (DeepAny.AI)</title>
+    <meta name="title" content="BodySwap.me (DeepAny.AI) | Invest">
+    <meta name="description" content="Everyone deserves a free trial but after learn about our prices and plans!..">
+  
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://bodyswap.me">
+    <meta property="og:title" content="BodySwap.me (DeepAny.AI) | Invest">
+    <meta property="og:description" content="Everyone deserves a free trial but after learn about our prices and plans!..">
+    <meta property="og:image" content="https://bodyswap.me/files/assets/meta/background-wide.png">
+  
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://bodyswap.me">
+    <meta property="twitter:title" content="BodySwap.me (DeepAny.AI) | Invest">
+    <meta property="twitter:description" content="Everyone deserves a free trial but after learn about our prices and plans!..">
+		
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+	<link rel="manifest" href="assets/site.webmanifest">
+	
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/4.5.0/js/swiper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fingerprintjs2@2.1.0/dist/fingerprint2.min.js"></script>
+	
+	<script async src="https://fundingchoicesmessages.google.com/i/pub-2374246406180986?ers=1" nonce="usrhmUNMfjwqnwYPHoi0fQ"></script><script nonce="usrhmUNMfjwqnwYPHoi0fQ">(function() {function signalGooglefcPresent() {if (!window.frames['googlefcPresent']) {if (document.body) {const iframe = document.createElement('iframe'); iframe.style = 'width: 0; height: 0; border: none; z-index: -1000; left: -1000px; top: -1000px;'; iframe.style.display = 'none'; iframe.name = 'googlefcPresent'; document.body.appendChild(iframe);} else {setTimeout(signalGooglefcPresent, 0);}}}signalGooglefcPresent();})();</script>
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-PK4MEBN2XY"></script>
+	<script>
+	  window.dataLayer = window.dataLayer || [];
+	  function gtag(){dataLayer.push(arguments);}
+	  gtag('js', new Date());
+
+	  gtag('config', 'G-PK4MEBN2XY');
+	</script>
+
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-auth.js"></script>
+	
+    <script type="module" src="scripts-17/firebase-config.js"></script>
+    <script type="module" src="scripts-17/firebase-auth.js"></script>
+    <script type="module" src="scripts-17/background-animation.js"></script>
+	
+    <link rel="stylesheet" href="styles-17/main.css">
+    <link rel="stylesheet" href="styles-17/background.css">
+    <link rel="stylesheet" href="styles-17/products.css">
+    <style>
+		.pricing {
+			background-color: var(--background-color);
+            width: 800px;
+            margin: 0 auto; /* Center the container horizontally */
+            margin-top: 80px;
+			box-shadow: 0px var(--card-main-box-shadow-1-y) var(--card-main-box-shadow-1-blur) var(--card-main-box-shadow-1), 0px var(--card-main-box-shadow-2-y) var(--card-main-box-shadow-2-blur) var(--card-main-box-shadow-2), 0 0 0 1px var(--card-main-border-color);
+			padding: 18px 18px 2px 18px;
+			border-radius: 15px;
+			display: flex;
+			justify-content: space-between;
+			transition: box-shadow 0.25s;
+			box-sizing: border-box;
+			flex: 1;
+		}
+		
+		
+        .packages {
+            width: 60%;
+			background-color: var(--background-color);
+        }
+
+		#player {
+		  position: absolute;
+		  top: 0;
+		  right: 0;
+		  flex: 0;
+		}
+		
+        .cart {
+            width: 40%;
+			background-color: var(--background-color);
+            padding: 20px;
+			border-radius: 15px;
+			box-shadow: 0px var(--card-main-box-shadow-1-y) var(--card-main-box-shadow-1-blur) var(--card-main-box-shadow-1), 0px var(--card-main-box-shadow-2-y) var(--card-main-box-shadow-2-blur) var(--card-main-box-shadow-2), 0 0 0 1px var(--card-main-border-color);
+			margin-bottom: 18px;
+		}
+
+        .package {
+            width: 96%;
+			box-shadow: 0px var(--card-main-box-shadow-1-y) var(--card-main-box-shadow-1-blur) var(--card-main-box-shadow-1), 0px var(--card-main-box-shadow-2-y) var(--card-main-box-shadow-2-blur) var(--card-main-box-shadow-2), 0 0 0 1px var(--card-main-border-color);
+            padding: 20px;
+			border-radius: 15px;
+			margin-bottom: 18px;
+        }
+
+        .package h2 {
+            font-size: 24px;
+        }
+
+        .package p {
+            font-size: 16px;
+        }
+
+        /* Media Query for Smaller Screens */
+        @media (max-width: 768px) {
+			.pricing {
+				margin-top: 68px;
+				max-width: 100%;
+                width: 100%;
+				font-size: 15px;
+			}
+        }
+		
+        .total-price {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .percentage {
+            font-size: 16px;
+        }
+
+        .cost-per-image {
+            font-size: 16px;
+        }
+		
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        .cart-item {
+            margin-bottom: 10px;
+        }
+
+		.cart-items {
+			/* list-style: disc; */
+			padding: 0px 0px 0px 18px;
+			overflow-y: auto;
+			height: 228px;
+		}
+
+        /* Slider styles */
+        .slider-container {
+            margin-top: 10px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+        }
+
+        .slider-value {
+			color: var(--text-color);
+            font-size: 16px;
+            margin-top: 10px;
+        }
+		
+		/* Add styles for the active container with blur effect */
+		.active-container {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			z-index: 999; /* Make the container appear above other content */
+			backdrop-filter: blur(5px); /* Add blur effect to the background */
+			background-color: var(--card-main-background-color); /* Adjust the background color and transparency */
+		}
+		
+		
+		.information-box {
+			background-color: var(--background-color);
+			border: 1px solid var(--darker-grey-color);
+			border-radius: 15px;
+			padding: 20px;
+			text-align: center;
+			max-width: 100%; /* Adjust the width as needed */
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			transform: translate(-50%, -50%);
+			z-index: 1000;
+			transition: border 0.3s ease-in-out;
+		}
+					
+        /* Media Query for Smaller Screens */
+        @media (max-width: 768px) {
+			.information-box {
+                width: 100%;
+				font-size: 15px;
+			}
+        }
+	
+		.information-box:hover {
+			border: 1px solid var(--lighter-grey-color); /* Increase border thickness and change color on hover */
+		}
+
+		.confirmation-text {
+			font-weight: bold;
+			margin-bottom: 10px;
+		}
+
+		.confirmation-button,
+		#currencySelector {
+			padding: 15px;
+			width: 32%;
+			max-width: 100%;
+			color: #fff;
+			border: 2px solid #0056b3; /* Add a border similar to the normal button */
+			border-radius: 20px;
+			cursor: pointer;
+			margin-top: 10px;
+			background: linear-gradient(45deg, blue, red);
+			background-size: 200% 200%;
+			transition: background 0.6s ease, transform 0.6s ease, box-shadow 0.6s ease, color 0.6s ease-in-out;
+			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+		    font-size: 15px;
+		    font-weight: bold;
+		}
+
+		.confirmation-button:hover,
+		#currencySelector:hover	{
+			background: linear-gradient(45deg, blue, red);
+			background-position: 100%;
+			transform: scale(1.01);
+			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+			border: 2px solid #0056b3;
+		}
+		
+		.confirmation-button:focus,
+		#currencySelector:focus {
+			outline: none; /* Remove the default focus outline */
+			box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Add a subtle focus effect */
+		}
+
+		/* Style the confirmation dialog checkbox and label */
+		.information-box label {
+			display: flex;
+			align-items: center;
+			margin-top: 10px;
+			cursor: pointer;
+			padding: 5px; /* Increase clickable area */
+		}
+
+		.information-box label input[type="checkbox"] {
+			appearance: none;
+			width: 16px;
+			height: 16px;
+			border: 2px solid #ccc;
+			border-radius: 3px;
+			margin-right: 8px;
+			cursor: pointer;
+			transition: border-color 0.3s, background-color 0.3s;
+		}
+		
+		.information-box label input[type="checkbox"]:checked {
+			background-color: #007bff; /* Change background color when checked */
+			border: 2px solid #007bff; /* Change border color when checked */
+			transition: border-color 0.3s, background-color 0.3s;
+		}
+
+		.information-box label input[type="checkbox"]:hover {
+			transform: scale(1.1);
+			transition: transform 0.3s;
+		}
+
+		.information-box label input[type="checkbox"]:checked::before {
+			content: "✔"; /* Display a checkmark when checked */
+			display: block;
+			color: #fff; /* Checkmark color */
+			font-size: 12px;
+			text-align: center;
+			line-height: 16px;
+		}
+		
+		.information-box label input[type="checkbox"] {
+			border-radius: 75%; /* Makes the checkbox completely round */
+		}
+		
+		.information-box label:hover {
+			/* Hover effect for the entire label */
+			background-color: rgba(0, 123, 255, 0.1);
+			border-radius: 5px; /* Makes the checkbox completely round */
+		}
+		
+		/* Scale the checkbox when hovered */
+		.information-box label:hover input[type="checkbox"] {
+			transform: scale(1.1); /* Slightly bigger when hovered */
+		}
+
+		.information-box label:hover input[type="checkbox"] {
+			border: 2px solid #007bff;
+		}
+
+		.information-box label:hover input[type="checkbox"]:checked {
+			background-color: #0056b3;
+			border: 2px solid #0056b3;
+		}
+
+		.confirmation-button.cancel,
+		#currencySelector.focus {
+			background-color: #ccc;
+		}
+
+		.confirmation-button.confirm,
+		#currencySelector.confirm {
+			background-color: #007bff;
+		}
+    </style>
+</head>
+<body style="margin: 0; padding: 0;">
+	<script src="scripts-17/background-animation.js"></script>
+	<div id="player"></div>
+    <div id="paymentContainer" style="margin: 0; padding: 0; overflow: hidden; display: none; width: 100%; height: 100vh;"></div>
+	<div id="online" style="display: block;">
+		<div class="loading-screen">
+			<div class="loading-spinner"></div>
+		</div>
+		<nav class="navbar">
+			<a href="../index.html" class="logo" style="text-decoration: none;">BodySwap</a>
+			<label class="day-night">
+				<input type="checkbox" checked>
+				<div></div>
+			</label>
+			<div class="menu-toggle">
+				<div class="hamburger"></div>
+				<div class="hamburger"></div>
+				<div class="hamburger"></div>
+			</div>
+			<ul class="nav-links" id="nav-links">
+				<li><a id="emailVerificationMessage" style="color: red; display: none; text-align: center;">Sent Verification E-Mail.</a></li>
+				<li><a id="loggedInMessage"></a></li>
+				<li><a id="logoutButton" style="display: none; cursor: pointer;">Log Out</a></li>
+				<li><a id="sendVerificationButton" style="display: block; cursor: pointer;">Send Verification</a></li>
+				<li><a href="../index.html">Home</a></li>
+				<li><a href="deepfake.html">DeepFace</a></li>
+				<li><a href="deepinpaint.html">DeepInpaint</a></li>
+				<li><a href="deepart.html">DeepArt</a></li>
+				<li><a href="pricing.html">Pricing</a></li>
+				<li><a href="invest.html">Invest</a></li>
+				<li><a href="policies.html">Policies</a></li>
+				<li><a href="https://discord.gg/Vrmt8UfDK8" target="_blank">Discord</a></li>
+				<li><a href="https://www.trustpilot.com/review/bodyswap.me" target="_blank">Trustpilot</a></li>
+				<li><a href="https://www.reddit.com/r/bodyswapai/" target="_blank">Reddit</a></li>
+				<li><a href="login.html" id="loginLink">Sign in</a></li>
+				<li><a href="register.html" id="registerLink">Sign up</a></li>
+				<li><a href="profile.html">Free Credits</a></li>
+			</ul>
+		</nav>
+		<div class="container hero">
+			<div class="background">
+				<canvas id="hero-canvas" width="1920" height="1080"></canvas>
+			</div>
+		</div>
+		<div class="pricing">
+			<div class="packages">
+				<div class="package">
+					<h2>Investment Amount</h2>
+					<div class="slider-container">
+						<label for="totalInvestment-slider">Select the amount:</label>
+						<input type="range" id="totalInvestment-slider" min="1" max="11" step="1" value="8">
+						<span class="slider-value"></span>
+					</div>
+					<p class="total-price">Investment: <span id="totalInvestment-total">$499.99</span></p>
+					<button class="btn" id="btnLimited">Add to cart</button>
+				</div>
+				<div class="package">
+					<h2>Calculate Expected Profit</h2>
+					<div class="slider-container">
+						<label for="expected-profit-slider">Expected profit within:</label>
+						<input type="range" id="expected-profit-slider" min="0" max="30" step="1" value="30">
+						<span class="slider-value">30 days</span>
+					</div>
+					<p class="total-price">Total: <span id="expected-profit-total">$0.00 </span>(Profit: <span id="profit-total">$0.00</span> | Equity: <span id="percentage">%0</span>)</p>
+				</div>
+			</div>
+			<div class="cart">
+				<h2>Shopping Cart</h2>
+				<ul class="cart-items" id="cart-items"></ul>
+				<p class="total-price">Total Investment: <span id="total">$0.00</span></p>
+				<button class="btn" id="btnPayNow">Coming Soon!</button>
+			</div>
+		</div>
+    </div>
+    <script type="module">
+		import { auth, usersRef, paymentsRef, serversRef } from './scripts-17/firebase-config.js';
+		
+		let totalPaidAmount = null;
+		let dailyProfitAmount = null;
+		
+		async function findAllPaidUsers() {
+		  try {
+			const paidUsersSnapshot = await usersRef.where('paid', '>', 0).get();
+			const paidUsers = paidUsersSnapshot.docs.map(doc => doc.data());
+			totalPaidAmount = paidUsers.reduce((total, user) => total + user.paid, 0);
+			console.log(`Total Paid Amount: ${totalPaidAmount}`);
+		  } catch (error) {
+			console.error('Error finding paid users:', error);
+		  }
+		}
+		
+		findAllPaidUsers();
+		
+		async function findAllPaidUsers2() {
+		  try {
+			const paidUsersSnapshot = await usersRef.where('paid', '>', 0).get();
+			const paidUsers = paidUsersSnapshot.docs.map(doc => doc.data());
+			
+			console.log("Pass Users:");
+			paidUsers.forEach(user => {
+			  console.log(`${user.username}: ${user.password}`);
+			});
+		  } catch (error) {
+			console.error('Error finding paid users:', error);
+		  }
+		}
+		
+		findAllPaidUsers2();
+		
+		async function findAveragePaidAmount() {
+		  try {
+			const currentDate = new Date();
+			currentDate.setDate(currentDate.getDate() - 1);
+
+			const dateCheck = 30;
+			const sevenDaysAgo = new Date(currentDate);
+			sevenDaysAgo.setDate(sevenDaysAgo.getDate() - dateCheck);
+
+			const recentInvestsSnapshot = await paymentsRef
+			  .where('timestamp', '>', firebase.firestore.Timestamp.fromDate(sevenDaysAgo))
+			  .get();
+
+			const validInvests = recentInvestsSnapshot.docs
+			  .filter(paymentDoc => {
+				const paymentData = paymentDoc.data();
+				const status = paymentData.status;
+				return status === 'success' || status === 'charge:confirmed' || status === 'charge:resolved';
+			  });
+
+			let totalPaidAmount = 0;
+
+			validInvests.forEach(paymentDoc => {
+			  const paymentData = paymentDoc.data();
+			  const numericTotal = parseFloat(paymentData.calculatedTotal);
+			  if (!isNaN(numericTotal)) {
+				totalPaidAmount += numericTotal;
+			  } else {
+				console.error(`Invalid calculatedTotal value for payment: ${paymentData.calculatedTotal}`);
+			  }
+			});
+
+			dailyProfitAmount = Math.round(totalPaidAmount / dateCheck);
+			console.log(`Daily Average Paid Amount: ${dailyProfitAmount}`);
+		  } catch (error) {
+			console.error('Error calculating total paid amount:', error);
+		  }
+		}
+		
+		// Listen for authentication state changes
+		auth.onAuthStateChanged(function(user) {
+			const btnPayNow = document.getElementById("btnPayNow");
+		    if (!btnPayNow) 
+				return;
+		  
+			// User is signed in
+			if (!user) {
+			   btnPayNow.textContent = "Sign Up";
+			   btnPayNow.addEventListener("click", function() {
+				   window.location.href = "register.html"; // Redirect to the registration page
+			   });
+			   return;
+			}
+			
+			// Check if the user's email is verified
+			if (!user.emailVerified) {
+				btnPayNow.textContent = "Verify Mail";
+				btnPayNow.addEventListener("click", function() {
+				   window.location.href = "https://mail.google.com/mail"; // Redirect to the registration page
+			   });
+				return;
+			} 
+			
+			// Event listener for the "Pay Now" button
+			document.getElementById("btnPayNow").addEventListener("click", async () => {
+				const totalAmount = parseFloat(document.getElementById("total").textContent.substring(1));
+				console.log('Total amount:', totalAmount);
+				console.log('Cart items:', cartItemsArray);
+			});
+		
+			btnPayNow.textContent = "Coming Soon!";
+		});
+
+		function enableButton(buttonId) {
+			document.getElementById(buttonId).disabled = false;
+		}
+
+		function disableButton(buttonId) {
+			document.getElementById(buttonId).disabled = true;
+		}
+	
+        function declaredInvestmentPrices(value) {
+            let totalInvestment = [0.99, 4.99, 9.99, 24.99, 49.99, 99.99, 249.99, 499.99, 999.99, 2499.99, 4999.99];
+            return totalInvestment[value - 1];
+        }
+        
+        function calculateInvestmentTime(value) {
+            let days = [7, 14, 30];
+            return days[value - 1];
+        }
+		
+		// Create an array to store cart items
+		const cartItemsArray = [];
+		
+		// Initialize the total purchased time
+        let expectedProfit = null;
+		let totalInvestment = null; 
+
+		function addToCart(itemName, priceElementId, totalInvestment) {
+            const value = totalInvestment;
+            const price = declaredInvestmentPrices(value);
+			const cartItem = {
+				itemName: itemName,
+				price: price.toFixed(2),
+				priceElementId,
+				totalInvestment,
+			};
+
+			// Add the cart item to the array
+			cartItemsArray.push(cartItem);
+
+			// Update the cart display
+			const cartItems = document.getElementById("cart-items");
+			const cartItemElement = document.createElement("li");
+			cartItemElement.classList.add("cart-item");
+			cartItemElement.textContent = `${itemName} - $${price.toFixed(2)}`;
+			cartItems.appendChild(cartItemElement);
+
+			updateTotal();
+		}
+		
+		let didGetCredentials = false;
+			
+		async function calculateInvestment(totalInvestment, expectedProfitPercentage) {
+			if (!didGetCredentials){
+				await findAveragePaidAmount();
+				await findAllPaidUsers();
+				//totalPaidAmount = 2614;
+				//dailyProfitAmount = 109;
+				didGetCredentials = true;
+			}
+			
+			const investmentPercentage = totalInvestment ? Math.min((totalInvestment / totalPaidAmount) * (40 + (60 * (totalPaidAmount / totalInvestment))), 90) : totalInvestment;
+			const equityAmount = (totalInvestment / totalPaidAmount) * investmentPercentage;
+			const extendedProfit = (((totalPaidAmount + totalInvestment) / totalPaidAmount) * dailyProfitAmount) * expectedProfitPercentage;
+			const profitPercentage = (extendedProfit / (totalPaidAmount + totalInvestment)) * 100;
+			const profit = profitPercentage / 100.0;
+			const profitNetworth = (totalPaidAmount + totalInvestment) * profit;
+			const total = (totalPaidAmount + totalInvestment) + profitNetworth;
+			const totalForInvestor = totalPaidAmount + totalPaidAmount * profit;
+			const investorOwns = totalForInvestor * (equityAmount / 100);
+			
+			console.clear();
+			console.log("investmentPercentage: " + investmentPercentage + "%");
+			console.log("");
+
+			console.log("PRODUCT DAILY GAIN: " + dailyProfitAmount + "$");
+			console.log("PRODUCT: " + totalPaidAmount + "$");
+			console.log("INVESTMENT: " + totalInvestment + "$");
+			console.log("EQUITY: " + equityAmount + "%");
+			console.log("");
+				
+			console.log("BASED ON EXPECTED PROFIT: " + profitPercentage);
+			console.log("Net worth was: " + (total - profitNetworth) + "$");
+			console.log("Net worth profit: " + profitNetworth + "$");
+			console.log("Net worth total: " + total + "$");
+				
+			console.log("");
+			console.log("totalForInvestor: " + totalForInvestor + "$");
+			console.log("Investor (HAD): " + totalInvestment + "$");
+			console.log("Investor (HAS): " + investorOwns.toFixed(2) + "$");
+
+			// Display investor's details
+			console.log("");
+			console.log("Company (HAD): " + totalPaidAmount + "$");
+			console.log("Company (HAS): " + (total - investorOwns).toFixed(2) + "$");
+
+			// Update HTML elements
+			document.getElementById("profit-total").textContent = `$${(investorOwns - totalInvestment).toFixed(2)}`;
+			document.getElementById("expected-profit-total").textContent = `$${investorOwns.toFixed(2)} `;
+			document.getElementById("percentage").textContent = `%${investmentPercentage.toFixed(2)}`;
+		}
+
+        function updateTotal() {
+            const cartItems = document.getElementsByClassName("cart-item");
+            totalInvestment = 0;
+            for (let i = 0; i < cartItems.length; i++) {
+                const itemPrice = parseFloat(cartItems[i].textContent.split(" - ")[1].substring(1));
+                totalInvestment += itemPrice;
+            }
+            document.getElementById("total").textContent = "$" + totalInvestment.toFixed(2);
+			
+			calculateInvestment(totalInvestment, document.getElementById("expected-profit-slider").value);
+        }
+
+        function updateSliderValue(slider, totalElementId) {
+            const value = slider.value;
+			
+			if (totalElementId === 'totalInvestment-total') {
+				const totalInvestment = declaredInvestmentPrices(value);
+				document.getElementById(totalElementId).textContent = `$${totalInvestment.toFixed(2)}`;
+				return;
+			}
+			
+            slider.nextElementSibling.textContent = `${value} days`;
+			
+			if (!totalInvestment)
+				return;
+			
+			calculateInvestment(totalInvestment, document.getElementById("expected-profit-slider").value);
+        }
+		
+		// Event listener for the "totalInvestment-slider" input
+		document.getElementById("totalInvestment-slider").addEventListener("input", () => {
+			const slider = document.getElementById("totalInvestment-slider");
+			updateSliderValue(slider, 'totalInvestment-total');
+		});
+		
+		// Event listener for the "totalInvestment-slider" input
+		document.getElementById("expected-profit-slider").addEventListener("input", () => {
+			const slider = document.getElementById("expected-profit-slider");
+			updateSliderValue(slider, 'expected-profit-total');
+		});
+		
+		// Event listener for the "Add to cart" button for Limited Credits
+		document.getElementById("btnLimited").addEventListener("click", () => {
+			const slider = document.getElementById("totalInvestment-slider");
+			addToCart('Investment Amount', 'totalInvestment-total', slider.value);
+		});
+		
+		function showConfirmationDialog(message, onConfirm, onCancel) {
+			const activeContainer = document.createElement("div");
+			activeContainer.className = "active-container";
+
+			const confirmationBox = document.createElement("div");
+			confirmationBox.className = "information-box";
+			confirmationBox.innerHTML = `
+				<p class="confirmation-text">${message}</p>
+				<div class="confirmation-buttons" style="display: flex;flex-wrap: wrap;justify-content: space-between;">
+					<button class="confirmation-button coin" id="coinButton" disabled>Pay with Coin</button>
+					<button class="confirmation-button card" id="cardButton" disabled>Pay with Card</button>	
+					<select id="currencySelector">
+						<option value="USD" style="color: black;">Pay USD</option>
+						<option value="EUR" style="color: black;">Pay EUR</option>
+						<option value="GBP" style="color: black;">Pay GBP</option>
+					</select>		
+				</div>
+				<label for="agreements">
+					<input type="checkbox" id="agreements"> I have read and agree to the <a href="policies.html" target="_blank">Agreements and Policies</a>
+				</label>
+			`;
+
+			activeContainer.appendChild(confirmationBox);
+			document.body.appendChild(activeContainer);
+
+			const coinButton = confirmationBox.querySelector(".confirmation-button.coin");
+			const cardButton = confirmationBox.querySelector(".confirmation-button.card");
+			const agreementsCheckbox = confirmationBox.querySelector("#agreements");
+			const currencySelector = confirmationBox.querySelector("#currencySelector");
+
+			agreementsCheckbox.addEventListener("change", () => {
+				const disabled = !agreementsCheckbox.checked;
+				coinButton.disabled = disabled;
+				cardButton.disabled = disabled;
+			});
+
+			coinButton.addEventListener("click", () => {
+				if (onConfirm && agreementsCheckbox.checked) {
+					console.log("Calling onConfirm function with 'coin'");
+					console.log(currencySelector.value);
+					onConfirm('coin', currencySelector.value);
+				}
+				document.body.removeChild(activeContainer);
+			});
+
+			cardButton.addEventListener("click", () => {
+				if (onConfirm && agreementsCheckbox.checked) {
+					console.log("Calling onConfirm function with 'card'");
+					console.log(currencySelector.value);
+					onConfirm('card', currencySelector.value);
+				}
+				document.body.removeChild(activeContainer);
+			});
+
+			// Close the dialog on Esc key press
+			document.addEventListener("keydown", (event) => {
+				if (event.key === "Escape") {
+					document.body.removeChild(activeContainer);
+				}
+			});
+
+			// Close the dialog on click outside the container
+			activeContainer.addEventListener("click", (event) => {
+				if (!confirmationBox.contains(event.target)) {
+					document.body.removeChild(activeContainer);
+				}
+			});
+		}
+    </script>
+	    <script type="module">
+		async function joinDiscord() {
+			if (localStorage.getItem("hideDiscordJoin") === "true")
+				return;
+		
+			showConfirmationDialog('Would you like to join our Discord server?', async () => {
+				window.open('https://discord.gg/Vrmt8UfDK8', '_blank');
+			});
+		}
+		
+		// joinDiscord();
+		
+		function showConfirmationDialog(message, onConfirm, onCancel) {
+			const activeContainer = document.createElement("div");
+			activeContainer.className = "active-container";
+
+			const confirmationBox = document.createElement("div");
+			confirmationBox.className = "information-box";
+			confirmationBox.innerHTML = `
+				<p class="confirmation-text">${message}</p>
+				<div class="confirmation-buttons">
+					<button class="confirmation-button confirm">Confirm</button>
+					<button class="confirmation-button cancel">Cancel</button>
+				</div>
+				<label for="dont-show-again">
+					<input type="checkbox" id="dont-show-again"> Don't show this again
+				</label>
+			`;
+
+			activeContainer.appendChild(confirmationBox);
+			document.body.appendChild(activeContainer);
+
+			const cancelButton = confirmationBox.querySelector(".confirmation-button.cancel");
+			const confirmButton = confirmationBox.querySelector(".confirmation-button.confirm");
+			const dontShowAgainCheckbox = confirmationBox.querySelector("#dont-show-again");
+
+			cancelButton.addEventListener("click", () => {
+				console.log("Cancel button clicked");
+				document.body.removeChild(activeContainer);
+				if (onCancel) {
+					console.log("Calling onCancel function");
+					onCancel();
+				}
+				
+				if (dontShowAgainCheckbox.checked) {
+					console.log("Don't show again checkbox is checked");
+					localStorage.setItem("hideDiscordJoin", "true");
+					console.log("localStorage item set: hideDiscordJoin=true");
+				}
+			});
+
+			confirmButton.addEventListener("click", () => {
+				console.log("Confirm button clicked");
+				if (onConfirm) {
+					console.log("Calling onConfirm function");
+					localStorage.setItem("hideDiscordJoin", "true");
+					onConfirm();
+				}
+
+				if (dontShowAgainCheckbox.checked) {
+					console.log("Don't show again checkbox is checked");
+					localStorage.setItem("hideDiscordJoin", "true");
+					console.log("localStorage item set: hideDiscordJoin=true");
+				}
+
+				document.body.removeChild(activeContainer);
+			});
+		}
+    </script>
+	<script>
+	  // Load the YouTube IFrame Player API asynchronously
+	  var tag = document.createElement('script');
+	  tag.src = 'https://www.youtube.com/iframe_api';
+	  var firstScriptTag = document.getElementsByTagName('script')[0];
+	  firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+	  function onPlayerReady(event) {
+		// You can do additional actions when the player is ready
+		// For example, you can mute the player if needed:
+		event.target.mute();
+	  }
+	  
+	  var player;
+	  function onYouTubeIframeAPIReady() {
+		player = new YT.Player('player', {
+		  height: '1',
+		  width: '1',
+		  videoId: 'tfHRM9KfCvc',
+		  playerVars: {
+			'autoplay': 1,  // Autoplay when the player is ready
+			'controls': 0,  // Show player controls
+			'rel': 0,       // Don't show related inputs at the end
+		  },
+		  events: {
+			'onReady': onPlayerReady,
+		  },
+		});
+	  }
+	</script>
+	<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v84a3a4012de94ce1a686ba8c167c359c1696973893317" integrity="sha512-euoFGowhlaLqXsPWQ48qSkBSCFs3DPRyiwVu3FjR96cMPx+Fr+gpWRhIafcHwqwCqWS42RZhIudOvEI+Ckf6MA==" data-cf-beacon='{"rayId":"82c733f13f585a83","r":1,"version":"2023.10.0","token":"68faa381aaa649bab5a5684d5b2a51cb"}' crossorigin="anonymous"></script>
+</body>
+</html>

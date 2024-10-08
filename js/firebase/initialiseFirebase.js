@@ -12,7 +12,7 @@ export async function getFirebaseModules() {
 
     const { initializeApp } = firebaseAppModule;
     const { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, onAuthStateChanged } = firebaseAuthModule;
-    const { getFirestore, collection, doc, getDoc } = firebaseFirestoreModule;
+    const { getFirestore, collection, doc, getDoc, getDocs } = firebaseFirestoreModule;
 
     const firebaseConfig = {
         apiKey: "AIzaSyB9KofLbx0_N9CKXUPJiuzRBMYizM-YPYw",
@@ -37,6 +37,7 @@ export async function getFirebaseModules() {
         onAuthStateChanged,
         doc,
         getDoc,
+        getDocs,
         collection
     };
 
@@ -46,4 +47,9 @@ export async function getFirebaseModules() {
 export async function getDocSnapshot(collectionId, documentId) {
     const { db, doc, getDoc, collection } = await getFirebaseModules();
     return await getDoc(doc(collection(db, collectionId), documentId));
+}
+
+export async function getDocsSnapshot(collectionId) {
+    const { db, getDocs, collection } = await getFirebaseModules();
+    return await getDocs(collection(db, collectionId));
 }

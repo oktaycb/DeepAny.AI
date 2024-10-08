@@ -1,0 +1,1662 @@
+<!DOCTYPE html>
+<html lang="en" style="background: rgba(24, 24, 24, 1);" class="loading-screen">
+<head>
+    <title>AI Face Swap: The Best, For Photo & Video | Free & Online</title>
+
+    <link rel="icon" href="assets/icon.ico" type="image/x-icon" title="DeepAny.AI Favicon">
+    <link rel="canonical" href="https://www.deepany.ai/face-swap">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="DeepAny.AI offers a free trial for creating realistic deepfake face swaps with cutting-edge AI technology. Easily swap faces in inputs and images with our user-friendly tools. No technical skills required�start your free trial today!">
+    <meta name="keywords" content="AI, DeepAny, bodyswap, technology, services, solutions">
+
+    <link id="loading-stylesheet" rel="stylesheet" href="css/loading.css">
+    <link rel="preload" href="assets/logo.webp" as="image">
+    <link rel="preload" href="css/pxiEyp8kv8JHgFVrJJfecg.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+    <link rel="preload" href="css/pxiByp8kv8JHgFVrLCz7Z1xlFQ.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body lang="en">
+    <script type="module" defer>
+        import { loadPageContent } from './js/defaultPageLoads/loadDefaultHTML.js';
+        import { getScreenMode } from './js/defaultPageLoads/accessVariables.js';
+        import { ensureUniqueId, getUserIpAddress, fetchServerAddresses, getPageName } from './js/functions.js';
+        import { getDocsSnapshot } from './js/firebase/initialiseFirebase.js';
+        import { setUserData, getCachedUserData, getCachedUserDoc, loginUser } from './js/firebase/authentication.js'
+        //import { openDB, addToDB, countInDB, getFromDB, initDB, updateInDB, deleteFromDB } from './js/database.js';
+
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!window.indexedDB) {
+                alert('Your browser does not support IndexedDB.');
+            }
+
+            const pageName = getPageName();
+
+            function savePageState() {
+                const requiredIds = [
+                    'enableOccluder',
+                    'smooth_face_enhancer',
+                    'natural_face_enhancer_512',
+                    'natural_face_enhancer_1024',
+                    'enableEnhancedAnalyzer',
+                    'enableEnhancedLandmarks',
+                    'skin',
+                    'eyebrow',
+                    'eye',
+                    'glasses',
+                    'nose',
+                    'mouth',
+                    'lip',
+                    'removeBanner',
+                    'keepFPS',
+                    'fps-slider'
+                ];
+
+                if (!requiredIds.every(id => document.getElementById(id))) {
+                    return;
+                }
+
+                const getCheckboxState = id => document.getElementById(id)?.checked || false;
+                const activeLink = document.querySelector('.nav-links .active');
+                const state = {
+                    enableOccluder: getCheckboxState('enableOccluder'),
+                    smooth_face_enhancer: getCheckboxState('smooth_face_enhancer'),
+                    natural_face_enhancer_512: getCheckboxState('natural_face_enhancer_512'),
+                    natural_face_enhancer_1024: getCheckboxState('natural_face_enhancer_1024'),
+                    enableEnhancedAnalyzer: getCheckboxState('enableEnhancedAnalyzer'),
+                    enableEnhancedLandmarks: getCheckboxState('enableEnhancedLandmarks'),
+                    skin: getCheckboxState('skin'),
+                    eyebrow: getCheckboxState('eyebrow'),
+                    eye: getCheckboxState('eye'),
+                    glasses: getCheckboxState('glasses'),
+                    nose: getCheckboxState('nose'),
+                    mouth: getCheckboxState('mouth'),
+                    lip: getCheckboxState('lip'),
+                    frontalRotation: getCheckboxState('frontalRotation'),
+                    rightRotation: getCheckboxState('rightRotation'),
+                    invertedRotation: getCheckboxState('invertedRotation'),
+                    leftRotation: getCheckboxState('leftRotation'),
+                    removeBanner: getCheckboxState('removeBanner'),
+                    keepFPS: getCheckboxState('keepFPS'),
+                    fpsValue: document.getElementById('fps-slider').value,
+                    activeLink: activeLink?.getAttribute('for') || '',
+                    multiboxes: Array.from(document.querySelectorAll('.multibox')).map(multibox => ({
+                        text: multibox.querySelector('.multibox-text')?.innerText || '',
+                        items: Array.from(multibox.querySelectorAll('.item')).map(item => ({
+                            checked: item.querySelector('input[type="checkbox"]')?.checked || false,
+                        })),
+                    })),
+                    comboboxes: Array.from(document.querySelectorAll('.combobox')).map(combobox => ({
+                        text: combobox.querySelector('.combobox-text')?.innerText || '',
+                        items: Array.from(combobox.querySelectorAll('.item')).map(item => ({
+                            checked: item.querySelector('input[type="checkbox"]')?.checked || false,
+                        })),
+                    })),
+                };
+
+                localStorage.setItem(pageName, JSON.stringify(state));
+            }
+
+            function updateMainContent(screenMode, pageContent) {
+                pageContent.length = 0;
+                pageContent.push(`
+                                                        <div id="baseContainer" class="centered-container">
+                                                            <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
+                                                                <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
+                                                                    <div class="background-dot-container">
+                                                                        <div class="background-dot-container-content">
+                                                                            <div style="display: flex;justify-content: space-between;">
+                                                                                <div style="display: flex;flex-direction: column;align-items: center;">
+                                                                                    <div class="circular-button" id="circular-button-input-upload" title="Upload input" tooltip>
+                                                                                        <div class="tooltip">Add and choose the video or image where the face swap will occur.</div>
+                                                                                        <input type="file" accept="video/*,image/*" id="input-upload" style="display: none" multiple>
+                                                                                    </div>
+                                                                                    <div class="inputs"></div>
+                                                                                </div>
+                                                                                <div style="display: flex;flex-direction: column;align-items: center;">
+                                                                                    <div class="circular-button" id="circular-button-face-upload" title="Upload face" tooltip>
+                                                                                        <div class="tooltip">Add and choose the new face image to apply to the video or image input.</div>
+                                                                                        <input type="file" accept="image/*" id="face-upload" style="display: none" multiple>
+                                                                                    </div>
+                                                                                    <div class="faces"></div>
+                                                                                </div>
+                                                                            </div>
+                                                                                <div class="nav-links">
+                                                                                    <li><a class="text" for="Facial">Facial</a></li>
+                                                                                    <li><a class="text" for="Analyzer">Analyzer</a></li>
+                                                                                    <li><a class="text" for="Other">Other</a></li>
+                                                                                </div>
+                                                                                <div id="Facial" class="section" style="display: none;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                    <div class="combobox" tooltip>
+                                                                                        <div class="tooltip">Choose a face enhancement model to improve the facial features. Each option applies a different method for enhancing or restoring the face's appearance.</div>
+                                                                                        <span class="combobox-text" title="Facial quality enhancement"></span>
+                                                                                        <span class="arrow-dwn"></span>
+                                                                                        <ul class="list-items">
+                                                                                            <li class="item">
+                                                                                                <label class="checkbox" tooltip>
+                                                                                                    <input type="checkbox" id="smooth_face_enhancer"><span>Smooth</span>
+                                                                                                    <div class="tooltip">Applies smoothing techniques for a refined and polished look.</div>
+                                                                                                </label>
+                                                                                            </li>
+                                                                                            <li class="item">
+                                                                                                <label class="checkbox" tooltip>
+                                                                                                    <input type="checkbox" id="natural_face_enhancer_512"><span>Natural</span>
+                                                                                                    <div class="tooltip">Preserves realistic details for a more natural appearance in 512x512 resolution.</div>
+                                                                                                </label>
+                                                                                            </li>
+                                                                                            <li class="item">
+                                                                                                <label class="checkbox" tooltip>
+                                                                                                    <input type="checkbox" id="natural_face_enhancer_1024"><span>Detailed</span>
+                                                                                                    <div class="tooltip">Preserves realistic details for a more natural appearance in 1024x1024 resolution.</div>
+                                                                                                </label>
+                                                                                            </li>
+                                                                                        </ul>
+                                                                                    </div>
+                                                                                    <label class="checkbox" tooltip>
+                                                                                        <input type="checkbox" id="enableOccluder"><span>Facial obstruction detection</span>
+                                                                                        <div class="tooltip">Detects obstructing objects in front of the face, but this can cause slight unsimilarity as it will retain the unswapped original person's facial outline.</div>
+                                                                                    </label>
+                                                                                    <label class="checkbox" tooltip>
+                                                                                        <input type="checkbox" id="enableEnhancedLandmarks"><span>68 Facial Landmarks</span>
+                                                                                        <div class="tooltip">By enabling this feature, the system can more accurately identify and analyze specific facial components such as the eyebrows, eyes, nose, mouth, and jawline.</div>
+                                                                                    </label>
+                                                                                </div>
+                                                                                <div id="Analyzer" class="section" style="display: none;position: relative;flex-direction: column;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                    <div class="multibox" tooltip>
+                                                                                        <div class="tooltip">Select regions to customize in the new face. If an area is not enabled, it will remain unchanged from the original face.</div>
+                                                                                        <span class="multibox-text" title="Select Regions"></span>
+                                                                                        <span class="arrow-dwn"></span>
+                                                                                        <ul class="list-items">
+                                                                                            <li class="item">
+                                                                                                <label class="checkbox" tooltip>
+                                                                                                    <input type="checkbox" id="skin"><span>Change Skin</span>
+                                                                                                    <div class="tooltip">Swap the skin area with the new face.</div>
+                                                                                                </label>
+                                                                                            </li>
+                                                                                            <li class="item">
+                                                                                                <label class="checkbox" tooltip>
+                                                                                                    <input type="checkbox" id="eyebrow"><span>Change Eyebrow</span>
+                                                                                                    <div class="tooltip">Replace the eyebrow shape or color.</div>
+                                                                                                </label>
+                                                                                            </li>
+                                                                                            <li class="item">
+                                                                                                <label class="checkbox" tooltip>
+                                                                                                    <input type="checkbox" id="eye"><span>Change Eye</span>
+                                                                                                    <div class="tooltip">Change the eye appearance.</div>
+                                                                                                </label>
+                                                                                            </li>
+                                                                                            <li class="item">
+                                                                                                <label class="checkbox" tooltip>
+                                                                                                    <input type="checkbox" id="glasses"><span>Change Glasses</span>
+                                                                                                    <div class="tooltip">Modify or add eyewear styles.</div>
+                                                                                                </label>
+                                                                                            </li>
+                                                                                            <li class="item">
+                                                                                                <label class="checkbox" tooltip>
+                                                                                                    <input type="checkbox" id="nose"><span>Change Nose</span>
+                                                                                                    <div class="tooltip">Alter the nose shape or size.</div>
+                                                                                                </label>
+                                                                                            </li>
+                                                                                            <li class="item">
+                                                                                                <label class="checkbox" tooltip>
+                                                                                                    <input type="checkbox" id="mouth"><span>Change Mouth</span>
+                                                                                                    <div class="tooltip">Change the shape or expression of the mouth.</div>
+                                                                                                </label>
+                                                                                            </li>
+                                                                                            <li class="item">
+                                                                                                <label class="checkbox" tooltip>
+                                                                                                    <input type="checkbox" id="lip"><span>Change Lip</span>
+                                                                                                    <div class="tooltip">Adjust the color or shape of the lips.</div>
+                                                                                                </label>
+                                                                                            </li>
+                                                                                        </ul>
+                                                                                    </div>
+                                                                                    <div class="multibox" tooltip>
+                                                                                        <div class="tooltip">Select head orientation to improve the analysis of the input video.</div>
+                                                                                        <span class="multibox-text" title="Orientation"></span>
+                                                                                        <span class="arrow-dwn"></span>
+                                                                                        <ul class="list-items">
+                                                                                            <li class="item">
+                                                                                                <label class="checkbox" tooltip>
+                                                                                                    <input type="checkbox" id="frontalRotation" checked disabled><span>Frontal Head (0°)</span>
+                                                                                                    <div class="tooltip">The face is facing forward. Best for accurate analysis.</div>
+                                                                                                </label>
+                                                                                            </li>
+                                                                                            <li class="item">
+                                                                                                <label class="checkbox" tooltip>
+                                                                                                    <input type="checkbox" id="rightRotation"><span>Tilted Right Head (90°)</span>
+                                                                                                    <div class="tooltip">Select this if the face is tilted to the right.</div>
+                                                                                                </label>
+                                                                                            </li>
+                                                                                            <li class="item">
+                                                                                                <label class="checkbox" tooltip>
+                                                                                                    <input type="checkbox" id="invertedRotation"><span>Inverted Head (180°)</span>
+                                                                                                    <div class="tooltip">Select this if the face is upside down.</div>
+                                                                                                </label>
+                                                                                            </li>
+                                                                                            <li class="item">
+                                                                                                <label class="checkbox" tooltip>
+                                                                                                    <div class="tooltip">Select this if the face is tilted to the left.</div>
+                                                                                                    <input type="checkbox" id="leftRotation"><span>Tilted Left Head (-90°)</span>
+                                                                                                </label>
+                                                                                            </li>
+                                                                                        </ul>
+                                                                                    </div>
+                                                                                    <label class="checkbox" tooltip>
+                                                                                        <input type="checkbox" id="enableEnhancedAnalyzer"><span>Multiple Face Detectors</span>
+                                                                                        <div class="tooltip">Use multiple detection algorithms (like YoloFace, RetinaFace, SCRFD) to get the best results.</div>
+                                                                                    </label>
+                                                                                </div>
+                                                                                <div id="Other" class="section" style="display: none;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                    <label class="checkbox">
+                                                                                        <input type="checkbox" id="removeBanner"><span>Remove banner</span>
+                                                                                    </label>
+                                                                                    <label class="checkbox" style="display: flex;align-items: center;gap: calc(1vh* var(--scale-factor-h));justify-content: space-between;">
+                                                                                        <div style="display: flex;align-items: center;"><input type="checkbox" id="keepFPS"><span>Keep FPS</span></div>
+                                                                                        <div id="keepFPSContainer" style="display: flex;align-items: center;flex-direction: row-reverse;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                            <input type="range" min="1" max="60" value="30" class="slider" id="fps-slider">
+                                                                                            <div class="slider-value" id="fps-value">30</div>
+                                                                                        </div>
+                                                                                    </label>
+                                                                                </div>
+                                                                            <div style="display: flex;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                <button class="wide" id="startProcessBtn">Start Process</button>
+                                                                                <button class="wide" id="cancellProcessBtn" >Cancel Process</button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
+                                                                <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
+                                                                    <div class="background-dot-container">
+                                                                        <div class="background-dot-container-content">
+                                                                            <div class="outputs"></div>
+                                                                            <div style="display: flex;justify-content: space-around;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                <button class="wide" id="downloadButton">Download</button>
+                                                                                <button class="wide" id="viewOutput">View</button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        `);
+            }
+
+            loadPageContent(updateMainContent, savePageState);
+
+            window.addEventListener('beforeunload', () => { savePageState(); });
+            window.addEventListener('pagehide', () => { savePageState(); });
+
+            document.addEventListener('click', () => { savePageState(); });
+            document.addEventListener('touchend', () => { savePageState(); });
+
+            function setMaxWidth() {
+                const backgroundDotContainer = document.querySelector('.background-dot-container-content');
+                const multibox = document.querySelector('.multibox');
+                const multiboxText = document.querySelectorAll('.multibox-text');
+                const arrowDwn = document.querySelector('.arrow-dwn');
+
+                if (backgroundDotContainer && multibox && multiboxText && arrowDwn) {
+                    const containerWidth = backgroundDotContainer.offsetWidth;
+                    const containerStyle = getComputedStyle(backgroundDotContainer);
+                    const multiboxStyle = getComputedStyle(multibox);
+                    const arrowDwnStyle = getComputedStyle(arrowDwn);
+
+                    const paddingLeft = parseFloat(multiboxStyle.paddingLeft) + parseFloat(containerStyle.paddingLeft) * 2;
+                    const paddingRight = parseFloat(multiboxStyle.paddingRight) + parseFloat(containerStyle.paddingRight);
+                    const arrowWidth = parseFloat(arrowDwnStyle.width);
+                    const maxWidth = containerWidth - paddingLeft - paddingRight - arrowWidth;
+                    multiboxText.forEach(text => {
+                        text.style.maxWidth = `${maxWidth - 2}px`;
+                    });
+                }
+            }
+
+            function loadPageState() {
+                setMaxWidth();
+
+                const pageData = localStorage.getItem(pageName) || null;
+                if (pageData) {
+                    const state = JSON.parse(pageData || '{}') || {};
+                    document.getElementById('enableOccluder').checked = state.enableOccluder || false;
+                    document.getElementById('smooth_face_enhancer').checked = state.smooth_face_enhancer || false;
+                    document.getElementById('natural_face_enhancer_512').checked = state.natural_face_enhancer_512 || false;
+                    document.getElementById('natural_face_enhancer_1024').checked = state.natural_face_enhancer_1024 || false;
+                    document.getElementById('enableEnhancedAnalyzer').checked = state.enableEnhancedAnalyzer || false;
+                    document.getElementById('enableEnhancedLandmarks').checked = state.enableEnhancedLandmarks || false;
+                    document.getElementById('skin').checked = state.skin || false;
+                    document.getElementById('eyebrow').checked = state.eyebrow || false;
+                    document.getElementById('eye').checked = state.eye || false;
+                    document.getElementById('glasses').checked = state.glasses || false;
+                    document.getElementById('nose').checked = state.nose || false;
+                    document.getElementById('mouth').checked = state.mouth || false;
+                    document.getElementById('lip').checked = state.lip || false;
+                    document.getElementById('frontalRotation').checked = state.frontalRotation || false;
+                    document.getElementById('rightRotation').checked = state.rightRotation || false;
+                    document.getElementById('invertedRotation').checked = state.invertedRotation || false;
+                    document.getElementById('leftRotation').checked = state.leftRotation || false;
+                    document.getElementById('removeBanner').checked = state.removeBanner || false;
+                    document.getElementById('keepFPS').checked = state.keepFPS || false;
+                    document.getElementById('fps-slider').value = state.fpsValue || 30;
+                    document.getElementById('fps-value').textContent = (state.fpsValue || 30) + ' FPS';
+
+                    const navLinks = document.querySelectorAll('.nav-links .text');
+                    navLinks.forEach(link => {
+                        if (link.getAttribute('for') === state.activeLink) {
+                            link.classList.add('active');
+                            const targetSection = document.getElementById(state.activeLink);
+                            if (targetSection) {
+                                targetSection.style.display = 'flex';
+                            }
+                        }
+                    });
+
+                    const multiboxQuery = document.querySelectorAll('.multibox');
+                    multiboxQuery.forEach((multibox, index) => {
+                        const btnText = multibox.querySelector('.multibox-text');
+                        const items = multibox.querySelectorAll('.item');
+
+                        if (state.multiboxes && state.multiboxes[index]) {
+                            btnText.innerText = state.multiboxes[index].text || '';
+
+                            state.multiboxes[index].items.forEach((itemState, itemIndex) => {
+                                if (itemIndex < items.length) {
+                                    const checkbox = items[itemIndex].querySelector('input[type="checkbox"]');
+                                    checkbox.checked = itemState.checked;
+                                    items[itemIndex].classList.toggle('checked', checkbox.checked);
+                                }
+                            });
+                        }
+                    });
+
+                    const comboboxQuery = document.querySelectorAll('.combobox');
+                    comboboxQuery.forEach((combobox, index) => {
+                        const btnText = combobox.querySelector('.combobox-text');
+                        const items = combobox.querySelectorAll('.item');
+
+                        if (state.comboboxes && state.comboboxes[index]) {
+                            btnText.innerText = state.comboboxes[index].text || '';
+
+                            state.comboboxes[index].items.forEach((itemState, itemIndex) => {
+                                if (itemIndex < items.length) {
+                                    const checkbox = items[itemIndex].querySelector('input[type="checkbox"]');
+                                    checkbox.checked = itemState.checked;
+                                    items[itemIndex].classList.toggle('checked', checkbox.checked);
+                                }
+                            });
+                        }
+                    });
+                }
+                else {
+                    const checkboxIds = [
+                        'skin',
+                        'eyebrow',
+                        'eye',
+                        'glasses',
+                        'nose',
+                        'mouth',
+                        'lip',
+                        'enableEnhancedAnalyzer',
+                        'enableEnhancedLandmarks',
+                        'enableOccluder',
+                        'smooth_face_enhancer',
+                        'natural_face_enhancer_512',
+                        'natural_face_enhancer_1024',
+                        'keepFPS'
+                    ];
+
+                    checkboxIds.forEach(id => {
+                        const checkbox = document.getElementById(id);
+                        checkbox.checked = true;
+                        setTimeout(() => { checkbox.dispatchEvent(new Event('change')); }, 0);
+                    });
+                }
+            }
+
+            const openDB = (dataBaseIndexName, dataBaseObjectStoreName) => {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(dataBaseIndexName, 1);
+
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        db.createObjectStore(dataBaseObjectStoreName, { keyPath: 'id', autoIncrement: true });
+                    };
+
+                    request.onsuccess = (event) => {
+                        const db = event.target.result;
+                        resolve(db);
+                    };
+
+                    request.onerror = (event) => {
+                        reject(`Error opening database: ${event.target.error}`);
+                    };
+                });
+            };
+
+            const countInDB = (db) => {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction([db.objectStoreNames[0]], 'readonly');
+                    const objectStore = transaction.objectStore(db.objectStoreNames[0]);
+                    const request = objectStore.count();
+
+                    request.onsuccess = (event) => {
+                        resolve(event.target.result);
+                    };
+
+                    request.onerror = (event) => {
+                        reject(`Error counting entries in database: ${event.target.error}`);
+                    };
+                });
+            };
+
+            async function saveCountIndex() {
+                const databases = [
+                    { indexName: 'outputDB-face-swap', objectStore: 'outputs' },
+                    { indexName: 'faceDB-face-swap', objectStore: 'faces' },
+                    { indexName: 'inputDB-face-swap', objectStore: 'inputs' }
+                ];
+
+                for (const dbConfig of databases) {
+                    const db = await openDB(dbConfig.indexName, dbConfig.objectStore);
+                    const photoCount = await countInDB(db, dbConfig.objectStore);
+                    localStorage.setItem(`${dbConfig.objectStore}-count`, photoCount);
+                }
+            }
+
+            const addToDB = (db, data) => {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
+                    const objectStore = transaction.objectStore(db.objectStoreNames[0]);
+
+                    let currentIndex = localStorage.getItem(`${db.objectStoreNames[0]}-index`);
+                    currentIndex = currentIndex === null ? 0 : parseInt(currentIndex, 10);
+                    currentIndex += 1;
+                    localStorage.setItem(`${db.objectStoreNames[0]}-index`, currentIndex);
+
+                    let entry = {
+                        timestamp: new Date().getTime(),
+                        index: currentIndex
+                    };
+
+                    if (data instanceof Blob) {
+                        entry.blob = data;
+                    } else if (Array.isArray(data)) {
+                        if (data[0] !== null) entry.blob = data[0];
+                        if (data[1] !== null) entry.url = data[1];
+                    }
+
+                    entry = Object.fromEntries(Object.entries(entry).filter(([_, v]) => v != null));
+
+                    const request = objectStore.add(entry);
+                    request.onsuccess = () => {
+                        resolve(currentIndex);
+                        saveCountIndex();
+                    };
+
+                    request.onerror = (event) => {
+                        currentIndex -= 1;
+                        localStorage.setItem(`${db.objectStoreNames[0]}-index`, currentIndex);
+                        alert('Error adding data to database: ' + event);
+                        reject(`Error adding data to database: ${event.target.error ? event.target.error.message : 'Unknown error'}`);
+                    };
+                });
+            };
+
+            const getFromDB = (db, limit = null, offset = 0) => {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction([db.objectStoreNames[0]], 'readonly');
+                    const objectStore = transaction.objectStore(db.objectStoreNames[0]);
+                    const request = objectStore.getAll();
+
+                    request.onsuccess = (event) => {
+                        let results = event.target.result;
+                        results = results.sort((a, b) => b.index - a.index);
+                        if (limit !== null) {
+                            results = results.slice(offset, offset + limit);
+                        }
+
+                        resolve(results.map(item => ({ blob: item.blob || null, url: item.url || null, index: item.index || null, id: item.id || null })));
+                    };
+
+                    request.onerror = (event) => {
+                        reject(`Error retrieving data from database: ${event.target.error}`);
+                    };
+                });
+            };
+
+            const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleDownload) => {
+                try {
+                    let db = openDB(dataBaseIndexName, dataBaseObjectStoreName);
+                    let mediaCount = localStorage.getItem(`${dataBaseObjectStoreName}-count`);
+
+                    if (!mediaCount) {
+                        mediaCount = await countInDB(await db);
+                        localStorage.setItem(`${dataBaseObjectStoreName}-count`, mediaCount);
+                    } else {
+                        mediaCount = parseInt(mediaCount, 10);
+                    }
+
+                    const mediaContainer = document.querySelector(`.${dataBaseObjectStoreName}`);
+                    const fragment = document.createDocumentFragment();
+
+                    if (mediaCount > 0) {
+                        mediaContainer.style.display = mediaCount > 0 ? 'flex' : 'none';
+                        for (let i = 0; i < mediaCount; i++) {
+                            const div = document.createElement('div');
+                            div.className = 'data-container';
+                            div.innerHTML = `<div class="process-text"></div><div class="delete-icon"></div>`;
+                            fragment.appendChild(div);
+                        }
+                    }
+                    mediaContainer.appendChild(fragment);
+                    db = await db;
+                    mediaCount = await countInDB(db);
+                    localStorage.setItem(`${dataBaseObjectStoreName}-count`, mediaCount);
+
+                    if (mediaCount > 0) {
+                        const mediaItems = await getFromDB(db);
+                        const inputElements = mediaContainer.querySelectorAll('.data-container');
+
+                        for (const [indexInBatch, { blob, url, index }] of mediaItems.entries()) {
+                            if (blob) {
+                                const blobUrl = URL.createObjectURL(blob);
+
+                                if (blob.type.startsWith('video')) {
+                                    inputElements[indexInBatch].innerHTML = `<video index="${index}" playsinline preload="auto" disablePictureInPicture loop muted autoplay>
+                                                     <source src="${blobUrl}" type="${blob.type}">
+                                                     Your browser does not support the video tag.
+                                                 </video>
+                                                 <div class="process-text"></div>
+                                                 <div class="delete-icon"></div>`;
+                                } else {
+                                    inputElements[indexInBatch].innerHTML = `<img index="${index}" src="${blobUrl}" alt="Uploaded Photo"/><div class="process-text"></div><div class="delete-icon"></div>`;
+                                }
+                            } else {
+                                async function tryHandleDownload(selectedOutputInfo, retries) {
+                                    for (let attempt = 1; attempt <= retries; attempt++) {
+                                        try {
+                                            await handleDownload(selectedOutputInfo);
+                                            break;
+                                        } catch (error) {
+                                            console.error(`Attempt ${attempt} failed:`, error);
+                                            if (attempt === retries) {
+                                                console.error('All attempts failed.'); // Log if all retries fail
+                                            }
+                                        }
+                                    }
+                                }
+
+                                const selectedOutputInfo = { db, url, element: inputElements[indexInBatch], index };
+                                tryHandleDownload(selectedOutputInfo);
+                            }
+                        }
+
+                        mediaContainer.style.display = mediaCount > 0 ? 'flex' : 'none';
+                    }
+                } catch (error) {
+                    console.error(`Database initialization failed: ${error.message}`);
+                }
+            };
+
+            const updateInDB = (db, url, blob) => {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
+                    const objectStore = transaction.objectStore(db.objectStoreNames[0]);
+
+                    const request = objectStore.openCursor();
+                    request.onsuccess = (event) => {
+                        const cursor = event.target.result;
+                        if (cursor) {
+                            if (cursor.value.url === url) {
+                                cursor.value.blob = blob;
+
+                                const updateRequest = cursor.update(cursor.value);
+                                updateRequest.onsuccess = () => {
+                                    resolve();
+                                    saveCountIndex();
+                                };
+
+                                updateRequest.onerror = (event) => {
+                                    reject(`Error updating photo in database: ${event.target.error}`);
+                                };
+                            } else {
+                                cursor.continue();
+                            }
+                        } else {
+                            reject(`No record found with url: ${url}`);
+                        }
+                    };
+
+                    request.onerror = (event) => {
+                        reject(`Error opening cursor in database: ${event.target.error}`);
+                    };
+                });
+            };
+
+            const deleteFromDB = async (db, index) => {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
+                    const photosObjectStore = transaction.objectStore(db.objectStoreNames[0]);
+                    const deleteRequest = photosObjectStore.delete(index);
+
+                    deleteRequest.onsuccess = async () => {
+                        resolve();
+                        saveCountIndex();
+                    };
+
+                    deleteRequest.onerror = (event) => {
+                        reject(`Error deleting photo from database: ${event.target.error}`);
+                    };
+                });
+            };
+
+            async function loadPage() {
+                const handleDownload = async (selectedOutputInfo) => {
+                    if (selectedOutputInfo) {
+                        const { db, url, element, index } = selectedOutputInfo;
+                        if (!db || !url || !element || !index)
+                            return;
+
+                        try {
+                            const response = await fetch(url);
+
+                            const contentLengthHeader = Number(response.headers.get('Content-Length'));
+                            let downloadedBytes = 0;
+
+                            let blob = new Blob([], { type: response.headers.get('Content-Type') });
+
+                            const reader = response.body.getReader();
+                            while (true) {
+                                const { done, value } = await reader.read();
+                                if (done) break;
+                                downloadedBytes += value.length;
+                                blob = new Blob([blob, value], { type: response.headers.get('Content-Type') });
+                                const progress = (downloadedBytes / contentLengthHeader) * 100;
+                                setProcessText(element, `Downloaded: ${progress.toFixed(0)}%`);
+                            }
+
+                            const blobUrl = URL.createObjectURL(blob);
+                            const isVideo = url.slice(-1) === '0';
+                            if (isVideo) {
+                                element.innerHTML = `<video index="${index}" loop muted autoplay><source src="${blobUrl}" type="${blob.type}">Your browser does not support the video tag.</video><div class="delete-icon"></div>`;
+                            } else {
+                                element.innerHTML = `<img index="${index}" src="${blobUrl}" alt="Uploaded Photo"/><div class="delete-icon"></div>`;
+                            }
+
+                            setProcessText(element, '');
+                            await updateInDB(db, url, blob);
+                        } catch (error) {
+                            setProcessText(element, error.message);
+                            startProcessBtn.disabled = false;
+                        }
+                    } else {
+                        alert('No Output Selected');
+                    }
+                };
+
+                const databases = [
+                    { indexName: 'outputDB-face-swap', objectStore: 'outputs' },
+                    { indexName: 'faceDB-face-swap', objectStore: 'faces' },
+                    { indexName: 'inputDB-face-swap', objectStore: 'inputs' }
+                ];
+                databases.forEach(db => initDB(db.indexName, db.objectStore, handleDownload));
+
+                window.addEventListener('beforeunload', async () => { await saveCountIndex(); });
+                window.addEventListener('pagehide', async () => { await saveCountIndex(); });
+
+                document.addEventListener('click', async () => { await saveCountIndex(); });
+                document.addEventListener('touchend', async () => { await saveCountIndex(); });
+
+                const handleDelete = async (dbName, storeName, parent) => {
+                    try {
+                        const element = parent.querySelector('img, video');
+                        const domIndex = parseInt(element.getAttribute('index'), 10);
+                        const db = await openDB(dbName, storeName);
+                        const items = await getFromDB(db);
+                        const itemToDelete = items.find(item => item.index === domIndex);
+                        await deleteFromDB(db, itemToDelete.id, databases);
+                        parent.remove();
+                    } catch (error) {
+                        alert('Error during delete operation: ' + error.message);
+                    }
+                };
+
+                const downloadButton = document.getElementById('downloadButton');
+                const viewOutputButton = document.getElementById('viewOutput');
+
+                downloadButton.disabled = true;
+                viewOutputButton.disabled = true;
+
+                const handleSelectionToggle = (container, clickedElement) => {
+                    if (container.className === 'outputs') {
+                        downloadButton.disabled = false;
+                        viewOutputButton.disabled = false;
+                    }
+
+                    container.querySelectorAll(".data-container.active").forEach(activePhoto => {
+                        activePhoto.classList.remove("active");
+                    });
+
+                    if (clickedElement.classList.contains("active"))
+                        clickedElement.classList.remove("active");
+                    else clickedElement.classList.add("active");
+                };
+
+                const handleEvent = async (event, dbName, storeName, container) => {
+                    const parent = event.target.closest('.data-container');
+                    if (!parent) return;
+
+                    if (event.target.classList.contains('delete-icon')) {
+                        return await handleDelete(dbName, storeName, parent);
+                    }
+
+                    handleSelectionToggle(container, parent);
+                };
+
+                document.querySelector('.inputs').addEventListener('click', async function (event) {
+                    await handleEvent(event, 'inputDB-face-swap', 'inputs', document.querySelector('.inputs'));
+                });
+
+                document.querySelector('.faces').addEventListener('click', async function (event) {
+                    await handleEvent(event, 'faceDB-face-swap', 'faces', document.querySelector('.faces'));
+                });
+
+                document.querySelector('.outputs').addEventListener('click', async function (event) {
+                    await handleEvent(event, 'outputDB-face-swap', 'outputs', document.querySelector('.outputs'));
+                });
+
+                document.querySelectorAll('.question-mark').forEach(questionMark => {
+                    questionMark.addEventListener('click', (event) => {
+                        event.stopPropagation();
+                    });
+                });
+
+                const handleUpload = async (event, dataBaseIndexName, dataBaseObjectStoreName) => {
+                    try {
+                        const db = await openDB(dataBaseIndexName, dataBaseObjectStoreName);
+                        const files = Array.from(event.target.files);
+                        const mediaContainer = document.querySelector(`.${dataBaseObjectStoreName}`);
+                        const fragment = document.createDocumentFragment();
+                        const newMedia = [];
+
+                        const processFile = async (file) => {
+                            return new Promise((resolve, reject) => {
+                                const reader = new FileReader();
+                                reader.onload = async (e) => {
+                                    try {
+                                        const blob = new Blob([e.target.result], { type: file.type });
+                                        const index = await addToDB(db, blob);
+                                        newMedia.push({ index, blob, isVideo: file.type.startsWith('video') });
+                                        resolve();
+                                    } catch (error) {
+                                        reject(`Processing media failed: ${error.message}`);
+                                    }
+                                };
+                                reader.readAsArrayBuffer(file);
+                            });
+                        };
+
+                        await Promise.all(files.map(processFile));
+
+                        newMedia.reverse().forEach(({ index, blob, isVideo }) => {
+                            const input = document.createElement('div');
+                            input.className = 'data-container';
+                            const blobUrl = URL.createObjectURL(blob);
+                            if (isVideo) {
+                                input.innerHTML = `<video index="${index}" loop muted autoplay><source src="${blobUrl}" type="${blob.type}">Your browser does not support the video tag.</video><div class="delete-icon"></div>`;
+                            } else {
+                                input.innerHTML = `<img index="${index}" src="${blobUrl}" alt="Uploaded Photo"/><div class="delete-icon"></div>`;
+                            }
+                            fragment.appendChild(input);
+                        });
+
+                        mediaContainer.insertBefore(fragment, mediaContainer.firstChild);
+                        localStorage.setItem(`${dataBaseObjectStoreName}-count`, await countInDB(db));
+                    } catch (error) {
+                        alert(`Opening media database failed: ${error.message}`);
+                    }
+                };
+
+                const setupFileUpload = ({ buttonId, inputId, dataBaseIndexName, dataBaseObjectStoreName, changeHandler }) => {
+                    const input = document.getElementById(inputId);
+                    document.getElementById(buttonId).addEventListener('click', () => input.click());
+                    input.addEventListener('change', async (event) => {
+                        await changeHandler(event, dataBaseIndexName, dataBaseObjectStoreName);
+                    });
+                };
+
+                const fileUploads = [
+                    { buttonId: 'circular-button-face-upload', inputId: 'face-upload', dataBaseIndexName: 'faceDB-face-swap', dataBaseObjectStoreName: 'faces' },
+                    { buttonId: 'circular-button-input-upload', inputId: 'input-upload', dataBaseIndexName: 'inputDB-face-swap', dataBaseObjectStoreName: 'inputs' }
+                ];
+
+                fileUploads.forEach(config => setupFileUpload({ ...config, changeHandler: handleUpload }));
+
+                const navLinks = document.querySelectorAll('.nav-links .text');
+                const sections = document.querySelectorAll('.section');
+
+                navLinks.forEach(link => {
+                    link.addEventListener('click', function () {
+                        navLinks.forEach(link => link.classList.remove('active'));
+                        this.classList.add('active');
+
+                        sections.forEach(section => section.style.display = 'none');
+
+                        const targetId = this.getAttribute('for');
+                        const targetSection = document.getElementById(targetId);
+                        if (targetSection) {
+                            targetSection.style.display = 'flex';
+                        }
+                    });
+                });
+
+                const multiboxes = document.querySelectorAll(".multibox");
+                multiboxes.forEach(multibox => {
+                    const selectBtn = multibox;
+                    const items = multibox.querySelectorAll(".item");
+                    const tooltip = multibox.querySelector(".tooltip");
+                    const btnText = multibox.querySelector(".multibox-text");
+                    const listItems = multibox.querySelector(".list-items");
+
+                    selectBtn.addEventListener("click", (event) => {
+                        event.stopPropagation();
+                        multiboxes.forEach(box => {
+                            if (box !== selectBtn) {
+                                box.classList.remove("open");
+                                box.querySelector(".list-items").style.display = "none";
+                            }
+                        });
+
+                        selectBtn.classList.toggle("open");
+                        listItems.style.display = selectBtn.classList.contains("open") ? "flex" : "none";
+                    });
+
+                    items.forEach(item => {
+                        const checkbox = item.querySelector('input[type="checkbox"]');
+                        const checkedItems = multibox.querySelectorAll(".item.checked input[type='checkbox']");
+                        const selectedNames = Array.from(checkedItems).map(checkbox => {
+                            const label = checkbox.parentElement.querySelector('span');
+                            return label ? label.textContent.trim() : '';
+                        }).filter(name => name !== '');
+
+                        btnText.innerText = selectedNames.length > 0 ? selectedNames.join(', ') : btnText.getAttribute("title");
+
+                        checkbox.addEventListener("change", () => {
+                            item.classList.toggle("checked", checkbox.checked);
+
+                            const checkedItems = multibox.querySelectorAll(".item.checked input[type='checkbox']");
+                            const selectedNames = Array.from(checkedItems).map(checkbox => {
+                                const label = checkbox.parentElement.querySelector('span');
+                                return label ? label.textContent.trim() : '';
+                            }).filter(name => name !== '');
+
+                            btnText.innerText = selectedNames.length > 0 ? selectedNames.join(', ') : btnText.getAttribute("title");
+                        });
+                    });
+
+                    listItems.addEventListener("mouseenter", () => {
+                        tooltip.style.display = "none";
+                    });
+
+                    listItems.addEventListener("mouseleave", () => {
+                        tooltip.style.display = "flex";
+                    });
+                });
+
+                document.addEventListener("click", () => {
+                    multiboxes.forEach(box => {
+                        box.classList.remove("open");
+                        box.querySelector(".list-items").style.display = "none";
+                    });
+                });
+
+                const comboboxes = document.querySelectorAll(".combobox");
+
+                comboboxes.forEach(combobox => {
+                    const btnText = combobox.querySelector(".combobox-text");
+                    const tooltip = combobox.querySelector(".tooltip");
+                    const defaultTitle = btnText.getAttribute("title");
+                    btnText.innerText = defaultTitle;
+
+                    const listItems = combobox.querySelector(".list-items");
+                    const selectBtn = combobox;
+                    selectBtn.addEventListener("click", (event) => {
+                        event.stopPropagation();
+                        listItems.style.display = listItems.style.display === "flex" ? "none" : "flex";
+                    });
+
+                    const items = combobox.querySelectorAll(".item");
+                    items.forEach(item => {
+                        const checkbox = item.querySelector('input[type="checkbox"]');
+                        if (checkbox.checked) {
+                            items.forEach(i => {
+                                const cb = i.querySelector('input[type="checkbox"]');
+                                cb.checked = false;
+                                i.classList.remove("checked");
+                            });
+
+                            checkbox.checked = true;
+                            item.classList.add("checked");
+                            btnText.innerText = defaultTitle + ": " + checkbox.parentElement.querySelector('span').textContent.trim();
+                        } else {
+                            const anyChecked = [...items].some(i => i.querySelector('input[type="checkbox"]').checked);
+                            if (!anyChecked) {
+                                btnText.innerText = defaultTitle + ": " + "Disabled";
+                            }
+                            item.classList.remove("checked");
+                        }
+
+                        checkbox.addEventListener("change", () => {
+                            if (checkbox.checked) {
+                                items.forEach(i => {
+                                    const cb = i.querySelector('input[type="checkbox"]');
+                                    cb.checked = false;
+                                    i.classList.remove("checked");
+                                });
+
+                                checkbox.checked = true;
+                                item.classList.add("checked");
+                                btnText.innerText = defaultTitle + ": " + checkbox.parentElement.querySelector('span').textContent.trim();
+                            } else {
+                                const anyChecked = [...items].some(i => i.querySelector('input[type="checkbox"]').checked);
+                                if (!anyChecked) {
+                                    btnText.innerText = defaultTitle + ": " + "Disabled";
+                                }
+                                item.classList.remove("checked");
+                            }
+                        });
+                    });
+
+                    listItems.addEventListener("mouseenter", () => {
+                        tooltip.style.display = "none";
+                    });
+
+                    listItems.addEventListener("mouseleave", () => {
+                        tooltip.style.display = "flex";
+                    });
+                });
+
+                document.addEventListener("click", () => {
+                    comboboxes.forEach(box => {
+                        box.querySelector(".list-items").style.display = "none";
+                    });
+                });
+
+
+
+                const keepFPS = document.getElementById('keepFPS');
+                const keepFPSContainer = document.getElementById('keepFPSContainer');
+                const fpsSlider = document.getElementById('fps-slider');
+                const fpsValue = document.getElementById('fps-value');
+                keepFPSContainer.style.display = !keepFPS.checked ? 'flex' : 'none';
+                keepFPS.addEventListener('change', () => {
+                    keepFPSContainer.style.display = !keepFPS.checked ? 'flex' : 'none';
+                });
+
+                fpsSlider.addEventListener('input', () => {
+                    fpsValue.innerText = fpsSlider.value + " FPS";
+                });
+
+                const allServerAddress = (await fetchServerAddresses(getDocsSnapshot('servers'))).reverse();
+
+                let serverAddress = allServerAddress[0];
+                let downloadFile = false;
+
+                let maximumAllowedFrames = 36000;
+                let singleCreditForTotalFrameAmount = 120;
+
+                const FILE_SIZE_LIMIT_MB = 500;
+                const MAX_TASK_LIMIT = 10;
+                const STATUS_OK = 200;
+                const STATUS_NOTFOUND = 404;
+
+                const startProcessBtn = document.getElementById('startProcessBtn');
+                const cancellProcessBtn = document.getElementById('cancellProcessBtn');
+
+                async function setClientStatus(message) {
+                    document.querySelector('.outputs').firstChild.querySelector('.process-text').textContent = message;
+                }
+
+                const setProcessText = (element, message) => {
+                    const processTextElement = element.querySelector('.process-text');
+                    if (processTextElement)
+                        processTextElement.textContent = message;
+                };
+
+                const userData = getCachedUserData();
+
+                async function startProcess() {
+                    startProcessBtn.disabled = true;
+
+                    try {
+                        const dataContainer = document.createElement('div');
+                        dataContainer.className = 'data-container';
+
+                        const processText = document.createElement('div');
+                        processText.className = 'process-text';
+                        dataContainer.appendChild(processText);
+
+                        const outputs = document.querySelector('.outputs');
+                        outputs.style.display = 'flex';
+                        outputs.insertBefore(dataContainer, outputs.firstChild);
+
+                        if (!userData || !userData.uid) {
+                            setClientStatus('No User Logon Detected');
+                            startProcessBtn.disabled = false;
+                            await loginUser();
+                            return;
+                        }
+
+                        if (!userData.emailVerified) {
+                            setClientStatus('Verify Your Email');
+                            window.open("https://mail.google.com/mail");
+                            startProcessBtn.disabled = false;
+                            return;
+                        }
+
+                        let userDoc = getCachedUserDoc();
+
+                        const activeVideoInput = document.querySelector(".inputs .data-container.active video");
+                        const activePhotoInput = document.querySelector(".inputs .data-container.active img");
+                        const activePhoto = document.querySelector(".faces .data-container.active img");
+
+                        if (!activeVideoInput && !activePhotoInput) {
+                            setClientStatus(`Click Your Uploaded Input Above`);
+                            startProcessBtn.disabled = false;
+                            return;
+                        }
+
+                        if (!activePhoto) {
+                            setClientStatus(`Click Your Uploaded Face Above`);
+                            startProcessBtn.disabled = false;
+                            return;
+                        }
+
+                        let videoDurationTotalFrames = 0;
+
+                        if (activeVideoInput) {
+                            const assumedFrameRate = !keepFPS.checked ? document.getElementById("fps-slider").value : 60;
+                            videoDurationTotalFrames = Math.floor(activeVideoInput.duration * assumedFrameRate);
+                            if (videoDurationTotalFrames <= 0) {
+                                setClientStatus(`No Frame Detected`);
+                                startProcessBtn.disabled = false;
+                                return;
+                            }
+
+                            if (videoDurationTotalFrames > maximumAllowedFrames) {
+                                setClientStatus(`Exceeding Frame Limit`);
+                                //showNotification(!keepFPS.checked ? 'If your video has less than 60 FPS, please specify by closing Keep FPS option.' : 'Lowering the settings will increase frame limit.', 'Warning - Exceeding Frame Limit', 'warning');
+                                startProcessBtn.disabled = false;
+                                return;
+                            }
+                        }
+
+                        const removeBanner = document.getElementById("removeBanner");
+                        const removeBannerStateMultiplier = removeBanner.checked ? 2 : 1;
+
+                        let neededCredits = 0;
+
+                        if (activeVideoInput) {
+                            const resolutionMultiplier = Math.max(1, 1 + Math.floor((activeVideoInput.videoWidth + activeVideoInput.videoHeight - 2500) / 1000) * 0.5);
+                            neededCredits = Math.floor(Math.max(1, videoDurationTotalFrames / singleCreditForTotalFrameAmount) * resolutionMultiplier * removeBannerStateMultiplier);
+                        } else if (activePhotoInput) {
+                            neededCredits = removeBannerStateMultiplier;
+                        }
+
+                        neededCredits = Math.max(1, neededCredits);
+
+                        setClientStatus('Creating ID...');
+
+                        async function getServerAddresses() {
+                            return await fetchServerAddresses(getDocsSnapshot('servers'), neededCredits === 1 || activePhotoInput);
+                        }
+
+                        let [userIpAddress, browserUniqueId, serverAddresses] = await Promise.all([
+                            getUserIpAddress(),
+                            ensureUniqueId(),
+                            getServerAddresses()
+                        ]);
+
+                        async function checkServerQueue(server) {
+                            const response = await fetch(`${server}/get-online`);
+                            if (response.status === STATUS_OK) {
+                                const data = await response.json();
+                                return data.server;
+                            }
+
+                            console.error(`Server ${server} is offline. Status: ${response.status}`);
+                            return Infinity;
+                        }
+
+                        let lowestQueueIndex = 0;
+
+                        const serverForSmallProcesses = "https://3080TI-1-DF.bodyswap.me";
+                        const serverPromises = serverAddresses.map(server => checkServerQueue(server));
+                        const results = await Promise.all(serverPromises);
+
+                        if (neededCredits > 0 && neededCredits < 25 || videoDurationTotalFrames < 500) {
+                            const primaryServerQueue = await checkServerQueue(serverForSmallProcesses);
+                            const everyServerEmpty = results.every(queue => queue === 0);
+                            const someServerNotEmpty = results.some(queue => queue === 0);
+                            if (someServerNotEmpty && !everyServerEmpty && primaryServerQueue > 0 || primaryServerQueue >= MAX_TASK_LIMIT) {
+                                const minQueueIndex = results.reduce((minIndex, queue, index, arr) => {
+                                    return (queue < arr[minIndex] && queue >= 0) ? index : minIndex;
+                                }, 0);
+                                lowestQueueIndex = results[minQueueIndex];
+                                if (results[minQueueIndex] === Infinity) {
+                                    startProcessBtn.disabled = false;
+                                    setClientStatus('Offline');
+                                    return;
+                                }
+                                serverAddresses = [serverAddresses[minQueueIndex]];
+                            } else {
+                                lowestQueueIndex = primaryServerQueue;
+                                serverAddresses = [serverForSmallProcesses];
+                            }
+                        } else {
+                            const index = serverAddresses.indexOf(serverForSmallProcesses);
+                            if (index !== -1) {
+                                serverAddresses.splice(index, 1);
+                            }
+                            const minQueueIndex = results.reduce((minIndex, queue, index, arr) => {
+                                return (queue < arr[minIndex]) ? index : minIndex;
+                            }, 0);
+                            lowestQueueIndex = results[minQueueIndex];
+                            if (results[minQueueIndex] === Infinity) {
+                                startProcessBtn.disabled = false;
+                                setClientStatus('Offline');
+                                return;
+                            }
+                            serverAddresses = [serverAddresses[minQueueIndex]];
+                        }
+
+                        serverAddress = serverAddresses[0];
+                        setClientStatus(`Connecting`);
+
+                        async function generateHash(str) {
+                            let hash = 0;
+                            for (let i = 0; i < str.length; i++) {
+                                hash = (hash << 5) - hash + str.charCodeAt(i);
+                                hash |= 0;
+                            }
+                            return hash;
+                        }
+
+                        const processBlobToFile = async (blobUrl, fileType, extension) => {
+                            const response = await fetch(blobUrl);
+                            const blob = await response.blob();
+                            const fileName = `${await generateHash(blobUrl)}.${extension}`;
+                            return new File([blob], fileName, { type: fileType });
+                        };
+
+                        const fileType = activeVideoInput ? 'video/mp4' : 'image/png';
+                        const extension = activeVideoInput ? 'mp4' : 'png';
+                        const faceFile = await processBlobToFile(activePhoto.src, 'image/png', 'png');
+                        const inputFile = await processBlobToFile(activeVideoInput ? activeVideoInput.querySelector('source').src : activePhotoInput.src, fileType, extension);
+
+                        if ((faceFile.size + inputFile.size) / (1024 * 1024) > FILE_SIZE_LIMIT_MB) {
+                            startProcessBtn.disabled = false;
+                            setClientStatus(`Size exceeds ${FILE_SIZE_LIMIT_MB}MB limit`);
+                            return;
+                        }
+
+                        let width = 0;
+                        let height = 0;
+
+                        if (activeVideoInput) {
+                            activeVideoInput.addEventListener('loadedmetadata', function () {
+                                width = activeVideoInput.videoWidth;
+                                height = activeVideoInput.videoHeight;
+                            });
+
+                            if (activeVideoInput.readyState >= 1) {
+                                width = activeVideoInput.videoWidth;
+                                height = activeVideoInput.videoHeight;
+                            }
+                        } else if (activePhotoInput) {
+                            const img = activePhotoInput;
+
+                            img.onload = function () {
+                                width = img.naturalWidth;
+                                height = img.naturalHeight;
+                            };
+
+                            if (img.complete) {
+                                img.onload();
+                            }
+                        }
+
+                        const userName = userDoc.username;
+                        const userEmail = userDoc.email;
+                        const processCount = userDoc.processCount || 0;
+
+                        const uniqueId = `${userName}_${userEmail}_${processCount}_${neededCredits}_${activeVideoInput ? 0 : 1}`
+                            .replace(/[^a-zA-Z0-9_-]/g, '_')
+                            .replace(/\s/g, '');
+
+                        const db = await openDB('outputDB-face-swap', 'outputs');
+                        const url = serverAddress + ('/download-video/') + uniqueId;
+                        const firstChild = outputs.firstChild;
+
+                        if (firstChild && !firstChild.dataset.created) {
+                            firstChild.dataset.created = true;
+                            firstChild.innerHTML = `<div class="process-text"></div>`;
+
+                            await addToDB(db, [null, url]);
+                        }
+
+                        function fetchToServer(url, options, onProgress) {
+                            if (typeof onProgress !== 'function') {
+                                return fetch(url, options);
+                            }
+
+                            return new Promise((resolve, reject) => {
+                                const xhr = new XMLHttpRequest();
+                                xhr.open(options.method || 'GET', url);
+
+                                xhr.upload.onprogress = (event) => {
+                                    if (event.lengthComputable) {
+                                        const progress = (event.loaded / event.total) * 100;
+                                        onProgress(progress);
+                                    }
+                                };
+
+                                xhr.onload = () => {
+                                    if (xhr.status >= STATUS_OK && xhr.status < STATUS_NOTFOUND) {
+                                        resolve(new Response(xhr.responseText, { status: xhr.status }));
+                                    } else {
+                                        reject(new Error(`Request failed with status ${xhr.status}`));
+                                        setClientStatus(`Request failed with status ${xhr.status}`);
+                                        //showNotification(`Request failed with status ${xhr.status}. Try Again.`, 'Warning - Fetching Failed', 'warning');
+                                    }
+                                };
+
+                                xhr.onerror = () => {
+                                    reject(new Error('Request failed'));
+                                    setClientStatus(`Request failed.`);
+                                    //showNotification(`Request failed with status ${xhr.status}. Try Again.`, 'Warning - Fetching Failed', 'warning');
+                                };
+
+                                for (const key in options.headers) {
+                                    if (options.headers.hasOwnProperty(key)) {
+                                        xhr.setRequestHeader(key, options.headers[key]);
+                                    }
+                                }
+
+                                xhr.send(options.body);
+                            });
+                        }
+
+                        const chunkSize = 50 * 1024 * 1024;
+                        const totalSize = inputFile.size;
+                        const maxChunkNumber = Math.ceil(totalSize / chunkSize);
+                        const uploadedSizes = new Array(maxChunkNumber).fill(0);
+
+                        for (let chunkNumber = 0; chunkNumber < maxChunkNumber; chunkNumber++) {
+                            let start = chunkNumber * chunkSize;
+                            let end = Math.min(start + chunkSize, totalSize);
+
+                            const formData = new FormData();
+                            const chunk = inputFile.slice(start, end);
+                            formData.append('videoChunk', chunk, `${inputFile.name}.part${chunkNumber}`);
+                            formData.append('fileType', fileType);
+
+                            await fetchToServer(`${serverAddress}/upload-chunk`, {
+                                method: 'POST',
+                                body: formData,
+                            }, (progress) => {
+                                const chunkUploadedSize = (progress / 100) * chunk.size;
+                                uploadedSizes[chunkNumber] = chunkUploadedSize;
+                                const uploadedSize = uploadedSizes.reduce((total, size) => total + size, 0);
+                                const overallProgress = (uploadedSize / totalSize) * 100;
+                                if (overallProgress < 100)
+                                    setClientStatus(`Upload (${chunkNumber + 1}/${maxChunkNumber}): ${overallProgress.toFixed(0)}%`);
+                                else if (results[lowestQueueIndex] !== 0)
+                                    setClientStatus(`Queue ${results[lowestQueueIndex]}...`);
+                                else
+                                    setClientStatus(`Extracting Frames`);
+                            });
+                        }
+
+                        setClientStatus('Configurating');
+
+                        const maxPixelCount = 1920 * 1080;
+                        const midPixelCount = 1280 * 720;
+                        const lowPixelCount = 854 * 480;
+
+                        const calculateEnhancerBlendValue = () => {
+                            const pixelCount = height * width;
+
+                            if (pixelCount >= maxPixelCount) {
+                                return 100;
+                            } else if (pixelCount >= midPixelCount) {
+                                return Math.round(
+                                    50 + (50 * (pixelCount - midPixelCount)) / (maxPixelCount - midPixelCount)
+                                );
+                            } else if (pixelCount >= lowPixelCount) {
+                                return Math.round(
+                                    25 + (25 * (pixelCount - lowPixelCount)) / (midPixelCount - lowPixelCount)
+                                );
+                            } else {
+                                return Math.round((25 * pixelCount) / lowPixelCount);
+                            }
+                        };
+
+                        let enableEnhancer = false;
+                        let enabledEnhancer = '';
+                        let enhancerBlendValue = calculateEnhancerBlendValue();
+
+                        if (enhancerBlendValue > 100 / 4) {
+                            function getSelectedInputId() {
+                                const smoothFaceEnhancer = document.getElementById('smooth_face_enhancer');
+                                const naturalFaceEnhancer512 = document.getElementById('natural_face_enhancer_512');
+                                const naturalFaceEnhancer1024 = document.getElementById('natural_face_enhancer_1024');
+
+                                if (naturalFaceEnhancer512.checked) {
+                                    return naturalFaceEnhancer512.id;
+                                }
+
+                                if (naturalFaceEnhancer1024.checked) {
+                                    return naturalFaceEnhancer1024.id;
+                                }
+
+                                return smoothFaceEnhancer.id;
+                            }
+
+                            enabledEnhancer = getSelectedInputId();
+                            enableEnhancer = document.getElementById(enabledEnhancer).checked;
+                        } else enhancerBlendValue = 0;
+
+                        const formData = new FormData();
+                        formData.append('face', faceFile);
+                        formData.append('inputFileName', inputFile.name);
+                        formData.append('userId', userData.uid);
+                        formData.append('userIpAddress', userIpAddress);
+                        formData.append('uniqueId', uniqueId);
+                        formData.append('uniqueUserBrowserProcessId', browserUniqueId);
+                        formData.append('enableBox', true);
+                        formData.append('enableOccluder', document.getElementById("enableOccluder").checked);
+                        formData.append('enableEnhancer', enableEnhancer);
+                        formData.append('enabledEnhancer', enabledEnhancer);
+                        formData.append('enhancerBlendValue', enhancerBlendValue);
+                        formData.append('removeBanner', removeBanner.checked);
+                        formData.append('keepFPS', document.getElementById("keepFPS").checked);
+                        formData.append('fpsValue', document.getElementById("fps-slider").value);
+                        formData.append('skin', document.getElementById("skin").checked);
+                        formData.append('eyebrow', document.getElementById("eyebrow").checked);
+                        formData.append('eye', document.getElementById("eye").checked);
+                        formData.append('glasses', document.getElementById("glasses").checked);
+                        formData.append('nose', document.getElementById("nose").checked);
+                        formData.append('mouth', document.getElementById("mouth").checked);
+                        formData.append('lip', document.getElementById("lip").checked);
+                        formData.append('enableBooster', 'none');
+                        formData.append('frontalRotation', document.getElementById("frontalRotation").checked);
+                        formData.append('rightRotation', document.getElementById("rightRotation").checked);
+                        formData.append('invertedRotation', document.getElementById("invertedRotation").checked);
+                        formData.append('leftRotation', document.getElementById("leftRotation").checked);
+                        formData.append('faceAnalyserAge', 'none');
+                        formData.append('faceAnalyserGender', 'none');
+                        formData.append('faceAnalyserOrder', 'none');
+                        formData.append('enableEnhancedLandmarks', document.getElementById("enableEnhancedLandmarks").checked);
+                        formData.append('enableEnhancedAnalyzer', document.getElementById("enableEnhancedAnalyzer").checked);
+                        formData.append('imageSize', 'none');
+                        formData.append('imageModel', 'none');
+
+                        setClientStatus('Starting...');
+                        fetch(`${serverAddress}/start-process`, {
+                            method: 'POST',
+                            body: formData,
+                        })
+                            .then(async response => {
+                                if (response.status === STATUS_OK) {
+                                    return response.json();
+                                } else if (response.status === STATUS_NOTFOUND) {
+                                    //cancelProcess(false);
+                                    setClientStatus('Offline');
+                                    startProcessBtn.disabled = false;
+                                } else {
+                                    return response.json().then(data => {
+                                        startProcessBtn.disabled = false;
+                                        //cancelProcess(false);
+                                        throw new Error(data.server);
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                startProcessBtn.disabled = false;
+                                setClientStatus(error.message);
+                                //cancelProcess(false);
+                            });
+                    } catch (error) {
+                        startProcessBtn.disabled = false;
+                        setClientStatus(error.message);
+                        //cancelProcess(false);
+                    }
+                }
+
+                startProcessBtn.addEventListener('click', async () => {
+                    await startProcess();
+                });
+
+                downloadButton.addEventListener('click', async () => {
+                    const activeVideoInput = document.querySelector(".outputs .data-container.active video");
+                    const activePhotoInput = document.querySelector(".outputs .data-container.active img");
+
+                    let blobUrl = '';
+                    let fileName = 'output_';
+
+                    const activeInput = activeVideoInput || activePhotoInput;
+
+                    if (activeInput) {
+                        blobUrl = activeInput.tagName === 'VIDEO'
+                            ? activeInput.querySelector('source').src
+                            : activeInput.src;
+
+                        const index = activeInput.getAttribute('index');
+                        fileName += `${index}.${activeInput.tagName === 'VIDEO' ? 'mp4' : 'png'}`; // Customize based on format
+                    }
+
+                    if (blobUrl) {
+                        if (window.showSaveFilePicker) {
+                            try {
+                                const fileHandle = await window.showSaveFilePicker({
+                                    suggestedName: fileName,
+                                    types: [{
+                                        description: 'Video Files',
+                                        accept: { 'video/mp4': ['.mp4'] }
+                                    }, {
+                                        description: 'Image Files',
+                                        accept: { 'image/png': ['.png'] }
+                                    }]
+                                });
+
+                                const writableStream = await fileHandle.createWritable();
+                                const response = await fetch(blobUrl);
+                                const blob = await response.blob();
+                                await writableStream.write(blob);
+                                await writableStream.close();
+                            } catch (error) {
+                                console.error('Error with file saving:', error);
+                            }
+                        } else if (navigator.share) {
+                            try {
+                                const response = await fetch(blobUrl);
+                                const blob = await response.blob();
+                                const fileToShare = new File([blob], fileName, { type: activeVideoInput ? 'video/mp4' : 'image/png' });
+
+                                await navigator.share({
+                                    title: fileName,
+                                    files: [fileToShare],
+                                });
+                            } catch (error) {
+                                console.error('Error sharing:', error);
+                            }
+                        } else {
+                            const a = document.createElement('a');
+                            a.href = blobUrl;
+                            a.download = fileName;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                        }
+                    }
+                });
+
+                viewOutputButton.addEventListener('click', async () => {
+                    const activeDataContainer = document.querySelector(".outputs .data-container.active");
+                    const activeInput = activeDataContainer.querySelector("video") || activeDataContainer.querySelector("img");
+
+                    if (activeInput) {
+                        window.open(activeInput.tagName === 'VIDEO'
+                            ? activeInput.querySelector('source').src
+                            : activeInput.src, '_blank');
+                    }
+                });
+
+                async function checkServerStatus() {
+                    if (!userData || !userData.uid)
+                        return;
+
+                    const offlineResponse = { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Unknown" }; // Server is offline
+                    const serverPromises = allServerAddress.map(async server => {
+                        try {
+                            const response = await fetch(`${server}/get-online`);
+                            if (response.status === STATUS_NOTFOUND || response.status !== STATUS_OK) {
+                                console.error(`Server ${server} is offline.`);
+                                return offlineResponse;
+                            }
+                            const data = await response.json();
+                            return {
+                                queueAmount: data.server,
+                                faceDetectionError: data.faceDetectionError,
+                                videoUnsupportedTooLongError: data.videoUnsupportedTooLongError,
+                                remainingTime: data.remainingTime,
+                                elapsedTime: data.elapsedTime,
+                                frameCount: data.frameCount,
+                                totalFrames: data.totalFrames,
+                                requestQueue: data.requestQueue,
+                                uniqueId: data.uniqueId,
+                                processingAmount: data.processingAmount,
+                                SERVER_1: data.SERVER_1
+                            };
+                        } catch (error) {
+                            return offlineResponse; // Server is offline
+                        }
+                    });
+
+                    const results = await Promise.all(serverPromises);
+                    const serverWithUserRequest = findServerWithUserRequest(results, userData.uid);
+
+                    if (serverWithUserRequest) {
+                        handleUserRequest(serverWithUserRequest, userData.uid);
+                    } else {
+                        startProcessBtn.disabled = false;
+                        await handleDownloadFileIfNeeded();
+                    }
+
+                    function findServerWithUserRequest(results, userId) {
+                        return results.find(serverData => serverData.requestQueue?.includes(userId));
+                    }
+
+                    function handleUserRequest(serverData, userId) {
+                        const { processingAmount, remainingTime, elapsedTime, requestQueue } = serverData;
+                        const userQueueIndex = requestQueue.indexOf(userId);
+
+                        if (userQueueIndex === 0) {
+                            updateClientStatus(processingAmount, remainingTime, elapsedTime);
+                        } else {
+                            setClientStatus(`Queue ${userQueueIndex}...`);
+                        }
+
+                        downloadFile = true;
+                    }
+
+                    function updateClientStatus(processingAmount, remainingTime, elapsedTime) {
+                        const statusMessage = processingAmount > 0
+                            ? `%${processingAmount} | Remaining/Elapsed: ${remainingTime}/${elapsedTime}`
+                            : 'Processing...';
+                        setClientStatus(statusMessage);
+                    }
+
+                    async function handleDownloadFileIfNeeded() {
+                        if (downloadFile) {
+                            downloadFile = false;
+
+                            const db = await openDB('outputDB-face-swap', 'outputs');
+                            const outputs = (await getFromDB(db)).reverse();
+                            const lastOutput = outputs[outputs.length - 1];
+
+                            const data = await fetchProcessState(lastOutput.url);
+                            if (data.status === 'completed') {
+                                setUserData();
+                                await tryHandleLastOutputDownload(lastOutput, 3);
+                            }
+                        }
+                    }
+
+                    async function fetchProcessState(url) {
+                        const response = await fetch(url.replace('download-video', 'get-process-state'));
+                        return await response.json();
+                    }
+
+                    async function handleLastOutputDownload(lastOutput) {
+                        const blobIsEmpty = !lastOutput.blob || Object.entries(lastOutput.blob).length === 0;
+
+                        if (blobIsEmpty) {
+                            const selectedOutputInfo = {
+                                db: await openDB('outputDB-face-swap', 'outputs'),
+                                url: lastOutput.url,
+                                element: document.querySelector('.outputs').firstChild,
+                                index: lastOutput.index
+                            };
+
+                            handleDownload(selectedOutputInfo);
+                        }
+                    }
+
+                    // New function to handle retries
+                    async function tryHandleLastOutputDownload(lastOutput, retries) {
+                        for (let attempt = 1; attempt <= retries; attempt++) {
+                            try {
+                                await handleLastOutputDownload(lastOutput);
+                                break; // Exit loop if successful
+                            } catch (error) {
+                                console.error(`Attempt ${attempt} failed:`, error);
+                                if (attempt === retries) {
+                                    console.error('All attempts failed.'); // Log if all retries fail
+                                }
+                            }
+                        }
+                    }
+
+                    setTimeout(checkServerStatus, 1000);
+                }
+
+                checkServerStatus();
+            }
+
+            let previousScreenMode = null;
+
+            async function sizeBasedElements() {
+                setMaxWidth();
+                let screenMode = getScreenMode();
+                const shouldUpdate = previousScreenMode !== screenMode;
+                previousScreenMode = screenMode;
+                if (!shouldUpdate)
+                    return;
+
+                loadPageState();
+                loadPage();
+            }
+
+            sizeBasedElements();
+
+            window.addEventListener('resize', sizeBasedElements);
+        });
+    </script>
+</body>
+</html>

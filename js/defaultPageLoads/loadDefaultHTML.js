@@ -12,6 +12,7 @@
 	setupMainSize,
 	loadScrollingAndMain,
 	showZoomIndicator,
+	setScaleFactors,
 	clamp,
 } from './accessVariables.js';
 
@@ -19,7 +20,7 @@ import {
 	setAuthentication
 } from '../firebase/authentication.js';
 
-export function loadPageContent(updateMainContent) {
+export function loadPageContent(updateMainContent, savePageState = null) {
 	let previousScreenMode = null, cleanupEvents = null, cleanPages = null, reconstructMainStyles = null;
 	let screenMode = getScreenMode();
 
@@ -38,15 +39,15 @@ export function loadPageContent(updateMainContent) {
 				<nav class="navbar">
 					<div class="container">
 						<div class="logo">
-							<img onclick="location.href='/'" style="cursor: pointer;" alt="DeepAny.AI Logo" width="clamp(0px, calc(6vh * var(--scale-factor)), calc(12vw * var(--scale-factor)))" height="auto" loading="eager">
-							<h2 onclick="location.href='/'" style="cursor: pointer;" translate="no">${document.title.split('.')[0]}.<span class="text-gradient" translate="no">${document.title.split('.')[1]}</span></h2>
+							<img onclick="location.href='/'" style="cursor: pointer;" alt="DeepAny.AI Logo" width="calc((6vh * var(--scale-factor-h) + 12vw / 2 * var(--scale-factor-w)))" height="auto" loading="eager">
+							<h2 onclick="location.href='/'" style="cursor: pointer;" translate="no">DeepAny.<span class="text-gradient" translate="no">AI</span></h2>
 						</div>
 					</div>
 				</nav>
 				<nav class="sidebar"></nav>
 			`);
 
-	function updateAspectRatio(screenMode) { document.documentElement.classList.toggle('aspect-4-3', screenMode !== 1); }
+	function updateAspectRatio(screenMode) { document.documentElement.classList.toggle('ar-4-3', screenMode !== 1); }
 	updateAspectRatio(screenMode);
 
 	let hamburgerMenu = document.querySelector('.hamburger-menu');
@@ -56,54 +57,74 @@ export function loadPageContent(updateMainContent) {
 	let navbar = document.querySelector('.navbar');
 	let sidebar = document.querySelector('.sidebar');
 
-	let scaleFactor = parseFloat(localStorage.getItem('scaleFactor')) || 0.75;
-	document.documentElement.style.setProperty('--scale-factor', scaleFactor);
+	let scaleFactorHeight = parseFloat(localStorage.getItem('scaleFactorHeight')) || 0.5;
+	let scaleFactorWidth = parseFloat(localStorage.getItem('scaleFactorWidth')) || 0.5;
+	setScaleFactors(scaleFactorHeight, scaleFactorWidth);
 
 	window.addEventListener('wheel', function (event) {
 		if (event.ctrlKey) {
 			event.preventDefault();
 
-			scaleFactor = clamp(scaleFactor + (event.deltaY < 0 ? 0.05 : -0.05), 0.1, 1);
-			document.documentElement.style.setProperty('--scale-factor', scaleFactor);
-			localStorage.setItem('scaleFactor', scaleFactor);
+			scaleFactorHeight = clamp(scaleFactorHeight + (event.deltaY < 0 ? 0.05 : -0.05), 0.1, 1);
+			scaleFactorWidth = clamp(scaleFactorWidth + (event.deltaY < 0 ? 0.05 : -0.05), 0.1, 1);
+			setScaleFactors(scaleFactorHeight, scaleFactorWidth);
+			localStorage.setItem('scaleFactorHeight', scaleFactorHeight);
+			localStorage.setItem('scaleFactorWidth', scaleFactorWidth);
 
-			showZoomIndicator(event, scaleFactor);
-			setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 500);
+			showZoomIndicator(event, scaleFactorHeight, scaleFactorWidth);
+			setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 100);
 		}
 	}, { passive: false });
 
+	let pageUpdated = false;
 	let pageContent = [];
 	let mainQuery = document.querySelectorAll('main');
 
 	async function sizeBasedElements() {
+		setScaleFactors(scaleFactorHeight, scaleFactorWidth);
+		mainQuery = document.querySelectorAll('main');
+		sidebar = document.querySelector('.sidebar');
+		navbar = document.querySelector('.navbar');
+		hamburgerMenu = document.querySelector('.hamburger-menu');
+
+		setTimeout(() => {
+			setNavbar(navbar, mainQuery, sidebar);
+			setSidebar(sidebar);
+			setupMainSize(mainQuery);
+			moveMains(mainQuery, getCurrentMain());
+		}, 1);
+
 		screenMode = getScreenMode();
 		const shouldUpdate = previousScreenMode !== screenMode;
 		previousScreenMode = screenMode;
 		if (!shouldUpdate)
 			return;
 
+		if (pageUpdated) {
+			const elements = document.querySelectorAll('*');
+			elements.forEach(element => {
+				const oldTransition = element.style.transition;
+				element.style.transition = 'unset';
+
+				setTimeout(() => {
+					element.style.transition = oldTransition;
+				}, 1);
+			});
+		}
+
 		updateAspectRatio(screenMode);
 
-		function resetNavbar() {
-			const menuContainer = document.getElementById('menu-container');
-			if (menuContainer) {
-				menuContainer.remove();
-			}
-
+		if (screenMode !== 1) {
 			if (navLinks && navLinks.length > 0) {
 				navLinks.forEach(navLink => navLink.remove());
 				navLinks = null;
 			}
-		}
-
-		if (screenMode !== 1) {
-			resetNavbar();
 			if (!hamburgerMenu) {
 				navContainer.insertAdjacentHTML('beforeend', `
 			<div id="menu-container" style="display: flex;gap: 2vw;">
 				<div class="indicator">
-					<button class="zoom-minus">-</button>
-					<button class="zoom-plus">+</button>
+					<button class="zoom-minus" translate="no">-</button>
+					<button class="zoom-plus" translate="no">+</button>
 				</div>
 				<div class="hamburger-menu">
 					<div class="line"></div>
@@ -115,29 +136,35 @@ export function loadPageContent(updateMainContent) {
 
 				const menuContainer = document.getElementById('menu-container');
 				hamburgerMenu = menuContainer.querySelector('.hamburger-menu');
-
 				hamburgerMenu.addEventListener('click', function () {
 					getSidebarActive() ? removeSidebar(sidebar, hamburgerMenu) : showSidebar(sidebar, hamburgerMenu);
 				});
 
-				let minusButton = menuContainer.querySelector('.zoom-minus');
-				minusButton.onclick = () => {
-					scaleFactor = clamp((scaleFactor || 1) - 0.05, 0.1, 1);
-					document.documentElement.style.setProperty('--scale-factor', scaleFactor);
-					localStorage.setItem('scaleFactor', scaleFactor);
+				menuContainer.querySelector('.zoom-minus').onclick = () => {
+					scaleFactorHeight = clamp((scaleFactorHeight || 1) - 0.05, 0.1, 1);
+					scaleFactorWidth = clamp((scaleFactorWidth || 1) - 0.05, 0.1, 1);
+					setScaleFactors(scaleFactorHeight, scaleFactorWidth);
+					localStorage.setItem('scaleFactorHeight', scaleFactorHeight);
+					localStorage.setItem('scaleFactorWidth', scaleFactorWidth);
+					showZoomIndicator(`${Math.round(scaleFactorHeight * 100)}%`, scaleFactorHeight, scaleFactorWidth);
 					setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 100);
 				};
 
-				let plusButton = menuContainer.querySelector('.zoom-plus');
-				plusButton.onclick = () => {
-					scaleFactor = clamp((scaleFactor || 1) + 0.05, 0.1, 1);
-					document.documentElement.style.setProperty('--scale-factor', scaleFactor);
-					localStorage.setItem('scaleFactor', scaleFactor);
+				menuContainer.querySelector('.zoom-plus').onclick = () => {
+					scaleFactorHeight = clamp((scaleFactorHeight || 1) + 0.05, 0.1, 1);
+					scaleFactorWidth = clamp((scaleFactorWidth || 1) + 0.05, 0.1, 1);
+					setScaleFactors(scaleFactorHeight, scaleFactorWidth);
+					localStorage.setItem('scaleFactorHeight', scaleFactorHeight);
+					localStorage.setItem('scaleFactorWidth', scaleFactorWidth);
+					showZoomIndicator(`${Math.round(scaleFactorHeight * 100)}%`, scaleFactorHeight, scaleFactorWidth);
 					setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 100);
 				};
 			}
 		} else {
-			resetNavbar();
+			const menuContainer = document.getElementById('menu-container');
+			if (menuContainer) {
+				menuContainer.remove();
+			}
 			if (!navLinks || navLinks.length === 0) {
 				navContainer.insertAdjacentHTML('beforeend', `
 			<ul class="nav-links" style="display: grid;grid-template-columns: 2fr 1fr 2fr;justify-items: center;">
@@ -145,7 +172,7 @@ export function loadPageContent(updateMainContent) {
 					<a class="text" href="#">Services</a>
 					<ul class="dropdown-menu">
 						<li><a class="text" href="face-swap.html">Face Swap</a></li>
-						<li><a class="text" href="inpainter.html">Inpainter</a></li>
+						<li><a class="text" href="inpaint.html">Inpaint</a></li>
 						<li><a class="text" href="art-generator.html">Art Generator</a></li>
 					</ul>
 				</li>
@@ -159,15 +186,15 @@ export function loadPageContent(updateMainContent) {
 				</li>
 				<li><a class="text" href="pricing.html">Pricing</a></li>
 			</ul>
-			<div class="nav-links" style="display: flex;justify-content: center;gap: clamp(0px, calc(1vh * var(--scale-factor)), calc(2vw * var(--scale-factor)));">
+			<div class="nav-links" style="display: flex;justify-content: center;gap: calc(1vh * var(--scale-factor-h));">
 				<button id="registerButton">Register</button>
 				<button class="important" id="loginButton">Login</button>
-				<a href="/profile" id="userLayout" style="display: flex;gap: clamp(0px, calc(1vh * var(--scale-factor)), calc(2vw * var(--scale-factor)));align-items: center;">
-                    <img alt="Profile Image" class="profile-image" style="width: clamp(0px, calc(6vh* var(--scale-factor)), calc(14vw* var(--scale-factor)));height: clamp(0px, calc(6vh* var(--scale-factor)), calc(14vw* var(--scale-factor)));">
-					<div style="display: flex;flex-direction: column;">
-						<p class="username">Duri Eun</p>
+				<a href="/profile" id="userLayout" style="display: flex;gap: calc(1vh * var(--scale-factor-h));align-items: center;">
+                    <img alt="Profile Image" class="profile-image" style="width: calc((6vh* var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w)));height: calc((6vh* var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w)));">
+					<div>
+						<p>Hello, <span class="username">Username</span></p>
                         <div class="line" style="margin: unset;"></div>
-						<p id="creditsAmount">100 Credits</p>
+						<p id="creditsAmount">0 Credits</p>
 					</div>
 				</a>
 			</div>
@@ -175,6 +202,9 @@ export function loadPageContent(updateMainContent) {
 				navLinks = document.querySelectorAll('.navbar .nav-links');
 			}
 		}
+
+		if (savePageState)
+			savePageState();
 
 		const oldContentLength = pageContent.length;
 		updateMainContent(screenMode, pageContent);
@@ -231,6 +261,10 @@ export function loadPageContent(updateMainContent) {
 
 	window.addEventListener('resize', sizeBasedElements);
 
+	const tooltipElements = document.querySelectorAll('.tooltip');
+
+
+
 	if (sidebarState === 'removeSidebar') {
 		removeSidebar(sidebar, hamburgerMenu);
 		localStorage.setItem('sidebarState', 'keepSideBar');
@@ -253,9 +287,16 @@ export function loadPageContent(updateMainContent) {
 	const buttons = document.querySelectorAll('button, a.button');
 	buttons.forEach(button => { button.addEventListener('click', handleButtonClick); });
 
+	document.body.classList.add('no-animation');
+
+	setTimeout(() => {
+		document.body.classList.remove('no-animation');
+	}, 0);
+
 	const link = document.getElementById('loading-stylesheet');
 	if (link)
 		link.parentNode.removeChild(link);
 
 	document.documentElement.classList.remove('loading-screen');
+	pageUpdated = true;
 }
