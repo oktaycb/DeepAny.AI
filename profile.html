@@ -2,21 +2,59 @@
 <html lang="en" style="background: rgba(24, 24, 24, 1);" class="loading-screen">
 <head>
     <title>DeepAny.AI: Profile</title>
-
-    <link rel="icon" href="assets/icon.ico" type="image/x-icon" title="DeepAny.AI Favicon">
-    <link rel="canonical" href="https://www.deepany.ai/profile">
+    <link rel="canonical" href="https://deepany.ai/profile">
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Manage your DeepAny.AI profile. Update your account details, review your activity, and customize your AI experience to suit your needs.">
     <meta name="keywords" content="AI, DeepAny, bodyswap, technology, services, solutions">
 
-    <link id="loading-stylesheet" rel="stylesheet" href="css/loading.css">
-    <link rel="preload" href="assets/logo.webp" as="image">
-    <link rel="preload" href="css/pxiEyp8kv8JHgFVrJJfecg.woff2" as="font" type="font/woff2" crossorigin="anonymous">
-    <link rel="preload" href="css/pxiByp8kv8JHgFVrLCz7Z1xlFQ.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+    <style id="loading-stylesheet">
+        .loading-screen {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #ff7300;
+            border-radius: 50%;
+            width: 50px !important;
+            height: 50px !important;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+    </style>
 
     <link rel="stylesheet" href="css/styles.css">
+    <script>
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'css/styles.css';
+        link.onload = function () {
+            const cssRules = Array.from(document.styleSheets).flatMap(sheet => { return Array.from(sheet.cssRules); });
+            const logoImgRule = cssRules.find(rule => rule.selectorText === '.logo img');
+            const content = logoImgRule.style.content;
+            const base64Match = content.match(/url\("?([^"]+)"?\)/);
+            link.href = base64Match[1];
+            const icon = document.createElement('link');
+            icon.rel = 'icon';
+            icon.href = base64Match[1];
+            icon.type = 'image/x-icon';
+            icon.title = 'DeepAny.AI Favicon';
+            document.head.appendChild(icon);
+            document.currentScript.remove();
+        };
+
+        document.head.appendChild(link);
+    </script>
     <style>
         .background-container {
             margin: unset;
@@ -27,12 +65,18 @@
 </head>
 <body lang="en">
     <script type="module" defer>
-        import { loadPageContent } from './js/defaultPageLoads/loadDefaultHTML.js';
-        import { handleImageUpload } from './js/functions.js';
+        const version = '1.1.2';
+
+        async function loadModule(url) {
+            return import(`${url}?v=${version}`);
+        }
 
         const cachedUserData = JSON.parse(localStorage.getItem('cachedUserData'));
 
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', async function () {
+            const functions = await loadModule('./scripts/functions.js');
+            const { setUser, setAuthentication, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, handleImageUpload, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserIpAddress } = functions;
+
             function updateMainContent(screenMode, pageContent) {
                 pageContent.length = 0;
 
@@ -43,7 +87,7 @@
                                     <h2>Account does not exist.</h2>
                                 </div>
                                 <div style="display: flex;justify-content: center;gap: calc((1vh * var(--scale-factor-h) + 12vw / 2 * var(--scale-factor-w)));">
-                                    <button id="registerButton">Register</button>
+                                    <button id="registerButton" class="disabled">Register</button>
                                     <button class="important" id="loginButton">Login</button>
                                 </div>
                             `);
@@ -51,7 +95,7 @@
                     else {
                         pageContent.push(`
                                 <div style="display: flex;flex-direction: column;justify-content: center;gap: 1vh;align-items: center;text-align: center;">
-                                    <h1>Account does not exist.</h1>
+                                    <h1>Please login or register to see your account.</h1>
                                 </div>
                             `);
                     }
@@ -320,8 +364,8 @@
                                                                     <div style="margin-left: calc((2vh* var(--scale-factor-h) + 4vw / 2 * var(--scale-factor-w)));;margin-top: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));;">
                                                                         <h4 style="font-weight: 300;">About Me</h4>
                                                                     </div>
-                                                                    <div style="font-size: 0px;margin-left: calc((2vh* var(--scale-factor-h) + 4vw / 2 * var(--scale-factor-w)));;margin-right: calc((2vh* var(--scale-factor-h) + 4vw / 2 * var(--scale-factor-w)));margin-bottom: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));width: 100%;height: 100%;">
-                                                                        <textarea placeholder="Tell us about yourself..." maxlength="2000" style="width: 100%;/*height: 100%;*/"></textarea>
+                                                                    <div style="font-size: 0px;margin-left: calc((2vh* var(--scale-factor-h) + 4vw / 2 * var(--scale-factor-w)));;margin-right: calc((2vh* var(--scale-factor-h) + 4vw / 2 * var(--scale-factor-w)));margin-bottom: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
+                                                                        <textarea placeholder="Tell us about yourself..." maxlength="2000" style="width: 100%;height: 100%;"></textarea>
                                                                     </div>
                                                                 </div>
                                                             </a>
@@ -379,7 +423,7 @@
                 }
             }
 
-            loadPageContent(updateMainContent);
+            loadPageContent(setUser, retrieveImageFromURL, getUserIpAddress, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, setAuthentication, updateMainContent);
 
             if (!cachedUserData) {
                 return;
@@ -405,6 +449,6 @@
             document.getElementById("email").value = cachedUserData.email;
         });
     </script>
-    <script src="js/defaultPageLoads/autoTranslate.js" defer></script>
+    
 </body>
 </html>

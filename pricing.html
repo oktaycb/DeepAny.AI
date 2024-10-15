@@ -2,45 +2,86 @@
 <html lang="en" style="background: rgba(24, 24, 24, 1);" class="loading-screen">
 <head>
     <title>DeepAny.AI: Pricing</title>
-
-    <link rel="icon" href="assets/icon.ico" type="image/x-icon" title="DeepAny.AI Favicon">
-    <link rel="canonical" href="https://www.deepany.ai/pricing">
+    <link rel="canonical" href="https://deepany.ai/pricing">
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Discover the best pricing plans for DeepAny.AI. Choose from a variety of options tailored to your needs, and get access to advanced AI tools and services at competitive rates.">
     <meta name="keywords" content="AI, DeepAny, bodyswap, technology, services, solutions">
 
-    <link id="loading-stylesheet" rel="stylesheet" href="css/loading.css">
+    <style id="loading-stylesheet">
+        .loading-screen {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #ff7300;
+            border-radius: 50%;
+            width: 50px !important;
+            height: 50px !important;
+            animation: spin 2s linear infinite;
+        }
 
-    <link rel="preload" href="assets/logo.webp" as="image">
-    <link rel="preload" href="css/pxiEyp8kv8JHgFVrJJfecg.woff2" as="font" type="font/woff2" crossorigin="anonymous">
-    <link rel="preload" href="css/pxiByp8kv8JHgFVrLCz7Z1xlFQ.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+        @keyframes spin {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+    </style>
 
     <link rel="stylesheet" href="css/styles.css">
+    <script>
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'css/styles.css';
+        link.onload = function () {
+            const cssRules = Array.from(document.styleSheets).flatMap(sheet => { return Array.from(sheet.cssRules); });
+            const logoImgRule = cssRules.find(rule => rule.selectorText === '.logo img');
+            const content = logoImgRule.style.content;
+            const base64Match = content.match(/url\("?([^"]+)"?\)/);
+            link.href = base64Match[1];
+            const icon = document.createElement('link');
+            icon.rel = 'icon';
+            icon.href = base64Match[1];
+            icon.type = 'image/x-icon';
+            icon.title = 'DeepAny.AI Favicon';
+            document.head.appendChild(icon);
+            document.currentScript.remove();
+        };
+
+        document.head.appendChild(link);
+    </script>
 </head>
 <body lang="en">
     <div id="paymentContainer" style="margin: 0; padding: 0; overflow: hidden; display: none; width: 100%; height: 100vh; position: absolute; z-index: 99999;"></div>
     <script type="module" defer>
-        import { getScreenMode, ScreenMode } from './js/defaultPageLoads/accessVariables.js';
-        import { loadPageContent } from './js/defaultPageLoads/loadDefaultHTML.js';
-        import { getFirebaseModules, getDocSnapshot } from './js/firebase/initialiseFirebase.js';
-        import { fetchConversionRates, fetchServerAddress } from './js/functions.js';
+        const version = '1.1.1';
+
+        async function loadModule(url) {
+            return import(`${url}?v=${version}`);
+        }
 
         document.addEventListener('DOMContentLoaded', async function () {
+            const functions = await loadModule('./scripts/functions.js');
+            const { setUser, setAuthentication, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserIpAddress } = functions;
+
             function updateMainContent(screenMode, pageContent) {
                 pageContent.length = 0;
                 pageContent.push(`<div id="baseContainer" class="centered-container long">
                                                                         <div style="display: flex;flex-direction: column; gap: calc((2vh* var(--scale-factor-h) + 4vw / 2 * var(--scale-factor-w)));">
                                                                                         <div class="background-container">
-                                                                                            <p class="background-dot-container-option" id="credits-mode">Credits</p>
+                                                                                            <p class="background-dot-container-option selected" id="credits-mode">Credits</p>
                                                                                             <p class="background-dot-container-option" id="subscription-mode">Subscription</p>
                                                                                             <p class="background-dot-container-option not-available" id="renewal-mode">Renewal</p>
                                                                                         </div>
 
 
                                                                                         <div class="background-container">
-                                                                                            <p class="background-dot-container-option" data-currency="USD" translate="no">$USD</p>
+                                                                                            <p class="background-dot-container-option selected" data-currency="USD" translate="no">$USD</p>
                                                                                             <p class="background-dot-container-option" data-currency="EUR" translate="no">€EUR</p>
                                                                                             <p class="background-dot-container-option" data-currency="GBP" translate="no">£GBP</p>
                                                                                             <p class="background-dot-container-option" data-currency="TRY" translate="no">₺TRY</p>
@@ -97,7 +138,8 @@
                                                                 `);
             }
 
-            loadPageContent(updateMainContent);
+            loadPageContent(setUser, retrieveImageFromURL, getUserIpAddress, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, setAuthentication, updateMainContent);
+            return;
 
             const credits = [100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000];
             const prices = [9.99, 19.99, 24.99, 44.99, 99.99, 174.99, 299.99, 624.99, 999.99];
@@ -161,7 +203,7 @@
 
             const checkmarkIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>`;
             const xIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x plans_x__KKb0t"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>`;
-            let SingleCreditForTotalFrameAmount = 120, creditPerTotalFrames = 120, FPS = 30, seconds = 60;
+            let SingleCreditForTotalFrameAmount = 150, creditPerTotalFrames = 120, FPS = 30, seconds = 60;
             const creditVideo = creditPerTotalFrames / SingleCreditForTotalFrameAmount;
             const creditPerInpaint = 2, creditPerArtGeneration = 1;
 
@@ -180,7 +222,7 @@
                             .replace(/[^\d.]/g, '');
 
                         const numericalPart = parseFloat(cleanedPrice);
-                        let formattedPrice = `${(numericalPart * multiplier)}`;
+                        let formattedPrice = `${(numericalPart * multiplier).toFixed(2)}`; // Ensures two decimal places
                         if (hasTilde)
                             formattedPrice += `~`;
                         return `${currencySymbol}${formattedPrice}`;
@@ -238,20 +280,14 @@
             const features = {
                 subscription: [
                     { text: "Verified account", icon: checkmarkIcon },
-                    { text: "Deadline", icon: checkmarkIcon },
-                    { text: "HD resolution", icon: checkmarkIcon },
                     { text: "Upload limit to 1 GB", icon: checkmarkIcon },
-                    { text: "API access", icon: xIcon },
-                    { text: "Pixel boost feature", icon: checkmarkIcon },
+                    { text: "API access (SOON)", icon: xIcon },
                     { text: "Priority queue", icon: checkmarkIcon },
                 ],
                 credits: [
                     { text: "Verified account", icon: checkmarkIcon },
-                    { text: "Deadline", icon: xIcon },
-                    { text: "HD resolution", icon: checkmarkIcon },
                     { text: "Upload limit to 500MB", icon: checkmarkIcon },
-                    { text: "API access", icon: checkmarkIcon },
-                    { text: "Pixel boost feature", icon: xIcon },
+                    { text: "API access (SOON)", icon: checkmarkIcon },
                     { text: "Priority queue", icon: xIcon },
                 ]
             };
@@ -577,6 +613,6 @@
             window.addEventListener('resize', createPayment);
         });
     </script>
-    <script src="js/defaultPageLoads/autoTranslate.js" defer></script>
+    
 </body>
 </html>

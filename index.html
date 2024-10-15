@@ -2,18 +2,38 @@
 <html lang="en" style="background: rgba(24, 24, 24, 1);" class="loading-screen">
 <head>
     <title>DeepAny.AI: Introducing The Best Free Online AI Tools Website</title>
-
-    <link rel="icon" href="assets/icon.ico" type="image/x-icon" title="DeepAny.AI Favicon">
-    <link rel="canonical" href="https://www.deepany.ai">
+    <link rel="canonical" href="https://deepany.ai">
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="DeepAny.AI: Your go-to platform for advanced AI solutions and services. Explore our innovative technology and cutting-edge tools.">
     <meta name="keywords" content="ai, deepany, bodyswap, art generator, face swap, inpaint, bodyswap, deepfake, art generator">
-    
-    <link id="loading-stylesheet" rel="stylesheet" href="css/loading.css">
 
-    <script>
+    <style id="loading-stylesheet">
+        .loading-screen {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #ff7300;
+            border-radius: 50%;
+            width: 50px !important;
+            height: 50px !important;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+    </style>
+
+    <script async>
         (function () {
             if (localStorage.getItem('preloadDone') || window.innerWidth / window.innerHeight <= 4 / 3) {
                 document.currentScript.remove();
@@ -38,11 +58,28 @@
         })();
     </script>
 
-    <link rel="preload" href="assets/logo.webp" as="image">
-    <link rel="preload" href="css/pxiEyp8kv8JHgFVrJJfecg.woff2" as="font" type="font/woff2" crossorigin="anonymous">
-    <link rel="preload" href="css/pxiByp8kv8JHgFVrLCz7Z1xlFQ.woff2" as="font" type="font/woff2" crossorigin="anonymous">
-
     <link rel="stylesheet" href="css/styles.css">
+    <script>
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'css/styles.css';
+        link.onload = function () {
+            const cssRules = Array.from(document.styleSheets).flatMap(sheet => { return Array.from(sheet.cssRules); });
+            const logoImgRule = cssRules.find(rule => rule.selectorText === '.logo img');
+            const content = logoImgRule.style.content;
+            const base64Match = content.match(/url\("?([^"]+)"?\)/);
+            link.href = base64Match[1];
+            const icon = document.createElement('link');
+            icon.rel = 'icon';
+            icon.href = base64Match[1];
+            icon.type = 'image/x-icon';
+            icon.title = 'DeepAny.AI Favicon';
+            document.head.appendChild(icon);
+            document.currentScript.remove();
+        };
+
+        document.head.appendChild(link);
+    </script>
     <style>
         .main-container {
             display: grid;
@@ -52,10 +89,16 @@
 </head>
 <body lang="en">
     <script type="module" defer>
-        import { getScreenMode, getSizeCache } from './js/defaultPageLoads/accessVariables.js';
-        import { loadPageContent } from './js/defaultPageLoads/loadDefaultHTML.js';
+        const version = '1.1.1';
 
-        document.addEventListener('DOMContentLoaded', function () {
+        async function loadModule(url) {
+            return import(`${url}?v=${version}`);
+        }
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            const functions = await loadModule('./scripts/functions.js');
+            const { setUser, setAuthentication, getFirebaseModules, getDocSnapshot, loadPageContent, retrieveImages, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, getSizeCache, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserIpAddress } = functions;
+
             let sizeCache = [];
 
             if (!Object.keys(sizeCache).length)
@@ -73,106 +116,106 @@
                 if (screenMode !== 1) {
                     pageContent.push(
                         `
-                        <div class="start-content" id="hover-div">
-                            <p class="subtext">Discover the leading AI platform since 2023, renowned for its ease and excellence.</p>
-                            <h1 class="text-gradient" id="dynamic-text">AI-Powered Services</h1>
-                            <ul class="styled-list">
-                                <li><strong>Daily Free Trial:</strong> <span>Experience our full-featured services without cost.</span></li>
-                                <li><strong>Security & Support:</strong> <span>Your data is protected, with 24/7 support available.</span></li>
-                                <li><strong>High Ratings:</strong> <span>Trusted by users with a 4.9 rating on<span>&nbsp;</span><a class="trusted-link" href="https://www.trustpilot.com/review/bodyswap.me" target="_blank" rel="noopener noreferrer">Trustpilot</a>.</li>
-                                <li><strong>Cost-Effective:</strong> <span>Only 1 credit per image & frame processed.</span></li>
-                                <li><strong>Fast Processing:</strong> <span>RTX 4090 GPUs in our servers for optimal performance.</span></li>
-                                <li><strong>Pricing:</strong> <span>Dynamic plans tailored to every budget.</span></li>
-                            </ul>
-                            <p class="subtext" style="padding-bottom: 0.5vh;">Unlock the potential of AI for your projects with our reliable and affordable services.</p>
-                            <div class="button-container">
-                                <button id="extend-services">Try Now</button>
-                                <a class="button important" href="/pricing">Purchase</a>
-                           </div>
-                    </div>
-                    <div class="card-container">
-                        <div class="background"></div>
-                        <a href="face-swap" class="card">
-                            <div class="card-content">
-                                <div class="card-title">Face Swap</div>
-                                <div class="card-link">Try Face Swap</div>
-                            </div>
-                        </a>
-                        <a href="inpaint" class="card">
-                            <div class="card-content">
-                                <div class="card-title">Inpaint</div>
-                                <div class="card-link">Try Inpaint</div>
-                            </div>
-                        </a>
-                        <a href="art-generator" class="card">
-                            <div class="card-content">
-                                <div  class="card-title">Art Generator</div>
-                                <div class="card-link">Create Art</div>
-                            </div>
-                        </a>
-                    </div>
-                `);
+                            <div class="start-content" id="hover-div">
+                                <p class="subtext">Discover the leading AI platform since 2023, renowned for its ease and excellence.</p>
+                                <h1 class="text-gradient" id="dynamic-text">AI-Powered Services</h1>
+                                <ul class="styled-list">
+                                    <li><strong>Daily Free Trial:</strong> <span>Experience our full-featured services without cost.</span></li>
+                                    <li><strong>Security & Support:</strong> <span>Your data is protected, with 24/7 support available.</span></li>
+                                    <li><strong>High Ratings:</strong> <span>Trusted by users with a 4.9 rating on<span>&nbsp;</span><a class="trusted-link" href="https://www.trustpilot.com/review/bodyswap.me" target="_blank" rel="noopener noreferrer">Trustpilot</a>.</li>
+                                    <li><strong>Cost-Effective:</strong> <span>Only 1 credit per image & frame processed.</span></li>
+                                    <li><strong>Fast Processing:</strong> <span>RTX 4090 GPUs in our servers for optimal performance.</span></li>
+                                    <li><strong>Pricing:</strong> <span>Dynamic plans tailored to every budget.</span></li>
+                                </ul>
+                                <p class="subtext" style="padding-bottom: 0.5vh;">Unlock the potential of AI for your projects with our reliable and affordable services.</p>
+                                <div class="button-container">
+                                    <button id="extend-services">Try Now</button>
+                                    <a class="button important disabled" href="pricing">Purchase</a>
+                               </div>
+                        </div>
+                        <div class="card-container">
+                            <div class="background"></div>
+                            <a href="face-swap" class="card">
+                                <div class="card-content">
+                                    <div class="card-title">Face Swap</div>
+                                    <div class="card-link">Try Face Swap</div>
+                                </div>
+                            </a>
+                            <a href="pricing" class="card disabled">
+                                <div class="card-content disabled">
+                                    <div class="card-title">Inpaint</div>
+                                    <div class="card-link">Try Inpaint</div>
+                                </div>
+                            </a>
+                            <a href="art-generator" class="card disabled">
+                                <div class="card-content disabled">
+                                    <div  class="card-title">Art Generator</div>
+                                    <div class="card-link">Create Art</div>
+                                </div>
+                            </a>
+                        </div>
+                    `);
                 } else {
                     pageContent.push(
                         `
-                    <div class="start-content-container">
-                        <div class="start-content" id="hover-div">
-                            <p class="subtext">Discover the leading AI platform since 2023, renowned for its ease and excellence.</p>
-                            <h1 class="text-gradient" id="dynamic-text">AI-Powered Services</h1>
-                            <ul class="styled-list">
-                                <li><strong>Daily Free Trial:</strong> <span>Experience our full-featured services without cost.</span></li>
-                                <li><strong>Security & Support:</strong> <span>Your data is protected, with 24/7 support available.</span></li>
-                                <li><strong>High Ratings:</strong> <span>Trusted by users with a 4.9 rating on</span><span>&nbsp;</span><a class="trusted-link" href="https://www.trustpilot.com/review/bodyswap.me" target="_blank" rel="noopener noreferrer">Trustpilot</a>.</li>
-                                <li><strong>Cost-Effective:</strong> <span>Only 1 credit per image & frame processed.</span></span></li>
-                                <li><strong>Fast Processing:</strong> <span>RTX 4090 GPUs in our servers for optimal performance.</span></li>
-                                <li><strong>Pricing:</strong> <span>Dynamic plans tailored to every budget.</span></li>
-                            </ul>
-                            <p class="subtext" style="padding-bottom: 0.5vh;">Unlock the potential of AI for your projects with our reliable and affordable services.</p>
-                            <div class="button-container">
-                                <button id="extend-services">Try Now</button>
-                                <a class="button important" href="/pricing">Purchase</a>
+                        <div class="start-content-container">
+                            <div class="start-content" id="hover-div">
+                                <p class="subtext">Discover the leading AI platform since 2023, renowned for its ease and excellence.</p>
+                                <h1 class="text-gradient" id="dynamic-text">AI-Powered Services</h1>
+                                <ul class="styled-list">
+                                    <li><strong>Daily Free Trial:</strong> <span>Experience our full-featured services without cost.</span></li>
+                                    <li><strong>Security & Support:</strong> <span>Your data is protected, with 24/7 support available.</span></li>
+                                    <li><strong>High Ratings:</strong> <span>Trusted by users with a 4.9 rating on</span><span>&nbsp;</span><a class="trusted-link" href="https://www.trustpilot.com/review/bodyswap.me" target="_blank" rel="noopener noreferrer">Trustpilot</a>.</li>
+                                    <li><strong>Cost-Effective:</strong> <span>Only 1 credit per image & frame processed.</span></span></li>
+                                    <li><strong>Fast Processing:</strong> <span>RTX 4090 GPUs in our servers for optimal performance.</span></li>
+                                    <li><strong>Pricing:</strong> <span>Dynamic plans tailored to every budget.</span></li>
+                                </ul>
+                                <p class="subtext" style="padding-bottom: 0.5vh;">Unlock the potential of AI for your projects with our reliable and affordable services.</p>
+                                <div class="button-container">
+                                    <button id="extend-services">Try Now</button>
+                                    <a class="button important disabled" href="pricing">Purchase</a>
+                                </div>
+                            </div>
+                            <div class="end-content">
+                                <img src="${getImageSrc('resize-large')}" id="resize-large" loading="eager" alt="Wide Image Example">
+                                <img src="${getImageSrc('resize-middle')}" id="resize-middle" loading="eager" alt="Medium Image Example">
+                                <img src="${getImageSrc('resize-long')}" id="resize-long" loading="eager" alt="Long Image Example">
                             </div>
                         </div>
-                        <div class="end-content">
-                            <img src="${getImageSrc('resize-large')}" id="resize-large" loading="eager" alt="Wide Image Example">
-                            <img src="${getImageSrc('resize-middle')}" id="resize-middle" loading="eager" alt="Medium Image Example">
-                            <img src="${getImageSrc('resize-long')}" id="resize-long" loading="eager" alt="Long Image Example">
-                        </div>
-                    </div>
-                    <div class="card-container">
-                        <div class="background"></div>
-                        <a href="face-swap" class="card">
-                            <div class="card-content">
-                                <div>
-                                    <div class="card-title">Face Swap</div>
-                                    <div class="card-description">Swap faces in your faces with ease.</div>
+                        <div class="card-container">
+                            <div class="background"></div>
+                            <a href="face-swap" class="card">
+                                <div class="card-content">
+                                    <div>
+                                        <div class="card-title">Face Swap</div>
+                                        <div class="card-description">Swap faces in your faces with ease.</div>
+                                    </div>
+                                    <div class="card-link">Try Face Swap</div>
                                 </div>
-                                <div class="card-link">Try Face Swap</div>
-                            </div>
-                        </a>
-                        <a href="/inpaint" class="card">
-                            <div class="card-content">
-                                <div>
-                                    <div class="card-title">Inpaint</div>
-                                    <div class="card-description">Remove or add elements in your images.</div>
+                            </a>
+                            <a href="pricing" class="card disabled">
+                                <div class="card-content disabled">
+                                    <div>
+                                        <div class="card-title">Inpaint</div>
+                                        <div class="card-description">Remove or add elements in your images.</div>
+                                    </div>
+                                    <div class="card-link">Try Inpaint</div>
                                 </div>
-                                <div class="card-link">Try Inpaint</div>
-                            </div>
-                        </a>
-                        <a href="/art-generator" class="card">
-                            <div class="card-content">
-                                <div>
-                                    <div class="card-title">Art Generator</div>
-                                    <div class="card-description">Create stunning digital artworks.</div>
+                            </a>
+                            <a href="art-generator" class="card disabled">
+                                <div class="card-content disabled">
+                                    <div>
+                                        <div class="card-title">Art Generator</div>
+                                        <div class="card-description">Create stunning digital artworks.</div>
+                                    </div>
+                                    <div class="card-link">Create Art</div>
                                 </div>
-                                <div class="card-link">Create Art</div>
-                            </div>
-                        </a>
-                    </div>`);
+                            </a>
+                        </div>`);
                 }
             }
 
-            loadPageContent(updateMainContent);
+            loadPageContent(setUser, retrieveImageFromURL, getUserIpAddress, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, setAuthentication, updateMainContent);
 
             let previousScreenMode = null;
 
@@ -181,7 +224,6 @@
                 const shouldUpdate = previousScreenMode !== screenMode;
                 previousScreenMode = screenMode;
                 if (shouldUpdate && screenMode === 1 && !Object.keys(sizeCache).length) {
-                    const { retrieveImages } = await import('./js/defaultPageLoads/accessVariables.js');
                     retrieveImages('resize-middle');
                     retrieveImages('resize-long');
                     retrieveImages('resize-large');
@@ -193,6 +235,5 @@
             sizeBasedElements();
         });
     </script>
-    <script src="js/defaultPageLoads/autoTranslate.js" defer></script>
 </body>
 </html>

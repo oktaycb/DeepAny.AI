@@ -1,33 +1,73 @@
 <!DOCTYPE html>
 <html lang="en" style="background: rgba(24, 24, 24, 1);" class="loading-screen">
 <head>
-    <title>AI Face Swap: The Best, For Photo & Video | Free & Online</title>
-
-    <link rel="icon" href="assets/icon.ico" type="image/x-icon" title="DeepAny.AI Favicon">
-    <link rel="canonical" href="https://www.deepany.ai/face-swap">
+    <title>AI Face Swap: The Best, Free & Online | For Photo & Video</title>
+    <link rel="canonical" href="https://deepany.ai/face-swap">
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="DeepAny.AI offers a free trial for creating realistic deepfake face swaps with cutting-edge AI technology. Easily swap faces in inputs and images with our user-friendly tools. No technical skills required�start your free trial today!">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="DeepAny.AI offers a free trial for creating realistic deepfake face swaps with cutting-edge AI technology. Easily swap faces in inputs and images with our user-friendly online ai tools. No technical skills required, start your free trial today!">
     <meta name="keywords" content="AI, DeepAny, bodyswap, technology, services, solutions">
 
-    <link id="loading-stylesheet" rel="stylesheet" href="css/loading.css">
-    <link rel="preload" href="assets/logo.webp" as="image">
-    <link rel="preload" href="css/pxiEyp8kv8JHgFVrJJfecg.woff2" as="font" type="font/woff2" crossorigin="anonymous">
-    <link rel="preload" href="css/pxiByp8kv8JHgFVrLCz7Z1xlFQ.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+    <style id="loading-stylesheet">
+        .loading-screen {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #ff7300;
+            border-radius: 50%;
+            width: 50px !important;
+            height: 50px !important;
+            animation: spin 2s linear infinite
+        }
+
+        @keyframes spin {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+    </style>
 
     <link rel="stylesheet" href="css/styles.css">
+    <script>
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'css/styles.css'; 
+        link.onload = function () {
+            const cssRules = Array.from(document.styleSheets).flatMap(sheet => { return Array.from(sheet.cssRules); });
+            const logoImgRule = cssRules.find(rule => rule.selectorText === '.logo img');
+            const content = logoImgRule.style.content;
+            const base64Match = content.match(/url\("?([^"]+)"?\)/);
+            link.href = base64Match[1];
+            const icon = document.createElement('link');
+            icon.rel = 'icon';
+            icon.href = base64Match[1];
+            icon.type = 'image/x-icon';
+            icon.title = 'DeepAny.AI Favicon';
+            document.head.appendChild(icon);
+            document.currentScript.remove();
+        };
+
+        document.head.appendChild(link);
+    </script>
 </head>
 <body lang="en">
     <script type="module" defer>
-        import { loadPageContent } from './js/defaultPageLoads/loadDefaultHTML.js';
-        import { getScreenMode } from './js/defaultPageLoads/accessVariables.js';
-        import { ensureUniqueId, getUserIpAddress, fetchServerAddresses, getPageName } from './js/functions.js';
-        import { getDocsSnapshot } from './js/firebase/initialiseFirebase.js';
-        import { setUserData, getCachedUserData, getCachedUserDoc, loginUser } from './js/firebase/authentication.js'
-        //import { openDB, addToDB, countInDB, getFromDB, initDB, updateInDB, deleteFromDB } from './js/database.js';
+        const version = '1.1.1';
 
-        document.addEventListener('DOMContentLoaded', function () {
+        async function loadModule(url) {
+            return import(`${url}?v=${version}`);
+        }
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            const functions = await loadModule('./scripts/functions.js');
+            const { openDB, addToDB, countInDB, getFromDB, initDB, updateInDB, deleteFromDB, setUser, setUserData, getCachedStaticUserData, getCachedDynamicUserDoc, loginUser, setAuthentication, getFirebaseModules, getDocSnapshot, getDocsSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserIpAddress, fetchServerAddresses, getPageName } = functions;
+
             if (!window.indexedDB) {
                 alert('Your browser does not support IndexedDB.');
             }
@@ -37,19 +77,11 @@
             function savePageState() {
                 const requiredIds = [
                     'enableOccluder',
-                    'smooth_face_enhancer',
-                    'natural_face_enhancer_512',
-                    'natural_face_enhancer_1024',
                     'enableEnhancedAnalyzer',
                     'enableEnhancedLandmarks',
-                    'skin',
-                    'eyebrow',
-                    'eye',
-                    'glasses',
-                    'nose',
-                    'mouth',
-                    'lip',
                     'removeBanner',
+                    'showServers',
+                    'skipSlowServers',
                     'keepFPS',
                     'fps-slider'
                 ];
@@ -62,34 +94,24 @@
                 const activeLink = document.querySelector('.nav-links .active');
                 const state = {
                     enableOccluder: getCheckboxState('enableOccluder'),
-                    smooth_face_enhancer: getCheckboxState('smooth_face_enhancer'),
-                    natural_face_enhancer_512: getCheckboxState('natural_face_enhancer_512'),
-                    natural_face_enhancer_1024: getCheckboxState('natural_face_enhancer_1024'),
                     enableEnhancedAnalyzer: getCheckboxState('enableEnhancedAnalyzer'),
                     enableEnhancedLandmarks: getCheckboxState('enableEnhancedLandmarks'),
-                    skin: getCheckboxState('skin'),
-                    eyebrow: getCheckboxState('eyebrow'),
-                    eye: getCheckboxState('eye'),
-                    glasses: getCheckboxState('glasses'),
-                    nose: getCheckboxState('nose'),
-                    mouth: getCheckboxState('mouth'),
-                    lip: getCheckboxState('lip'),
-                    frontalRotation: getCheckboxState('frontalRotation'),
-                    rightRotation: getCheckboxState('rightRotation'),
-                    invertedRotation: getCheckboxState('invertedRotation'),
-                    leftRotation: getCheckboxState('leftRotation'),
                     removeBanner: getCheckboxState('removeBanner'),
+                    showServers: getCheckboxState('showServers'),
+                    skipSlowServers: getCheckboxState('skipSlowServers'),
                     keepFPS: getCheckboxState('keepFPS'),
                     fpsValue: document.getElementById('fps-slider').value,
                     activeLink: activeLink?.getAttribute('for') || '',
                     multiboxes: Array.from(document.querySelectorAll('.multibox')).map(multibox => ({
                         text: multibox.querySelector('.multibox-text')?.innerText || '',
+                        open: multibox.classList.contains('open'),
                         items: Array.from(multibox.querySelectorAll('.item')).map(item => ({
                             checked: item.querySelector('input[type="checkbox"]')?.checked || false,
                         })),
                     })),
                     comboboxes: Array.from(document.querySelectorAll('.combobox')).map(combobox => ({
                         text: combobox.querySelector('.combobox-text')?.innerText || '',
+                        open: combobox.classList.contains('open'),
                         items: Array.from(combobox.querySelectorAll('.item')).map(item => ({
                             checked: item.querySelector('input[type="checkbox"]')?.checked || false,
                         })),
@@ -99,194 +121,231 @@
                 localStorage.setItem(pageName, JSON.stringify(state));
             }
 
+            let userData = getCachedStaticUserData();
+            let userDoc = getCachedDynamicUserDoc();
+
             function updateMainContent(screenMode, pageContent) {
                 pageContent.length = 0;
-                pageContent.push(`
-                                                        <div id="baseContainer" class="centered-container">
-                                                            <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
-                                                                <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
-                                                                    <div class="background-dot-container">
-                                                                        <div class="background-dot-container-content">
-                                                                            <div style="display: flex;justify-content: space-between;">
-                                                                                <div style="display: flex;flex-direction: column;align-items: center;">
-                                                                                    <div class="circular-button" id="circular-button-input-upload" title="Upload input" tooltip>
-                                                                                        <div class="tooltip">Add and choose the video or image where the face swap will occur.</div>
-                                                                                        <input type="file" accept="video/*,image/*" id="input-upload" style="display: none" multiple>
-                                                                                    </div>
-                                                                                    <div class="inputs"></div>
-                                                                                </div>
-                                                                                <div style="display: flex;flex-direction: column;align-items: center;">
-                                                                                    <div class="circular-button" id="circular-button-face-upload" title="Upload face" tooltip>
-                                                                                        <div class="tooltip">Add and choose the new face image to apply to the video or image input.</div>
-                                                                                        <input type="file" accept="image/*" id="face-upload" style="display: none" multiple>
-                                                                                    </div>
-                                                                                    <div class="faces"></div>
-                                                                                </div>
-                                                                            </div>
-                                                                                <div class="nav-links">
-                                                                                    <li><a class="text" for="Facial">Facial</a></li>
-                                                                                    <li><a class="text" for="Analyzer">Analyzer</a></li>
-                                                                                    <li><a class="text" for="Other">Other</a></li>
-                                                                                </div>
-                                                                                <div id="Facial" class="section" style="display: none;gap: calc(1vh* var(--scale-factor-h));">
-                                                                                    <div class="combobox" tooltip>
-                                                                                        <div class="tooltip">Choose a face enhancement model to improve the facial features. Each option applies a different method for enhancing or restoring the face's appearance.</div>
-                                                                                        <span class="combobox-text" title="Facial quality enhancement"></span>
-                                                                                        <span class="arrow-dwn"></span>
-                                                                                        <ul class="list-items">
-                                                                                            <li class="item">
-                                                                                                <label class="checkbox" tooltip>
-                                                                                                    <input type="checkbox" id="smooth_face_enhancer"><span>Smooth</span>
-                                                                                                    <div class="tooltip">Applies smoothing techniques for a refined and polished look.</div>
-                                                                                                </label>
-                                                                                            </li>
-                                                                                            <li class="item">
-                                                                                                <label class="checkbox" tooltip>
-                                                                                                    <input type="checkbox" id="natural_face_enhancer_512"><span>Natural</span>
-                                                                                                    <div class="tooltip">Preserves realistic details for a more natural appearance in 512x512 resolution.</div>
-                                                                                                </label>
-                                                                                            </li>
-                                                                                            <li class="item">
-                                                                                                <label class="checkbox" tooltip>
-                                                                                                    <input type="checkbox" id="natural_face_enhancer_1024"><span>Detailed</span>
-                                                                                                    <div class="tooltip">Preserves realistic details for a more natural appearance in 1024x1024 resolution.</div>
-                                                                                                </label>
-                                                                                            </li>
-                                                                                        </ul>
-                                                                                    </div>
-                                                                                    <label class="checkbox" tooltip>
-                                                                                        <input type="checkbox" id="enableOccluder"><span>Facial obstruction detection</span>
-                                                                                        <div class="tooltip">Detects obstructing objects in front of the face, but this can cause slight unsimilarity as it will retain the unswapped original person's facial outline.</div>
-                                                                                    </label>
-                                                                                    <label class="checkbox" tooltip>
-                                                                                        <input type="checkbox" id="enableEnhancedLandmarks"><span>68 Facial Landmarks</span>
-                                                                                        <div class="tooltip">By enabling this feature, the system can more accurately identify and analyze specific facial components such as the eyebrows, eyes, nose, mouth, and jawline.</div>
-                                                                                    </label>
-                                                                                </div>
-                                                                                <div id="Analyzer" class="section" style="display: none;position: relative;flex-direction: column;gap: calc(1vh* var(--scale-factor-h));">
-                                                                                    <div class="multibox" tooltip>
-                                                                                        <div class="tooltip">Select regions to customize in the new face. If an area is not enabled, it will remain unchanged from the original face.</div>
-                                                                                        <span class="multibox-text" title="Select Regions"></span>
-                                                                                        <span class="arrow-dwn"></span>
-                                                                                        <ul class="list-items">
-                                                                                            <li class="item">
-                                                                                                <label class="checkbox" tooltip>
-                                                                                                    <input type="checkbox" id="skin"><span>Change Skin</span>
-                                                                                                    <div class="tooltip">Swap the skin area with the new face.</div>
-                                                                                                </label>
-                                                                                            </li>
-                                                                                            <li class="item">
-                                                                                                <label class="checkbox" tooltip>
-                                                                                                    <input type="checkbox" id="eyebrow"><span>Change Eyebrow</span>
-                                                                                                    <div class="tooltip">Replace the eyebrow shape or color.</div>
-                                                                                                </label>
-                                                                                            </li>
-                                                                                            <li class="item">
-                                                                                                <label class="checkbox" tooltip>
-                                                                                                    <input type="checkbox" id="eye"><span>Change Eye</span>
-                                                                                                    <div class="tooltip">Change the eye appearance.</div>
-                                                                                                </label>
-                                                                                            </li>
-                                                                                            <li class="item">
-                                                                                                <label class="checkbox" tooltip>
-                                                                                                    <input type="checkbox" id="glasses"><span>Change Glasses</span>
-                                                                                                    <div class="tooltip">Modify or add eyewear styles.</div>
-                                                                                                </label>
-                                                                                            </li>
-                                                                                            <li class="item">
-                                                                                                <label class="checkbox" tooltip>
-                                                                                                    <input type="checkbox" id="nose"><span>Change Nose</span>
-                                                                                                    <div class="tooltip">Alter the nose shape or size.</div>
-                                                                                                </label>
-                                                                                            </li>
-                                                                                            <li class="item">
-                                                                                                <label class="checkbox" tooltip>
-                                                                                                    <input type="checkbox" id="mouth"><span>Change Mouth</span>
-                                                                                                    <div class="tooltip">Change the shape or expression of the mouth.</div>
-                                                                                                </label>
-                                                                                            </li>
-                                                                                            <li class="item">
-                                                                                                <label class="checkbox" tooltip>
-                                                                                                    <input type="checkbox" id="lip"><span>Change Lip</span>
-                                                                                                    <div class="tooltip">Adjust the color or shape of the lips.</div>
-                                                                                                </label>
-                                                                                            </li>
-                                                                                        </ul>
-                                                                                    </div>
-                                                                                    <div class="multibox" tooltip>
-                                                                                        <div class="tooltip">Select head orientation to improve the analysis of the input video.</div>
-                                                                                        <span class="multibox-text" title="Orientation"></span>
-                                                                                        <span class="arrow-dwn"></span>
-                                                                                        <ul class="list-items">
-                                                                                            <li class="item">
-                                                                                                <label class="checkbox" tooltip>
-                                                                                                    <input type="checkbox" id="frontalRotation" checked disabled><span>Frontal Head (0°)</span>
-                                                                                                    <div class="tooltip">The face is facing forward. Best for accurate analysis.</div>
-                                                                                                </label>
-                                                                                            </li>
-                                                                                            <li class="item">
-                                                                                                <label class="checkbox" tooltip>
-                                                                                                    <input type="checkbox" id="rightRotation"><span>Tilted Right Head (90°)</span>
-                                                                                                    <div class="tooltip">Select this if the face is tilted to the right.</div>
-                                                                                                </label>
-                                                                                            </li>
-                                                                                            <li class="item">
-                                                                                                <label class="checkbox" tooltip>
-                                                                                                    <input type="checkbox" id="invertedRotation"><span>Inverted Head (180°)</span>
-                                                                                                    <div class="tooltip">Select this if the face is upside down.</div>
-                                                                                                </label>
-                                                                                            </li>
-                                                                                            <li class="item">
-                                                                                                <label class="checkbox" tooltip>
-                                                                                                    <div class="tooltip">Select this if the face is tilted to the left.</div>
-                                                                                                    <input type="checkbox" id="leftRotation"><span>Tilted Left Head (-90°)</span>
-                                                                                                </label>
-                                                                                            </li>
-                                                                                        </ul>
-                                                                                    </div>
-                                                                                    <label class="checkbox" tooltip>
-                                                                                        <input type="checkbox" id="enableEnhancedAnalyzer"><span>Multiple Face Detectors</span>
-                                                                                        <div class="tooltip">Use multiple detection algorithms (like YoloFace, RetinaFace, SCRFD) to get the best results.</div>
-                                                                                    </label>
-                                                                                </div>
-                                                                                <div id="Other" class="section" style="display: none;gap: calc(1vh* var(--scale-factor-h));">
-                                                                                    <label class="checkbox">
-                                                                                        <input type="checkbox" id="removeBanner"><span>Remove banner</span>
-                                                                                    </label>
-                                                                                    <label class="checkbox" style="display: flex;align-items: center;gap: calc(1vh* var(--scale-factor-h));justify-content: space-between;">
-                                                                                        <div style="display: flex;align-items: center;"><input type="checkbox" id="keepFPS"><span>Keep FPS</span></div>
-                                                                                        <div id="keepFPSContainer" style="display: flex;align-items: center;flex-direction: row-reverse;gap: calc(1vh* var(--scale-factor-h));">
-                                                                                            <input type="range" min="1" max="60" value="30" class="slider" id="fps-slider">
-                                                                                            <div class="slider-value" id="fps-value">30</div>
+                pageContent.push(`                      <div id="baseContainer" class="centered-container">
+                                                                    <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
+                                                                        <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
+                                                                            <div class="background-dot-container">
+                                                                                <div class="background-dot-container-content">
+                                                                                    <div style="display: flex;justify-content: space-between;">
+                                                                                        <div style="display: flex;flex-direction: column;align-items: center;">
+                                                                                            <div class="circular-button" id="circular-button-input-upload" title="Upload input" tooltip>
+                                                                                                <div class="tooltip">Add and choose the video or image where the face swap will occur.</div>
+                                                                                                <input type="file" accept="video/*,image/*" id="input-upload" style="display: none" multiple>
+                                                                                            </div>
+                                                                                            <div class="inputs"></div>
                                                                                         </div>
-                                                                                    </label>
+                                                                                        <div style="display: flex;flex-direction: column;align-items: center;">
+                                                                                            <div class="circular-button" id="circular-button-face-upload" title="Upload face" tooltip>
+                                                                                                <div class="tooltip">Add and choose the new face image to apply to the video or image input.</div>
+                                                                                                <input type="file" accept="image/*" id="face-upload" style="display: none" multiple>
+                                                                                            </div>
+                                                                                            <div class="faces"></div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                        <div class="nav-links">
+                                                                                            <li><a class="text" for="Facial">Facial</a></li>
+                                                                                            <li><a class="text" for="Analyzer">Analyzer</a></li>
+                                                                                            <li><a class="text" for="Other">Other</a></li>
+                                                                                        </div>
+                                                                                        <div id="Facial" class="section" style="display: none;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                            <div class="combobox" tooltip>
+                                                                                                <div class="tooltip">Choose a face enhancement model to improve the facial features. Each option applies a different method for enhancing or restoring the face's appearance.</div>
+                                                                                                <span class="combobox-text" title="Facial enhancement"></span>
+                                                                                                <span class="arrow-dwn"></span>
+                                                                                                <ul class="list-items">
+                                                                                                    <li class="item">
+                                                                                                        <label class="checkbox" tooltip>
+                                                                                                            <input type="checkbox" id="natural_face_enhancer_1024"><span>Detailed</span>
+                                                                                                            <div class="tooltip">Preserves realistic details for a more natural appearance in 1024x1024 resolution.</div>
+                                                                                                        </label>
+                                                                                                    </li>
+                                                                                                    <li class="item">
+                                                                                                        <label class="checkbox" tooltip>
+                                                                                                            <input type="checkbox" id="natural_face_enhancer_512"><span>Natural</span>
+                                                                                                            <div class="tooltip">Preserves realistic details for a more natural appearance in 512x512 resolution.</div>
+                                                                                                        </label>
+                                                                                                    </li>
+                                                                                                    <li class="item">
+                                                                                                        <label class="checkbox" tooltip>
+                                                                                                            <input type="checkbox" id="smooth_face_enhancer"><span>Smooth</span>
+                                                                                                            <div class="tooltip">Applies smoothing techniques for a refined and polished look.</div>
+                                                                                                        </label>
+                                                                                                    </li>
+                                                                                                </ul>
+                                                                                            </div>
+                                                                                            <div class="combobox" tooltip>
+                                                                                                <div class="tooltip">
+                                                                                                    The addition of a "pixel boost" option enhances the resolution of swapped faces, making results more realistic and detailed.
+                                                                                                </div>
+                                                                                                <span class="combobox-text" title="Pixel boost"></span>
+                                                                                                <span class="arrow-dwn"></span>
+                                                                                                <ul class="list-items">
+                                                                                                    <li class="item">
+                                                                                                        <label class="checkbox" tooltip>
+                                                                                                            <input type="checkbox" id="pixelBoost256x256"><span>256x256</span>
+                                                                                                            <div class="tooltip">Takes 2x longer, but the quality and detail improves.</div>
+                                                                                                        </label>
+                                                                                                    </li>
+                                                                                                    <li class="item">
+                                                                                                        <label class="checkbox" tooltip>
+                                                                                                            <input type="checkbox" id="pixelBoost512x512"><span>512x512</span>
+                                                                                                            <div class="tooltip">Takes 4x longer, with significantly improved quality and details.</div>
+                                                                                                        </label>
+                                                                                                    </li>
+                                                                                                    <li class="item">
+                                                                                                        <label class="checkbox" tooltip>
+                                                                                                            <input type="checkbox" id="pixelBoost1024x1024"><span>1024x1024</span>
+                                                                                                            <div class="tooltip">Takes 8x longer, resulting in the highest quality and details.</div>
+                                                                                                        </label>
+                                                                                                    </li>
+                                                                                                </ul>
+                                                                                            </div>
+                                                                                            <label class="checkbox" tooltip>
+                                                                                                <input type="checkbox" id="enableOccluder"><span>Facial Obstruction Detection</span>
+                                                                                                <div class="tooltip">Detects obstructing objects in front of the face, but this can cause slight unsimilarity as it will retain the unswapped original person's facial outline.</div>
+                                                                                            </label>
+                                                                                            <label class="checkbox" tooltip>
+                                                                                                <input type="checkbox" id="enableEnhancedLandmarks"><span>68 Facial Landmarks</span>
+                                                                                                <div class="tooltip">By enabling this feature, the system can more accurately identify and analyze specific facial components such as the eyebrows, eyes, nose, mouth, and jawline. It helps decreasing jitters in the face.</div>
+                                                                                            </label>
+                                                                                        </div>
+                                                                                        <div id="Analyzer" class="section" style="display: none;position: relative;flex-direction: column;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                            <div class="multibox" tooltip>
+                                                                                                <div class="tooltip">Select regions to customize in the new face. If an area is not enabled, it will remain unchanged from the original face.</div>
+                                                                                                <span class="multibox-text" title="Select Regions"></span>
+                                                                                                <span class="arrow-dwn"></span>
+                                                                                                <ul class="list-items">
+                                                                                                    <li class="item">
+                                                                                                        <label class="checkbox" tooltip>
+                                                                                                            <input type="checkbox" id="skin"><span>Change Skin</span>
+                                                                                                            <div class="tooltip">Swap the skin area with the new face.</div>
+                                                                                                        </label>
+                                                                                                    </li>
+                                                                                                    <li class="item">
+                                                                                                        <label class="checkbox" tooltip>
+                                                                                                            <input type="checkbox" id="eyebrow"><span>Change Eyebrow</span>
+                                                                                                            <div class="tooltip">Replace the eyebrow shape or color.</div>
+                                                                                                        </label>
+                                                                                                    </li>
+                                                                                                    <li class="item">
+                                                                                                        <label class="checkbox" tooltip>
+                                                                                                            <input type="checkbox" id="eye"><span>Change Eye</span>
+                                                                                                            <div class="tooltip">Change the eye appearance.</div>
+                                                                                                        </label>
+                                                                                                    </li>
+                                                                                                    <li class="item">
+                                                                                                        <label class="checkbox" tooltip>
+                                                                                                            <input type="checkbox" id="glasses"><span>Change Glasses</span>
+                                                                                                            <div class="tooltip">Modify or add eyewear styles.</div>
+                                                                                                        </label>
+                                                                                                    </li>
+                                                                                                    <li class="item">
+                                                                                                        <label class="checkbox" tooltip>
+                                                                                                            <input type="checkbox" id="nose"><span>Change Nose</span>
+                                                                                                            <div class="tooltip">Alter the nose shape or size.</div>
+                                                                                                        </label>
+                                                                                                    </li>
+                                                                                                    <li class="item">
+                                                                                                        <label class="checkbox" tooltip>
+                                                                                                            <input type="checkbox" id="mouth"><span>Change Mouth</span>
+                                                                                                            <div class="tooltip">Change the shape or expression of the mouth.</div>
+                                                                                                        </label>
+                                                                                                    </li>
+                                                                                                    <li class="item">
+                                                                                                        <label class="checkbox" tooltip>
+                                                                                                            <input type="checkbox" id="lip"><span>Change Lip</span>
+                                                                                                            <div class="tooltip">Adjust the color or shape of the lips.</div>
+                                                                                                        </label>
+                                                                                                    </li>
+                                                                                                </ul>
+                                                                                            </div>
+                                                                                            <div class="multibox" tooltip>
+                                                                                                <div class="tooltip">Select head orientation to improve the analysis of the input video. Rotates the input to get the frontal head rotation.</div>
+                                                                                                <span class="multibox-text" title="Orientation"></span>
+                                                                                                <span class="arrow-dwn"></span>
+                                                                                                <ul class="list-items">
+                                                                                                    <li class="item">
+                                                                                                        <label class="checkbox" tooltip>
+                                                                                                            <input type="checkbox" id="frontalRotation" checked disabled><span>Frontal Head (0°)</span>
+                                                                                                            <div class="tooltip">The face is facing forward. Best for accurate analysis.</div>
+                                                                                                        </label>
+                                                                                                    </li>
+                                                                                                    <li class="item">
+                                                                                                        <label class="checkbox" tooltip>
+                                                                                                            <input type="checkbox" id="rightRotation"><span>Tilted Right Head (90°)</span>
+                                                                                                            <div class="tooltip">Select this if the face in the input is tilted to the right.</div>
+                                                                                                        </label>
+                                                                                                    </li>
+                                                                                                    <li class="item">
+                                                                                                        <label class="checkbox" tooltip>
+                                                                                                            <input type="checkbox" id="invertedRotation"><span>Inverted Head (180°)</span>
+                                                                                                            <div class="tooltip">Select this if the face in the input is upside down.</div>
+                                                                                                        </label>
+                                                                                                    </li>
+                                                                                                    <li class="item">
+                                                                                                        <label class="checkbox" tooltip>
+                                                                                                            <div class="tooltip">Select this if the face in the input is tilted to the left.</div>
+                                                                                                            <input type="checkbox" id="leftRotation"><span>Tilted Left Head (-90°)</span>
+                                                                                                        </label>
+                                                                                                    </li>
+                                                                                                </ul>
+                                                                                            </div>
+                                                                                            <label class="checkbox" tooltip>
+                                                                                                <input type="checkbox" id="enableEnhancedAnalyzer"><span>Multiple Face Detectors</span>
+                                                                                                <div class="tooltip">Use multiple detection algorithms (like YoloFace, RetinaFace, SCRFD) to get the best results. It helps decreasing flickerings.</div>
+                                                                                            </label>
+                                                                                        </div>
+                                                                                        <div id="Other" class="section" style="display: none;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                            <label class="checkbox">
+                                                                                                <input type="checkbox" id="removeBanner"><span>Remove banner</span>
+                                                                                            </label>
+                                                                                            <label class="checkbox" style="display: flex;align-items: center;gap: calc(1vh* var(--scale-factor-h));justify-content: space-between;">
+                                                                                                <div style="display: flex;align-items: center;"><input type="checkbox" id="keepFPS"><span>Keep FPS</span></div>
+                                                                                                <div id="keepFPSContainer" style="display: flex;align-items: center;flex-direction: row-reverse;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                    <input type="range" min="1" max="60" value="30" class="slider" id="fps-slider">
+                                                                                                    <div class="slider-value" id="fps-value">30</div>
+                                                                                                </div>
+                                                                                            </label>
+                                                                                            <label class="checkbox">
+								                                                                <input type="checkbox" id="skipSlowServers">Skip Slow Servers</input>
+							                                                                </label>
+                                                                                            <label class="checkbox">
+                                                                                                <input type="checkbox" id="showServers">Server List</input>
+                                                                                            </label>
+                                                                                            <div id="serverList" style="display: flex;justify-content: space-evenly;flex-wrap: wrap;align-content: stretch;flex-direction: column;"></div>
+						                                                                    <button id="removeData" class="wide">Remove Cookies & Caches</button>
+                                                                                        </div>
+                                                                                    <div style="display: flex;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                        <button class="wide" id="startProcessBtn">Start Process</button>
+                                                                                        <button class="wide" id="cancellProcessBtn" >Cancel Process</button>
+                                                                                    </div>
                                                                                 </div>
-                                                                            <div style="display: flex;gap: calc(1vh* var(--scale-factor-h));">
-                                                                                <button class="wide" id="startProcessBtn">Start Process</button>
-                                                                                <button class="wide" id="cancellProcessBtn" >Cancel Process</button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
+                                                                        <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
+                                                                            <div class="background-dot-container">
+                                                                                <div class="background-dot-container-content">
+                                                                                    <div class="outputs"></div>
+                                                                                    <div style="display: flex;justify-content: space-around;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                        <button class="wide" id="downloadButton">Download</button>
+                                                                                        <button class="wide" id="viewOutput">View</button>
+                                                                                    </div>
+                                                                                </div>
                                                                             </div>
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                                                            </div>
-                                                            <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
-                                                                <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
-                                                                    <div class="background-dot-container">
-                                                                        <div class="background-dot-container-content">
-                                                                            <div class="outputs"></div>
-                                                                            <div style="display: flex;justify-content: space-around;gap: calc(1vh* var(--scale-factor-h));">
-                                                                                <button class="wide" id="downloadButton">Download</button>
-                                                                                <button class="wide" id="viewOutput">View</button>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        `);
+                                                                `);
             }
 
-            loadPageContent(updateMainContent, savePageState);
+            loadPageContent(setUser, retrieveImageFromURL, getUserIpAddress, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, setAuthentication, updateMainContent, savePageState);
 
             window.addEventListener('beforeunload', () => { savePageState(); });
             window.addEventListener('pagehide', () => { savePageState(); });
@@ -310,11 +369,163 @@
                     const paddingRight = parseFloat(multiboxStyle.paddingRight) + parseFloat(containerStyle.paddingRight);
                     const arrowWidth = parseFloat(arrowDwnStyle.width);
                     const maxWidth = containerWidth - paddingLeft - paddingRight - arrowWidth;
-                    multiboxText.forEach(text => {
-                        text.style.maxWidth = `${maxWidth - 2}px`;
-                    });
+                    multiboxText.forEach(text => { text.style.maxWidth = `${maxWidth - 2}px`; });
                 }
             }
+
+            const allServerAddress = (await fetchServerAddresses(getDocsSnapshot('servers'))).reverse();
+
+            function getSelectedInputId(checkboxes) {
+                for (let checkbox of checkboxes) {
+                    if (checkbox.checked) {
+                        return checkbox.id;
+                    }
+                }
+
+                return null;
+            }
+
+            let serverAddress = allServerAddress[0];
+            let downloadFile = false;
+            let maximumAllowedFrames = 36000;
+
+            function createNotificationsContainer() {
+                let container = document.getElementById('notification');
+                if (!container) {
+                    container = document.createElement('div');
+                    container.id = 'notification';
+                    container.className = 'indicator-container';
+                    document.body.appendChild(container);
+                }
+
+                const indicators = container.getElementsByClassName('indicator');
+                if (indicators.length > 0) {
+                    for (let i = 0; i < indicators.length - 0; i++) {
+                        const notification = indicators[i];
+                        notification.style.opacity = '0';
+                        setTimeout(() => {
+                            notification.remove();
+                        }, 300);
+                    }
+                }
+
+                return container;
+            }
+
+            function showNotification(message, featureChange, type) {
+                const container = createNotificationsContainer();
+                let waitTime = 5000;
+
+                const notification = document.createElement('div');
+                notification.className = 'indicator';
+
+                const featureChangeElement = document.createElement('p');
+                featureChangeElement.innerText = featureChange;
+                featureChangeElement.className = 'feature-change';
+
+                if (type === 'warning') {
+                    notification.classList.add('notification-warning');
+                    featureChangeElement.classList.add('feature-change-warning');
+                    waitTime = 10000;
+                }
+
+                const messageElement = document.createElement('p');
+                messageElement.innerText = message;
+
+                notification.appendChild(featureChangeElement);
+                notification.appendChild(messageElement);
+                container.appendChild(notification);
+
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                    setTimeout(() => {
+                        notification.remove();
+                    }, 300);
+                }, waitTime);
+            }
+
+            let oldMaximumAllowedFrames = null;
+
+            function updateFrameLimit(checkbox) {
+                oldMaximumAllowedFrames = maximumAllowedFrames;
+                maximumAllowedFrames = 36000;
+
+                const enhancers = [
+                    document.getElementById('smooth_face_enhancer'),
+                    document.getElementById('natural_face_enhancer_512'),
+                    document.getElementById('natural_face_enhancer_1024')
+                ];
+
+                const enabledEnhancer = getSelectedInputId(enhancers);
+                if (!enabledEnhancer)
+                    maximumAllowedFrames *= 2;
+
+                const pixelBoosters = [
+                    document.getElementById('pixelBoost256x256'),
+                    document.getElementById('pixelBoost512x512'),
+                    document.getElementById('pixelBoost1024x1024')
+                ];
+
+                let enabledPixelBoost = getSelectedInputId(pixelBoosters);
+                if (enabledPixelBoost)
+                    maximumAllowedFrames /= parseInt(enabledPixelBoost.match(/\d+x\d+/)[0].split('x')[0], 10) / 128;
+
+                if (!document.getElementById("enableEnhancedLandmarks").checked)
+                    maximumAllowedFrames *= 1.1;
+
+                if (!document.getElementById("enableEnhancedAnalyzer").checked)
+                    maximumAllowedFrames *= 1.1;
+
+                if (!document.getElementById("enableOccluder").checked)
+                    maximumAllowedFrames *= 1.1;
+
+                if (document.getElementById("rightRotation").checked)
+                    maximumAllowedFrames /= 1.1;
+
+                if (document.getElementById("invertedRotation").checked)
+                    maximumAllowedFrames /= 1.1;
+
+                if (document.getElementById("leftRotation").checked)
+                    maximumAllowedFrames /= 1.1;
+
+                const values = [
+                    document.getElementById("skin").checked,
+                    document.getElementById("eyebrow").checked,
+                    document.getElementById("eye").checked,
+                    document.getElementById("glasses").checked,
+                    document.getElementById("nose").checked,
+                    document.getElementById("mouth").checked,
+                    document.getElementById("lip").checked
+                ];
+
+                const enableRegionsCheck = values.some(value => !value);
+                if (enableRegionsCheck)
+                    maximumAllowedFrames /= 1.1;
+
+                const pageData = localStorage.getItem(pageName) || null;
+                if (!pageData || !checkbox || oldMaximumAllowedFrames === maximumAllowedFrames)
+                    return;
+
+                const span = checkbox.nextElementSibling;   
+                const featureText = span ? span.textContent : '';
+
+                const frameRate = 30;
+                const totalMinutes = (maximumAllowedFrames / frameRate) / 60;
+                const frameLimitMessage = `Frame limit is ${Math.floor(maximumAllowedFrames)}: Allows you to upload a video up to ${totalMinutes.toFixed(2)} minutes at ${frameRate} FPS.`;
+
+                showNotification(
+                    frameLimitMessage,
+                    `${featureText} ${checkbox.checked ? "Enabled" : "Disabled"}`,
+                    'normal'
+                );
+            }
+
+            const singleCreditForTotalFrameAmount = 120;
+
+            const FILE_SIZE_LIMIT_MB = 500;
+            const MAX_TASK_LIMIT = 10;
+            const STATUS_OK = 200;
+            const STATUS_NOTFOUND = 404;
 
             function loadPageState() {
                 setMaxWidth();
@@ -323,23 +534,11 @@
                 if (pageData) {
                     const state = JSON.parse(pageData || '{}') || {};
                     document.getElementById('enableOccluder').checked = state.enableOccluder || false;
-                    document.getElementById('smooth_face_enhancer').checked = state.smooth_face_enhancer || false;
-                    document.getElementById('natural_face_enhancer_512').checked = state.natural_face_enhancer_512 || false;
-                    document.getElementById('natural_face_enhancer_1024').checked = state.natural_face_enhancer_1024 || false;
                     document.getElementById('enableEnhancedAnalyzer').checked = state.enableEnhancedAnalyzer || false;
                     document.getElementById('enableEnhancedLandmarks').checked = state.enableEnhancedLandmarks || false;
-                    document.getElementById('skin').checked = state.skin || false;
-                    document.getElementById('eyebrow').checked = state.eyebrow || false;
-                    document.getElementById('eye').checked = state.eye || false;
-                    document.getElementById('glasses').checked = state.glasses || false;
-                    document.getElementById('nose').checked = state.nose || false;
-                    document.getElementById('mouth').checked = state.mouth || false;
-                    document.getElementById('lip').checked = state.lip || false;
-                    document.getElementById('frontalRotation').checked = state.frontalRotation || false;
-                    document.getElementById('rightRotation').checked = state.rightRotation || false;
-                    document.getElementById('invertedRotation').checked = state.invertedRotation || false;
-                    document.getElementById('leftRotation').checked = state.leftRotation || false;
                     document.getElementById('removeBanner').checked = state.removeBanner || false;
+                    document.getElementById('showServers').checked = state.showServers || false;
+                    document.getElementById('skipSlowServers').checked = state.skipSlowServers || false;
                     document.getElementById('keepFPS').checked = state.keepFPS || false;
                     document.getElementById('fps-slider').value = state.fpsValue || 30;
                     document.getElementById('fps-value').textContent = (state.fpsValue || 30) + ' FPS';
@@ -363,6 +562,14 @@
                         if (state.multiboxes && state.multiboxes[index]) {
                             btnText.innerText = state.multiboxes[index].text || '';
 
+                            if (state.multiboxes[index].open) {
+                                multibox.classList.add('open');
+                                multibox.querySelector('.list-items').style.display = 'flex';
+                            } else {
+                                multibox.classList.remove('open');
+                                multibox.querySelector('.list-items').style.display = 'none';
+                            }
+
                             state.multiboxes[index].items.forEach((itemState, itemIndex) => {
                                 if (itemIndex < items.length) {
                                     const checkbox = items[itemIndex].querySelector('input[type="checkbox"]');
@@ -380,6 +587,14 @@
 
                         if (state.comboboxes && state.comboboxes[index]) {
                             btnText.innerText = state.comboboxes[index].text || '';
+
+                            if (state.comboboxes[index].open) {
+                                combobox.classList.add('open');
+                                combobox.querySelector('.list-items').style.display = 'flex';
+                            } else {
+                                combobox.classList.remove('open');
+                                combobox.querySelector('.list-items').style.display = 'none';
+                            }
 
                             state.comboboxes[index].items.forEach((itemState, itemIndex) => {
                                 if (itemIndex < items.length) {
@@ -403,9 +618,8 @@
                         'enableEnhancedAnalyzer',
                         'enableEnhancedLandmarks',
                         'enableOccluder',
-                        'smooth_face_enhancer',
-                        'natural_face_enhancer_512',
                         'natural_face_enhancer_1024',
+                        'skipSlowServers',
                         'keepFPS'
                     ];
 
@@ -417,49 +631,13 @@
                 }
             }
 
-            const openDB = (dataBaseIndexName, dataBaseObjectStoreName) => {
-                return new Promise((resolve, reject) => {
-                    const request = indexedDB.open(dataBaseIndexName, 1);
-
-                    request.onupgradeneeded = (event) => {
-                        const db = event.target.result;
-                        db.createObjectStore(dataBaseObjectStoreName, { keyPath: 'id', autoIncrement: true });
-                    };
-
-                    request.onsuccess = (event) => {
-                        const db = event.target.result;
-                        resolve(db);
-                    };
-
-                    request.onerror = (event) => {
-                        reject(`Error opening database: ${event.target.error}`);
-                    };
-                });
-            };
-
-            const countInDB = (db) => {
-                return new Promise((resolve, reject) => {
-                    const transaction = db.transaction([db.objectStoreNames[0]], 'readonly');
-                    const objectStore = transaction.objectStore(db.objectStoreNames[0]);
-                    const request = objectStore.count();
-
-                    request.onsuccess = (event) => {
-                        resolve(event.target.result);
-                    };
-
-                    request.onerror = (event) => {
-                        reject(`Error counting entries in database: ${event.target.error}`);
-                    };
-                });
-            };
+            const databases = [
+                { indexName: `outputDB-${pageName}`, objectStore: 'outputs' },
+                { indexName: `faceDB-${pageName}`, objectStore: 'faces' },
+                { indexName: `inputDB-${pageName}`, objectStore: 'inputs' }
+            ];
 
             async function saveCountIndex() {
-                const databases = [
-                    { indexName: 'outputDB-face-swap', objectStore: 'outputs' },
-                    { indexName: 'faceDB-face-swap', objectStore: 'faces' },
-                    { indexName: 'inputDB-face-swap', objectStore: 'inputs' }
-                ];
-
                 for (const dbConfig of databases) {
                     const db = await openDB(dbConfig.indexName, dbConfig.objectStore);
                     const photoCount = await countInDB(db, dbConfig.objectStore);
@@ -467,306 +645,381 @@
                 }
             }
 
-            const addToDB = (db, data) => {
-                return new Promise((resolve, reject) => {
-                    const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
-                    const objectStore = transaction.objectStore(db.objectStoreNames[0]);
+            const handleDownload = async (selectedOutputInfo) => {
+                if (selectedOutputInfo) {
+                    const { db, url, element, index } = selectedOutputInfo;
+                    if (!db || !url || !element || !index)
+                        return;
 
-                    let currentIndex = localStorage.getItem(`${db.objectStoreNames[0]}-index`);
-                    currentIndex = currentIndex === null ? 0 : parseInt(currentIndex, 10);
-                    currentIndex += 1;
-                    localStorage.setItem(`${db.objectStoreNames[0]}-index`, currentIndex);
+                    try {
+                        const response = await fetch(url);
+                        const contentLengthHeader = Number(response.headers.get('Content-Length'));
+                        let downloadedBytes = 0;
 
-                    let entry = {
-                        timestamp: new Date().getTime(),
-                        index: currentIndex
-                    };
+                        let blob = new Blob([], { type: response.headers.get('Content-Type') });
 
-                    if (data instanceof Blob) {
-                        entry.blob = data;
-                    } else if (Array.isArray(data)) {
-                        if (data[0] !== null) entry.blob = data[0];
-                        if (data[1] !== null) entry.url = data[1];
-                    }
-
-                    entry = Object.fromEntries(Object.entries(entry).filter(([_, v]) => v != null));
-
-                    const request = objectStore.add(entry);
-                    request.onsuccess = () => {
-                        resolve(currentIndex);
-                        saveCountIndex();
-                    };
-
-                    request.onerror = (event) => {
-                        currentIndex -= 1;
-                        localStorage.setItem(`${db.objectStoreNames[0]}-index`, currentIndex);
-                        alert('Error adding data to database: ' + event);
-                        reject(`Error adding data to database: ${event.target.error ? event.target.error.message : 'Unknown error'}`);
-                    };
-                });
-            };
-
-            const getFromDB = (db, limit = null, offset = 0) => {
-                return new Promise((resolve, reject) => {
-                    const transaction = db.transaction([db.objectStoreNames[0]], 'readonly');
-                    const objectStore = transaction.objectStore(db.objectStoreNames[0]);
-                    const request = objectStore.getAll();
-
-                    request.onsuccess = (event) => {
-                        let results = event.target.result;
-                        results = results.sort((a, b) => b.index - a.index);
-                        if (limit !== null) {
-                            results = results.slice(offset, offset + limit);
+                        const reader = response.body.getReader();
+                        while (true) {
+                            const { done, value } = await reader.read();
+                            if (done) break;
+                            downloadedBytes += value.length;
+                            blob = new Blob([blob, value], { type: response.headers.get('Content-Type') });
+                            const progress = (downloadedBytes / contentLengthHeader) * 100;
+                            setProcessText(element, `Downloaded: ${progress.toFixed(0)}%`);
                         }
 
-                        resolve(results.map(item => ({ blob: item.blob || null, url: item.url || null, index: item.index || null, id: item.id || null })));
-                    };
-
-                    request.onerror = (event) => {
-                        reject(`Error retrieving data from database: ${event.target.error}`);
-                    };
-                });
-            };
-
-            const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleDownload) => {
-                try {
-                    let db = openDB(dataBaseIndexName, dataBaseObjectStoreName);
-                    let mediaCount = localStorage.getItem(`${dataBaseObjectStoreName}-count`);
-
-                    if (!mediaCount) {
-                        mediaCount = await countInDB(await db);
-                        localStorage.setItem(`${dataBaseObjectStoreName}-count`, mediaCount);
-                    } else {
-                        mediaCount = parseInt(mediaCount, 10);
-                    }
-
-                    const mediaContainer = document.querySelector(`.${dataBaseObjectStoreName}`);
-                    const fragment = document.createDocumentFragment();
-
-                    if (mediaCount > 0) {
-                        mediaContainer.style.display = mediaCount > 0 ? 'flex' : 'none';
-                        for (let i = 0; i < mediaCount; i++) {
-                            const div = document.createElement('div');
-                            div.className = 'data-container';
-                            div.innerHTML = `<div class="process-text"></div><div class="delete-icon"></div>`;
-                            fragment.appendChild(div);
-                        }
-                    }
-                    mediaContainer.appendChild(fragment);
-                    db = await db;
-                    mediaCount = await countInDB(db);
-                    localStorage.setItem(`${dataBaseObjectStoreName}-count`, mediaCount);
-
-                    if (mediaCount > 0) {
-                        const mediaItems = await getFromDB(db);
-                        const inputElements = mediaContainer.querySelectorAll('.data-container');
-
-                        for (const [indexInBatch, { blob, url, index }] of mediaItems.entries()) {
-                            if (blob) {
-                                const blobUrl = URL.createObjectURL(blob);
-
-                                if (blob.type.startsWith('video')) {
-                                    inputElements[indexInBatch].innerHTML = `<video index="${index}" playsinline preload="auto" disablePictureInPicture loop muted autoplay>
-                                                     <source src="${blobUrl}" type="${blob.type}">
-                                                     Your browser does not support the video tag.
-                                                 </video>
-                                                 <div class="process-text"></div>
-                                                 <div class="delete-icon"></div>`;
-                                } else {
-                                    inputElements[indexInBatch].innerHTML = `<img index="${index}" src="${blobUrl}" alt="Uploaded Photo"/><div class="process-text"></div><div class="delete-icon"></div>`;
-                                }
-                            } else {
-                                async function tryHandleDownload(selectedOutputInfo, retries) {
-                                    for (let attempt = 1; attempt <= retries; attempt++) {
-                                        try {
-                                            await handleDownload(selectedOutputInfo);
-                                            break;
-                                        } catch (error) {
-                                            console.error(`Attempt ${attempt} failed:`, error);
-                                            if (attempt === retries) {
-                                                console.error('All attempts failed.'); // Log if all retries fail
-                                            }
-                                        }
-                                    }
-                                }
-
-                                const selectedOutputInfo = { db, url, element: inputElements[indexInBatch], index };
-                                tryHandleDownload(selectedOutputInfo);
-                            }
+                        const blobUrl = URL.createObjectURL(blob);
+                        const isVideo = url.slice(-1) === '0';
+                        if (isVideo) {
+                            element.innerHTML = `<video index="${index}" loop muted autoplay><source src="${blobUrl}" type="${blob.type}">Your browser does not support the video tag.</video><div class="delete-icon"></div>`;
+                        } else {
+                            element.innerHTML = `<img index="${index}" src="${blobUrl}" alt="Uploaded Photo"/><div class="delete-icon"></div>`;
                         }
 
-                        mediaContainer.style.display = mediaCount > 0 ? 'flex' : 'none';
+                        setProcessText(element, '');
+                        await updateInDB(db, url, blob, saveCountIndex);
+                    } catch (error) {
+                        setProcessText(element, error.message);
+                        startProcessBtn.disabled = false;
                     }
-                } catch (error) {
-                    console.error(`Database initialization failed: ${error.message}`);
+                } else {
+                    alert('No Output Selected');
                 }
             };
 
-            const updateInDB = (db, url, blob) => {
-                return new Promise((resolve, reject) => {
-                    const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
-                    const objectStore = transaction.objectStore(db.objectStoreNames[0]);
+            window.addEventListener('beforeunload', async () => { await saveCountIndex(); });
+            window.addEventListener('pagehide', async () => { await saveCountIndex(); });
 
-                    const request = objectStore.openCursor();
-                    request.onsuccess = (event) => {
-                        const cursor = event.target.result;
-                        if (cursor) {
-                            if (cursor.value.url === url) {
-                                cursor.value.blob = blob;
+            document.addEventListener('click', async () => { await saveCountIndex(); });
+            document.addEventListener('touchend', async () => { await saveCountIndex(); });
 
-                                const updateRequest = cursor.update(cursor.value);
-                                updateRequest.onsuccess = () => {
+            const handleDelete = async (dbName, storeName, parent) => {
+                try {
+                    const element = parent.querySelector('img, video');
+                    const domIndex = parseInt(element.getAttribute('index'), 10);
+                    const db = await openDB(dbName, storeName);
+                    const items = await getFromDB(db);
+
+                    let itemToDelete = items.find(item => item.index === domIndex);
+
+                    if (!itemToDelete) {
+                        const domTimestamp = parseInt(element.getAttribute('timestamp'), 10);
+                        itemToDelete = items.find(item => item.timestamp === domTimestamp);
+                    }
+
+                    if (itemToDelete) {
+                        await deleteFromDB(db, itemToDelete.id, saveCountIndex);
+                        parent.remove();
+                    } else {
+                        throw new Error('Item to delete not found.');
+                    }
+                } catch (error) {
+                    alert('Error during delete operation: ' + error.message);
+                }
+            };
+
+            const downloadButton = document.getElementById('downloadButton');
+            const viewOutputButton = document.getElementById('viewOutput');
+
+            downloadButton.disabled = true;
+            viewOutputButton.disabled = true;
+
+            const handleEvent = async (event, dbName, storeName, container) => {
+                const parent = event.target.closest('.data-container');
+                if (!parent) return;
+
+                if (event.target.classList.contains('delete-icon')) {
+                    return await handleDelete(dbName, storeName, parent);
+                }
+
+                if (container.className === 'outputs') {
+                    const downloadButton = document.getElementById('downloadButton');
+                    const viewOutputButton = document.getElementById('viewOutput');
+
+                    downloadButton.disabled = false;
+                    viewOutputButton.disabled = false;
+                }
+
+                container.querySelectorAll(".data-container.active").forEach(activePhoto => {
+                    activePhoto.classList.remove("active");
+                });
+
+                if (parent.classList.contains("active"))
+                    parent.classList.remove("active");
+                else parent.classList.add("active");
+            };
+
+            const handleUpload = async (event, dataBaseIndexName, dataBaseObjectStoreName) => {
+                try {
+                    const db = await openDB(dataBaseIndexName, dataBaseObjectStoreName);
+                    const files = Array.from(event.target.files);
+                    const mediaContainer = document.querySelector(`.${dataBaseObjectStoreName}`);
+                    const fragment = document.createDocumentFragment();
+                    const newMedia = [];
+
+                    const processFile = async (file) => {
+                        return new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = async (e) => {
+                                try {
+                                    const blob = new Blob([e.target.result], { type: file.type });
+                                    const index = await addToDB(db, blob, saveCountIndex);
+                                    newMedia.push({ index, blob, isVideo: file.type.startsWith('video') });
                                     resolve();
-                                    saveCountIndex();
-                                };
+                                } catch (error) {
+                                    reject(`Processing media failed: ${error.message}`);
+                                }
+                            };
+                            reader.readAsArrayBuffer(file);
+                        });
+                    };
 
-                                updateRequest.onerror = (event) => {
-                                    reject(`Error updating photo in database: ${event.target.error}`);
-                                };
-                            } else {
-                                cursor.continue();
-                            }
+                    await Promise.all(files.map(processFile));
+
+                    newMedia.reverse().forEach(({ index, blob, isVideo }) => {
+                        const input = document.createElement('div');
+                        input.className = 'data-container';
+                        const blobUrl = URL.createObjectURL(blob);
+                        if (isVideo) {
+                            input.innerHTML = `<video index="${index}" loop muted autoplay><source src="${blobUrl}" type="${blob.type}">Your browser does not support the video tag.</video><div class="delete-icon"></div>`;
                         } else {
-                            reject(`No record found with url: ${url}`);
+                            input.innerHTML = `<img index="${index}" src="${blobUrl}" alt="Uploaded Photo"/><div class="delete-icon"></div>`;
                         }
-                    };
+                        fragment.appendChild(input);
+                    });
 
-                    request.onerror = (event) => {
-                        reject(`Error opening cursor in database: ${event.target.error}`);
-                    };
+                    mediaContainer.insertBefore(fragment, mediaContainer.firstChild);
+                    localStorage.setItem(`${dataBaseObjectStoreName}-count`, await countInDB(db));
+                } catch (error) {
+                    alert(`Opening media database failed: ${error.message}`);
+                }
+            };
+
+            const setupFileUpload = ({ buttonId, inputId, dataBaseIndexName, dataBaseObjectStoreName, changeHandler }) => {
+                const input = document.getElementById(inputId);
+                document.getElementById(buttonId).addEventListener('click', () => input.click());
+                input.addEventListener('change', async (event) => {
+                    await changeHandler(event, dataBaseIndexName, dataBaseObjectStoreName);
                 });
             };
 
-            const deleteFromDB = async (db, index) => {
-                return new Promise((resolve, reject) => {
-                    const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
-                    const photosObjectStore = transaction.objectStore(db.objectStoreNames[0]);
-                    const deleteRequest = photosObjectStore.delete(index);
+            const fileUploads = [
+                { buttonId: 'circular-button-face-upload', inputId: 'face-upload', dataBaseIndexName: `faceDB-${pageName}`, dataBaseObjectStoreName: 'faces' },
+                { buttonId: 'circular-button-input-upload', inputId: 'input-upload', dataBaseIndexName: `inputDB-${pageName}`, dataBaseObjectStoreName: 'inputs' }
+            ];
 
-                    deleteRequest.onsuccess = async () => {
-                        resolve();
-                        saveCountIndex();
-                    };
+            async function setClientStatus(message) {
+                console.log(message);
+                const outputs = document.querySelector('.outputs');
+                if (outputs) {
+                    outputs.firstChild.querySelector('.process-text').textContent = message;
+                }
+            }
 
-                    deleteRequest.onerror = (event) => {
-                        reject(`Error deleting photo from database: ${event.target.error}`);
-                    };
+            const setProcessText = (element, message) => {
+                console.log(message);
+                const processTextElement = element.querySelector('.process-text');
+                if (processTextElement)
+                    processTextElement.textContent = message;
+            };
+
+            let serverListContainer = document.getElementById('serverList');
+
+            async function checkServerStatus() {
+                const offlineResponse = { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Unknown" };
+                const serverPromises = allServerAddress.map(async server => {
+                    try {
+                        const response = await fetch(`${server}/get-online`);
+                        if (response.status === STATUS_NOTFOUND || response.status !== STATUS_OK) {
+                            console.error(`Server ${server} is offline.`);
+                            return offlineResponse;
+                        }
+                        const data = await response.json();
+                        return {
+                            queueAmount: data.server,
+                            faceDetectionError: data.faceDetectionError,
+                            videoUnsupportedTooLongError: data.videoUnsupportedTooLongError,
+                            remainingTime: data.remainingTime,
+                            elapsedTime: data.elapsedTime,
+                            frameCount: data.frameCount,
+                            totalFrames: data.totalFrames,
+                            requestQueue: data.requestQueue,
+                            uniqueId: data.uniqueId,
+                            processingAmount: data.processingAmount,
+                            SERVER_1: data.SERVER_1
+                        };
+                    } catch (error) {
+                        return offlineResponse;
+                    }
                 });
+
+                const results = await Promise.all(serverPromises);
+                serverListContainer.innerHTML = '';
+
+                if (results.some(serverData => serverData.queueAmount !== Infinity)) {
+                    results.forEach((serverData, serverIndex) => {
+                        const listItem = document.createElement('div');
+
+                        var newTime = '00:00';
+
+                        if (serverData.remainingTime) {
+                            var currentTime = serverData.remainingTime;
+                            var timeArray = currentTime.split(':');
+                            var timeAdd = Math.max(0, (serverData.queueAmount - 1) * 10);
+                            var hours = parseInt(timeArray[0], 10);
+                            var minutes = parseInt(timeArray[1], 10);
+                            var currentDate = new Date();
+                            currentDate.setHours(hours);
+                            currentDate.setMinutes(minutes);
+                            currentDate.setMinutes(currentDate.getMinutes() + timeAdd);
+                            var newHours = ('0' + currentDate.getHours()).slice(-2);
+                            var newMinutes = ('0' + currentDate.getMinutes()).slice(-2);
+                            newTime = newHours + ':' + newMinutes;
+                        }
+
+                        listItem.innerHTML = `<p>Server ${serverIndex + 1} (${serverData.SERVER_1}) - Queue: ${serverData.queueAmount === Infinity ? "Offline" : serverData.queueAmount} - ${serverData.frameCount ? serverData.frameCount : 0}/${serverData.totalFrames ? serverData.totalFrames : 0} (%${serverData.processingAmount ? serverData.processingAmount : 0}) - ${!serverData.remainingTime ? "00:00" : newTime}</p>`;
+                        serverListContainer.appendChild(listItem);
+                    });
+                }
+
+                setTimeout(checkServerStatus, 1000);
+
+                if (!userData || !userData.uid)
+                    return;
+
+                const serverWithUserRequest = findServerWithUserRequest(results, userData.uid);
+
+                if (serverWithUserRequest) {
+                    handleUserRequest(serverWithUserRequest, userData.uid);
+                } else {
+                    startProcessBtn.disabled = false;
+                    await handleDownloadFileIfNeeded();
+                }
+
+                function findServerWithUserRequest(results, userId) {
+                    return results.find(serverData => serverData.requestQueue?.includes(userId));
+                }
+
+                function handleUserRequest(serverData, userId) {
+                    const { processingAmount, remainingTime, elapsedTime, requestQueue } = serverData;
+                    const userQueueIndex = requestQueue.indexOf(userId);
+
+                    if (userQueueIndex === 0) {
+                        updateClientStatus(processingAmount, remainingTime, elapsedTime);
+                    } else {
+                        setClientStatus(`Queue ${userQueueIndex}...`);
+                    }
+
+                    downloadFile = true;
+                }
+
+                function updateClientStatus(processingAmount, remainingTime, elapsedTime) {
+                    const statusMessage = processingAmount > 0
+                        ? `%${processingAmount} | Remaining/Elapsed: ${remainingTime}/${elapsedTime}`
+                        : 'Processing...';
+                    setClientStatus(statusMessage);
+                }
+
+                async function handleDownloadFileIfNeeded() {
+                    if (!downloadFile)
+                        return;
+
+                    downloadFile = false;
+
+                    const db = await openDB(`outputDB-${pageName}`, 'outputs');
+                    const outputs = (await getFromDB(db)).reverse();
+                    const lastOutput = outputs[outputs.length - 1];
+                    const data = await fetchProcessState(lastOutput.url);
+                    if (data.status === 'completed') {
+                        setUserData(getDocSnapshot);
+                        await tryHandleLastOutputDownload(lastOutput, 3);
+                    } else if (data.status === 'failed') 
+                        setClientStatus(data.server);
+
+                    showNotification(`Request ${data.status} With Status ${data.server}.`, 'Fetch Information', 'default');
+                }
+
+                async function fetchProcessState(url) {
+                    const response = await fetch(url.replace('download-video', 'get-process-state'));
+                    return await response.json();
+                }
+
+                async function handleLastOutputDownload(lastOutput) {
+                    const blobIsEmpty = !lastOutput.blob || Object.entries(lastOutput.blob).length === 0;
+
+                    if (blobIsEmpty) {
+                        const selectedOutputInfo = {
+                            db: await openDB(`outputDB-${pageName}`, 'outputs'),
+                            url: lastOutput.url,
+                            element: document.querySelector('.outputs').firstChild,
+                            index: lastOutput.index
+                        };
+
+                        handleDownload(selectedOutputInfo);
+                    }
+                }
+
+                async function tryHandleLastOutputDownload(lastOutput, retries) {
+                    for (let attempt = 1; attempt <= retries; attempt++) {
+                        try {
+                            await handleLastOutputDownload(lastOutput);
+                            break;
+                        } catch (error) {
+                            console.error(`Attempt ${attempt} failed:`, error);
+                            if (attempt === retries) {
+                                console.error('All attempts failed.');
+                            }
+                        }
+                    }
+                }
+            }
+
+            checkServerStatus();
+
+            const cleanSiteData = async (automatic = false) => {
+                try {
+                    const confirmationMessage = !automatic
+                        ? "Are you sure you want to delete local data, caches, and cookies?"
+                        : "We need to clean cookies, caches, and local data for the new update. You don't need to confirm if you have data to download. After accepting, the data will be deleted, but the site will continue to function normally.";
+
+                    const confirmed = confirm(confirmationMessage);
+                    if (!confirmed) {
+                        return;
+                    }
+
+                    location.reload(false);
+                    const cacheBuster = new Date().getTime();
+                    window.location.href = window.location.pathname + `?cb=${cacheBuster}`;
+                } catch (error) {
+                    console.error("Error cleaning site data:", error);
+                    alert("Failed to clean site data. Please try again or contact support.");
+                }
             };
 
             async function loadPage() {
-                const handleDownload = async (selectedOutputInfo) => {
-                    if (selectedOutputInfo) {
-                        const { db, url, element, index } = selectedOutputInfo;
-                        if (!db || !url || !element || !index)
-                            return;
+                const removeDataButton = document.getElementById('removeData');
+                removeDataButton.addEventListener('click', () => cleanSiteData(false));
 
-                        try {
-                            const response = await fetch(url);
+                const showServers = document.getElementById('showServers');
+                serverListContainer = document.getElementById('serverList');
+                serverListContainer.style.display = showServers.checked ? 'block' : 'none';
 
-                            const contentLengthHeader = Number(response.headers.get('Content-Length'));
-                            let downloadedBytes = 0;
+                showServers.addEventListener('click', async () => {
+                    serverListContainer.style.display = showServers.checked ? 'block' : 'none';
+                });
 
-                            let blob = new Blob([], { type: response.headers.get('Content-Type') });
-
-                            const reader = response.body.getReader();
-                            while (true) {
-                                const { done, value } = await reader.read();
-                                if (done) break;
-                                downloadedBytes += value.length;
-                                blob = new Blob([blob, value], { type: response.headers.get('Content-Type') });
-                                const progress = (downloadedBytes / contentLengthHeader) * 100;
-                                setProcessText(element, `Downloaded: ${progress.toFixed(0)}%`);
-                            }
-
-                            const blobUrl = URL.createObjectURL(blob);
-                            const isVideo = url.slice(-1) === '0';
-                            if (isVideo) {
-                                element.innerHTML = `<video index="${index}" loop muted autoplay><source src="${blobUrl}" type="${blob.type}">Your browser does not support the video tag.</video><div class="delete-icon"></div>`;
-                            } else {
-                                element.innerHTML = `<img index="${index}" src="${blobUrl}" alt="Uploaded Photo"/><div class="delete-icon"></div>`;
-                            }
-
-                            setProcessText(element, '');
-                            await updateInDB(db, url, blob);
-                        } catch (error) {
-                            setProcessText(element, error.message);
-                            startProcessBtn.disabled = false;
-                        }
-                    } else {
-                        alert('No Output Selected');
-                    }
-                };
-
-                const databases = [
-                    { indexName: 'outputDB-face-swap', objectStore: 'outputs' },
-                    { indexName: 'faceDB-face-swap', objectStore: 'faces' },
-                    { indexName: 'inputDB-face-swap', objectStore: 'inputs' }
-                ];
                 databases.forEach(db => initDB(db.indexName, db.objectStore, handleDownload));
 
-                window.addEventListener('beforeunload', async () => { await saveCountIndex(); });
-                window.addEventListener('pagehide', async () => { await saveCountIndex(); });
-
-                document.addEventListener('click', async () => { await saveCountIndex(); });
-                document.addEventListener('touchend', async () => { await saveCountIndex(); });
-
-                const handleDelete = async (dbName, storeName, parent) => {
-                    try {
-                        const element = parent.querySelector('img, video');
-                        const domIndex = parseInt(element.getAttribute('index'), 10);
-                        const db = await openDB(dbName, storeName);
-                        const items = await getFromDB(db);
-                        const itemToDelete = items.find(item => item.index === domIndex);
-                        await deleteFromDB(db, itemToDelete.id, databases);
-                        parent.remove();
-                    } catch (error) {
-                        alert('Error during delete operation: ' + error.message);
-                    }
-                };
-
-                const downloadButton = document.getElementById('downloadButton');
-                const viewOutputButton = document.getElementById('viewOutput');
-
-                downloadButton.disabled = true;
-                viewOutputButton.disabled = true;
-
-                const handleSelectionToggle = (container, clickedElement) => {
-                    if (container.className === 'outputs') {
-                        downloadButton.disabled = false;
-                        viewOutputButton.disabled = false;
-                    }
-
-                    container.querySelectorAll(".data-container.active").forEach(activePhoto => {
-                        activePhoto.classList.remove("active");
-                    });
-
-                    if (clickedElement.classList.contains("active"))
-                        clickedElement.classList.remove("active");
-                    else clickedElement.classList.add("active");
-                };
-
-                const handleEvent = async (event, dbName, storeName, container) => {
-                    const parent = event.target.closest('.data-container');
-                    if (!parent) return;
-
-                    if (event.target.classList.contains('delete-icon')) {
-                        return await handleDelete(dbName, storeName, parent);
-                    }
-
-                    handleSelectionToggle(container, parent);
-                };
-
                 document.querySelector('.inputs').addEventListener('click', async function (event) {
-                    await handleEvent(event, 'inputDB-face-swap', 'inputs', document.querySelector('.inputs'));
+                    await handleEvent(event, `inputDB-${pageName}`, 'inputs', document.querySelector('.inputs'));
                 });
 
                 document.querySelector('.faces').addEventListener('click', async function (event) {
-                    await handleEvent(event, 'faceDB-face-swap', 'faces', document.querySelector('.faces'));
+                    await handleEvent(event, `faceDB-${pageName}`, 'faces', document.querySelector('.faces'));
                 });
 
                 document.querySelector('.outputs').addEventListener('click', async function (event) {
-                    await handleEvent(event, 'outputDB-face-swap', 'outputs', document.querySelector('.outputs'));
+                    await handleEvent(event, `outputDB-${pageName}`, 'outputs', document.querySelector('.outputs'));
                 });
 
                 document.querySelectorAll('.question-mark').forEach(questionMark => {
@@ -774,65 +1027,6 @@
                         event.stopPropagation();
                     });
                 });
-
-                const handleUpload = async (event, dataBaseIndexName, dataBaseObjectStoreName) => {
-                    try {
-                        const db = await openDB(dataBaseIndexName, dataBaseObjectStoreName);
-                        const files = Array.from(event.target.files);
-                        const mediaContainer = document.querySelector(`.${dataBaseObjectStoreName}`);
-                        const fragment = document.createDocumentFragment();
-                        const newMedia = [];
-
-                        const processFile = async (file) => {
-                            return new Promise((resolve, reject) => {
-                                const reader = new FileReader();
-                                reader.onload = async (e) => {
-                                    try {
-                                        const blob = new Blob([e.target.result], { type: file.type });
-                                        const index = await addToDB(db, blob);
-                                        newMedia.push({ index, blob, isVideo: file.type.startsWith('video') });
-                                        resolve();
-                                    } catch (error) {
-                                        reject(`Processing media failed: ${error.message}`);
-                                    }
-                                };
-                                reader.readAsArrayBuffer(file);
-                            });
-                        };
-
-                        await Promise.all(files.map(processFile));
-
-                        newMedia.reverse().forEach(({ index, blob, isVideo }) => {
-                            const input = document.createElement('div');
-                            input.className = 'data-container';
-                            const blobUrl = URL.createObjectURL(blob);
-                            if (isVideo) {
-                                input.innerHTML = `<video index="${index}" loop muted autoplay><source src="${blobUrl}" type="${blob.type}">Your browser does not support the video tag.</video><div class="delete-icon"></div>`;
-                            } else {
-                                input.innerHTML = `<img index="${index}" src="${blobUrl}" alt="Uploaded Photo"/><div class="delete-icon"></div>`;
-                            }
-                            fragment.appendChild(input);
-                        });
-
-                        mediaContainer.insertBefore(fragment, mediaContainer.firstChild);
-                        localStorage.setItem(`${dataBaseObjectStoreName}-count`, await countInDB(db));
-                    } catch (error) {
-                        alert(`Opening media database failed: ${error.message}`);
-                    }
-                };
-
-                const setupFileUpload = ({ buttonId, inputId, dataBaseIndexName, dataBaseObjectStoreName, changeHandler }) => {
-                    const input = document.getElementById(inputId);
-                    document.getElementById(buttonId).addEventListener('click', () => input.click());
-                    input.addEventListener('change', async (event) => {
-                        await changeHandler(event, dataBaseIndexName, dataBaseObjectStoreName);
-                    });
-                };
-
-                const fileUploads = [
-                    { buttonId: 'circular-button-face-upload', inputId: 'face-upload', dataBaseIndexName: 'faceDB-face-swap', dataBaseObjectStoreName: 'faces' },
-                    { buttonId: 'circular-button-input-upload', inputId: 'input-upload', dataBaseIndexName: 'inputDB-face-swap', dataBaseObjectStoreName: 'inputs' }
-                ];
 
                 fileUploads.forEach(config => setupFileUpload({ ...config, changeHandler: handleUpload }));
 
@@ -924,9 +1118,20 @@
 
                     const listItems = combobox.querySelector(".list-items");
                     const selectBtn = combobox;
+
                     selectBtn.addEventListener("click", (event) => {
                         event.stopPropagation();
-                        listItems.style.display = listItems.style.display === "flex" ? "none" : "flex";
+
+                        comboboxes.forEach(cbx => {
+                            if (cbx !== combobox) {
+                                const otherListItems = cbx.querySelector(".list-items");
+                                otherListItems.style.display = "none";
+                                cbx.classList.remove("open");
+                            }
+                        });
+
+                        selectBtn.classList.toggle("open");
+                        listItems.style.display = selectBtn.classList.contains("open") ? "flex" : "none";
                     });
 
                     const items = combobox.querySelectorAll(".item");
@@ -981,12 +1186,12 @@
                 });
 
                 document.addEventListener("click", () => {
-                    comboboxes.forEach(box => {
-                        box.querySelector(".list-items").style.display = "none";
+                    comboboxes.forEach(combobox => {
+                        const listItems = combobox.querySelector(".list-items");
+                        listItems.style.display = "none";
+                        combobox.classList.remove("open");
                     });
                 });
-
-
 
                 const keepFPS = document.getElementById('keepFPS');
                 const keepFPSContainer = document.getElementById('keepFPSContainer');
@@ -1001,33 +1206,8 @@
                     fpsValue.innerText = fpsSlider.value + " FPS";
                 });
 
-                const allServerAddress = (await fetchServerAddresses(getDocsSnapshot('servers'))).reverse();
-
-                let serverAddress = allServerAddress[0];
-                let downloadFile = false;
-
-                let maximumAllowedFrames = 36000;
-                let singleCreditForTotalFrameAmount = 120;
-
-                const FILE_SIZE_LIMIT_MB = 500;
-                const MAX_TASK_LIMIT = 10;
-                const STATUS_OK = 200;
-                const STATUS_NOTFOUND = 404;
-
                 const startProcessBtn = document.getElementById('startProcessBtn');
                 const cancellProcessBtn = document.getElementById('cancellProcessBtn');
-
-                async function setClientStatus(message) {
-                    document.querySelector('.outputs').firstChild.querySelector('.process-text').textContent = message;
-                }
-
-                const setProcessText = (element, message) => {
-                    const processTextElement = element.querySelector('.process-text');
-                    if (processTextElement)
-                        processTextElement.textContent = message;
-                };
-
-                const userData = getCachedUserData();
 
                 async function startProcess() {
                     startProcessBtn.disabled = true;
@@ -1058,7 +1238,7 @@
                             return;
                         }
 
-                        let userDoc = getCachedUserDoc();
+                        userDoc = getCachedDynamicUserDoc();
 
                         const activeVideoInput = document.querySelector(".inputs .data-container.active video");
                         const activePhotoInput = document.querySelector(".inputs .data-container.active img");
@@ -1089,7 +1269,7 @@
 
                             if (videoDurationTotalFrames > maximumAllowedFrames) {
                                 setClientStatus(`Exceeding Frame Limit`);
-                                //showNotification(!keepFPS.checked ? 'If your video has less than 60 FPS, please specify by closing Keep FPS option.' : 'Lowering the settings will increase frame limit.', 'Warning - Exceeding Frame Limit', 'warning');
+                                showNotification(!keepFPS.checked ? 'If your video has less than 60 FPS, please specify by closing Keep FPS option.' : 'Lowering the settings will increase frame limit.', 'Warning - Exceeding Frame Limit', 'warning');
                                 startProcessBtn.disabled = false;
                                 return;
                             }
@@ -1108,11 +1288,23 @@
                         }
 
                         neededCredits = Math.max(1, neededCredits);
-
                         setClientStatus('Creating ID...');
 
+                        const pixelBoosters = [
+                            document.getElementById('pixelBoost256x256'),
+                            document.getElementById('pixelBoost512x512'),
+                            document.getElementById('pixelBoost1024x1024')
+                        ];
+
+                        let enabledPixelBoost = getSelectedInputId(pixelBoosters);
+                        if (enabledPixelBoost)
+                            enabledPixelBoost = enabledPixelBoost.match(/\d+x\d+/)[0];
+
+                        if (!enabledPixelBoost)
+                            enabledPixelBoost = '128x128';
+
                         async function getServerAddresses() {
-                            return await fetchServerAddresses(getDocsSnapshot('servers'), neededCredits === 1 || activePhotoInput);
+                            return await fetchServerAddresses(getDocsSnapshot('servers'), enabledPixelBoost === '128x128' && (activePhotoInput || neededCredits < 1) || !document.getElementById('skipSlowServers').checked);
                         }
 
                         let [userIpAddress, browserUniqueId, serverAddresses] = await Promise.all([
@@ -1128,13 +1320,12 @@
                                 return data.server;
                             }
 
-                            console.error(`Server ${server} is offline. Status: ${response.status}`);
                             return Infinity;
                         }
 
                         let lowestQueueIndex = 0;
 
-                        const serverForSmallProcesses = "https://3080TI-1-DF.bodyswap.me";
+                        const serverForSmallProcesses = "https://4090-1-DF.bodyswap.me";
                         const serverPromises = serverAddresses.map(server => checkServerQueue(server));
                         const results = await Promise.all(serverPromises);
 
@@ -1238,7 +1429,7 @@
                             .replace(/[^a-zA-Z0-9_-]/g, '_')
                             .replace(/\s/g, '');
 
-                        const db = await openDB('outputDB-face-swap', 'outputs');
+                        const db = await openDB(`outputDB-${pageName}`, 'outputs');
                         const url = serverAddress + ('/download-video/') + uniqueId;
                         const firstChild = outputs.firstChild;
 
@@ -1246,7 +1437,7 @@
                             firstChild.dataset.created = true;
                             firstChild.innerHTML = `<div class="process-text"></div>`;
 
-                            await addToDB(db, [null, url]);
+                            await addToDB(db, [null, url], saveCountIndex);
                         }
 
                         function fetchToServer(url, options, onProgress) {
@@ -1271,14 +1462,14 @@
                                     } else {
                                         reject(new Error(`Request failed with status ${xhr.status}`));
                                         setClientStatus(`Request failed with status ${xhr.status}`);
-                                        //showNotification(`Request failed with status ${xhr.status}. Try Again.`, 'Warning - Fetching Failed', 'warning');
+                                        showNotification(`Request failed with status ${xhr.status}. Try Again.`, 'Warning - Fetching Failed', 'warning');
                                     }
                                 };
 
                                 xhr.onerror = () => {
                                     reject(new Error('Request failed'));
                                     setClientStatus(`Request failed.`);
-                                    //showNotification(`Request failed with status ${xhr.status}. Try Again.`, 'Warning - Fetching Failed', 'warning');
+                                    showNotification(`Request failed with status ${xhr.status}. Try Again.`, 'Warning - Fetching Failed', 'warning');
                                 };
 
                                 for (const key in options.headers) {
@@ -1324,9 +1515,9 @@
 
                         setClientStatus('Configurating');
 
-                        const maxPixelCount = 1920 * 1080;
-                        const midPixelCount = 1280 * 720;
-                        const lowPixelCount = 854 * 480;
+                        const maxPixelCount = 1600 * 900;
+                        const midPixelCount = 854 * 480;
+                        const lowPixelCount = 426 * 240;
 
                         const calculateEnhancerBlendValue = () => {
                             const pixelCount = height * width;
@@ -1341,35 +1532,28 @@
                                 return Math.round(
                                     25 + (25 * (pixelCount - lowPixelCount)) / (midPixelCount - lowPixelCount)
                                 );
-                            } else {
-                                return Math.round((25 * pixelCount) / lowPixelCount);
                             }
+
+                            return Math.round((25 * pixelCount) / lowPixelCount);
                         };
 
                         let enableEnhancer = false;
                         let enabledEnhancer = '';
                         let enhancerBlendValue = calculateEnhancerBlendValue();
-
                         if (enhancerBlendValue > 100 / 4) {
-                            function getSelectedInputId() {
-                                const smoothFaceEnhancer = document.getElementById('smooth_face_enhancer');
-                                const naturalFaceEnhancer512 = document.getElementById('natural_face_enhancer_512');
-                                const naturalFaceEnhancer1024 = document.getElementById('natural_face_enhancer_1024');
+                            const enhancerOptions = ['smooth_face_enhancer', 'natural_face_enhancer_512', 'natural_face_enhancer_1024'];
+                            const enabledEnhancer = enhancerOptions.find(id => {
+                                const enhancer = document.getElementById(id);
+                                return enhancer && enhancer.checked;
+                            });
 
-                                if (naturalFaceEnhancer512.checked) {
-                                    return naturalFaceEnhancer512.id;
-                                }
-
-                                if (naturalFaceEnhancer1024.checked) {
-                                    return naturalFaceEnhancer1024.id;
-                                }
-
-                                return smoothFaceEnhancer.id;
-                            }
-
-                            enabledEnhancer = getSelectedInputId();
-                            enableEnhancer = document.getElementById(enabledEnhancer).checked;
+                            enableEnhancer = enabledEnhancer ? document.getElementById(enabledEnhancer).checked : false;
                         } else enhancerBlendValue = 0;
+
+                        if (enhancerBlendValue > 0 && enabledEnhancer !== 'smooth_face_enhancer')
+                            enhancerBlendValue *= 1.5;
+
+                        enhancerBlendValue = clamp(enhancerBlendValue, 0, 100);
 
                         const formData = new FormData();
                         formData.append('face', faceFile);
@@ -1383,8 +1567,9 @@
                         formData.append('enableEnhancer', enableEnhancer);
                         formData.append('enabledEnhancer', enabledEnhancer);
                         formData.append('enhancerBlendValue', enhancerBlendValue);
+                        formData.append('enabledPixelBoost', enabledPixelBoost);
                         formData.append('removeBanner', removeBanner.checked);
-                        formData.append('keepFPS', document.getElementById("keepFPS").checked);
+                        formData.append('keepFPS', keepFPS.checked);
                         formData.append('fpsValue', document.getElementById("fps-slider").value);
                         formData.append('skin', document.getElementById("skin").checked);
                         formData.append('eyebrow', document.getElementById("eyebrow").checked);
@@ -1393,7 +1578,6 @@
                         formData.append('nose', document.getElementById("nose").checked);
                         formData.append('mouth', document.getElementById("mouth").checked);
                         formData.append('lip', document.getElementById("lip").checked);
-                        formData.append('enableBooster', 'none');
                         formData.append('frontalRotation', document.getElementById("frontalRotation").checked);
                         formData.append('rightRotation', document.getElementById("rightRotation").checked);
                         formData.append('invertedRotation', document.getElementById("invertedRotation").checked);
@@ -1415,13 +1599,13 @@
                                 if (response.status === STATUS_OK) {
                                     return response.json();
                                 } else if (response.status === STATUS_NOTFOUND) {
-                                    //cancelProcess(false);
+                                    cancelProcess(false);
                                     setClientStatus('Offline');
                                     startProcessBtn.disabled = false;
                                 } else {
                                     return response.json().then(data => {
                                         startProcessBtn.disabled = false;
-                                        //cancelProcess(false);
+                                        cancelProcess(false);
                                         throw new Error(data.server);
                                     });
                                 }
@@ -1429,17 +1613,76 @@
                             .catch(error => {
                                 startProcessBtn.disabled = false;
                                 setClientStatus(error.message);
-                                //cancelProcess(false);
+                                cancelProcess(false);
                             });
                     } catch (error) {
                         startProcessBtn.disabled = false;
                         setClientStatus(error.message);
-                        //cancelProcess(false);
+                        cancelProcess(false);
                     }
                 }
 
                 startProcessBtn.addEventListener('click', async () => {
                     await startProcess();
+                });
+
+                function cancelProcess(showAlertion) {
+                    return new Promise(async (resolve) => {
+                        try {
+                            await setUserData(getDocSnapshot); userDoc = getCachedDynamicUserDoc();
+
+                            const userIsProcessing = userDoc.isProcessing;
+                            const serverAddresses = await fetchServerAddresses(getDocsSnapshot('servers'));
+                            const serverPromises = serverAddresses.map(server => {
+                                return fetch(`${server}/get-online`).then(response => {
+                                    if (response.status === STATUS_NOTFOUND) 
+                                        return { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Unkown" };
+
+                                    else if (response.status === STATUS_OK) 
+                                        return response.json();
+
+                                    else return { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Unkown" };
+                                }).then(data => ({ queueAmount: data.server, faceDetectionError: data.faceDetectionError, videoUnsupportedTooLongError: data.videoUnsupportedTooLongError, remainingTime: data.remainingTime, elapsedTime: data.elapsedTime, frameCount: data.frameCount, totalFrames: data.totalFrames, requestQueue: data.requestQueue, uniqueId: data.uniqueId, processingAmount: data.processingAmount, SERVER_1: data.SERVER_1 })).catch(error => {
+                                    return { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Unkown" };
+                                });
+                            });
+
+                            const results = await Promise.all(serverPromises);
+                            const serverWithUserRequest = results.find(serverData => serverData.requestQueue && serverData.requestQueue.includes(userData.uid));
+
+                            if (userIsProcessing || serverWithUserRequest) {
+                                const cancelRequests = serverAddresses.map(async (serverAddress) => {
+                                    try {
+                                        const response = await fetch(`${serverAddress}/cancel-process`, {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ userId: userData.uid }),
+                                        });
+
+                                        if (showAlertion) {
+                                            if (response.ok) {
+                                                startProcessBtn.disabled = false;
+                                                setClientStatus(`Request got cancelled`);
+                                            }
+                                        }
+                                    } catch (error) { 
+                                        console.error(`Error on server ${serverAddress}:`, error);
+                                    }
+                                });
+
+                                await Promise.all(cancelRequests);
+                            } else if (showAlertion)
+                                alert('User is not processing. No cancellation request sent.');
+                        } catch (error) {
+                            console.error('Error checking processes:', error);
+                        } finally {
+                            resolve();
+                        }
+                    });
+                }
+
+                cancellProcessBtn.addEventListener('click', async () => {
+                    await cancelProcess(true);
                 });
 
                 downloadButton.addEventListener('click', async () => {
@@ -1457,45 +1700,39 @@
                             : activeInput.src;
 
                         const index = activeInput.getAttribute('index');
-                        fileName += `${index}.${activeInput.tagName === 'VIDEO' ? 'mp4' : 'png'}`; // Customize based on format
+                        fileName += `${index}.${activeInput.tagName === 'VIDEO' ? 'mp4' : 'png'}`;
                     }
 
                     if (blobUrl) {
                         if (window.showSaveFilePicker) {
-                            try {
-                                const fileHandle = await window.showSaveFilePicker({
-                                    suggestedName: fileName,
-                                    types: [{
-                                        description: 'Video Files',
-                                        accept: { 'video/mp4': ['.mp4'] }
-                                    }, {
-                                        description: 'Image Files',
-                                        accept: { 'image/png': ['.png'] }
-                                    }]
-                                });
+                            const fileHandle = await window.showSaveFilePicker({
+                                suggestedName: fileName,
+                                types: [{
+                                    description: 'Video Files',
+                                    accept: { 'video/mp4': ['.mp4'] }
+                                }, {
+                                    description: 'Image Files',
+                                    accept: { 'image/png': ['.png'] }
+                                }]
+                            });
 
-                                const writableStream = await fileHandle.createWritable();
-                                const response = await fetch(blobUrl);
-                                const blob = await response.blob();
-                                await writableStream.write(blob);
-                                await writableStream.close();
-                            } catch (error) {
-                                console.error('Error with file saving:', error);
-                            }
-                        } else if (navigator.share) {
-                            try {
-                                const response = await fetch(blobUrl);
-                                const blob = await response.blob();
-                                const fileToShare = new File([blob], fileName, { type: activeVideoInput ? 'video/mp4' : 'image/png' });
+                            const writableStream = await fileHandle.createWritable();
+                            const response = await fetch(blobUrl);
+                            const blob = await response.blob();
+                            await writableStream.write(blob);
+                            await writableStream.close();
+                        }
+                        else if (navigator.share) {
+                            const response = await fetch(blobUrl);
+                            const blob = await response.blob();
+                            const fileToShare = new File([blob], fileName, { type: activeVideoInput ? 'video/mp4' : 'image/png' });
 
-                                await navigator.share({
-                                    title: fileName,
-                                    files: [fileToShare],
-                                });
-                            } catch (error) {
-                                console.error('Error sharing:', error);
-                            }
-                        } else {
+                            await navigator.share({
+                                title: fileName,
+                                files: [fileToShare],
+                            });
+                        }
+                        else {
                             const a = document.createElement('a');
                             a.href = blobUrl;
                             a.download = fileName;
@@ -1517,133 +1754,20 @@
                     }
                 });
 
-                async function checkServerStatus() {
-                    if (!userData || !userData.uid)
-                        return;
+                updateFrameLimit(null);
 
-                    const offlineResponse = { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Unknown" }; // Server is offline
-                    const serverPromises = allServerAddress.map(async server => {
-                        try {
-                            const response = await fetch(`${server}/get-online`);
-                            if (response.status === STATUS_NOTFOUND || response.status !== STATUS_OK) {
-                                console.error(`Server ${server} is offline.`);
-                                return offlineResponse;
-                            }
-                            const data = await response.json();
-                            return {
-                                queueAmount: data.server,
-                                faceDetectionError: data.faceDetectionError,
-                                videoUnsupportedTooLongError: data.videoUnsupportedTooLongError,
-                                remainingTime: data.remainingTime,
-                                elapsedTime: data.elapsedTime,
-                                frameCount: data.frameCount,
-                                totalFrames: data.totalFrames,
-                                requestQueue: data.requestQueue,
-                                uniqueId: data.uniqueId,
-                                processingAmount: data.processingAmount,
-                                SERVER_1: data.SERVER_1
-                            };
-                        } catch (error) {
-                            return offlineResponse; // Server is offline
-                        }
+                document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.addEventListener("change", () => {
+                        updateFrameLimit(checkbox);
                     });
-
-                    const results = await Promise.all(serverPromises);
-                    const serverWithUserRequest = findServerWithUserRequest(results, userData.uid);
-
-                    if (serverWithUserRequest) {
-                        handleUserRequest(serverWithUserRequest, userData.uid);
-                    } else {
-                        startProcessBtn.disabled = false;
-                        await handleDownloadFileIfNeeded();
-                    }
-
-                    function findServerWithUserRequest(results, userId) {
-                        return results.find(serverData => serverData.requestQueue?.includes(userId));
-                    }
-
-                    function handleUserRequest(serverData, userId) {
-                        const { processingAmount, remainingTime, elapsedTime, requestQueue } = serverData;
-                        const userQueueIndex = requestQueue.indexOf(userId);
-
-                        if (userQueueIndex === 0) {
-                            updateClientStatus(processingAmount, remainingTime, elapsedTime);
-                        } else {
-                            setClientStatus(`Queue ${userQueueIndex}...`);
-                        }
-
-                        downloadFile = true;
-                    }
-
-                    function updateClientStatus(processingAmount, remainingTime, elapsedTime) {
-                        const statusMessage = processingAmount > 0
-                            ? `%${processingAmount} | Remaining/Elapsed: ${remainingTime}/${elapsedTime}`
-                            : 'Processing...';
-                        setClientStatus(statusMessage);
-                    }
-
-                    async function handleDownloadFileIfNeeded() {
-                        if (downloadFile) {
-                            downloadFile = false;
-
-                            const db = await openDB('outputDB-face-swap', 'outputs');
-                            const outputs = (await getFromDB(db)).reverse();
-                            const lastOutput = outputs[outputs.length - 1];
-
-                            const data = await fetchProcessState(lastOutput.url);
-                            if (data.status === 'completed') {
-                                setUserData();
-                                await tryHandleLastOutputDownload(lastOutput, 3);
-                            }
-                        }
-                    }
-
-                    async function fetchProcessState(url) {
-                        const response = await fetch(url.replace('download-video', 'get-process-state'));
-                        return await response.json();
-                    }
-
-                    async function handleLastOutputDownload(lastOutput) {
-                        const blobIsEmpty = !lastOutput.blob || Object.entries(lastOutput.blob).length === 0;
-
-                        if (blobIsEmpty) {
-                            const selectedOutputInfo = {
-                                db: await openDB('outputDB-face-swap', 'outputs'),
-                                url: lastOutput.url,
-                                element: document.querySelector('.outputs').firstChild,
-                                index: lastOutput.index
-                            };
-
-                            handleDownload(selectedOutputInfo);
-                        }
-                    }
-
-                    // New function to handle retries
-                    async function tryHandleLastOutputDownload(lastOutput, retries) {
-                        for (let attempt = 1; attempt <= retries; attempt++) {
-                            try {
-                                await handleLastOutputDownload(lastOutput);
-                                break; // Exit loop if successful
-                            } catch (error) {
-                                console.error(`Attempt ${attempt} failed:`, error);
-                                if (attempt === retries) {
-                                    console.error('All attempts failed.'); // Log if all retries fail
-                                }
-                            }
-                        }
-                    }
-
-                    setTimeout(checkServerStatus, 1000);
-                }
-
-                checkServerStatus();
+                });
             }
 
             let previousScreenMode = null;
 
             async function sizeBasedElements() {
                 setMaxWidth();
-                let screenMode = getScreenMode();
+                const screenMode = getScreenMode();
                 const shouldUpdate = previousScreenMode !== screenMode;
                 previousScreenMode = screenMode;
                 if (!shouldUpdate)

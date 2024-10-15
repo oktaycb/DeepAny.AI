@@ -1,6 +1,6 @@
-# robots.txt file for DeepAny.AI
-# Created in the the year 2024
+# This is the robots.txt for deepany.ai
+Sitemap: https://deepany.ai/sitemap.xml
 
 User-agent: *
-Disallow: /admin/
-Disallow: /api/
+Disallow: /admin/   # Prevents indexing of the admin area
+Disallow: /api/     # Prevents indexing of API endpoints
