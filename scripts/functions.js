@@ -627,7 +627,7 @@ export function setUser(userDoc = getCachedDynamicUserDoc()) {
     const credits = document.getElementById('creditsAmount');
     if (credits) {
         const totalCredits = (Number(userDoc.credits) || 0) + (Number(userDoc.dailyCredits) || 0);
-        credits.textContent = '';
+        credits.textContent = 'Credits ';
         credits.textContent += totalCredits;
 
         if (userDoc.deadline) {
@@ -664,7 +664,6 @@ export function setUser(userDoc = getCachedDynamicUserDoc()) {
             }
         }
     }
-
 
     const usernames = document.getElementsByClassName('username');
     for (let username of usernames) {
@@ -769,7 +768,7 @@ async function handleUserLoggedIn(userData, getUserIpAddress, ensureUniqueId, fe
 
                 const userId = userData.uid;
                 const urlParams = new URLSearchParams(window.location.search);
-                const referral = urlParams.get('referral');
+                const referral = urlParams.get('referral') || null;
 
                 const response = await fetch(`${serverAddressAPI}/create-user`, {
                     method: 'POST',
@@ -783,7 +782,7 @@ async function handleUserLoggedIn(userData, getUserIpAddress, ensureUniqueId, fe
                         isAnonymous: userData.isAnonymous,
                         userIpAddress,
                         uniqueId,
-                        referral,
+                        referral: referral || null,
                     }),
                 });
 
@@ -791,15 +790,19 @@ async function handleUserLoggedIn(userData, getUserIpAddress, ensureUniqueId, fe
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
 
-                return await response.json();
+                const jsonResponse = await response.json();
+                const responseText = JSON.stringify(jsonResponse);
+                console.log(responseText);
+
+                if (responseText.includes("success")) {
+                    location.reload();
+                }
             } catch (error) {
                 console.error('Error during user registration:', error);
                 return null;
             }
-
-            location.reload();
         }
-
+        else location.reload();
         return;
     }
 
@@ -1365,9 +1368,9 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserIpAddress,
 							<a id="userLayout" style="display: flex;gap: calc(1vh * var(--scale-factor-h));align-items: center;">
 								<img alt="Profile Image" class="profile-image" style="width: calc((6vh* var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w)));height: calc((6vh* var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w)));" src="assets/profile.webp">
 								<div>
-									<p>Hello, <span class="username">Username</span></p>
+									<p style="white-space: nowrap;">Hello, <span class="username">Username</span></p>
 									<div class="line" style="margin: unset;"></div>
-									<p id="creditsAmount">0 Credits</p>
+									<p id="creditsAmount" style="white-space: nowrap;">Open account for credentials</p>
 								</div>
 							</a>
 							<ul class="dropdown-menu">
@@ -1778,18 +1781,38 @@ export function showSidebar(sidebar, hamburgerMenu, setUser) {
 				</div>
 				`;
 
+        const userData = getCachedStaticUserData();
+        const userDoc = getCachedDynamicUserDoc();
+
         if (screenMode === ScreenMode.PHONE) {
-            sideBar = `
-                <a href="profile" id="userLayout" style="display: flex; gap: calc(1vh * var(--scale-factor-h)); align-items: center;">
-                    <img alt="Profile Image" class="profile-image" style="width: calc((6vh * var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w))); height: calc((6vh * var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w)));">
-                    <div>
-                        <p>Hello, <span class="username">Username</span></p>
-                        <div class="line" style="margin: unset;"></div>
-                        <p id="creditsAmount">0 Credits</p>
-                    </div>
-                </a>
-                <div class="line"></div>
+            if (userData && userDoc) {
+                sideBar = `
+            			<li id="userProfileLayout">
+							<a id="userLayout" style="display: flex;gap: calc(1vh * var(--scale-factor-h));align-items: center;">
+								<img alt="Profile Image" class="profile-image" style="width: calc((6vh* var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w)));height: calc((6vh* var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w)));" src="assets/profile.webp">
+								<div>
+									<p style="white-space: nowrap;">Hello, <span class="username">Username</span></p>
+									<div class="line" style="margin: unset;"></div>
+									<p id="creditsAmount" style="white-space: nowrap;">Open account for credentials</p>
+								</div>
+							</a>
+							<ul class="dropdown-menu">
+								<li><a class="text" id="signOut">Log Out</a></li>
+							</ul>
+						</li>
+                        <div class="line"></div>
+
             ` + sideBar;
+            }
+            else {
+                sideBar = `
+                        <div style="display: flex;gap: 1vh;flex-direction: row;">
+                            <button style="justify-content: center;" id="openSignUpContainer">Sign Up</button>
+                            <button style="justify-content: center;" class="important" id="openSignInContainer">Sign In</button>
+                        </div>
+                        <div class="line"></div>
+                ` + sideBar;
+            }
         }
 
         sidebar.innerHTML = sideBar;

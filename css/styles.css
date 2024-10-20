@@ -491,7 +491,7 @@ option {
     justify-content: center
 }
 
-    .nav-links li {
+    .nav-links li, .sidebar li {
         list-style-type: none;
         padding: 0 calc(2.5vh* var(--scale-factor-h));
         cursor: pointer;
@@ -499,7 +499,7 @@ option {
         align-items: center
     }
 
-        .nav-links li:has(.dropdown-menu)::before {
+        .nav-links li:has(.dropdown-menu)::before, .sidebar li:has(.dropdown-menu)::before {
             content: "";
             position: absolute;
             right: 0;
@@ -511,11 +511,11 @@ option {
             transition: transform .3s
         }
 
-        .nav-links li:hover::before {
+        .nav-links li:hover::before, .sidebar li:hover::before {
             transform: rotate(180deg)
         }
 
-    .nav-links a:hover::before, .nav-links a.active::before {
+    .nav-links a:hover::before, .nav-links a.active::before, .sidebar a:hover::before, .sidebar a.active::before {
         transform: scaleX(1);
         -webkit-transform: scaleX(1);
         -moz-transform: scaleX(1);
@@ -523,11 +523,17 @@ option {
         -ms-transform: scaleX(1)
     }
 
-    .nav-links li:hover .dropdown-menu {
+    .nav-links li:hover .dropdown-menu, .sidebar li:hover .dropdown-menu {
         opacity: 1;
         visibility: visible;
         top: calc(100% + (2vh* var(--scale-factor-h)))
     }
+
+.fill-room {
+    margin: unset !important;
+    width: 100% !important;
+    height: 100% !important;
+}
 
 .dropdown-menu {
     position: absolute;
@@ -539,7 +545,8 @@ option {
     background: var(--background-lighter-color);
     transition: all var(--transition-duration-1);
     border: var(--border) solid;
-    border-radius: var(--border-radius)
+    border-radius: var(--border-radius);
+    z-index: 9999
 }
 
     .dropdown-menu:hover {
