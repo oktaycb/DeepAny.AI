@@ -627,8 +627,9 @@ export function setUser(userDoc = getCachedDynamicUserDoc()) {
     const credits = document.getElementById('creditsAmount');
     if (credits) {
         const totalCredits = (Number(userDoc.credits) || 0) + (Number(userDoc.dailyCredits) || 0);
-        credits.textContent = 'Credits ';
+        credits.textContent = '';
         credits.textContent += totalCredits;
+        credits.textContent += ' Credits';
 
         if (userDoc.deadline) {
             const deadline = new Date(userDoc.deadline.seconds * 1000 + (userDoc.deadline.nanoseconds || 0) / 1000000);
@@ -1787,7 +1788,7 @@ export function showSidebar(sidebar, hamburgerMenu, setUser) {
         if (screenMode === ScreenMode.PHONE) {
             if (userData && userDoc) {
                 sideBar = `
-            			<li id="userProfileLayout">
+            			<li id="userProfileLayout" style="padding: 0;">
 							<a id="userLayout" style="display: flex;gap: calc(1vh * var(--scale-factor-h));align-items: center;">
 								<img alt="Profile Image" class="profile-image" style="width: calc((6vh* var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w)));height: calc((6vh* var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w)));" src="assets/profile.webp">
 								<div>
