@@ -557,7 +557,12 @@ export const getCachedStaticUserData = () => {
 
 export const getCachedDynamicUserDoc = () => {
     const cachedUserDocument = localStorage.getItem('cachedUserDocument');
-    return cachedUserDocument ? JSON.parse(cachedUserDocument) : null;
+    if (!cachedUserDocument) {
+        return null;
+    }
+
+    const parsedData = JSON.parse(cachedUserDocument);
+    return parsedData.data || null;
 };
 
 export async function setCurrentUserData(getFirebaseModules) {
@@ -565,14 +570,36 @@ export async function setCurrentUserData(getFirebaseModules) {
     localStorage.setItem('cachedUserData', JSON.stringify(cachedUserData));
 }
 
-export async function setUserDoc(getDocSnapshot) {
+const CACHE_EXPIRATION_TIME = 1 * 60 * 60 * 1000; // Update every hour.
+
+export async function setCurrentUserDoc(getDocSnapshot, useCache = false) {
+    if (useCache) {
+        let cachedUserDoc = localStorage.getItem('cachedUserDocument');
+
+        if (cachedUserDoc) {
+            cachedUserDoc = JSON.parse(cachedUserDoc);
+            const currentTime = new Date().getTime();
+
+            if (currentTime - cachedUserDoc.timestamp < CACHE_EXPIRATION_TIME) {
+                setUser(cachedUserDoc.data);
+                return true;
+            }
+        }
+    }
+
     const userData = getCachedStaticUserData();
     const userDocSnap = await getDocSnapshot('users', userData.uid);
-    if (!userDocSnap || !userDocSnap.exists())
+    if (!userDocSnap || !userDocSnap.exists()) {
         return false;
+    }
 
     const userDoc = userDocSnap.data();
-    localStorage.setItem(`cachedUserDocument`, JSON.stringify(userDoc));
+    localStorage.setItem('cachedUserDocument', JSON.stringify({
+        data: userDoc,
+        timestamp: new Date().getTime(),
+    }));
+
+    // TODO: add loading text here for firebase update. In future only update firebase when necessary but updating every hour is fine too. make button to fetch user data incase user needs data immidiately.
     setUser(userDoc);
     return true;
 }
@@ -600,20 +627,26 @@ export function setUser(userDoc = getCachedDynamicUserDoc()) {
     const credits = document.getElementById('creditsAmount');
     if (credits) {
         const totalCredits = (Number(userDoc.credits) || 0) + (Number(userDoc.dailyCredits) || 0);
-        credits.textContent = credits.textContent.replace(/\d+/, totalCredits);
+        credits.textContent = '';
+        credits.textContent += totalCredits;
 
-        if (userDoc.deadline && !credits.textContent.includes('remaining') && !credits.textContent.includes('lifetime')) {
-            const deadlineSeconds = userDoc.deadline.seconds;
-            const deadlineNanoseconds = userDoc.deadline.nanoseconds || 0;
-
-            const deadline = new Date((deadlineSeconds * 1000) + (deadlineNanoseconds / 1000000));
+        if (userDoc.deadline) {
+            const deadline = new Date(userDoc.deadline.seconds * 1000 + (userDoc.deadline.nanoseconds || 0) / 1000000);
             const now = new Date();
-            const timeDiff = deadline - now;
+            const timeDiff = deadline.getTime() - now.getTime();
 
             if (timeDiff > 0) {
-                const years = Math.floor(timeDiff / (1000 * 60 * 60 * 24 * 365));
-                const months = Math.floor((timeDiff % (1000 * 60 * 60 * 24 * 365)) / (1000 * 60 * 60 * 24 * 30));
-                const days = Math.floor((timeDiff % (1000 * 60 * 60 * 24 * 30)) / (1000 * 60 * 60 * 24));
+                const minuteInMs = 1000 * 60;
+                const hourInMs = minuteInMs * 60;
+                const dayInMs = hourInMs * 24;
+                const yearInMs = dayInMs * 365;
+                const monthInMs = dayInMs * 30;
+
+                const years = Math.floor(timeDiff / yearInMs);
+                const months = Math.floor((timeDiff % yearInMs) / monthInMs);
+                const days = Math.floor((timeDiff % monthInMs) / dayInMs);
+                const hours = Math.floor((timeDiff % dayInMs) / hourInMs);
+                const minutes = Math.floor((timeDiff % hourInMs) / minuteInMs);
 
                 let remainingTime = '';
                 if (years > 5) {
@@ -621,7 +654,9 @@ export function setUser(userDoc = getCachedDynamicUserDoc()) {
                 } else {
                     if (years > 0) remainingTime += `${years} year${years > 1 ? 's' : ''} `;
                     if (months > 0) remainingTime += `${months} month${months > 1 ? 's' : ''} `;
-                    if (days > 0 || (!years && !months)) remainingTime += `${days} day${days > 1 ? 's' : ''}`;
+                    if (days > 0) remainingTime += `${days} day${days > 1 ? 's' : ''} `;
+                    if (days === 0 && hours > 0) remainingTime += `${hours} hour${hours > 1 ? 's' : ''} `;
+                    if (days === 0 && hours === 0 && minutes > 0) remainingTime += `${minutes} minute${minutes > 1 ? 's' : ''}`;
                     remainingTime = remainingTime.trim() + ' remaining';
                 }
 
@@ -629,6 +664,7 @@ export function setUser(userDoc = getCachedDynamicUserDoc()) {
             }
         }
     }
+
 
     const usernames = document.getElementsByClassName('username');
     for (let username of usernames) {
@@ -716,63 +752,58 @@ async function handleUserLoggedIn(userData, getUserIpAddress, ensureUniqueId, fe
         createForm(createFormSection);
     }
 
-    const userId = userData.uid;
-
-    try {
-        const canSetUserData = setUser();
-        if (!canSetUserData) {
-            const setUserDataSuccess = await setUserDoc(getDocSnapshot);
-            if (!setUserDataSuccess) {
-                try {
-                    async function getServerAddressAPI() {
-                        return await fetchServerAddress(getDocSnapshot('servers', '3050-1'), 'API');
-                    }
-
-                    const [userIpAddress, uniqueId, serverAddressAPI] = await Promise.all([
-                        getUserIpAddress(),
-                        ensureUniqueId(),
-                        getServerAddressAPI()
-                    ]);
-
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const referral = urlParams.get('referral');
-
-                    const response = await fetch(`${serverAddressAPI}/create-user`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            userId,
-                            email: userData.email,
-                            username: userData.displayName,
-                            //phoneNumber: userData.phoneNumber,
-                            //emailVerified: userData.emailVerified,
-                            isAnonymous: userData.isAnonymous,
-                            userIpAddress,
-                            uniqueId,
-                            referral,
-                        }),
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
-                    }
-
-                    return await response.json();
-                } catch (error) {
-                    console.error('Error during user registration:', error);
-                    return null;
+    const canSetUserData = setUser();
+    if (!canSetUserData) {
+        const setUserDataSuccess = await setCurrentUserDoc(getDocSnapshot);
+        if (!setUserDataSuccess) {
+            try {
+                async function getServerAddressAPI() {
+                    return await fetchServerAddress(getDocSnapshot('servers', '3050-1'), 'API');
                 }
 
-                location.reload();
+                const [userIpAddress, uniqueId, serverAddressAPI] = await Promise.all([
+                    getUserIpAddress(),
+                    ensureUniqueId(),
+                    getServerAddressAPI()
+                ]);
+
+                const userId = userData.uid;
+                const urlParams = new URLSearchParams(window.location.search);
+                const referral = urlParams.get('referral');
+
+                const response = await fetch(`${serverAddressAPI}/create-user`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId,
+                        email: userData.email,
+                        username: userData.displayName,
+                        //phoneNumber: userData.phoneNumber,
+                        //emailVerified: userData.emailVerified,
+                        isAnonymous: userData.isAnonymous,
+                        userIpAddress,
+                        uniqueId,
+                        referral,
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error('Error during user registration:', error);
+                return null;
             }
+
+            location.reload();
         }
-    } catch (error) {
-        console.error("Error getting user document:", error);
+
+        return;
     }
 
-    await setCurrentUserData(getFirebaseModules);
-    await setUserDoc(getDocSnapshot);
-    setUser();
+    await setCurrentUserDoc(getDocSnapshot, true);
 }
 
 async function createSignFormSection(registerForm, retrieveImageFromURL, getFirebaseModules) {

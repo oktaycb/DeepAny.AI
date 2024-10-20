@@ -32,7 +32,7 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="css/styles.css?v=1.2.7">
+    <link rel="stylesheet" href="css/styles.css?v=1.2.8">
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             const cssRules = Array.from(document.styleSheets).flatMap(sheet => Array.from(sheet.cssRules));
@@ -61,7 +61,7 @@
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = '1.2.7';
+        const version = '1.2.8';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -69,7 +69,7 @@
 
         document.addEventListener('DOMContentLoaded', async function () {
             const functions = await loadModule('./scripts/functions.js');
-            const { openDB, addToDB, countInDB, getFromDB, updateActiveState, initDB, updateInDB, deleteFromDB, setUser, setUserDoc, getCachedStaticUserData, getCachedDynamicUserDoc, setAuthentication, getFirebaseModules, getDocSnapshot, getDocsSnapshot, getScreenMode, getCurrentMain, updateContent, ScreenMode, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserIpAddress, fetchServerAddresses, getPageName } = functions;
+            const { openDB, addToDB, countInDB, getFromDB, updateActiveState, initDB, updateInDB, deleteFromDB, setUser, setCurrentUserDoc, getCachedStaticUserData, getCachedDynamicUserDoc, setAuthentication, getFirebaseModules, getDocSnapshot, getDocsSnapshot, getScreenMode, getCurrentMain, updateContent, ScreenMode, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserIpAddress, fetchServerAddresses, getPageName } = functions;
 
             if (!window.indexedDB) {
                 alert('Your browser does not support IndexedDB.');
@@ -1040,7 +1040,7 @@
                     const lastOutput = outputs[outputs.length - 1];
                     const data = await fetchProcessState(lastOutput.url);
                     if (data.status === 'completed') {
-                        setUserDoc(getDocSnapshot);
+                        setCurrentUserDoc(getDocSnapshot);
                         await tryHandleLastOutputDownload(lastOutput, 3);
                     } else if (data.status === 'failed') 
                         setClientStatus(data.server);
@@ -1806,7 +1806,7 @@
                 function cancelProcess(showAlertion) {
                     return new Promise(async (resolve) => {
                         try {
-                            await setUserDoc(getDocSnapshot); userDoc = getCachedDynamicUserDoc();
+                            await setCurrentUserDoc(getDocSnapshot); userDoc = getCachedDynamicUserDoc();
 
                             const userIsProcessing = userDoc.isProcessing;
                             const serverAddresses = await fetchServerAddresses(getDocsSnapshot('servers'));

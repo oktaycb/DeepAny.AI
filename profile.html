@@ -32,7 +32,7 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="css/styles.css?v=1.2.7">
+    <link rel="stylesheet" href="css/styles.css?v=1.2.8">
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             const cssRules = Array.from(document.styleSheets).flatMap(sheet => Array.from(sheet.cssRules));
@@ -68,7 +68,7 @@
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = '1.2.7';
+        const version = '1.2.8';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
