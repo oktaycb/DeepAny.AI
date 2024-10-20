@@ -1908,18 +1908,24 @@ export function setupMainSize(mainQuery) {
 const swipeThreshold = 50;
 
 export function loadScrollingAndMain(navbar, mainQuery, sidebar, hamburgerMenu, setUser) {
-    if (!mainQuery || !mainQuery.length)
-        return;
+    if (!mainQuery || !mainQuery.length) return;
 
     let scrolling = false;
     let touchStartY = 0;
     let touchEndY = 0;
     let touchStartTime = 0;
+    let scrollAttemptedOnce = false; // Track if the user has scrolled once
+    let lastScrollTime = 0; // Track the last scroll event time
+    let lastScrollDirection = ''; // Track the last scroll direction ('up' or 'down')
+
+    function getCurrentMainElement() {
+        const currentIndex = getCurrentMain();
+        return mainQuery[currentIndex]; // Return the current main element based on the index
+    }
 
     function showMain(index, transitionDuration = 250) {
         if (mainQuery.length > 1 && index >= 0 && index < mainQuery.length && !scrolling) {
-            if (sidebarActive && getScreenMode() !== ScreenMode.PC)
-                return;
+            if (sidebarActive && getScreenMode() !== ScreenMode.PC) return;
 
             scrolling = true;
             const wentDown = index >= getCurrentMain();
@@ -1939,28 +1945,80 @@ export function loadScrollingAndMain(navbar, mainQuery, sidebar, hamburgerMenu, 
         if (!scrolling) {
             if (event.key === 'ArrowDown' || event.key === 'ArrowRight') {
                 event.preventDefault();
-                showMain(getCurrentMain() + 1);
+                handleScroll('down');
             } else if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') {
                 event.preventDefault();
-                showMain(getCurrentMain() - 1);
+                handleScroll('up');
             }
         }
     };
 
     const handleWheel = (event) => {
-        if (event.ctrlKey)
+        if (event.ctrlKey) {
+            console.log('Wheel event ignored due to ctrlKey:', event.ctrlKey);
             return;
+        }
+        handleScroll(event.deltaY > 0 ? 'down' : 'up');
+    };
 
-        if (!scrolling) {
-            if (event.deltaY > 0) {
+    const handleScroll = (direction) => {
+        const currentTime = Date.now();
+
+        const currentMainElement = getCurrentMainElement();
+        if (!currentMainElement) return;
+
+        const atTop = currentMainElement.scrollTop === 0;
+        const atBottom = currentMainElement.scrollTop + currentMainElement.clientHeight >= currentMainElement.scrollHeight;
+        const isMainScrollable = currentMainElement.scrollHeight > currentMainElement.clientHeight;
+
+        // Check the time since the last scroll attempt
+        if (scrollAttemptedOnce && (currentTime - lastScrollTime < 500 / 2)) {
+            console.log('Scroll attempt ignored due to time constraint:', currentTime - lastScrollTime);
+            return; // Ignore the scroll attempt
+        }
+
+        // Update last scroll time
+        lastScrollTime = currentTime;
+
+        // Reset the scroll attempt if the direction is different
+        if (scrollAttemptedOnce && direction !== lastScrollDirection) {
+            console.log('Scroll attempt reset due to direction change:', direction);
+            scrollAttemptedOnce = false; // Reset for the next use
+        }
+
+        // Update last scroll direction
+        lastScrollDirection = direction;
+
+        // If the main is not scrollable, directly use custom scrolling
+        if (!isMainScrollable) {
+            if (direction === 'down') {
                 showMain(getCurrentMain() + 1);
-            } else if (event.deltaY < 0) {
+            } else {
                 showMain(getCurrentMain() - 1);
             }
+            return; // Exit after handling the custom scrolling
+        }
+
+        // For scrollable main, check top/bottom state for second scroll attempt
+        if (atTop || atBottom) {
+            if (scrollAttemptedOnce) {
+                console.log('Second scroll attempt:', direction);
+                if (direction === 'down') {
+                    showMain(getCurrentMain() + 1);
+                } else {
+                    showMain(getCurrentMain() - 1);
+                }
+                scrollAttemptedOnce = false; // Reset for next use
+            } else {
+                console.log('First scroll attempt, waiting for second:', direction);
+                scrollAttemptedOnce = true; // Set to true for the next scroll
+            }
+        } else {
+            console.log('Main is scrollable, normal scrolling allowed.');
         }
     };
 
-    const handleEvent = e => {
+    const handleEvent = (e) => {
         if (!e) return;
         const { clientY, clientX } = e.type === 'touchstart' ? e.touches[0] : e;
         if (clientY > navbar.offsetHeight) {
@@ -1984,11 +2042,8 @@ export function loadScrollingAndMain(navbar, mainQuery, sidebar, hamburgerMenu, 
         const touchDistance = touchEndY - touchStartY;
         const touchDuration = Date.now() - touchStartTime;
         if (Math.abs(touchDistance) > swipeThreshold && touchDuration < 500) {
-            if (touchDistance < 0) {
-                showMain(getCurrentMain() + 1);
-            } else {
-                showMain(getCurrentMain() - 1);
-            }
+            const direction = touchDistance < 0 ? 'down' : 'up';
+            handleScroll(direction);
         }
     };
 

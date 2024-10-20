@@ -1,5 +1,10 @@
 ﻿html, body {
+    overflow: hidden;
     touch-action: none
+}
+
+main {
+    overflow: auto;
 }
 
 :root {
@@ -25,7 +30,7 @@
     --font-size: calc(2.4vh * var(--scale-factor-h));
     --scale-factor-h: .5;
     --scale-factor-w: .5;
-    --scrollbar-width: calc(2vh * var(--scale-factor-h));
+    --scrollbar-width: 6px;
     --border: 1px;
     --border-radius: calc(1vh * var(--scale-factor-h));
     --ease-time: 0.5s;
@@ -76,10 +81,6 @@
 
 .center, .first-text, .slider-value, button, a.button {
     text-align: center
-}
-
-.main-container, body, main {
-    overflow-x: hidden
 }
 
 body, h1, h2, h3, h4, p {
@@ -162,8 +163,8 @@ main {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    margin: calc((2vh * var(--scale-factor-h) ));
-    gap: calc((2vh * var(--scale-factor-h) ));
+    margin: calc(2vh * var(--scale-factor-h));
+    gap: calc(2vh * var(--scale-factor-h));
     width: auto;
     height: auto;
     z-index: 1
