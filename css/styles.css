@@ -27,7 +27,7 @@
     --scale-factor-w: .5;
     --scrollbar-width: calc(2vh * var(--scale-factor-h));
     --border: 1px;
-    --border-radius: calc((1vh * var(--scale-factor-h) ));
+    --border-radius: calc(1vh * var(--scale-factor-h));
     --ease-time: 0.5s;
     --line-width: calc((4vh* var(--scale-factor-h) ));
     --line-height: calc((0.5vh* var(--scale-factor-h) ));
@@ -169,6 +169,10 @@ main {
     z-index: 1
 }
 
+.ar-4-3 .main-container {
+    justify-content: unset;
+}
+
 .long {
     height: 100%
 }
@@ -219,6 +223,15 @@ button, a.button, input, li, a, select, textarea {
     font-size: calc((2.5vh * var(--scale-factor-h) ))
 }
 
+label {
+    font-size: calc((2vh * var(--scale-factor-h) ))
+}
+
+small {
+    font-size: calc((1.5vh * var(--scale-factor-h) ));
+    display: flex;
+}
+
 li {
     line-height: calc((2.5vh * 1.75 * var(--scale-factor-h)))
 }
@@ -226,6 +239,19 @@ li {
 a {
     font-weight: 400;
     display: inline-block
+}
+
+#formWrapper {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(6px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1002;
+    padding: calc(1vh* var(--scale-factor-h)) calc((2vh* var(--scale-factor-h)));
 }
 
     .text-gradient, a.text:hover, a.active {
@@ -255,28 +281,16 @@ a {
 
 .button-container {
     display: flex;
-    -moz-display: flex;
-    -ms-display: flex;
     justify-content: flex-start;
-    -webkit-justify-content: flex-start;
-    -moz-justify-content: flex-start;
-    -ms-justify-content: flex-start;
     width: 75%;
     gap: calc(1vh * var(--scale-factor-h))
 }
 
 button, a.button {
     display: flex;
-    -moz-display: flex;
-    -ms-display: flex;
     justify-content: center;
     -webkit-justify-content: center;
-    -moz-justify-content: center;
-    -ms-justify-content: center;
     align-items: center;
-    -webkit-align-items: center;
-    -moz-align-items: center;
-    -ms-align-items: center;
     white-space: nowrap;
     border: var(--border) solid;
     border-radius: var(--border-radius);
@@ -284,7 +298,7 @@ button, a.button {
     cursor: pointer;
     font-weight: 500;
     background: linear-gradient(45deg,#181818 60%,#181818);
-    height: calc((6vh * var(--scale-factor-h) ));
+    height: calc((7vh * var(--scale-factor-h) ));
     width: 30%;
     min-width: fit-content;
     padding: 0 calc((1.5vh * var(--scale-factor-h) ));
@@ -335,7 +349,7 @@ button:disabled, a.button.disabled {
 }
 
 .sidebar button, .sidebar a.button {
-    margin: calc(.75vh * var(--scale-factor-h)) 0;
+    margin: 0;
     white-space: nowrap;
     justify-content: left;
     width: 100%
@@ -365,7 +379,7 @@ button:disabled, a.button.disabled {
 }
 
 input, select {
-    height: calc((6vh * var(--scale-factor-h) ))
+    height: calc((7vh * var(--scale-factor-h) ))
 }
 
 option {
@@ -428,6 +442,7 @@ option {
     flex-direction: column;
     gap: calc(1vh * var(--scale-factor-h))
 }
+
 
 .sidebar div {
     display: flex;
@@ -637,7 +652,7 @@ ul {
 }
 
 .background-container, .background-dot-container-content {
-    gap: calc((1vh* var(--scale-factor-h) ));
+    gap: calc(1vh* var(--scale-factor-h));
     display: flex
 }
 
@@ -692,6 +707,10 @@ ul {
     border: var(--border) solid #3c3f44;
     align-items: center;
     justify-content: space-between
+}
+
+.ar-4-3 .background-container {
+    width: 100%;
 }
 
 input[type=range] {
@@ -1051,29 +1070,29 @@ input[type=range] {
     }
 
 .line {
-    margin-top: calc((1.5vh * var(--scale-factor-h) ));
-    margin-bottom: calc((1.5vh * var(--scale-factor-h) ));
+    margin-top: calc((1vh * var(--scale-factor-h) ));
+    margin-bottom: calc((1vh * var(--scale-factor-h) ));
     border: var(--border) solid rgba(var(--grey),1);
+    width: 100%;
     line-height: 100%
 }
 
 .ar-4-3 .sidebar button, .ar-4-3 .sidebar a.button {
-    margin: calc((.75vh + 1.5vw / 2) / 2) 0;
+    margin: 0vh 0;
     white-space: nowrap;
     justify-content: left;
-    padding-left: calc((1.5vh * var(--scale-factor-h) ));
     width: 100%;
-    height: calc((6vh + 12vw / 2) / 2);
-    border-radius: calc((1vh + 2vw / 2) / 2)
+    height: 5vh;
+    border-radius: 1vh
 }
 
 .ar-4-3 .sidebar button, .ar-4-3 .sidebar a.button {
-    font-size: calc((2.5vh + 5vw / 2) / 2)
+    font-size: 2vh
 }
 
     .ar-4-3 .sidebar button svg, .ar-4-3 .sidebar a.button svg {
-        margin-right: calc((1vh + 2vw / 2) / 2);
-        width: calc((2.5vh + 5vw / 2) / 2)
+        margin-right: 1vh;
+        width: 2vh
     }
 
 .ar-4-3 .hamburger-menu {
@@ -1375,7 +1394,7 @@ label.checkbox {
     display: flex;
     align-items: center;
     cursor: pointer;
-    height: calc(6vh* var(--scale-factor-h));
+    height: calc(7vh* var(--scale-factor-h));
     padding: calc(1vh* var(--scale-factor-h));
     border: var(--border) solid;
     border-color: rgba(var(--grey),1);
@@ -1438,7 +1457,7 @@ label.checkbox input[type="checkbox"]:checked {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: calc(6vh * var(--scale-factor-h));
+    height: calc(7vh * var(--scale-factor-h));
     cursor: pointer;
     white-space: nowrap;
     border: var(--border) solid;
@@ -1682,7 +1701,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .important-outline, input, select, textarea {
-    transition: --transition-angle var(--transition-duration-5),opacity var(--transition-duration-5),--transition-red var(--transition-duration-5),--transition-orange var(--transition-duration-5),--transition-white var(--transition-duration-5),--transition-grey var(--transition-duration-5)
+    transition: --transition-angle var(--transition-duration-3),opacity var(--transition-duration-3),--transition-red var(--transition-duration-3),--transition-orange var(--transition-duration-3),--transition-white var(--transition-duration-3),--transition-grey var(--transition-duration-3)
 }
 
     .important-outline:hover {
@@ -1765,4 +1784,20 @@ input, select, textarea {
     -moz-transition: --transition-grey var(--transition-duration-1);
     -o-transition: --transition-grey var(--transition-duration-1);
     -ms-transition: --transition-grey var(--transition-duration-1)
+}
+
+.ar-4-3 .background-dot-container {
+    width: 100%;
+}
+
+.custom-width {
+    width: 25vw;
+    min-width: 50vh;
+    --scale-factor-h: .8;
+}
+
+.ar-4-3 .custom-width {
+    width: 100%;
+    min-width: unset;
+    --scale-factor-h: 1;
 }

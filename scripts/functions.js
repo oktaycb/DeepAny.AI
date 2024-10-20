@@ -1,16 +1,1182 @@
-export function setCache(e, t, _) { let r = new Date, a = { value: t, expiry: r.getTime() + _ }; localStorage.setItem(e, JSON.stringify(a)) } export function getCache(e) { let t = localStorage.getItem(e); if (!t) return null; let _ = JSON.parse(t), r = new Date; return r.getTime() > _.expiry ? (localStorage.removeItem(e), null) : _.value } export const resizeImage = (e, t, _) => new Promise((r, a) => { let $ = new Image; $.src = e, $.onload = () => { let e = document.createElement("canvas"), a = e.getContext("2d"); e.width = t, e.height = _, a.drawImage($, 0, 0, t, _), r(e.toDataURL()) }, $.onerror = e => { a(`Image resizing failed: ${e}`) } }); export function retrieveImageFromURL(e, t, _ = 2, r = 1e3, a = !1) { fetch(e).then($ => { if ($.ok) return $.blob(); if (429 === $.status && _ > 0) setTimeout(() => { console.log(`Retrying... Attempts left: ${_}`), retrieveImageFromURL(e, t, _ - 1, 2 * r, a) }, r); else throw Error(`Failed to fetch image: ${$.status}`) }).then(e => { if (e) { if (a) { let _ = new FileReader; _.onloadend = () => { t(_.result) }, _.readAsDataURL(e) } else t(URL.createObjectURL(e)) } }).catch(e => { console.error("Error fetching the image:", e) }) } export function handleImageUpload(e, t) { let _ = document.getElementById(e); _.addEventListener("click", function () { let e = document.createElement("input"); e.type = "file", e.accept = "image/*", e.style.display = "none", document.body.appendChild(e), e.click(), e.addEventListener("change", function (r) { let a = r.target.files[0]; if (a) { let $ = new FileReader; $.onloadend = function () { let e = new Image; e.src = $.result, e.onload = function () { let r = document.createElement("canvas"), a = r.getContext("2d"); r.width = 96, r.height = 96, a.drawImage(e, 0, 0, r.width, r.height); let $ = r.toDataURL(); _.src = $, localStorage.setItem(t, $) } }, $.readAsDataURL(a) } e.remove() }) }) } async function fetchWithTimeout(e, t, _) { let r = _.signal, a = fetch(e, { signal: r }).then(e => e.json()), $ = new Promise((e, r) => { setTimeout(() => { _.abort(), r(Error("Request timed out")) }, t) }); return Promise.race([a, $]) } export async function getUserIpAddress() { let e = ["https://ipinfo.io/json", "https://api64.ipify.org?format=json"], t = e.map(() => new AbortController); try { let _ = e.map((e, _) => fetchWithTimeout(e, 1e3, t[_])), r = await Promise.any(_); return t.forEach(e => e.abort()), r.ip } catch (a) { return console.error("All attempts to fetch IP address failed:", a), null } } export function getPageName() { let e = window.location.pathname, t = e.split("/"); return t[t.length - 1] || "default" } export async function fetchServerAddresses(e, t = !0) { let _ = getPageName() + "-serverAddresses", r = getCache(_); if (t || (r = r.filter(e => !e.includes("3050"))), r) return r; let a = await e, $ = a.docs.map(e => e.data()["serverAdress-DF"]).filter(Boolean); return setCache(_, $, 6048e5), t || ($ = $.filter(e => !e.includes("3050"))), $ } export async function fetchServerAddress(e, t) { let _ = `serverAddress-${t}`, r = getCache(_); if (r) return r; let a = await e; if (a && a.exists()) { let $ = a.data()[`serverAdress-${t}`]; return setCache(_, $ || null, 6048e5), $ || null } return null } export async function fetchConversionRates() { let e = "conversionRates", t = getCache(e); if (t) return t; try { let _ = await fetch("https://api.frankfurter.app/latest?from=USD"); if (!_.ok) throw Error("API request failed"); let r = await _.json(); return setCache(e, r.rates, 864e5), r.rates } catch (a) { return console.error("Error fetching conversion rates:", a), { EUR: .9, GBP: .8, TRY: 35 } } } export function generateBID() { for (var e = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789%^&*()_-+=", t = "", _ = 0; _ < 12; _++) { var r = Math.floor(Math.random() * e.length); t += e.charAt(r) } return t } export async function ensureUniqueId() { let e = localStorage.getItem("uniqueUserBrowserRegisterId"); if (!e) { let t = await generateBID(); return localStorage.setItem("uniqueUserBrowserRegisterId", t), t } return e } export const openDB = (e, t) => new Promise((_, r) => { let a = indexedDB.open(e, 1); a.onupgradeneeded = e => { let _ = e.target.result; _.createObjectStore(t, { keyPath: "id", autoIncrement: !0 }) }, a.onsuccess = e => { let t = e.target.result; _(t) }, a.onerror = e => { r(`Error opening database: ${e.target.error}`) } }); export const countInDB = e => new Promise((t, _) => { let r = e.transaction([e.objectStoreNames[0]], "readonly"), a = r.objectStore(e.objectStoreNames[0]), $ = a.count(); $.onsuccess = e => { t(e.target.result) }, $.onerror = e => { _(`Error counting entries in database: ${e.target.error}`) } }); export const addToDB = (e, t, _) => new Promise((r, a) => { let $ = e.transaction([e.objectStoreNames[0]], "readwrite"), i = $.objectStore(e.objectStoreNames[0]), n = localStorage.getItem(`${e.objectStoreNames[0]}-index`); n = null === n ? 0 : parseInt(n, 10), n += 1, localStorage.setItem(`${e.objectStoreNames[0]}-index`, n); let o = { timestamp: new Date().getTime(), index: n }; t instanceof Blob ? o.blob = t : Array.isArray(t) && (null !== t[0] && (o.blob = t[0]), null !== t[1] && (o.url = t[1])), o = Object.fromEntries(Object.entries(o).filter(([e, t]) => null != t)); let s = i.add(o); s.onsuccess = async () => { r(n), await _() }, s.onerror = t => { n -= 1, localStorage.setItem(`${e.objectStoreNames[0]}-index`, n), alert("Error adding data to database: " + t), a(`Error adding data to database: ${t.target.error ? t.target.error.message : "Unknown error"}`) } }); export const getFromDB = (e, t = null, _ = 0) => new Promise((r, a) => { let $ = e.transaction([e.objectStoreNames[0]], "readonly"), i = $.objectStore(e.objectStoreNames[0]), n = i.getAll(); n.onsuccess = e => { let a = e.target.result; a = a.sort((e, t) => t.index - e.index), null !== t && (a = a.slice(_, _ + t)), r(a.map(e => ({ blob: e.blob || null, url: e.url || null, index: e.index || null, id: e.id || null, timestamp: e.timestamp || null }))) }, n.onerror = e => { a(`Error retrieving data from database: ${e.target.error}`) } }); export const initDB = async (e, t, _) => {
-	try {
-		let r = openDB(e, t), a = localStorage.getItem(`${t}-count`); a ? a = parseInt(a, 10) : (a = await countInDB(await r), localStorage.setItem(`${t}-count`, a)); let $ = document.querySelector(`.${t}`), i = document.createDocumentFragment(); if (a > 0) { $.style.display = a > 0 ? "flex" : "none"; for (let n = 0; n < a; n++) { let o = document.createElement("div"); o.className = "data-container", o.innerHTML = '<div class="process-text"></div><div class="delete-icon"></div>', i.appendChild(o) } } if ($.appendChild(i), a = await countInDB(r = await r), localStorage.setItem(`${t}-count`, a), a > 0) {
-			let s = await getFromDB(r), l = $.querySelectorAll(".data-container"); for (let [c, { blob: d, url: u, index: h, timestamp: g }] of s.entries()) if (console.log("url: " + u), console.log("index: " + h), console.log("timestamp: " + g), d) {
-				let p = URL.createObjectURL(d); d.type.startsWith("video") ? l[c].innerHTML = `<video index="${h}" timestamp="${g}" playsinline preload="auto" disablePictureInPicture loop muted autoplay>
-                                            <source src="${p}" type="${d.type}">
-                                            Your browser does not support the video tag.
-                                        </video><div class="process-text"></div><div class="delete-icon"></div>`: d.type.startsWith("image") ? l[c].innerHTML = `<img index="${h}" timestamp="${g}" src="${p}" alt="Uploaded Photo"/><div class="process-text"></div><div class="delete-icon"></div>` : l[c].innerHTML = `<video index="${h}" timestamp="${g}"></video><div class="process-text"></div><div class="delete-icon"></div>`
-			} else if (u) { let m = { db: r, url: u, element: l[c], index: h }; _(m) } else g && (l[c].innerHTML = `<img index="${h}" timestamp="${g}"/><div class="process-text"></div><div class="delete-icon"></div>`); $.style.display = a > 0 ? "flex" : "none"
-		}
-	} catch (f) { console.error(`Database initialization failed: ${f.message}`) }
-}; export const updateInDB = (e, t, _, r) => new Promise((a, $) => { let i = e.transaction([e.objectStoreNames[0]], "readwrite"), n = i.objectStore(e.objectStoreNames[0]), o = n.openCursor(); o.onsuccess = e => { let i = e.target.result; if (i) { if (i.value.url === t) { i.value.blob = _; let n = i.update(i.value); n.onsuccess = async () => { a(), await r() }, n.onerror = e => { $(`Error updating photo in database: ${e.target.error}`) } } else i.continue() } else $(`No record found with url: ${t}`) }, o.onerror = e => { $(`Error opening cursor in database: ${e.target.error}`) } }); export const deleteFromDB = async (e, t, _) => new Promise((r, a) => { let $ = e.transaction([e.objectStoreNames[0]], "readwrite"), i = $.objectStore(e.objectStoreNames[0]), n = i.delete(t); n.onsuccess = async () => { r(), await _() }, n.onerror = e => { a(`Error deleting photo from database: ${e.target.error}`) } }); let firebaseModules = null; export async function getFirebaseModules() { if (firebaseModules) return firebaseModules; let e = await import("https://www.gstatic.com/firebasejs/9.17.2/firebase-app.js"), t = await import("https://www.gstatic.com/firebasejs/9.17.2/firebase-auth.js"), _ = await import("https://www.gstatic.com/firebasejs/9.17.2/firebase-firestore.js"), { initializeApp: r } = e, { getAuth: a, GoogleAuthProvider: $, signInWithPopup: i, createUserWithEmailAndPassword: n, onAuthStateChanged: o, signOut: s } = t, { getFirestore: l, collection: c, doc: d, getDoc: u, getDocs: h } = _, g = r({ apiKey: "AIzaSyB9KofLbx0_N9CKXUPJiuzRBMYizM-YPYw", authDomain: "bodyswap-389200.firebaseapp.com", projectId: "bodyswap-389200", storageBucket: "bodyswap-389200.appspot.com", messagingSenderId: "385732753036", appId: "1:385732753036:web:e078abf4bbf557938deda9", measurementId: "G-7PLJEN2Y0R" }), p = a(g), m = l(g); return firebaseModules = { auth: p, db: m, GoogleAuthProvider: $, signInWithPopup: i, createUserWithEmailAndPassword: n, onAuthStateChanged: o, signOut: s, doc: d, getDoc: u, getDocs: h, collection: c } } export async function getDocSnapshot(e, t) { let { db: _, doc: r, getDoc: a, collection: $ } = await getFirebaseModules(); return await a(r($(_, e), t)) } export async function getDocsSnapshot(e) { let { db: t, getDocs: _, collection: r } = await getFirebaseModules(); return await _(r(t, e)) } export const getCachedStaticUserData = () => { let e = localStorage.getItem("cachedUserData"); return e ? JSON.parse(e) : null }; export const getCachedDynamicUserDoc = () => { let e = localStorage.getItem("cachedUserDocument"); return e ? JSON.parse(e) : null }; export async function setUserData(e) { let t = getCachedStaticUserData(), _ = await e("users", t.uid); if (!_ || !_.exists()) return !1; let r = _.data(); return localStorage.setItem("cachedUserDocument", JSON.stringify(r)), setUser(r), !0 } export function setUser(e = getCachedDynamicUserDoc()) { if (!e) return !1; !function e(t, _) { let r = document.getElementsByClassName(t), a = localStorage.getItem(_); if (a) for (let $ of r) $.src = a; else for (let i of r) i.src = "assets/profile.webp" }("profile-image", "profileImageBase64"); let t = document.getElementById("creditsAmount"); t && (t.textContent = t.textContent.replace(/\d+/, e.credits)); let _ = document.getElementsByClassName("username"); for (let r of _) r.textContent = e.username, r.value = e.username; return !0 } async function handleUserLoggedIn(e, t, _, r, a) { if (!e) return; let $ = document.getElementById("loginButton"), i = document.getElementById("registerButton"); $ && $.remove(), i && i.remove(); let n = e.uid; try { let o = setUser(); if (!o) { let s = await setUserData(a); if (!s) { try { async function l() { return await r(a("servers", "3050-1"), "API") } let [c, d, u] = await Promise.all([t(), _(), l()]), h = new URL(window.location.href), g = h.searchParams.get("referral"), p = await fetch(`${u}/create-user`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: n, email: e.email, username: e.displayName, phoneNumber: e.phoneNumber, emailVerified: e.emailVerified, isAnonymous: e.isAnonymous, userIpAddress: c, uniqueId: d, referral: g }) }); if (!p.ok) throw Error(`HTTP error! Status: ${p.status}`); return await p.json() } catch (m) { return console.error("Error during user registration:", m), null } location.reload() } } } catch (f) { console.error("Error getting user document:", f) } } export async function loginUser(e, t) { try { let { auth: _, GoogleAuthProvider: r, signInWithPopup: a } = await t(), $ = new r, i = await a(_, $), n = { ...i.user }; if (delete n.stsTokenManager, delete n.providerData, delete n.metadata, delete n.accessToken, delete n.proactiveRefresh, delete n.providerId, delete n.tenantId, delete n.reloadListener, delete n.reloadUserInfo, delete n.auth, !localStorage.getItem("profileImageBase64")) { let o = await e(n.photoURL, 2, 1e3, !0); o && localStorage.setItem("profileImageBase64", o) } let s = JSON.stringify(n); localStorage.setItem("cachedUserData", s), location.reload() } catch (l) { console.error("Google sign-in error:", l) } } export async function registerUser(e) { try { let { auth: t, createUserWithEmailAndPassword: _ } = await e(), r = prompt("Enter your email:"), a = prompt("Enter your password:"), $ = await _(t, r, a), i = { ...$.user }; delete i.stsTokenManager, delete i.providerData, delete i.metadata, delete i.accessToken, delete i.proactiveRefresh, delete i.providerId, delete i.tenantId, delete i.reloadListener, delete i.reloadUserInfo, delete i.auth, localStorage.setItem("cachedUserData", JSON.stringify(i)), location.reload() } catch (n) { console.error("Registration error:", n) } } async function handleLoggedOutState(e, t) { let _ = document.getElementById("userProfileLayout"); _ && _.remove(); let r = document.getElementById("loginButton"), a = document.getElementById("registerButton"); r && r.addEventListener("click", async _ => { _.preventDefault(); try { await loginUser(e, t) } catch (r) { console.error("Google sign-in error:", r) } }), a && a.addEventListener("click", async e => { e.preventDefault(); try { await registerUser(t) } catch (_) { console.error("Registration error:", _) } }) } export function setAuthentication(e, t, _, r, a, $) { let i = document.getElementById("signOut"); i && i.addEventListener("click", async function () { let { auth: e, signOut: t } = await a(); localStorage.removeItem("cachedUserData"), localStorage.removeItem("cachedUserDocument"), localStorage.removeItem("profileImageBase64"); try { await t(e), console.log("User signed out successfully"), location.reload() } catch (_) { console.error("Error during sign out:", _) } }); let n = localStorage.getItem("cachedUserData"); n ? handleUserLoggedIn(JSON.parse(n), t, _, r, $) : handleLoggedOutState(e, a) } export function loadPageContent(e, t, _, r, a, $, i, n, o, s, l, c, d, u, h, g, p, m, f, v, w, C, y, b, x = null) {
-	let L = null, S = null, I = n(); if (!localStorage.getItem("sidebarStateInitialized") && 1 !== I) { localStorage.setItem("sidebarState", "keepSideBar"); document.querySelectorAll(".sidebar img").forEach(e => { e.setAttribute("loading", "lazy") }), localStorage.setItem("sidebarStateInitialized", "true") } function E(e) { document.documentElement.classList.toggle("ar-4-3", 1 !== e) } document.body.insertAdjacentHTML("afterbegin", `
+export function setCache(key, value, ttl) {
+    const now = new Date();
+    const item = {
+        value: value,
+        expiry: now.getTime() + ttl,
+    }
+    localStorage.setItem(key, JSON.stringify(item));
+}
+
+export function getCache(key) {
+    const itemStr = localStorage.getItem(key);
+    if (!itemStr) {
+        return null;
+    }
+
+    const item = JSON.parse(itemStr);
+    const now = new Date();
+    if (now.getTime() > item.expiry) {
+        localStorage.removeItem(key);
+        return null;
+    }
+    return item.value;
+}
+
+export const resizeImage = (base64, width, height) => {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = base64;
+
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = width;
+            canvas.height = height;
+
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL());
+        };
+
+        img.onerror = (error) => {
+            reject(`Image resizing failed: ${error}`);
+        };
+    });
+};
+
+export function retrieveImageFromURL(photoURL, callback, retries = 2, delay = 1000, createBase64 = false) {
+    fetch(photoURL)
+        .then(response => {
+            if (response.ok) {
+                return response.blob();
+            } else if (response.status === 429 && retries > 0) {
+                setTimeout(() => {
+                    retrieveImageFromURL(photoURL, callback, retries - 1, delay * 2, createBase64);
+                }, delay);
+            } else {
+                throw new Error(`Failed to fetch image: ${response.status}`);
+            }
+        })
+        .then(blob => {
+            if (blob) {
+                if (createBase64) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        callback(reader.result);
+                    };
+                    reader.readAsDataURL(blob);
+                } else callback(URL.createObjectURL(blob));
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching the image:', error);
+        });
+}
+
+/* Use resizeImage here!!! */
+export function handleImageUpload(imgElementId, storageKey) {
+    const imgElement = document.getElementById(imgElementId);
+    imgElement.addEventListener('click', function () {
+        const inputElement = document.createElement("input");
+        inputElement.type = "file";
+        inputElement.accept = "image/*";
+        inputElement.style.display = "none";
+        document.body.appendChild(inputElement);
+        inputElement.click();
+        inputElement.addEventListener("change", function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onloadend = function () {
+                    const img = new Image();
+                    img.src = reader.result;
+                    img.onload = function () {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        canvas.width = 96; 
+                        canvas.height = 96;
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                        const resizedBase64Image = canvas.toDataURL(); 
+                        imgElement.src = resizedBase64Image; 
+                        localStorage.setItem(storageKey, resizedBase64Image);
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+
+            inputElement.remove();
+        });
+    });
+}
+
+async function fetchWithTimeout(url, timeout, controller) {
+    const signal = controller.signal;
+
+    const fetchPromise = fetch(url, { signal }).then(response => response.json());
+    const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => {
+            controller.abort();
+            reject(new Error('Request timed out'));
+        }, timeout);
+    });
+
+    return Promise.race([fetchPromise, timeoutPromise]);
+}
+
+export async function getUserIpAddress() {
+    const urls = [
+        'https://ipinfo.io/json',
+        'https://api64.ipify.org?format=json'
+    ];
+
+    const controllers = urls.map(() => new AbortController()); 
+    try {
+        const fetchPromises = urls.map((url, index) => fetchWithTimeout(url, 1000, controllers[index]));
+        const data = await Promise.any(fetchPromises);
+        controllers.forEach(controller => controller.abort());
+        return data.ip;
+    } catch (error) {
+        console.error('All attempts to fetch IP address failed:', error);
+        return null;
+    }
+}
+
+export function getPageName() {
+    const url = window.location.pathname;
+    const pathArray = url.split('/');
+    return pathArray[pathArray.length - 1] || 'default';
+}
+
+export async function fetchServerAddresses(snapshotPromise, keepSlowServers = true) {
+    const cacheKey = getPageName() + '-serverAddresses';
+    let cachedAddresses = getCache(cacheKey);
+    if (!keepSlowServers)
+        cachedAddresses = cachedAddresses.filter(address => !address.includes("3050"));
+    if (cachedAddresses) return cachedAddresses;
+
+    const snapshot = await snapshotPromise;
+    let serverAddresses = snapshot.docs.map((doc) => doc.data()['serverAdress-DF']).filter(Boolean);
+    setCache(cacheKey, serverAddresses, 7 * 24 * 60 * 60 * 1000);
+    if (!keepSlowServers)
+        serverAddresses = serverAddresses.filter(address => !address.includes("3050"));
+    return serverAddresses;
+}
+
+export async function fetchServerAddress(snapshotPromise, fieldId) {
+    const cacheKey = `serverAddress-${fieldId}`;
+    const cachedAddress = getCache(cacheKey);
+    if (cachedAddress) return cachedAddress;
+
+    const snapshot = await snapshotPromise;
+    if (snapshot && snapshot.exists()) {
+        const serverAddress = snapshot.data()[`serverAdress-${fieldId}`];
+        setCache(cacheKey, serverAddress || null, 7 * 24 * 60 * 60 * 1000);
+        return serverAddress || null;
+    }
+
+    return null;
+}
+
+export async function fetchConversionRates() {
+    const cacheKey = 'conversionRates';
+    const cachedRates = getCache(cacheKey);
+    if (cachedRates) return cachedRates;
+
+    try {
+        const response = await fetch('https://api.frankfurter.app/latest?from=USD');
+        if (!response.ok) {
+            throw new Error('API request failed');
+        }
+        const data = await response.json();
+        setCache(cacheKey, data.rates, 1 * 24 * 60 * 60 * 1000);
+        return data.rates;
+    } catch (error) {
+        console.error("Error fetching conversion rates:", error);
+        return { EUR: 0.9, GBP: 0.8, TRY: 35.00 };
+    }
+}
+
+export function generateBID() {
+    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789%^&*()_-+=';
+    var uniqueId = '';
+
+    for (var i = 0; i < 12; i++) {
+        var randomIndex = Math.floor(Math.random() * characters.length);
+        uniqueId += characters.charAt(randomIndex);
+    }
+
+    return uniqueId;
+}
+
+export async function ensureUniqueId() {
+    const storedUniqueId = localStorage.getItem('uniqueUserBrowserRegisterId');
+    if (!storedUniqueId) {
+        const newUniqueId = await generateBID();
+        localStorage.setItem('uniqueUserBrowserRegisterId', newUniqueId);
+        return newUniqueId;
+    }
+
+    return storedUniqueId;
+}
+
+export const openDB = (dataBaseIndexName, dataBaseObjectStoreName) => {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(dataBaseIndexName, 1);
+
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            db.createObjectStore(dataBaseObjectStoreName, { keyPath: 'id', autoIncrement: true });
+        };
+
+        request.onsuccess = (event) => {
+            const db = event.target.result;
+            resolve(db);
+        };
+
+        request.onerror = (event) => {
+            reject(`Error opening database: ${event.target.error}`);
+        };
+    });
+};
+
+export const countInDB = (db) => {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([db.objectStoreNames[0]], 'readonly');
+        const objectStore = transaction.objectStore(db.objectStoreNames[0]);
+        const request = objectStore.count();
+
+        request.onsuccess = (event) => {
+            resolve(event.target.result);
+        };
+
+        request.onerror = (event) => {
+            reject(`Error counting entries in database: ${event.target.error}`);
+        };
+    });
+};
+
+export const addToDB = (db, data, saveCountIndex, isActive = false) => {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
+        const objectStore = transaction.objectStore(db.objectStoreNames[0]);
+
+        let currentIndex = localStorage.getItem(`${db.objectStoreNames[0]}-index`);
+        currentIndex = currentIndex === null ? 0 : parseInt(currentIndex, 10);
+        currentIndex += 1;
+        localStorage.setItem(`${db.objectStoreNames[0]}-index`, currentIndex);
+
+        const timestamp = new Date().getTime(); // Capture the current timestamp
+
+        // Create the entry object with active state
+        let entry = {
+            timestamp, // Add the timestamp here
+            index: currentIndex,
+            isActive // Set the isActive state
+        };
+
+        if (data instanceof Blob) {
+            entry.blob = data;
+        } else if (Array.isArray(data)) {
+            if (data[0] !== null) entry.blob = data[0];
+            if (data[1] !== null) entry.url = data[1];
+        }
+
+        entry = Object.fromEntries(Object.entries(entry).filter(([_, v]) => v != null));
+
+        const request = objectStore.add(entry);
+        request.onsuccess = async () => {
+            await saveCountIndex();
+            resolve({ index: currentIndex, timestamp });
+        };
+
+        request.onerror = (event) => {
+            currentIndex -= 1;
+            localStorage.setItem(`${db.objectStoreNames[0]}-index`, currentIndex);
+            alert('Error adding data to database: ' + event);
+            reject(`Error adding data to database: ${event.target.error ? event.target.error.message : 'Unknown error'}`);
+        };
+    });
+};
+
+export const getFromDB = (db, limit = null, offset = 0) => {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([db.objectStoreNames[0]], 'readonly');
+        const objectStore = transaction.objectStore(db.objectStoreNames[0]);
+        const request = objectStore.getAll();
+
+        request.onsuccess = (event) => {
+            let results = event.target.result;
+            results = results.sort((a, b) => b.index - a.index);
+            if (limit !== null) {
+                results = results.slice(offset, offset + limit);
+            }
+
+            resolve(results.map(item => ({
+                blob: item.blob || null,
+                url: item.url || null,
+                index: item.index || null,
+                id: item.id || null,
+                timestamp: item.timestamp || null,
+                isActive: item.isActive || false
+            })));
+        };
+
+        request.onerror = (event) => {
+            reject(`Error retrieving data from database: ${event.target.error}`);
+        };
+    });
+};
+
+export const updateActiveState = async (db, index, isActive) => {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
+        const objectStore = transaction.objectStore(db.objectStoreNames[0]);
+        const request = objectStore.get(index);
+
+        request.onsuccess = (event) => {
+            const item = event.target.result;
+            if (item) {
+                item.isActive = isActive; // Set active state based on parameter
+
+                const updateRequest = objectStore.put(item); // Update the object
+
+                updateRequest.onsuccess = () => {
+                    console.log(`Item ${isActive ? 'activated' : 'inactivated'}:`, item); // Log the item
+                    resolve();
+                };
+                updateRequest.onerror = (event) => reject(`Error updating active state: ${event.target.error}`);
+            } else {
+                reject('Item not found for update');
+            }
+        };
+
+        request.onerror = (event) => {
+            reject(`Error retrieving item for active state update: ${event.target.error}`);
+        };
+    });
+};
+
+export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleDownload) => {
+    try {
+        let db = openDB(dataBaseIndexName, dataBaseObjectStoreName);
+        let mediaCount = localStorage.getItem(`${dataBaseObjectStoreName}-count`);
+
+        if (!mediaCount) {
+            mediaCount = await countInDB(await db);
+            localStorage.setItem(`${dataBaseObjectStoreName}-count`, mediaCount);
+        } else {
+            mediaCount = parseInt(mediaCount, 10);
+        }
+
+        const mediaContainer = document.querySelector(`.${dataBaseObjectStoreName}`);
+        const fragment = document.createDocumentFragment();
+
+        if (mediaCount > 0) {
+            mediaContainer.style.display = mediaCount > 0 ? 'flex' : 'none';
+            for (let i = 0; i < mediaCount; i++) {
+                const div = document.createElement('div');
+                div.className = 'data-container';
+                div.innerHTML = `<div class="process-text"></div><div class="delete-icon"></div>`;
+                fragment.appendChild(div);
+            }
+        }
+        mediaContainer.appendChild(fragment);
+        db = await db;
+        mediaCount = await countInDB(db);
+        localStorage.setItem(`${dataBaseObjectStoreName}-count`, mediaCount);
+
+        if (mediaCount > 0) {
+            const mediaItems = await getFromDB(db);
+            const inputElements = mediaContainer.querySelectorAll('.data-container');
+
+            for (const [indexInBatch, { blob, url, index, timestamp, isActive }] of mediaItems.entries()) {
+                let content = `<initial index="${index}" timestamp="${timestamp}"/></initial>`;
+
+                if (blob && (blob.type.startsWith('video') || blob.type.startsWith('image'))) {
+                    const blobUrl = URL.createObjectURL(blob);
+                    content = blob.type.startsWith('video')
+                        ? `<video index="${index}" timestamp="${timestamp}" playsinline preload="auto" disablePictureInPicture loop muted autoplay><source src="${blobUrl}" type="${blob.type}">Your browser does not support the video tag.</video>`
+                        : `<img index="${index}" timestamp="${timestamp}" src="${blobUrl}" alt="Uploaded Photo"/>`;
+                } else if (url) {
+                    handleDownload({ db, url, element: inputElements[indexInBatch], index });
+                }
+
+                inputElements[indexInBatch].innerHTML = `${content}<div class="process-text"></div><div class="delete-icon"></div>`;
+
+                if (isActive) {
+                    inputElements[indexInBatch].classList.add('active');
+                }
+            }
+
+            mediaContainer.style.display = mediaCount > 0 ? 'flex' : 'none';
+        }
+    } catch (error) {
+        console.error(`Database initialization failed: ${error.message}`);
+    }
+};
+
+
+export const updateInDB = (db, url, blob, saveCountIndex) => {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
+        const objectStore = transaction.objectStore(db.objectStoreNames[0]);
+
+        const request = objectStore.openCursor();
+        request.onsuccess = (event) => {
+            const cursor = event.target.result;
+            if (cursor) {
+                if (cursor.value.url === url) {
+                    cursor.value.blob = blob;
+
+                    const updateRequest = cursor.update(cursor.value);
+                    updateRequest.onsuccess = async () => {
+                        resolve();
+                        await saveCountIndex();
+                    };
+
+                    updateRequest.onerror = (event) => {
+                        reject(`Error updating photo in database: ${event.target.error}`);
+                    };
+                } else {
+                    cursor.continue();
+                }
+            } else {
+                reject(`No record found with url: ${url}`);
+            }
+        };
+
+        request.onerror = (event) => {
+            reject(`Error opening cursor in database: ${event.target.error}`);
+        };
+    });
+};
+
+export const deleteFromDB = async (db, index, saveCountIndex) => {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
+        const photosObjectStore = transaction.objectStore(db.objectStoreNames[0]);
+        const deleteRequest = photosObjectStore.delete(index);
+
+        deleteRequest.onsuccess = async () => {
+            resolve();
+            await saveCountIndex();
+        };
+
+        deleteRequest.onerror = (event) => {
+            reject(`Error deleting photo from database: ${event.target.error}`);
+        };
+    });
+};
+
+let firebaseModules = null;
+
+export async function getFirebaseModules() {
+    if (firebaseModules) {
+        return firebaseModules;
+    }
+
+    const firebaseAppModule = await import('https://www.gstatic.com/firebasejs/9.17.2/firebase-app.js');
+    const firebaseAuthModule = await import('https://www.gstatic.com/firebasejs/9.17.2/firebase-auth.js');
+    const firebaseFirestoreModule = await import('https://www.gstatic.com/firebasejs/9.17.2/firebase-firestore.js');
+
+    const { initializeApp } = firebaseAppModule;
+    const { getAuth, GoogleAuthProvider, sendEmailVerification, sendPasswordResetEmail, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } = firebaseAuthModule;
+    const { getFirestore, collection, doc, getDoc, getDocs } = firebaseFirestoreModule;
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB9KofLbx0_N9CKXUPJiuzRBMYizM-YPYw",
+        authDomain: "bodyswap-389200.firebaseapp.com",
+        projectId: "bodyswap-389200",
+        storageBucket: "bodyswap-389200.appspot.com",
+        messagingSenderId: "385732753036",
+        appId: "1:385732753036:web:e078abf4bbf557938deda9",
+        measurementId: "G-7PLJEN2Y0R"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    firebaseModules = {
+        auth,
+        db,
+        GoogleAuthProvider,
+        sendEmailVerification,
+        sendPasswordResetEmail,
+        signInWithPopup,
+        signInWithEmailAndPassword,
+        createUserWithEmailAndPassword,
+        onAuthStateChanged,
+        signOut,
+        doc,
+        getDoc,
+        getDocs,
+        collection
+    };
+
+    return firebaseModules;
+}
+
+export async function getCurrentUserData(getFirebaseModules) {
+    const { auth } = await getFirebaseModules();
+
+    return new Promise((resolve, reject) => {
+        const unsubscribe = auth.onAuthStateChanged((user) => {
+            unsubscribe();
+
+            if (user) {
+                resolve({
+                    uid: user.uid,
+                    email: user.email,
+                    emailVerified: user.emailVerified,
+                    displayName: user.displayName,
+                    photoURL: user.photoURL
+                });
+            } else {
+                reject(new Error('No user is currently logged in.'));
+            }
+        });
+    });
+}
+
+export async function getDocSnapshot(collectionId, documentId) {
+    const { db, doc, getDoc, collection } = await getFirebaseModules();
+    return await getDoc(doc(collection(db, collectionId), documentId));
+}
+
+export async function getDocsSnapshot(collectionId) {
+    const { db, getDocs, collection } = await getFirebaseModules();
+    return await getDocs(collection(db, collectionId));
+}
+
+export const getCachedStaticUserData = () => {
+    const cachedUserData = localStorage.getItem('cachedUserData');
+    return cachedUserData ? JSON.parse(cachedUserData) : null;
+};
+
+export const getCachedDynamicUserDoc = () => {
+    const cachedUserDocument = localStorage.getItem('cachedUserDocument');
+    return cachedUserDocument ? JSON.parse(cachedUserDocument) : null;
+};
+
+export async function setCurrentUserData(getFirebaseModules) {
+    const cachedUserData = await getCurrentUserData(getFirebaseModules);
+    localStorage.setItem('cachedUserData', JSON.stringify(cachedUserData));
+}
+
+export async function setUserDoc(getDocSnapshot) {
+    const userData = getCachedStaticUserData();
+    const userDocSnap = await getDocSnapshot('users', userData.uid);
+    if (!userDocSnap || !userDocSnap.exists())
+        return false;
+
+    const userDoc = userDocSnap.data();
+    localStorage.setItem(`cachedUserDocument`, JSON.stringify(userDoc));
+    setUser(userDoc);
+    return true;
+}
+
+export function setUser(userDoc = getCachedDynamicUserDoc()) {
+    if (!userDoc) return false;
+
+    function setCachedImageForElements(className, storageKey) {
+        const imgElements = document.getElementsByClassName(className);
+        const cachedImage = localStorage.getItem(storageKey);
+
+        if (cachedImage) {
+            for (let imgElement of imgElements) {
+                imgElement.src = cachedImage;
+            }
+        } else {
+            for (let imgElement of imgElements) {
+                imgElement.src = 'assets/profile.webp';
+            }
+        }
+    }
+
+    setCachedImageForElements('profile-image', 'profileImageBase64');
+
+    const credits = document.getElementById('creditsAmount');
+    if (credits) {
+        const totalCredits = (Number(userDoc.credits) || 0) + (Number(userDoc.dailyCredits) || 0);
+        credits.textContent = credits.textContent.replace(/\d+/, totalCredits);
+
+        if (userDoc.deadline && !credits.textContent.includes('remaining') && !credits.textContent.includes('lifetime')) {
+            const deadlineSeconds = userDoc.deadline.seconds;
+            const deadlineNanoseconds = userDoc.deadline.nanoseconds || 0;
+
+            const deadline = new Date((deadlineSeconds * 1000) + (deadlineNanoseconds / 1000000));
+            const now = new Date();
+            const timeDiff = deadline - now;
+
+            if (timeDiff > 0) {
+                const years = Math.floor(timeDiff / (1000 * 60 * 60 * 24 * 365));
+                const months = Math.floor((timeDiff % (1000 * 60 * 60 * 24 * 365)) / (1000 * 60 * 60 * 24 * 30));
+                const days = Math.floor((timeDiff % (1000 * 60 * 60 * 24 * 30)) / (1000 * 60 * 60 * 24));
+
+                let remainingTime = '';
+                if (years > 5) {
+                    remainingTime = 'lifetime';
+                } else {
+                    if (years > 0) remainingTime += `${years} year${years > 1 ? 's' : ''} `;
+                    if (months > 0) remainingTime += `${months} month${months > 1 ? 's' : ''} `;
+                    if (days > 0 || (!years && !months)) remainingTime += `${days} day${days > 1 ? 's' : ''}`;
+                    remainingTime = remainingTime.trim() + ' remaining';
+                }
+
+                credits.textContent += ` (${remainingTime})`;
+            }
+        }
+    }
+
+    const usernames = document.getElementsByClassName('username');
+    for (let username of usernames) {
+        username.textContent = userDoc.username;
+        username.value = userDoc.username;
+    }
+
+    return true;
+}
+
+async function handleUserLoggedIn(userData, getUserIpAddress, ensureUniqueId, fetchServerAddress, getDocSnapshot, getFirebaseModules) {
+    if (!userData) return;
+
+    const openSignInContainer = document.getElementById("openSignInContainer");
+    const openSignUpContainer = document.getElementById("openSignUpContainer");
+
+    if (openSignInContainer) openSignInContainer.remove();
+    if (openSignUpContainer) openSignUpContainer.remove();
+
+    if (!userData.emailVerified) {
+        async function createVerificationFormSection(getFirebaseModules) {
+            const innerContainer = document.getElementById('innerContainer');
+            if (!innerContainer)
+                return;
+
+            innerContainer.innerHTML = `
+                <h2>Verify Your Email</h2>
+                <p id="verificationMessage">Please click on the button to send verification email.</p>
+                <button class="wide" id="sendVerificationEmail" type="button">Send Verification Email</button>
+                <div style="display: flex; justify-content: center; width: 100%; align-items: center;">
+                    <div class="line"></div>
+                    <p style="padding: 0 calc(1vh * var(--scale-factor-h)); white-space: nowrap;">I have verified</p>
+                    <div class="line"></div>
+                </div>
+                <button class="wide" id="validateVerification">Validate Verification</button>
+                <span class="close-button" style="position: absolute; top: 10px; right: 10px; cursor: pointer;">X</span>
+            `;
+
+            const sendVerificationEmail = document.getElementById("sendVerificationEmail");
+            sendVerificationEmail.addEventListener('click', async () => {
+                try {
+                    const { auth, sendEmailVerification } = await getFirebaseModules();
+                    const user = auth.currentUser;
+
+                    if (user) {
+                        await sendEmailVerification(user);
+                        document.getElementById('verificationMessage').style.display = 'unset';
+                        document.getElementById('verificationMessage').style.color = 'unset';
+                        document.getElementById('verificationMessage').textContent = 'Verification email sent! Please check your inbox.';
+                    } else {
+                        throw new Error('No authenticated user found. Please log in first.');
+                    }
+                } catch (error) {
+                    document.getElementById('verificationMessage').style.display = 'unset';
+                    document.getElementById('verificationMessage').style.color = 'red';
+                    document.getElementById('verificationMessage').textContent = error.message;
+                }
+            });
+
+            const validateVerification = document.getElementById("validateVerification");
+            validateVerification.addEventListener('click', async () => {
+                try {
+                    await setCurrentUserData(getFirebaseModules);
+
+                    const userData = getCachedStaticUserData();
+                    if (!userData.emailVerified)
+                        throw new Error('Your email is still not verified.');
+                    else {
+                        location.reload();
+                    }
+                } catch (error) {
+                    document.getElementById('verificationMessage').style.display = 'unset';
+                    document.getElementById('verificationMessage').style.color = 'red';
+                    document.getElementById('verificationMessage').textContent = error.message;
+                }
+            });
+
+            const closeButton = formWrapper.querySelector('.close-button');
+            closeButton.addEventListener('click', () => {
+                document.body.removeChild(formWrapper);
+            });
+        }
+
+        const createFormSection = createVerificationFormSection.bind(null, getFirebaseModules);
+        createForm(createFormSection);
+    }
+
+    const userId = userData.uid;
+
+    try {
+        const canSetUserData = setUser();
+        if (!canSetUserData) {
+            const setUserDataSuccess = await setUserDoc(getDocSnapshot);
+            if (!setUserDataSuccess) {
+                try {
+                    async function getServerAddressAPI() {
+                        return await fetchServerAddress(getDocSnapshot('servers', '3050-1'), 'API');
+                    }
+
+                    const [userIpAddress, uniqueId, serverAddressAPI] = await Promise.all([
+                        getUserIpAddress(),
+                        ensureUniqueId(),
+                        getServerAddressAPI()
+                    ]);
+
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const referral = urlParams.get('referral');
+
+                    const response = await fetch(`${serverAddressAPI}/create-user`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId,
+                            email: userData.email,
+                            username: userData.displayName,
+                            //phoneNumber: userData.phoneNumber,
+                            //emailVerified: userData.emailVerified,
+                            isAnonymous: userData.isAnonymous,
+                            userIpAddress,
+                            uniqueId,
+                            referral,
+                        }),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error during user registration:', error);
+                    return null;
+                }
+
+                location.reload();
+            }
+        }
+    } catch (error) {
+        console.error("Error getting user document:", error);
+    }
+
+    await setCurrentUserData(getFirebaseModules);
+    await setUserDoc(getDocSnapshot);
+    setUser();
+}
+
+async function createSignFormSection(registerForm, retrieveImageFromURL, getFirebaseModules) {
+    const innerContainer = document.getElementById('innerContainer');
+    if (!innerContainer)
+        return;
+
+    if (!registerForm) {
+        innerContainer.innerHTML = `
+                <h2>Sign in</h2>
+                <p>Don't have an account? <span id="openSignUpForm" style="cursor: pointer; color: blue;">Sign up</span></p>
+                <button class="wide" id="googleSignInButton" type="button">Sign in with Google</button>
+
+                <div style="display: flex; justify-content: center; width: 100%; align-items: center;">
+                    <div class="line"></div>
+                    <p style="padding: 0 calc(1vh * var(--scale-factor-h)); white-space: nowrap;">or use email</p>
+                    <div class="line"></div>
+                </div>
+
+                <div id="infoMessage" style="color: red; display: none;"></div>
+
+                <div>
+                    <label for="email">Email address</label>
+                    <input type="email" id="email" name="email" placeholder="Enter your email address..." required>
+                </div>
+
+                <div>
+                    <label for="password">Password</label>
+                    <div style="position: relative;">
+                        <input type="password" id="password" name="password" placeholder="Enter your password..." required minlength="8" style="padding-right: calc(5vh * var(--scale-factor-h));">
+                        <span class="input_password_show" style="position: absolute; display: flex; right: calc(1vh * var(--scale-factor-h)); top: 50%; transform: translateY(-50%); cursor: pointer; height: calc(3vh * var(--scale-factor-h)); width: calc(3vh * var(--scale-factor-h)); align-items: center; justify-content: center;">
+                            <svg xmlns="http://www.w3.org/2000/svg" style="height: 100%; width: 100%;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye">
+                                <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </span>
+                    </div>
+                    <small style="opacity: 0.75;">at least 8 characters long</small>
+                </div>
+
+                <button class="wide" id="signInButton">Sign in</button>
+                <p id="forgotPassword" style="cursor: pointer;">Forgot your password?</p>
+                <span class="close-button" style="position: absolute; top: 10px; right: 10px; cursor: pointer;">X</span>
+            `;
+
+        document.getElementById('openSignUpForm').addEventListener('click', () => {
+            createSignFormSection(true, retrieveImageFromURL, getFirebaseModules);
+        });
+    } else {
+        innerContainer.innerHTML = `
+                <h2>Sign up</h2>
+                <p>Already have an account? <span id="openSignInForm" style="cursor: pointer; color: blue;">Sign in</span></p>
+                <div id="infoMessage" style="color: red; display: none;"></div>
+
+                <div>
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Enter your username..." required>
+                </div>
+
+                <div>
+                    <label for="email">Email address</label>
+                    <input type="email" id="email" name="email" placeholder="Enter your email address..." required>
+                </div>
+
+                <div>
+                    <label for="password">Password</label>
+                    <div style="position: relative;">
+                        <input type="password" id="password" name="password" placeholder="Enter your password..." required minlength="8" style="padding-right: calc(5vh * var(--scale-factor-h));">
+                        <span class="input_password_show" style="position: absolute; display: flex; right: calc(1vh * var(--scale-factor-h)); top: 50%; transform: translateY(-50%); cursor: pointer; height: calc(3vh * var(--scale-factor-h)); width: calc(3vh * var(--scale-factor-h)); align-items: center; justify-content: center;">
+                            <svg xmlns="http://www.w3.org/2000/svg" style="height: 100%; width: 100%;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye">
+                                <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </span>
+                    </div>
+                    <small style="opacity: 0.75;">at least 8 characters long</small>
+                </div>
+
+                <button class="wide" id="signUpButton">Sign Up</button>
+                <span class="close-button" style="position: absolute; top: 10px; right: 10px; cursor: pointer;">X</span>
+            `;
+
+        document.getElementById('openSignInForm').addEventListener('click', () => {
+            createSignFormSection(false, retrieveImageFromURL, getFirebaseModules);
+        });
+    }
+
+    const closeButton = formWrapper.querySelector('.close-button');
+    closeButton.addEventListener('click', () => {
+        document.body.removeChild(formWrapper);
+    });
+
+    formWrapper.addEventListener('mousedown', (event) => {
+        if (event.target === formWrapper) {
+            document.body.removeChild(formWrapper);
+        }
+    });
+
+    let messageContainer = document.getElementById('infoMessage');
+
+    let googleSignInButton = document.getElementById('googleSignInButton');
+    let signInButton = document.getElementById('signInButton');
+    let forgotPassword = document.getElementById('forgotPassword');
+
+    let signUpButton = document.getElementById('signUpButton');
+
+    if (forgotPassword) {
+        forgotPassword.style.display = 'none';
+        forgotPassword.addEventListener('click', async () => {
+            let email = document.getElementById('email').value;
+            if (!email)
+                email = prompt('Please enter your email address to reset your password:');
+
+            if (email) {
+                try {
+                    const { auth, sendPasswordResetEmail } = await getFirebaseModules();
+                    await sendPasswordResetEmail(auth, email);
+                    if (messageContainer) {
+                        messageContainer.style.display = 'unset';
+                        messageContainer.style.color = 'red';
+                        messageContainer.textContent = 'Password reset email sent! Please check your inbox.';
+                    }
+                } catch (error) {
+                    console.error("Error sending password reset email:", error);
+                    alert('An error occurred while sending the password reset email. Please try again.');
+                }
+            }
+        });
+    }
+
+    if (googleSignInButton) {
+        googleSignInButton.addEventListener('click', async (event) => {
+            event.preventDefault();
+            try {
+                const { auth, GoogleAuthProvider, signInWithPopup } = await getFirebaseModules();
+                const provider = new GoogleAuthProvider();
+                const result = await signInWithPopup(auth, provider);
+
+                let userCopy = { ...result.user };
+                delete userCopy.stsTokenManager;
+                delete userCopy.providerData;
+                delete userCopy.metadata;
+                delete userCopy.accessToken;
+                delete userCopy.proactiveRefresh;
+                delete userCopy.providerId;
+                delete userCopy.tenantId;
+                delete userCopy.reloadListener;
+                delete userCopy.reloadUserInfo;
+                delete userCopy.auth;
+
+                if (!localStorage.getItem('profileImageBase64')) {
+                    const base64Image = await retrieveImageFromURL(userCopy.photoURL, 2, 1000, true);
+                    if (base64Image) {
+                        localStorage.setItem('profileImageBase64', base64Image);
+                    }
+                }
+
+                const cachedUserData = JSON.stringify(userCopy);
+                localStorage.setItem('cachedUserData', cachedUserData);
+                location.reload();
+            } catch (error) {
+                console.error("Google sign-in error:", error);
+            }
+        });
+    }
+
+    if (signInButton) {
+        signInButton.addEventListener('click', async (event) => {
+            event.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const { auth, signInWithEmailAndPassword } = await getFirebaseModules();
+                const result = await signInWithEmailAndPassword(auth, email, password);
+
+                let userCopy = { ...result.user };
+                delete userCopy.stsTokenManager;
+                delete userCopy.providerData;
+                delete userCopy.metadata;
+                delete userCopy.accessToken;
+                delete userCopy.proactiveRefresh;
+                delete userCopy.providerId;
+                delete userCopy.tenantId;
+                delete userCopy.reloadListener;
+                delete userCopy.reloadUserInfo;
+                delete userCopy.auth;
+
+                const cachedUserData = JSON.stringify(userCopy);
+                localStorage.setItem('cachedUserData', cachedUserData);
+                location.reload();
+            } catch (error) {
+                if (forgotPassword) {
+                    forgotPassword.style.display = 'unset';
+                }
+
+                if (messageContainer) {
+                    messageContainer.style.display = 'unset';
+                    messageContainer.style.color = 'red';
+
+                    switch (error.code) {
+                        case 'auth/user-not-found':
+                            messageContainer.textContent = 'No user found with this email.';
+                            break;
+                        case 'auth/wrong-password':
+                            messageContainer.textContent = 'Incorrect password.';
+                            break;
+                        case 'auth/invalid-login-credentials':
+                            messageContainer.textContent = 'Invalid credentials.';
+                            break;
+                        case 'auth/too-many-requests':
+                            messageContainer.textContent = 'Access to this account has been temporarily disabled due to many failed login attempts. Reset your password or try again later.';
+                            break;
+                        default:
+                            messageContainer.textContent = 'An error occurred. Please try again.';
+                    }
+                }
+
+                console.error("Email/password sign-in error:", error);
+            }
+        });
+    }
+
+    if (signUpButton) {
+        signUpButton.addEventListener('click', async (event) => {
+            event.preventDefault();
+
+            try {
+                async function getServerAddressAPI() {
+                    return await fetchServerAddress(getDocSnapshot('servers', '3050-1'), 'API');
+                }
+
+                const [userIpAddress, uniqueId, serverAddressAPI] = await Promise.all([
+                    getUserIpAddress(),
+                    ensureUniqueId(),
+                    getServerAddressAPI()
+                ]);
+
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const username = document.getElementById('username').value;
+                const url = new URL(window.location.href);
+                const referral = url.searchParams.get('referral') || null;
+
+                const requestData = {
+                    email,
+                    password,
+                    username,
+                    referral: referral || null,
+                    userIpAddress: userIpAddress || null,
+                    uniqueId,
+                };
+
+                const response = await fetch(`${serverAddressAPI}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestData),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.message && data.message.includes("User registered successfully")) {
+                    createSignFormSection(false, retrieveImageFromURL, getFirebaseModules);
+
+                    messageContainer = document.getElementById('infoMessage');
+                    if (messageContainer) {
+                        messageContainer.style.display = 'unset';
+                        messageContainer.style.color = 'unset';
+                        messageContainer.textContent = 'Registration successful! Please sign in now.';
+                    }
+                } else {
+                    throw new Error(data);
+                }
+            } catch (error) {
+                messageContainer.style.display = 'block';
+                messageContainer.textContent = error.message;
+
+                console.error('Error during user registration:', error);
+            }
+        });
+    }
+
+    const passwordInput = document.getElementById('password');
+    const showPasswordIcon = document.querySelector('.input_password_show');
+
+    showPasswordIcon.addEventListener('click', () => {
+        const isPasswordVisible = passwordInput.type === 'text';
+        passwordInput.type = isPasswordVisible ? 'password' : 'text';
+        showPasswordIcon.innerHTML = isPasswordVisible ? `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye">
+                    <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+            ` : `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye-off">
+                    <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"></path>
+                    <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"></path>
+                    <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.749 10.749 0 0 1 15.417 5.151 1 1 0 0 1 0 .696 10.749 10.749 0 0 1-2.687 3.415"></path>
+                    <path d="M6.66 17.623l1.136-1.136"></path>
+                    <path d="M16.5 7.5L17.636 6.364"></path>
+                    <path d="M6.5 17.5L4.883 19.117"></path>
+                    <path d="M19.117 4.883L17.5 6.5"></path>
+                </svg>
+            `;
+    });
+}
+
+async function createForm(createFormSection) {
+    const existingFormWrapper = document.getElementById('formWrapper');
+    if (existingFormWrapper) return;
+
+    const formWrapper = document.createElement('div');
+    formWrapper.id = 'formWrapper';
+
+    const backgroundContainer = document.createElement('div');
+    backgroundContainer.className = 'background-container';
+
+    const backgroundDotContainer = document.createElement('a');
+    backgroundDotContainer.className = 'background-dot-container';
+
+    const backgroundDotContent = document.createElement('div');
+    backgroundDotContent.className = 'background-dot-container-content';
+    backgroundDotContent.classList.add('custom-width');
+
+    const innerContainer = document.createElement('div');
+    innerContainer.className = 'background-container';
+    innerContainer.style.display = 'contents';
+    innerContainer.id = 'innerContainer';
+
+    backgroundDotContent.appendChild(innerContainer);
+    backgroundDotContainer.appendChild(backgroundDotContent);
+    backgroundContainer.appendChild(backgroundDotContainer);
+    formWrapper.appendChild(backgroundContainer);
+    document.body.appendChild(formWrapper);
+
+    createFormSection();
+}
+
+async function handleLoggedOutState(retrieveImageFromURL, getFirebaseModules) {
+    const userProfileLayout = document.getElementById("userProfileLayout");
+    if (userProfileLayout) userProfileLayout.remove();
+
+    const openSignInContainer = document.getElementById("openSignInContainer");
+    if (openSignInContainer) {
+        openSignInContainer.addEventListener('click', async (event) => {
+            event.preventDefault();
+            const createFormSection = createSignFormSection.bind(null, false, retrieveImageFromURL, getFirebaseModules);
+            createForm(createFormSection);
+        });
+    }
+
+    const openSignUpContainer = document.getElementById("openSignUpContainer");
+    if (openSignUpContainer) {
+        openSignUpContainer.addEventListener('click', async (event) => {
+            event.preventDefault();
+            const createFormSection = createSignFormSection.bind(null, true, retrieveImageFromURL, getFirebaseModules);
+            createForm(createFormSection);
+        });
+    }
+}
+
+export function setAuthentication(retrieveImageFromURL, getUserIpAddress, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot) {
+    const signOut = document.getElementById('signOut');
+    if (signOut) {
+        signOut.addEventListener('click', async function () {
+            const { auth, signOut } = await getFirebaseModules();
+
+            localStorage.removeItem('cachedUserData');
+            localStorage.removeItem(`cachedUserDocument`);
+            localStorage.removeItem('profileImageBase64');
+
+            try {
+                await signOut(auth);
+                location.reload();
+            } catch (error) {
+                console.error('Error during sign out:', error);
+            }
+        });
+    }
+
+    const userData = getCachedStaticUserData();
+    if (userData) handleUserLoggedIn(userData, getUserIpAddress, ensureUniqueId, fetchServerAddress, getDocSnapshot, getFirebaseModules);
+    else handleLoggedOutState(retrieveImageFromURL, getFirebaseModules);
+}
+
+export function loadPageContent(setUser, retrieveImageFromURL, getUserIpAddress, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, setAuthentication, updateMainContent, savePageState = null) {
+    let previousScreenMode = null, cleanupEvents = null, cleanPages = null, reconstructMainStyles = null;
+    let screenMode = getScreenMode();
+
+    if (!localStorage.getItem('sidebarStateInitialized') && screenMode !== 1) {
+        localStorage.setItem('sidebarState', 'keepSideBar');
+
+        let sidebarImages = document.querySelectorAll('.sidebar img');
+        sidebarImages.forEach(image => {
+            image.setAttribute('loading', 'lazy');
+        });
+
+        localStorage.setItem('sidebarStateInitialized', 'true');
+    }
+
+    document.body.insertAdjacentHTML('afterbegin', `
 				<nav class="navbar">
 					<div class="container">
 						<div class="logo">
@@ -20,10 +1186,82 @@ export function setCache(e, t, _) { let r = new Date, a = { value: t, expiry: r.
 					</div>
 				</nav>
 				<nav class="sidebar"></nav>
-			`), E(I); let H = document.querySelector(".hamburger-menu"), A = document.querySelectorAll(".navbar .nav-links"), M = document.querySelector(".navbar .container"), B = document.querySelector(".navbar"), D = document.querySelector(".sidebar"), N = parseFloat(localStorage.getItem("scaleFactorHeight")) || .5, z = parseFloat(localStorage.getItem("scaleFactorWidth")) || .5; w(N, z), window.addEventListener("wheel", function (e) { e.ctrlKey && (e.preventDefault(), w(N = C(N + (e.deltaY < 0 ? .05 : -.05), .1, 1), z = C(z + (e.deltaY < 0 ? .05 : -.05), .1, 1)), localStorage.setItem("scaleFactorHeight", N), localStorage.setItem("scaleFactorWidth", z), v(e, N, z), setTimeout(() => { window.dispatchEvent(new Event("resize")) }, 100)) }, { passive: !1 }); let k = !1, U = [], W = document.querySelectorAll("main"); async function j() {
-		w(N, z), W = document.querySelectorAll("main"), D = document.querySelector(".sidebar"), B = document.querySelector(".navbar"), H = document.querySelector(".hamburger-menu"), setTimeout(() => { c(B, W, D), d(D), m(W), p(W, o()) }, 1), I = n(); let j = L !== I; if (L = I, !j) return; if (k) { let R = document.querySelectorAll("*"); R.forEach(e => { let t = e.style.transition; e.style.transition = "unset", setTimeout(() => { e.style.transition = t }, 1) }) } if (E(I), 1 !== I) {
-			if (A && A.length > 0 && (A.forEach(e => e.remove()), A = null), !H) {
-				M.insertAdjacentHTML("beforeend", `
+			`);
+
+    function updateAspectRatio(screenMode) { document.documentElement.classList.toggle('ar-4-3', screenMode !== 1); }
+    updateAspectRatio(screenMode);
+
+    let hamburgerMenu = document.querySelector('.hamburger-menu');
+    let navLinks = document.querySelectorAll('.navbar .nav-links');
+    let navContainer = document.querySelector('.navbar .container');
+
+    let navbar = document.querySelector('.navbar');
+    let sidebar = document.querySelector('.sidebar');
+
+    let scaleFactorHeight = parseFloat(localStorage.getItem('scaleFactorHeight')) || 0.5;
+    let scaleFactorWidth = parseFloat(localStorage.getItem('scaleFactorWidth')) || 0.5;
+    setScaleFactors(scaleFactorHeight, scaleFactorWidth);
+
+    window.addEventListener('wheel', function (event) {
+        if (event.ctrlKey) {
+            event.preventDefault();
+
+            scaleFactorHeight = clamp(scaleFactorHeight + (event.deltaY < 0 ? 0.05 : -0.05), 0.1, 1);
+            scaleFactorWidth = clamp(scaleFactorWidth + (event.deltaY < 0 ? 0.05 : -0.05), 0.1, 1);
+            setScaleFactors(scaleFactorHeight, scaleFactorWidth);
+            localStorage.setItem('scaleFactorHeight', scaleFactorHeight);
+            localStorage.setItem('scaleFactorWidth', scaleFactorWidth);
+
+            showZoomIndicator(event, scaleFactorHeight, scaleFactorWidth);
+            setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 100);
+        }
+    }, { passive: false });
+
+    let pageUpdated = false;
+    let pageContent = [];
+    let mainQuery = document.querySelectorAll('main');
+
+    async function sizeBasedElements() {
+        setScaleFactors(scaleFactorHeight, scaleFactorWidth);
+        mainQuery = document.querySelectorAll('main');
+        sidebar = document.querySelector('.sidebar');
+        navbar = document.querySelector('.navbar');
+        hamburgerMenu = document.querySelector('.hamburger-menu');
+
+        setTimeout(() => {
+            setNavbar(navbar, mainQuery, sidebar);
+            setSidebar(sidebar);
+            setupMainSize(mainQuery);
+            moveMains(mainQuery, getCurrentMain());
+        }, 1);
+
+        screenMode = getScreenMode();
+        const shouldUpdate = previousScreenMode !== screenMode;
+        previousScreenMode = screenMode;
+        if (!shouldUpdate)
+            return;
+
+        if (pageUpdated) {
+            const elements = document.querySelectorAll('*');
+            elements.forEach(element => {
+                const oldTransition = element.style.transition;
+                element.style.transition = 'unset';
+
+                setTimeout(() => {
+                    element.style.transition = oldTransition;
+                }, 1);
+            });
+        }
+
+        updateAspectRatio(screenMode);
+
+        if (screenMode !== 1) {
+            if (navLinks && navLinks.length > 0) {
+                navLinks.forEach(navLink => navLink.remove());
+                navLinks = null;
+            }
+            if (!hamburgerMenu) {
+                navContainer.insertAdjacentHTML('beforeend', `
 			<div id="menu-container" style="display: flex;gap: 2vw;">
 				<div class="indicator" style="margin-bottom: 0;">
 					<button class="zoom-minus" translate="no">-</button>
@@ -35,10 +1273,41 @@ export function setCache(e, t, _) { let r = new Date, a = { value: t, expiry: r.
 					<div class="line"></div>
 				</div>
 			</div>
-		`); let P = document.getElementById("menu-container"); (H = P.querySelector(".hamburger-menu")).addEventListener("click", function () { g() ? h(D, H) : u(D, H, e) }), P.querySelector(".zoom-minus").onclick = () => { N = C((N || 1) - .05, .1, 1), z = C((z || 1) - .05, .1, 1), w(N, z), localStorage.setItem("scaleFactorHeight", N), localStorage.setItem("scaleFactorWidth", z), v(`${Math.round(100 * N)}%`, N, z), setTimeout(() => { window.dispatchEvent(new Event("resize")) }, 100) }, P.querySelector(".zoom-plus").onclick = () => { N = C((N || 1) + .05, .1, 1), z = C((z || 1) + .05, .1, 1), w(N, z), localStorage.setItem("scaleFactorHeight", N), localStorage.setItem("scaleFactorWidth", z), v(`${Math.round(100 * N)}%`, N, z), setTimeout(() => { window.dispatchEvent(new Event("resize")) }, 100) }
-			}
-		} else {
-			let q = document.getElementById("menu-container"); q && q.remove(), A && 0 !== A.length || (M.insertAdjacentHTML("beforeend", `
+		`);
+
+                const menuContainer = document.getElementById('menu-container');
+                hamburgerMenu = menuContainer.querySelector('.hamburger-menu');
+                hamburgerMenu.addEventListener('click', function () {
+                    getSidebarActive() ? removeSidebar(sidebar, hamburgerMenu) : showSidebar(sidebar, hamburgerMenu, setUser);
+                });
+
+                menuContainer.querySelector('.zoom-minus').onclick = () => {
+                    scaleFactorHeight = clamp((scaleFactorHeight || 1) - 0.05, 0.1, 1);
+                    scaleFactorWidth = clamp((scaleFactorWidth || 1) - 0.05, 0.1, 1);
+                    setScaleFactors(scaleFactorHeight, scaleFactorWidth);
+                    localStorage.setItem('scaleFactorHeight', scaleFactorHeight);
+                    localStorage.setItem('scaleFactorWidth', scaleFactorWidth);
+                    showZoomIndicator(`${Math.round(scaleFactorHeight * 100)}%`, scaleFactorHeight, scaleFactorWidth);
+                    setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 100);
+                };
+
+                menuContainer.querySelector('.zoom-plus').onclick = () => {
+                    scaleFactorHeight = clamp((scaleFactorHeight || 1) + 0.05, 0.1, 1);
+                    scaleFactorWidth = clamp((scaleFactorWidth || 1) + 0.05, 0.1, 1);
+                    setScaleFactors(scaleFactorHeight, scaleFactorWidth);
+                    localStorage.setItem('scaleFactorHeight', scaleFactorHeight);
+                    localStorage.setItem('scaleFactorWidth', scaleFactorWidth);
+                    showZoomIndicator(`${Math.round(scaleFactorHeight * 100)}%`, scaleFactorHeight, scaleFactorWidth);
+                    setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 100);
+                };
+            }
+        } else {
+            const menuContainer = document.getElementById('menu-container');
+            if (menuContainer) {
+                menuContainer.remove();
+            }
+            if (!navLinks || navLinks.length === 0) {
+                navContainer.insertAdjacentHTML('beforeend', `
 					<ul class="nav-links" style="display: grid;grid-template-columns: 2fr 1fr 2fr;justify-items: center;">
 						<li>
 							<a class="text" href="#">Services</a>
@@ -59,8 +1328,8 @@ export function setCache(e, t, _) { let r = new Date, a = { value: t, expiry: r.
 						<li class="disabled"><a class="text disabled" href="pricing">Pricing</a></li>
 					</ul>
 					<div class="nav-links" style="display: flex;justify-content: center;gap: calc(1vh * var(--scale-factor-h));">
-						<button id="registerButton" class="disabled">Register</button>
-						<button class="important" id="loginButton">Login</button>
+						<button id="openSignUpContainer">Sign Up</button>
+						<button class="important" id="openSignInContainer">Sign In</button>
 						<li id="userProfileLayout">
 							<a id="userLayout" style="display: flex;gap: calc(1vh * var(--scale-factor-h));align-items: center;">
 								<img alt="Profile Image" class="profile-image" style="width: calc((6vh* var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w)));height: calc((6vh* var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w)));" src="assets/profile.webp">
@@ -76,14 +1345,322 @@ export function setCache(e, t, _) { let r = new Date, a = { value: t, expiry: r.
 							</ul>
 						</li>
 					</div>
-				`), A = document.querySelectorAll(".navbar .nav-links"))
-		} x && x(); let T = U.length; b(I, U); let F = U.length; if (T !== F) { if (T > 0) { let { cleanPages: Z } = await import("../defaultPageLoads/accessVariables.js"); Z(U) } if (l(U), T > 0) { let { reconstructMainStyles: V } = await import("../defaultPageLoads/accessVariables.js"); V(U) } } s(U), y(t, _, r, a, $, i), W = document.querySelectorAll("main"), D = document.querySelector(".sidebar"), B = document.querySelector(".navbar"), H = document.querySelector(".hamburger-menu"), c(B, W, D), d(D), m(W), p(W, o()), S && S(), S = f(B, W, D, H, e)
-	} let R = localStorage.getItem("sidebarState"); function P(e) { let t = e.currentTarget; t.classList.add("button-click-animation"), "Copy" === t.textContent.trim() && (t.textContent = "Copied"), setTimeout(() => { t.classList.remove("button-click-animation"), "Copied" === t.textContent.trim() && (t.textContent = "Copy") }, 500) } "keepSideBar" === R ? h(D, H) : (1 !== I && (c(B, W, D), d(D)), u(D, H, e)), j(), window.addEventListener("resize", j), "removeSidebar" === R && (h(D, H), localStorage.setItem("sidebarState", "keepSideBar")); let q = document.querySelectorAll("button, a.button"); q.forEach(e => { e.addEventListener("click", P) }), document.body.classList.add("no-animation"), setTimeout(() => { document.body.classList.remove("no-animation") }, 0); let T = document.getElementById("loading-stylesheet"); T && T.parentNode.removeChild(T), document.documentElement.classList.remove("loading-screen"), k = !0; let F = document.createElement("script"); F.src = "https://www.googletagmanager.com/gtag/js?id=G-BFR70Q5VX1", F.defer = !0, document.head.appendChild(F), F.onload = function () { function e() { dataLayer.push(arguments) } window.dataLayer = window.dataLayer || [], e("js", new Date), e("config", "G-BFR70Q5VX1") }
-} let currentMain = 0, windowHeight = window.innerHeight, windowWidth = window.innerWidth, aspectRatio = windowHeight / windowWidth, sidebarActive = !0, navbarActive = !0, actualNavbarHeight = 0, navbarHeight = 0; export const ScreenMode = Object.freeze({ PHONE: 3, PC: 1 }); export function dispatchEvent(e) { window.dispatchEvent(new Event(e)) } export function getScreenMode() { let e = getAspectRatio(); return e < .8 ? ScreenMode.PHONE : ScreenMode.PC } export function setCurrentMain(e) { currentMain = e } export function getCurrentMain() { return currentMain } export function setWindowHeight(e) { windowHeight = e } export function getWindowHeight() { return windowHeight } export function setWindowWidth(e) { windowWidth = e } export function getWindowWidth() { return windowWidth } export function setAspectRatio() { (windowHeight != window.innerHeight || windowWidth != window.innerWidth || aspectRatio != window.innerWidth / window.innerHeight) && (setWindowHeight(window.innerHeight), setWindowWidth(window.innerWidth), aspectRatio = getWindowWidth() / getWindowHeight()) } export function getAspectRatio() { return setAspectRatio(), aspectRatio } export function setSidebarActive(e) { sidebarActive = e } export function getSidebarActive() { return sidebarActive } export function setNavbarActive(e) { navbarActive = e } export function getNavbarActive() { return navbarActive } export function setActualNavbarHeight(e) { actualNavbarHeight = e } export function getActualNavbarHeight() { return actualNavbarHeight } export function setNavbarHeight(e) { navbarHeight = e } export function getNavbarHeight() { return navbarHeight } export function setSidebar(e) { let t = 1 !== getScreenMode() ? 2 : 0; if (2 === t) { if (getSidebarActive()) { e.style.right = "0", e.style.left = "0", e.style.top = navbarHeight + "px"; return } e && (e.style.right = "0", e.style.left = "0", e.style.top = -getWindowHeight() + "px") } else if (1 === t) { if (getSidebarActive()) { e.style.right = "0"; return } e && (e.style.right = -e.offsetWidth + "px") } else if (0 === t) { if (getSidebarActive()) { e.style.left = "0"; return } e && (e.style.left = -e.offsetWidth + "px") } } export function moveMains(e, t) { e && e.length > 0 && e.forEach((_, r) => { let a = (r - Math.min(e.length - 1, t)) * getWindowHeight(); _.style.top = `${a + getNavbarHeight()}px`, _.style.height = `${getWindowHeight() - getNavbarHeight()}px`, _.style.width = `${getWindowWidth()}px` }) } export function reconstructMainStyles() { let e = document.querySelectorAll("main"); e && e.length > 0 && e.forEach((e, t) => { e.style.display = "grid", e.style.top = `${t * getWindowHeight() + getNavbarHeight()}px`, e.style.height = `${getWindowHeight() - getNavbarHeight()}px`, e.style.width = `${getWindowWidth()}px` }) } export function setNavbar(e, t, _) { setActualNavbarHeight(e ? e.offsetHeight : 0), setNavbarHeight(getNavbarActive() ? e.offsetHeight : 0), moveMains(t, currentMain), getNavbarActive() ? (e.style.top = "0", _ && (getScreenMode() === ScreenMode.PC && (_.style.top = `${getNavbarHeight()}px`), _.style.height = `${getWindowHeight() - getNavbarHeight()}px`)) : (e && (e.style.top = -e.offsetHeight + "px"), _ && (_.style.height = "100vh")) } let previousScreenMode = 0; export function showSidebar(e, t, _) {
-	function r() {
-		let t = getScreenMode(), r = previousScreenMode !== t; if (previousScreenMode = t, !r) return; let a = `
+				`);
+                navLinks = document.querySelectorAll('.navbar .nav-links');
+            }
+        }
+
+        if (savePageState)
+            savePageState();
+
+        const oldContentLength = pageContent.length;
+        updateMainContent(screenMode, pageContent);
+        const currentContentLength = pageContent.length;
+
+        if (oldContentLength !== currentContentLength) {
+            if (oldContentLength > 0) {
+                if (!cleanPages) {
+                    const { cleanPages } = await import('../defaultPageLoads/accessVariables.js');
+                    cleanPages(pageContent);
+                } else cleanPages(pageContent);
+            }
+            createPages(pageContent);
+            if (oldContentLength > 0) {
+                if (!reconstructMainStyles) {
+                    const { reconstructMainStyles } = await import('../defaultPageLoads/accessVariables.js');
+                    reconstructMainStyles(pageContent);
+                } else reconstructMainStyles(pageContent);
+            }
+        }
+
+        updateContent(pageContent);
+        setAuthentication(retrieveImageFromURL, getUserIpAddress, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
+
+        mainQuery = document.querySelectorAll('main');
+        sidebar = document.querySelector('.sidebar');
+        navbar = document.querySelector('.navbar');
+        hamburgerMenu = document.querySelector('.hamburger-menu');
+
+        setNavbar(navbar, mainQuery, sidebar);
+        setSidebar(sidebar);
+        setupMainSize(mainQuery);
+        moveMains(mainQuery, getCurrentMain());
+
+        if (cleanupEvents)
+            cleanupEvents();
+
+        cleanupEvents = loadScrollingAndMain(navbar, mainQuery, sidebar, hamburgerMenu, setUser);
+    }
+
+    const sidebarState = localStorage.getItem('sidebarState');
+    if (sidebarState === 'keepSideBar')
+        removeSidebar(sidebar, hamburgerMenu);
+    else {
+        if (screenMode !== 1) {
+            setNavbar(navbar, mainQuery, sidebar);
+            setSidebar(sidebar);
+        }
+
+        showSidebar(sidebar, hamburgerMenu, setUser);
+    }
+
+    sizeBasedElements();
+
+    window.addEventListener('resize', sizeBasedElements);
+
+    if (sidebarState === 'removeSidebar') {
+        removeSidebar(sidebar, hamburgerMenu);
+        localStorage.setItem('sidebarState', 'keepSideBar');
+    }
+
+    function handleButtonClick(event) {
+        const button = event.currentTarget;
+        button.classList.add('button-click-animation');
+
+        if (button.textContent.trim() === 'Copy')
+            button.textContent = 'Copied';
+
+        setTimeout(() => {
+            button.classList.remove('button-click-animation');
+            if (button.textContent.trim() === 'Copied')
+                button.textContent = 'Copy';
+        }, 500);
+    }
+
+    const buttons = document.querySelectorAll('button, a.button');
+    buttons.forEach(button => { button.addEventListener('click', handleButtonClick); });
+
+    document.body.classList.add('no-animation');
+
+    setTimeout(() => {
+        document.body.classList.remove('no-animation');
+    }, 0);
+
+    const link = document.getElementById('loading-stylesheet');
+    if (link)
+        link.parentNode.removeChild(link);
+
+    document.documentElement.classList.remove('loading-screen');
+    pageUpdated = true;
+
+    window.gtag = function () {
+        if (!window.dataLayer)
+            window.dataLayer = window.dataLayer || [];
+
+        if (window.dataLayer)
+            window.dataLayer.push(arguments);
+    };
+
+    const script = document.createElement('script');
+    script.src = 'https://www.googletagmanager.com/gtag/js?id=G-BFR70Q5VX1';
+    script.defer = true;
+    document.head.appendChild(script);
+
+    script.onload = function () {
+        gtag('js', new Date());
+        gtag('config', 'G-BFR70Q5VX1');
+    };
+}
+
+let currentMain = 0;
+let windowHeight = window.innerHeight;
+let windowWidth = window.innerWidth;
+let aspectRatio = windowHeight / windowWidth;
+let sidebarActive = true;
+let navbarActive = true;
+let actualNavbarHeight = 0;
+let navbarHeight = 0;
+
+export const ScreenMode = Object.freeze({
+    PHONE: 3,
+    PC: 1,
+});
+
+export function dispatchEvent(event) {
+    window.dispatchEvent(new Event(event));
+}
+
+export function getScreenMode() {
+    const aspectRatio = getAspectRatio();
+    if (aspectRatio < 4 / 5) return ScreenMode.PHONE;
+    if (aspectRatio <= 4 / 3) return ScreenMode.PC;
+    return ScreenMode.PC;
+}
+
+export function setCurrentMain(value) {
+    currentMain = value;
+}
+
+export function getCurrentMain() {
+    return currentMain;
+}
+
+export function setWindowHeight(value) {
+    windowHeight = value;
+}
+
+export function getWindowHeight() {
+    return windowHeight;
+}
+
+export function setWindowWidth(value) {
+    windowWidth = value;
+}
+
+export function getWindowWidth() {
+    return windowWidth;
+}
+
+export function setAspectRatio() {
+    if (windowHeight != window.innerHeight || windowWidth != window.innerWidth || aspectRatio != window.innerWidth / window.innerHeight) {
+        setWindowHeight(window.innerHeight);
+        setWindowWidth(window.innerWidth);
+        aspectRatio = getWindowWidth() / getWindowHeight();
+    }
+}
+
+export function getAspectRatio() {
+    setAspectRatio();
+    return aspectRatio;
+}
+
+export function setSidebarActive(value) {
+    sidebarActive = value;
+}
+
+export function getSidebarActive() {
+    return sidebarActive;
+}
+
+export function setNavbarActive(value) {
+    navbarActive = value;
+}
+
+export function getNavbarActive() {
+    return navbarActive;
+}
+
+export function setActualNavbarHeight(value) {
+    actualNavbarHeight = value;
+}
+
+export function getActualNavbarHeight() {
+    return actualNavbarHeight;
+}
+
+export function setNavbarHeight(value) {
+    navbarHeight = value;
+}
+
+export function getNavbarHeight() {
+    return navbarHeight;
+}
+
+export function setSidebar(sidebar) {
+    const type = getScreenMode() !== 1 ? 2 : 0; /* 0 = to right, 1 = to left, 2 = to bottom */
+    if (type === 2) {
+        if (getSidebarActive()) {
+            sidebar.style.right = '0';
+            sidebar.style.left = '0';
+            sidebar.style.top = navbarHeight + "px";
+            return;
+        }
+
+        if (sidebar) {
+            sidebar.style.right = '0';
+            sidebar.style.left = '0';
+            sidebar.style.top = -getWindowHeight() + "px";
+        }
+    }
+    else if (type === 1) {
+        if (getSidebarActive()) {
+            sidebar.style.right = '0';
+            return;
+        }
+
+        if (sidebar)
+            sidebar.style.right = -sidebar.offsetWidth + "px";
+    }
+    else if (type === 0) {
+        if (getSidebarActive()) {
+            sidebar.style.left = '0';
+            return;
+        }
+
+        if (sidebar)
+            sidebar.style.left = -sidebar.offsetWidth + 'px';
+    }
+}
+
+export function moveMains(mains, currentMain) {
+    if (mains && mains.length > 0) {
+        mains.forEach((main, i) => {
+            const offset = (i - Math.min(mains.length - 1, currentMain)) * getWindowHeight();
+            main.style.top = `${offset + getNavbarHeight()}px`;
+            main.style.height = `${getWindowHeight() - getNavbarHeight()}px`;
+            main.style.width = `${getWindowWidth()}px`;
+        });
+    }
+}
+
+export function reconstructMainStyles() {
+    let mains = document.querySelectorAll('main');
+    if (mains && mains.length > 0) {
+        mains.forEach((main, i) => {
+            main.style.display = 'grid';
+            main.style.top = `${i * getWindowHeight() + getNavbarHeight()}px`;
+            main.style.height = `${getWindowHeight() - getNavbarHeight()}px`;
+            main.style.width = `${getWindowWidth()}px`;
+        });
+    }
+}
+
+export function setNavbar(navbar, mains, sidebar) {
+    setActualNavbarHeight(navbar ? navbar.offsetHeight : 0);
+    setNavbarHeight(getNavbarActive() ? navbar.offsetHeight : 0);
+    moveMains(mains, currentMain);
+
+    if (getNavbarActive()) {
+        navbar.style.top = '0';
+
+        if (sidebar) {
+            if (getScreenMode() === ScreenMode.PC)
+                sidebar.style.top = `${getNavbarHeight()}px`;
+            sidebar.style.height = `${getWindowHeight() - getNavbarHeight()}px`;
+        }
+    }
+    else {
+        if (navbar) {
+            navbar.style.top = -navbar.offsetHeight + "px";
+        }
+
+        if (sidebar) {
+            sidebar.style.height = '100vh';
+        }
+    }
+}
+
+let previousScreenMode = 0;
+
+export function showSidebar(sidebar, hamburgerMenu, setUser) {
+    setSidebarActive(sidebar);
+    setSidebar(sidebar);
+
+    if (hamburgerMenu)
+        hamburgerMenu.classList.add('open');
+
+    localStorage.removeItem('sidebarState');
+
+    function loadSideBar() {
+        const screenMode = getScreenMode();
+        const shouldUpdate = previousScreenMode !== screenMode;
+        previousScreenMode = screenMode;
+        if (!shouldUpdate)
+            return;
+
+        let sideBar = `
 				<div style="flex: 1; justify-content: space-between;">
-                    <div>
+                    <div style="display: flex;gap: 1vh;">
                         <a class="button" id="exploreButton" href=".">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M12 0C5.38318 0 0 5.38318 0 12C0 18.6168 5.38318 24 12 24C18.6164 24 23.9992 18.6168 23.9992 12C23.9992 5.38318 18.6164 0 12 0ZM17.9313 6.83591L14.1309 13.8977C14.0788 13.9945 13.9995 14.0742 13.9023 14.1264L6.84094 17.9263C6.75694 17.9714 6.66559 17.9932 6.57463 17.9932C6.42889 17.9932 6.28489 17.9369 6.1767 17.8285C6.00097 17.653 5.96129 17.3828 6.07896 17.1641L9.87858 10.1029C9.93084 10.0059 10.0104 9.9262 10.1074 9.87413L17.1695 6.07413C17.3882 5.95626 17.658 5.99613 17.8339 6.17167C18.0093 6.34741 18.0494 6.61721 17.9313 6.83591Z" fill="white"/>
@@ -104,7 +1681,8 @@ export function setCache(e, t, _) { let r = new Date, a = { value: t, expiry: r.
                             Premium
                         </a>
                     </div>
-                    <div>
+                    <div class="line" style="margin: 0;"></div>
+                    <div style="display: flex;gap: 1vh;">
                         <a class="button" id="faceSwapButton" href="face-swap">
                             <svg class="svg-icon" width="24" height="24" style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M848 64h-84c-7.2 0-14.3 2.7-19.8 8.2-5.5 5.5-8.2 12.6-8.2 19.8 0 7.2 2.7 14.3 8.2 19.8 5.5 5.5 12.6 8.2 19.8 8.2h84v84c0 7.2 2.7 14.3 8.2 19.8 5.5 5.5 12.6 8.2 19.8 8.2s14.3-2.7 19.8-8.2c5.5-5.5 8.2-12.6 8.2-19.8v-84c0-30.9-25.1-56-56-56zM876 512c-7.2 0-14.3 2.7-19.8 8.2-5.5 5.5-8.2 12.6-8.2 19.8v84h-84c-7.2 0-14.3 2.7-19.8 8.2-1.5 1.5-2.3 3.4-3.4 5.2-31.6-30.4-67.1-55.4-106.4-72C714.2 517.7 764.7 426 749.2 323c-14.6-96.7-89.6-177.5-185.3-197.5-17.6-3.7-35-5.4-51.9-5.4-132.6 0-240 107.4-240 240 0 87.6 47.5 163.5 117.6 205.4-39.2 16.6-74.8 41.6-106.4 72-1.1-1.8-1.9-3.7-3.4-5.2-5.5-5.5-12.6-8.2-19.8-8.2h-84v-84c0-7.2-2.7-14.3-8.2-19.8-5.5-5.5-12.6-8.2-19.8-8.2s-14.3 2.7-19.8 8.2c-5.5 5.5-8.2 12.6-8.2 19.8v84c0 30.9 25.1 56 56 56h69c-46.8 60.6-79.3 136.5-89.5 221.3-3.8 31.2 21.1 58.7 52.5 58.7h608c31.4 0 56.2-27.6 52.5-58.7-10.2-84.9-42.7-160.8-89.5-221.4h69c30.9 0 56-25.1 56-56v-84c0-7.2-2.7-14.3-8.2-19.8-5.5-5.5-12.6-8.2-19.8-8.2zM211.5 905c16.9-132.8 93.3-242.9 199.9-288 19.4-8.2 32.6-26.7 34.1-47.7 1.5-21.1-9-41.1-27.2-52C361.8 483.6 328 424.7 328 360c0-101.5 82.5-184 184-184 13.4 0 27 1.4 40.4 4.3 72.1 15.1 130.3 77.2 141.4 151.1 11.4 75.5-22.4 146.8-88.2 186-18.1 10.8-28.6 30.9-27.2 52 1.5 21.1 14.6 39.5 34.1 47.7C719 661.9 795.3 771.7 812.4 904l-600.9 1zM148 232c7.2 0 14.3-2.7 19.8-8.2 5.5-5.5 8.2-12.6 8.2-19.8v-84h84c7.2 0 14.3-2.7 19.8-8.2 5.5-5.5 8.2-12.6 8.2-19.8 0-7.2-2.7-14.3-8.2-19.8-5.5-5.5-12.6-8.2-19.8-8.2h-84c-30.9 0-56 25.1-56 56v84c0 7.2 2.7 14.3 8.2 19.8 5.5 5.5 12.6 8.2 19.8 8.2z" fill="white"/></svg>
                             Face Swap
@@ -118,7 +1696,8 @@ export function setCache(e, t, _) { let r = new Date, a = { value: t, expiry: r.
                             Art Generator
                         </a>
                     </div>
-					<div>
+                    <div class="line" style="margin: 0;"></div>
+                    <div style="display: flex;gap: 1vh;">
 						<a class="button" id="discordButton" translate="no" href="https://discord.gg/VvHAj2eBCS" target="_blank">
 							<svg width="24" height="24" viewBox="0 0 127.14 96.36" xmlns="http://www.w3.org/2000/svg">
 								<path class="cls-1" d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z" fill="white"/>
@@ -136,7 +1715,8 @@ export function setCache(e, t, _) { let r = new Date, a = { value: t, expiry: r.
 							Reddit
 						</a>
 					</div>
-					<div>
+                    <div class="line" style="margin: 0;"></div>
+                    <div style="display: flex;gap: 1vh;">
 						<button id="contactButton" href="mailto:durieun02@gmail.com">
 							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 							<g id="contact">
@@ -165,7 +1745,10 @@ export function setCache(e, t, _) { let r = new Date, a = { value: t, expiry: r.
 						</a>
 					</div>
 				</div>
-				`; t === ScreenMode.PHONE && (a = `
+				`;
+
+        if (screenMode === ScreenMode.PHONE) {
+            sideBar = `
                 <a href="profile" id="userLayout" style="display: flex; gap: calc(1vh * var(--scale-factor-h)); align-items: center;">
                     <img alt="Profile Image" class="profile-image" style="width: calc((6vh * var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w))); height: calc((6vh * var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w)));">
                     <div>
@@ -174,6 +1757,394 @@ export function setCache(e, t, _) { let r = new Date, a = { value: t, expiry: r.
                         <p id="creditsAmount">0 Credits</p>
                     </div>
                 </a>
-            `+ a), e.innerHTML = a, t === ScreenMode.PHONE && _(), ["exploreButton", "profileButton", "premiumButton", "faceSwapButton", "inpaintButton", "artGeneratorButton", "userLayout"].forEach(e => { let t = document.getElementById(e); t && t.addEventListener("click", () => localStorage.setItem("sidebarState", "removeSidebar")) })
-	} setSidebarActive(e), setSidebar(e), t && t.classList.add("open"), localStorage.removeItem("sidebarState"), r(), window.hasResizeEventListener || (window.addEventListener("resize", r), window.hasResizeEventListener = !0)
-} export function showNavbar(e, t, _) { setNavbarActive(e), setNavbar(e, t, _), setSidebar(_) } export function removeSidebar(e, t) { setSidebarActive(!1), setSidebar(e), t && t.classList.remove("open"), localStorage.setItem("sidebarState", "keepSideBar") } export function removeNavbar(e, t, _) { setNavbarActive(!1), setNavbar(e, t, _), setSidebar(_) } export function cleanPages() { document.querySelectorAll("main").forEach(e => e.remove()), document.querySelectorAll(".faded-content").forEach(e => e.remove()) } export function createPages(e) { let t = e.length; if (t <= 0) return; for (let _ = 0; _ < t; _++) { let r = document.createElement("main"), a = document.createElement("div"); a.classList.add("main-container"), r.appendChild(a), document.body.appendChild(r) } let $ = document.createElement("div"); $.classList.add("faded-content"); let i = document.createElement("div"); i.classList.add("first-text"); let n = document.createElement("h1"); n.setAttribute("translate", "no"), n.innerHTML = 'DeepAny.<span class="text-gradient" translate="no">AI</span>'; let o = document.createElement("h2"); o.classList.add("text-gradient"), o.setAttribute("translate", "no"), o.textContent = "bring your imagination come to life."; let s = document.createElement("div"); s.classList.add("offset-text"); for (let l = 0; l < 3; l++) { let c = document.createElement("h1"); c.classList.add("offset"), c.setAttribute("translate", "no"), c.innerHTML = 'deepany.a<span class="no-spacing" translate="no">i</span>', s.appendChild(c) } i.appendChild(n), i.appendChild(o), i.appendChild(s), $.appendChild(i), document.body.appendChild($) } export function clamp(e, t, _) { return Math.max(t, Math.min(e, _)) } export function setupMainSize(e) { e && e.length && e.forEach((e, t) => { e.style.display = "grid", e.style.top = `${t * getWindowHeight() + getNavbarHeight()}px`, e.style.height = `${getWindowHeight() - getNavbarHeight()}px`, e.style.width = `${getWindowWidth()}px` }) } let swipeThreshold = 50; export function loadScrollingAndMain(e, t, _, r, a) { if (!t || !t.length) return; let $ = !1, i = 0, n = 0, o = 0; function s(r, a = 250) { if (t.length > 1 && r >= 0 && r < t.length && !$) { if (sidebarActive && getScreenMode() !== ScreenMode.PC) return; $ = !0; let i = r >= getCurrentMain(); setCurrentMain(r), i ? removeNavbar(e, t, _) : showNavbar(e, t, _), setTimeout(() => { $ = !1 }, a) } } let l = e => { $ || ("ArrowDown" === e.key || "ArrowRight" === e.key ? (e.preventDefault(), s(getCurrentMain() + 1)) : ("ArrowUp" === e.key || "ArrowLeft" === e.key) && (e.preventDefault(), s(getCurrentMain() - 1))) }, c = e => { e.ctrlKey || $ || (e.deltaY > 0 ? s(getCurrentMain() + 1) : e.deltaY < 0 && s(getCurrentMain() - 1)) }, d = $ => { if (!$) return; let { clientY: i, clientX: n } = "touchstart" === $.type ? $.touches[0] : $; if (i > e.offsetHeight) { if (!n) return showSidebar(_, r, a); "click" === $.type && n > _.offsetWidth && !$.target.closest("a") && removeSidebar(_, r) } else showNavbar(e, t, _) }, u = e => { n = e.changedTouches[0].clientY, g() }, h = e => { d(e), i = e.touches[0].clientY, o = Date.now() }, g = () => { let e = n - i, t = Date.now() - o; Math.abs(e) > 50 && t < 500 && (e < 0 ? s(getCurrentMain() + 1) : s(getCurrentMain() - 1)) }; return document.addEventListener("keydown", l), document.addEventListener("wheel", c), document.addEventListener("click", d), document.addEventListener("mousemove", d), document.addEventListener("touchmove", u), document.addEventListener("touchstart", h), function e() { document.removeEventListener("keydown", l), document.removeEventListener("wheel", c), document.removeEventListener("click", d), document.removeEventListener("mousemove", d), document.removeEventListener("touchmove", u), document.removeEventListener("touchstart", h) } } export function updateContent(e) { let t = document.querySelectorAll(".main-container"); t.forEach((t, _) => { e[_] && (t.innerHTML = "", t.insertAdjacentHTML("beforeend", e[_])) }) } function loadSizeCache() { let e = localStorage.getItem("sizeCache"); return e ? JSON.parse(e) : {} } let sizeCache = loadSizeCache(); export function retrieveImages(e) { let t = document.getElementById(e); if (!t) return; let _ = (e, _, r) => { t.src = e, t.srcset = _, t.sizes = r }; if (sizeCache[e]) { let { src: r, srcset: a, sizes: $ } = sizeCache[e]; _(r, a, $) } else { let i = () => { var r; let { width: a, height: $ } = t.getBoundingClientRect(), i = (r = Math.max(a, $), [128, 256, 512, 768].reduce((e, t) => Math.abs(t - r) < Math.abs(e - r) ? t : e)), n = `./assets/${e}-${i}.webp`, o = `${n} ${i}w`, s = `${i}px`; sizeCache[e] = { src: n, srcset: o, sizes: s }, localStorage.setItem("sizeCache", JSON.stringify(sizeCache)), _(n, o, s) }; t.complete ? i() : t.addEventListener("load", i, { once: !0 }) } } export function getSizeCache() { return sizeCache } function getValueBasedOnAspectRatio() { let e = window.innerWidth, t = window.innerHeight, _ = e / t, r = Math.max(0, Math.min(1, _ / .5)); return _ < .25 && (r = .5), Math.min(1, r) } document.querySelectorAll("*[tooltip]").forEach(e => { e.addEventListener("mouseenter", function () { let e = this.querySelector(".tooltip"); e && adjustTooltipPosition(e) }) }); export function setScaleFactors(e, t, _ = 3, r = 0) { let a = getValueBasedOnAspectRatio(); _ *= a = Math.pow(a, .5) / 2, r *= a, document.documentElement.style.setProperty("--scale-factor-h", e * _), document.documentElement.style.setProperty("--scale-factor-w", t * r) } export function showZoomIndicator(e, t, _) { let r = document.getElementById("zoom-container"); r || ((r = document.createElement("div")).id = "zoom-container", r.className = "indicator-container", document.body.appendChild(r)); let a = r.querySelector(".indicator"); a || ((a = document.createElement("div")).className = "indicator", r.appendChild(a)); let $ = a.querySelector("p"); $ || (($ = document.createElement("p")).style.marginRight = "4vh", a.appendChild($)); let i = a.querySelector(".zoom-minus"), n = a.querySelector(".zoom-plus"); i || ((i = document.createElement("button")).className = "zoom-minus", i.innerText = "-", a.appendChild(i)), n || ((n = document.createElement("button")).className = "zoom-plus", n.innerText = "+", a.appendChild(n)), i.onclick = () => { setScaleFactors(t = clamp((t || 1) - .05, .1, 1), _ = clamp((_ || 1) - .05, .1, 1)), localStorage.setItem("scaleFactorHeight", t), localStorage.setItem("scaleFactorWidth", _), showZoomIndicator(`${Math.round(100 * t)}%`, t, _), setTimeout(() => { window.dispatchEvent(new Event("resize")) }, 100) }, n.onclick = () => { setScaleFactors(t = clamp((t || 1) + .05, .1, 1), _ = clamp((_ || 1) + .05, .1, 1)), localStorage.setItem("scaleFactorHeight", t), localStorage.setItem("scaleFactorWidth", _), showZoomIndicator(`${Math.round(100 * t)}%`, t, _), setTimeout(() => { window.dispatchEvent(new Event("resize")) }, 100) }, a.style.opacity = 1, document.addEventListener("click", e => { r.contains(e.target) || (a.style.opacity = 0) }), $.innerText = `${Math.round(100 * t)}%` }
+                <div class="line"></div>
+            ` + sideBar;
+        }
+
+        sidebar.innerHTML = sideBar;
+
+        if (screenMode === ScreenMode.PHONE)
+            setUser();
+
+        ['exploreButton', 'profileButton', 'premiumButton', 'faceSwapButton', 'inpaintButton', 'artGeneratorButton', 'userLayout'].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.addEventListener('click', () => localStorage.setItem('sidebarState', 'removeSidebar'));
+            }
+        });
+    }
+
+    loadSideBar();
+
+    if (!window.hasResizeEventListener) {
+        window.addEventListener('resize', loadSideBar);
+        window.hasResizeEventListener = true;
+    }
+}
+
+export function showNavbar(navbar, mains, sidebar) {
+    setNavbarActive(navbar);
+    setNavbar(navbar, mains, sidebar);
+    setSidebar(sidebar);
+}
+
+export function removeSidebar(sidebar, hamburgerMenu) {
+    setSidebarActive(false);
+    setSidebar(sidebar);
+
+    if (hamburgerMenu)
+        hamburgerMenu.classList.remove('open');
+
+    localStorage.setItem('sidebarState', 'keepSideBar');
+    // TODO: Remove side bar elements when animation is over and allow recreation!
+}
+
+export function removeNavbar(navbar, mains, sidebar) {
+    setNavbarActive(false);
+    setNavbar(navbar, mains, sidebar);
+    setSidebar(sidebar);
+}
+
+export function cleanPages() {
+    document.querySelectorAll('main').forEach(main => main.remove());
+    document.querySelectorAll('.faded-content').forEach(fadedContent => fadedContent.remove());
+}
+
+export function createPages(contents) {
+    const numberOfPages = contents.length;
+    if (numberOfPages <= 0) return;
+
+    for (let index = 0; index < numberOfPages; index++) {
+        const mainElement = document.createElement('main');
+        const mainContainer = document.createElement('div');
+        mainContainer.classList.add('main-container');
+
+        mainElement.appendChild(mainContainer);
+        document.body.appendChild(mainElement);
+    }
+
+    const fadedContent = document.createElement('div');
+    fadedContent.classList.add('faded-content');
+
+    const firstText = document.createElement('div');
+    firstText.classList.add('first-text');
+
+    const h1Element = document.createElement('h1');
+    h1Element.setAttribute('translate', 'no');
+    h1Element.innerHTML = 'DeepAny.<span class="text-gradient" translate="no">AI</span>';
+
+    const h2Element = document.createElement('h2');
+    h2Element.classList.add('text-gradient');
+    h2Element.setAttribute('translate', 'no');
+    h2Element.textContent = 'bring your imagination come to life.';
+
+    const offsetText = document.createElement('div');
+    offsetText.classList.add('offset-text');
+
+    for (let j = 0; j < 3; j++) {
+        const offsetH1 = document.createElement('h1');
+        offsetH1.classList.add('offset');
+        offsetH1.setAttribute('translate', 'no');
+        offsetH1.innerHTML = 'deepany.a<span class="no-spacing" translate="no">i</span>';
+        offsetText.appendChild(offsetH1);
+    }
+
+    firstText.appendChild(h1Element);
+    firstText.appendChild(h2Element);
+    firstText.appendChild(offsetText);
+    fadedContent.appendChild(firstText);
+
+    document.body.appendChild(fadedContent);
+}
+
+export function clamp(value, min, max) {
+    return Math.max(min, Math.min(value, max));
+}
+
+export function setupMainSize(mainQuery) {
+    if (!mainQuery || !mainQuery.length)
+        return;
+
+    mainQuery.forEach((main, index) => {
+        main.style.display = 'grid';
+        main.style.top = `${index * getWindowHeight() + getNavbarHeight()}px`;
+        main.style.height = `${getWindowHeight() - getNavbarHeight()}px`;
+        main.style.width = `${getWindowWidth()}px`;
+    });
+
+}
+
+const swipeThreshold = 50;
+
+export function loadScrollingAndMain(navbar, mainQuery, sidebar, hamburgerMenu, setUser) {
+    if (!mainQuery || !mainQuery.length)
+        return;
+
+    let scrolling = false;
+    let touchStartY = 0;
+    let touchEndY = 0;
+    let touchStartTime = 0;
+
+    function showMain(index, transitionDuration = 250) {
+        if (mainQuery.length > 1 && index >= 0 && index < mainQuery.length && !scrolling) {
+            if (sidebarActive && getScreenMode() !== ScreenMode.PC)
+                return;
+
+            scrolling = true;
+            const wentDown = index >= getCurrentMain();
+            setCurrentMain(index);
+            if (wentDown) {
+                removeNavbar(navbar, mainQuery, sidebar);
+            } else {
+                showNavbar(navbar, mainQuery, sidebar);
+            }
+            setTimeout(() => {
+                scrolling = false;
+            }, transitionDuration);
+        }
+    }
+
+    const handleKeydown = (event) => {
+        if (!scrolling) {
+            if (event.key === 'ArrowDown' || event.key === 'ArrowRight') {
+                event.preventDefault();
+                showMain(getCurrentMain() + 1);
+            } else if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') {
+                event.preventDefault();
+                showMain(getCurrentMain() - 1);
+            }
+        }
+    };
+
+    const handleWheel = (event) => {
+        if (event.ctrlKey)
+            return;
+
+        if (!scrolling) {
+            if (event.deltaY > 0) {
+                showMain(getCurrentMain() + 1);
+            } else if (event.deltaY < 0) {
+                showMain(getCurrentMain() - 1);
+            }
+        }
+    };
+
+    const handleEvent = e => {
+        if (!e) return;
+        const { clientY, clientX } = e.type === 'touchstart' ? e.touches[0] : e;
+        if (clientY > navbar.offsetHeight) {
+            if (!clientX) return showSidebar(sidebar, hamburgerMenu, setUser);
+            if (e.type === 'click' && clientX > sidebar.offsetWidth && !e.target.closest('a')) removeSidebar(sidebar, hamburgerMenu);
+        } else showNavbar(navbar, mainQuery, sidebar);
+    };
+
+    const handleTouchMove = (event) => {
+        touchEndY = event.changedTouches[0].clientY;
+        handleSwipe();
+    };
+
+    const handleTouchStart = (event) => {
+        handleEvent(event);
+        touchStartY = event.touches[0].clientY;
+        touchStartTime = Date.now();
+    };
+
+    const handleSwipe = () => {
+        const touchDistance = touchEndY - touchStartY;
+        const touchDuration = Date.now() - touchStartTime;
+        if (Math.abs(touchDistance) > swipeThreshold && touchDuration < 500) {
+            if (touchDistance < 0) {
+                showMain(getCurrentMain() + 1);
+            } else {
+                showMain(getCurrentMain() - 1);
+            }
+        }
+    };
+
+    document.addEventListener('keydown', handleKeydown);
+    document.addEventListener('wheel', handleWheel);
+    document.addEventListener('click', handleEvent);
+    document.addEventListener('mousemove', handleEvent);
+    document.addEventListener('touchmove', handleTouchMove);
+    document.addEventListener('touchstart', handleTouchStart);
+
+    return function cleanup() {
+        document.removeEventListener('keydown', handleKeydown);
+        document.removeEventListener('wheel', handleWheel);
+        document.removeEventListener('click', handleEvent);
+        document.removeEventListener('mousemove', handleEvent);
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('touchstart', handleTouchStart);
+    };
+}
+
+export function updateContent(contents) {
+    const mainContainers = document.querySelectorAll('.main-container');
+    mainContainers.forEach((mainContainer, index) => {
+        if (contents[index]) {
+            mainContainer.innerHTML = '';
+            mainContainer.insertAdjacentHTML('beforeend', contents[index]);
+        }
+    });
+}
+
+function loadSizeCache() {
+    const cachedData = localStorage.getItem('sizeCache');
+    return cachedData ? JSON.parse(cachedData) : {};
+}
+
+const sizeCache = loadSizeCache();
+
+export function retrieveImages(id) {
+    const img = document.getElementById(id);
+    if (!img) {
+        return;
+    }
+
+    const applyImageAttributes = (src, srcset, sizes) => {
+        img.src = src;
+        img.srcset = srcset;
+        img.sizes = sizes;
+    };
+
+    if (sizeCache[id]) {
+        const { src, srcset, sizes } = sizeCache[id];
+        applyImageAttributes(src, srcset, sizes);
+    } else {
+        const handleImageLoad = () => {
+            function getClosestSize(dimension) {
+                const availableSizes = [128, 256, 512, 768];
+                return availableSizes.reduce((prev, curr) =>
+                    Math.abs(curr - dimension) < Math.abs(prev - dimension) ? curr : prev
+                );
+            }
+
+            const { width, height } = img.getBoundingClientRect();
+            const largerDimension = Math.max(width, height);
+            const closestSize = getClosestSize(largerDimension);
+
+            const newSrc = `./assets/${id}-${closestSize}.webp`;
+            const newSrcset = `${newSrc} ${closestSize}w`;
+            const newSizes = `${closestSize}px`;
+
+            sizeCache[id] = { src: newSrc, srcset: newSrcset, sizes: newSizes };
+            localStorage.setItem('sizeCache', JSON.stringify(sizeCache));
+            applyImageAttributes(newSrc, newSrcset, newSizes);
+        };
+
+        if (img.complete) {
+            handleImageLoad();
+        } else {
+            img.addEventListener('load', handleImageLoad, { once: true });
+        }
+    }
+}
+
+export function getSizeCache() {
+    return sizeCache;
+}
+
+function getValueBasedOnAspectRatio() {
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    const aspectRatio = windowWidth / windowHeight;
+    const maxAspectRatio = 0.5;
+    const minAspectRatio = 0.25;
+
+    let value = Math.max(0, Math.min(1, aspectRatio / maxAspectRatio));
+    if (aspectRatio < minAspectRatio) {
+        value = minAspectRatio / maxAspectRatio;
+    }
+
+    return Math.min(1, value);
+}
+
+// Attach event listeners for each element with the tooltip
+document.querySelectorAll('*[tooltip]').forEach(item => {
+    item.addEventListener('mouseenter', function () {
+        const tooltip = this.querySelector('.tooltip');
+        if (tooltip) {
+            adjustTooltipPosition(tooltip);
+        }
+    });
+});
+
+export function setScaleFactors(scaleFactorHeight, scaleFactorWidth, scaleFactorHeightMultiplier = 3, scaleFactorWidthMultiplier = 0) {
+    let value = getValueBasedOnAspectRatio();
+    value = Math.pow(value, 0.5) / 2;
+    scaleFactorHeightMultiplier *= value;
+    scaleFactorWidthMultiplier *= value;
+    document.documentElement.style.setProperty('--scale-factor-h', scaleFactorHeight * scaleFactorHeightMultiplier);
+    document.documentElement.style.setProperty('--scale-factor-w', scaleFactorWidth * scaleFactorWidthMultiplier);
+}
+
+export function showZoomIndicator(event, scaleFactorHeight, scaleFactorWidth) {
+    let container = document.getElementById('zoom-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'zoom-container';
+        container.className = 'indicator-container';
+        document.body.appendChild(container);
+    }
+
+    let notification = container.querySelector('.indicator');
+    if (!notification) {
+        notification = document.createElement('div');
+        notification.className = 'indicator';
+        container.appendChild(notification);
+    }
+
+    let messageElement = notification.querySelector('p');
+    if (!messageElement) {
+        messageElement = document.createElement('p');
+        messageElement.style.marginRight = '4vh';
+        notification.appendChild(messageElement);
+    }
+
+    let minusButton = notification.querySelector('.zoom-minus');
+    let plusButton = notification.querySelector('.zoom-plus');
+
+    if (!minusButton) {
+        minusButton = document.createElement('button');
+        minusButton.className = 'zoom-minus';
+        minusButton.innerText = '-';
+        notification.appendChild(minusButton);
+    }
+
+    if (!plusButton) {
+        plusButton = document.createElement('button');
+        plusButton.className = 'zoom-plus';
+        plusButton.innerText = '+';
+        notification.appendChild(plusButton);
+    }
+
+    minusButton.onclick = () => {
+        scaleFactorHeight = clamp((scaleFactorHeight || 1) - 0.05, 0.1, 1);
+        scaleFactorWidth = clamp((scaleFactorWidth || 1) - 0.05, 0.1, 1);
+        setScaleFactors(scaleFactorHeight, scaleFactorWidth);
+        localStorage.setItem('scaleFactorHeight', scaleFactorHeight);
+        localStorage.setItem('scaleFactorWidth', scaleFactorWidth);
+        showZoomIndicator(`${Math.round(scaleFactorHeight * 100)}%`, scaleFactorHeight, scaleFactorWidth);
+        setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 100);
+    };
+
+    plusButton.onclick = () => {
+        scaleFactorHeight = clamp((scaleFactorHeight || 1) + 0.05, 0.1, 1);
+        scaleFactorWidth = clamp((scaleFactorWidth || 1) + 0.05, 0.1, 1);
+        setScaleFactors(scaleFactorHeight, scaleFactorWidth);
+        localStorage.setItem('scaleFactorHeight', scaleFactorHeight);
+        localStorage.setItem('scaleFactorWidth', scaleFactorWidth);
+        showZoomIndicator(`${Math.round(scaleFactorHeight * 100)}%`, scaleFactorHeight, scaleFactorWidth);
+        setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 100);
+    };
+
+    notification.style.opacity = 1;
+
+    document.addEventListener('click', (event) => {
+        if (!container.contains(event.target)) {
+            notification.style.opacity = 0;
+        }
+    });
+
+    messageElement.innerText = `${Math.round(scaleFactorHeight * 100)}%`;
+}

@@ -32,8 +32,7 @@
             }
         }
     </style>
-
-    <script async>
+    <script defer>
         (function () {
             if (localStorage.getItem('preloadDone') || window.innerWidth / window.innerHeight <= 4 / 3) {
                 document.currentScript.remove();
@@ -57,28 +56,31 @@
             localStorage.setItem('preloadDone', 'true');
         })();
     </script>
-
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/styles.css?v=1.2.7">
     <script>
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = 'css/styles.css';
-        link.onload = function () {
-            const cssRules = Array.from(document.styleSheets).flatMap(sheet => { return Array.from(sheet.cssRules); });
+        window.addEventListener('DOMContentLoaded', () => {
+            const cssRules = Array.from(document.styleSheets).flatMap(sheet => Array.from(sheet.cssRules));
             const logoImgRule = cssRules.find(rule => rule.selectorText === '.logo img');
-            const content = logoImgRule.style.content;
-            const base64Match = content.match(/url\("?([^"]+)"?\)/);
-            link.href = base64Match[1];
-            const icon = document.createElement('link');
-            icon.rel = 'icon';
-            icon.href = base64Match[1];
-            icon.type = 'image/x-icon';
-            icon.title = 'DeepAny.AI Favicon';
-            document.head.appendChild(icon);
-            document.currentScript.remove();
-        };
 
-        document.head.appendChild(link);
+            if (logoImgRule && logoImgRule.style.content) {
+                const content = logoImgRule.style.content;
+                const base64Match = content.match(/url\("?([^"]+)"?\)/);
+
+                if (base64Match && base64Match[1]) {
+                    const icon = document.createElement('link');
+                    icon.rel = 'icon';
+                    icon.href = base64Match[1];
+                    icon.type = 'image/x-icon';
+                    icon.title = 'DeepAny.AI Favicon';
+                    document.head.appendChild(icon);
+                }
+            }
+
+            const currentScript = document.currentScript;
+            if (currentScript) {
+                currentScript.remove();
+            }
+        });
     </script>
     <style>
         .main-container {
@@ -86,10 +88,514 @@
             grid-template-rows: 1fr auto;
         }
     </style>
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "Review",
+            "itemReviewed": {
+                "@type": "Product",
+                "name": "Deepany AI Services",
+                "url": "https://deepany.ai",
+                "brand": {
+                    "@type": "Organization",
+                    "name": "DeepAny AI",
+                    "url": "https://deepany.ai"
+                },
+                "image": "DeepAny.AI.png",
+                "description": "Check our Trustpilot page for user reviews and experiences.",
+                "aggregateRating": {
+                    "@type": "AggregateRating",
+                    "ratingValue": "4.9",
+                    "reviewCount": "179"
+                },
+                "offers": [
+                    {
+                        "@type": "Offer",
+                        "priceCurrency": "USD",
+                        "price": "9.99",
+                        "shippingDetails": "10 Minutes Or Less.",
+                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
+                        "availability": "https://schema.org/InStock",
+                        "url": "https://deepany.ai/pricing",
+                        "name": "100 Credits",
+                        "priceValidUntil": "2099-12-31",
+                        "shippingRate": {
+                            "@type": "MonetaryAmount",
+                            "value": "0.00",
+                            "currency": "USD"
+                        },
+                        "shippingDestination": {
+                            "@type": "Place",
+                            "name": "User Account"
+                        },
+                        "deliveryTime": {
+                            "@type": "DeliveryTime",
+                            "duration": "PT10M"
+                        }
+                    },
+                    {
+                        "@type": "Offer",
+                        "priceCurrency": "USD",
+                        "price": "19.99",
+                        "shippingDetails": "10 Minutes Or Less.",
+                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
+                        "availability": "https://schema.org/InStock",
+                        "url": "https://deepany.ai/pricing",
+                        "name": "250 Credits",
+                        "priceValidUntil": "2099-12-31",
+                        "shippingRate": {
+                            "@type": "MonetaryAmount",
+                            "value": "0.00",
+                            "currency": "USD"
+                        },
+                        "shippingDestination": {
+                            "@type": "Place",
+                            "name": "User Account"
+                        },
+                        "deliveryTime": {
+                            "@type": "DeliveryTime",
+                            "duration": "PT10M"
+                        }
+                    },
+                    {
+                        "@type": "Offer",
+                        "priceCurrency": "USD",
+                        "price": "24.99",
+                        "shippingDetails": "10 Minutes Or Less.",
+                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
+                        "availability": "https://schema.org/InStock",
+                        "url": "https://deepany.ai/pricing",
+                        "name": "500 Credits",
+                        "priceValidUntil": "2099-12-31",
+                            "shippingRate": {
+                                "@type": "MonetaryAmount",
+                                "value": "0.00",
+                                "currency": "USD"
+                            },
+                            "shippingDestination": {
+                                "@type": "Place",
+                                "name": "User Account"
+                            },
+                            "deliveryTime": {
+                                "@type": "DeliveryTime",
+                                "duration": "PT10M"
+                            }
+                    },
+                    {
+                        "@type": "Offer",
+                        "priceCurrency": "USD",
+                        "price": "44.99",
+                        "shippingDetails": "10 Minutes Or Less.",
+                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
+                        "availability": "https://schema.org/InStock",
+                        "url": "https://deepany.ai/pricing",
+                        "name": "1000 Credits",
+                        "priceValidUntil": "2099-12-31",
+                            "shippingRate": {
+                                "@type": "MonetaryAmount",
+                                "value": "0.00",
+                                "currency": "USD"
+                            },
+                            "shippingDestination": {
+                                "@type": "Place",
+                                "name": "User Account"
+                            },
+                            "deliveryTime": {
+                                "@type": "DeliveryTime",
+                                "duration": "PT10M"
+                            }
+                    },
+                    {
+                        "@type": "Offer",
+                        "priceCurrency": "USD",
+                        "price": "99.99",
+                        "shippingDetails": "10 Minutes Or Less.",
+                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
+                        "availability": "https://schema.org/InStock",
+                        "url": "https://deepany.ai/pricing",
+                        "name": "2500 Credits",
+                        "priceValidUntil": "2099-12-31",
+                            "shippingRate": {
+                                "@type": "MonetaryAmount",
+                                "value": "0.00",
+                                "currency": "USD"
+                            },
+                            "shippingDestination": {
+                                "@type": "Place",
+                                "name": "User Account"
+                            },
+                            "deliveryTime": {
+                                "@type": "DeliveryTime",
+                                "duration": "PT10M"
+                            }
+                    },
+                    {
+                        "@type": "Offer",
+                        "priceCurrency": "USD",
+                        "price": "174.99",
+                        "shippingDetails": "10 Minutes Or Less.",
+                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
+                        "availability": "https://schema.org/InStock",
+                        "url": "https://deepany.ai/pricing",
+                        "name": "5000 Credits",
+                        "priceValidUntil": "2099-12-31",
+                            "shippingRate": {
+                                "@type": "MonetaryAmount",
+                                "value": "0.00",
+                                "currency": "USD"
+                            },
+                            "shippingDestination": {
+                                "@type": "Place",
+                                "name": "User Account"
+                            },
+                            "deliveryTime": {
+                                "@type": "DeliveryTime",
+                                "duration": "PT10M"
+                            }
+                    },
+                    {
+                        "@type": "Offer",
+                        "priceCurrency": "USD",
+                        "price": "299.99",
+                        "shippingDetails": "10 Minutes Or Less.",
+                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
+                        "availability": "https://schema.org/InStock",
+                        "url": "https://deepany.ai/pricing",
+                        "name": "10000 Credits",
+                        "priceValidUntil": "2099-12-31",
+                            "shippingRate": {
+                                "@type": "MonetaryAmount",
+                                "value": "0.00",
+                                "currency": "USD"
+                            },
+                            "shippingDestination": {
+                                "@type": "Place",
+                                "name": "User Account"
+                            },
+                            "deliveryTime": {
+                                "@type": "DeliveryTime",
+                                "duration": "PT10M"
+                            }
+                    },
+                    {
+                        "@type": "Offer",
+                        "priceCurrency": "USD",
+                        "price": "624.99",
+                        "shippingDetails": "10 Minutes Or Less.",
+                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
+                        "availability": "https://schema.org/InStock",
+                        "url": "https://deepany.ai/pricing",
+                        "name": "25000 Credits",
+                        "priceValidUntil": "2099-12-31",
+                            "shippingRate": {
+                                "@type": "MonetaryAmount",
+                                "value": "0.00",
+                                "currency": "USD"
+                            },
+                            "shippingDestination": {
+                                "@type": "Place",
+                                "name": "User Account"
+                            },
+                            "deliveryTime": {
+                                "@type": "DeliveryTime",
+                                "duration": "PT10M"
+                            }
+                    },
+                    {
+                        "@type": "Offer",
+                        "priceCurrency": "USD",
+                        "price": "999.99",
+                        "shippingDetails": "10 Minutes Or Less.",
+                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
+                        "availability": "https://schema.org/InStock",
+                        "url": "https://deepany.ai/pricing",
+                        "name": "50000 Credits",
+                        "priceValidUntil": "2099-12-31",
+                            "shippingRate": {
+                                "@type": "MonetaryAmount",
+                                "value": "0.00",
+                                "currency": "USD"
+                            },
+                            "shippingDestination": {
+                                "@type": "Place",
+                                "name": "User Account"
+                            },
+                            "deliveryTime": {
+                                "@type": "DeliveryTime",
+                                "duration": "PT10M"
+                            }
+                    },
+                    {
+                        "@type": "Offer",
+                        "priceCurrency": "USD",
+                        "price": "19.99",
+                        "shippingDetails": "10 Minutes Or Less.",
+                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
+                        "availability": "https://schema.org/InStock",
+                        "url": "https://deepany.ai/pricing",
+                        "name": "1 Day Subscription",
+                        "priceValidUntil": "2099-12-31",
+                            "shippingRate": {
+                                "@type": "MonetaryAmount",
+                                "value": "0.00",
+                                "currency": "USD"
+                            },
+                            "shippingDestination": {
+                                "@type": "Place",
+                                "name": "User Account"
+                            },
+                            "deliveryTime": {
+                                "@type": "DeliveryTime",
+                                "duration": "PT10M"
+                            }
+                    },
+                    {
+                        "@type": "Offer",
+                        "priceCurrency": "USD",
+                        "price": "69.99",
+                        "shippingDetails": "10 Minutes Or Less.",
+                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
+                        "availability": "https://schema.org/InStock",
+                        "url": "https://deepany.ai/pricing",
+                        "name": "7 Day Subscription",
+                        "priceValidUntil": "2099-12-31",
+                            "shippingRate": {
+                                "@type": "MonetaryAmount",
+                                "value": "0.00",
+                                "currency": "USD"
+                            },
+                            "shippingDestination": {
+                                "@type": "Place",
+                                "name": "User Account"
+                            },
+                            "deliveryTime": {
+                                "@type": "DeliveryTime",
+                                "duration": "PT10M"
+                            }
+                    },
+                    {
+                        "@type": "Offer",
+                        "priceCurrency": "USD",
+                        "price": "149.99",
+                        "shippingDetails": "10 Minutes Or Less.",
+                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
+                        "availability": "https://schema.org/InStock",
+                        "url": "https://deepany.ai/pricing",
+                        "name": "30 Day Subscription",
+                        "priceValidUntil": "2099-12-31",
+                            "shippingRate": {
+                                "@type": "MonetaryAmount",
+                                "value": "0.00",
+                                "currency": "USD"
+                            },
+                            "shippingDestination": {
+                                "@type": "Place",
+                                "name": "User Account"
+                            },
+                            "deliveryTime": {
+                                "@type": "DeliveryTime",
+                                "duration": "PT10M"
+                            }
+                    },
+                    {
+                        "@type": "Offer",
+                        "priceCurrency": "USD",
+                        "price": "269.99",
+                        "shippingDetails": "10 Minutes Or Less.",
+                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
+                        "availability": "https://schema.org/InStock",
+                        "url": "https://deepany.ai/pricing",
+                        "name": "90 Day Subscription",
+                        "priceValidUntil": "2099-12-31",
+                            "shippingRate": {
+                                "@type": "MonetaryAmount",
+                                "value": "0.00",
+                                "currency": "USD"
+                            },
+                            "shippingDestination": {
+                                "@type": "Place",
+                                "name": "User Account"
+                            },
+                            "deliveryTime": {
+                                "@type": "DeliveryTime",
+                                "duration": "PT10M"
+                            }
+                    },
+                    {
+                        "@type": "Offer",
+                        "priceCurrency": "USD",
+                        "price": "726.99",
+                        "shippingDetails": "10 Minutes Or Less.",
+                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
+                        "availability": "https://schema.org/InStock",
+                        "url": "https://deepany.ai/pricing",
+                        "name": "1 Year Subscription",
+                        "priceValidUntil": "2099-12-31",
+                            "shippingRate": {
+                                "@type": "MonetaryAmount",
+                                "value": "0.00",
+                                "currency": "USD"
+                            },
+                            "shippingDestination": {
+                                "@type": "Place",
+                                "name": "User Account"
+                            },
+                            "deliveryTime": {
+                                "@type": "DeliveryTime",
+                                "duration": "PT10M"
+                            }
+                    },
+                    {
+                        "@type": "Offer",
+                        "priceCurrency": "USD",
+                        "price": "1399.99",
+                        "shippingDetails": "10 Minutes Or Less.",
+                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
+                        "availability": "https://schema.org/InStock",
+                        "url": "https://deepany.ai/pricing",
+                        "name": "Lifetime Subscription",
+                        "priceValidUntil": "2099-12-31",
+                            "shippingRate": {
+                                "@type": "MonetaryAmount",
+                                "value": "0.00",
+                                "currency": "USD"
+                            },
+                            "shippingDestination": {
+                                "@type": "Place",
+                                "name": "User Account"
+                            },
+                            "deliveryTime": {
+                                "@type": "DeliveryTime",
+                                "duration": "PT10M"
+                            }
+                    }
+                ]
+            },
+            "author": {
+                "@type": "Organization",
+                "name": "Trustpilot",
+                "url": "https://www.trustpilot.com/review/deepany.ai"
+            },
+            "datePublished": "2024-10-15",
+            "reviewBody": "A very useful tool for creating content that isn’t available elsewhere on the internet. It is accessible to those who need it and easy to use.",
+            "reviewRating": {
+                "@type": "Rating",
+                "ratingValue": "5",
+                "bestRating": "5"
+            },
+            "publisher": {
+                "@type": "Organization",
+                "name": "Deepany",
+                "url": "https://deepany.ai"
+            },
+            "potentialAction": {
+                "@type": "Action",
+                "name": "Read more reviews",
+                "url": "https://www.trustpilot.com/review/deepany.ai"
+            }
+        }
+    </script>
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity":
+            [
+                {
+                    "@type": "Question",
+                    "name": "What services does Deepany offer?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Deepany offers AI-powered tools for face swapping, inpainting images, generating arts, and more."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "How can I purchase credits on Deepany?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "You can purchase credits directly on our website using various payment options available such as credit cards, bitcoin, and more."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Is there a free trial available?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Yes, Deepany offers a limited free trial for new users to experience our services before committing."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "How do I contact customer support?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "You can contact our customer support via the contact form on our website or by emailing support@deepany.ai."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "What are the system requirements for using Deepany's services?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Deepany's services are web-based and can be accessed on any modern browser. For the best experience, we recommend using the latest versions of Chrome, Firefox, or Safari."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Can I use Deepany's services on mobile devices?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Yes, Deepany's services are mobile-friendly and can be accessed from smartphones and tablets. For optimal performance, we recommend using a stable internet connection."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Are there any restrictions on the type of images I can use?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Users should avoid uploading images that violate copyright or contain offensive content. For more details, please refer to our terms of service."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "How long does it take to process to complete?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Processing times vary depending on the complexity of the task and the input size. Generally, most tasks are completed faster than our any other competitor."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "What payment methods are accepted on Deepany?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Deepany accepts various payment methods, including credit/debit cards, and cryptocurrencies like Bitcoin. Paypal is not available for purchasing."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "How can I reset my password?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "If you need to reset your password, go to the login page and click on 'Forgot Password?' Follow the instructions in the email you receive to reset your password."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "How does Deepany protect my privacy and data?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "At Deepany, we are committed to safeguarding your privacy and data. We implement industry-standard encryption and security measures to protect your information. Your data typically remains on our servers for up to 2 days, after which it is deleted. However, thanks to browser caching and storage mechanisms, your files will still be accessible to you even after this period, which will not be accesible to us. Your data will not be looked up until you give permission during 2 days storage in our servers. We retain this information to assist you in case you accidentally delete files from your local storage on our site, allowing us to help you recover lost files. For more details, please refer to our Privacy Policy."
+                    }
+                }
+            ]
+        }
+    </script>
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = '1.1.1';
+        const version = '1.2.7';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -116,102 +622,102 @@
                 if (screenMode !== 1) {
                     pageContent.push(
                         `
-                            <div class="start-content" id="hover-div">
-                                <p class="subtext">Discover the leading AI platform since 2023, renowned for its ease and excellence.</p>
-                                <h1 class="text-gradient" id="dynamic-text">AI-Powered Services</h1>
-                                <ul class="styled-list">
-                                    <li><strong>Daily Free Trial:</strong> <span>Experience our full-featured services without cost.</span></li>
-                                    <li><strong>Security & Support:</strong> <span>Your data is protected, with 24/7 support available.</span></li>
-                                    <li><strong>High Ratings:</strong> <span>Trusted by users with a 4.9 rating on<span>&nbsp;</span><a class="trusted-link" href="https://www.trustpilot.com/review/bodyswap.me" target="_blank" rel="noopener noreferrer">Trustpilot</a>.</li>
-                                    <li><strong>Cost-Effective:</strong> <span>Only 1 credit per image & frame processed.</span></li>
-                                    <li><strong>Fast Processing:</strong> <span>RTX 4090 GPUs in our servers for optimal performance.</span></li>
-                                    <li><strong>Pricing:</strong> <span>Dynamic plans tailored to every budget.</span></li>
-                                </ul>
-                                <p class="subtext" style="padding-bottom: 0.5vh;">Unlock the potential of AI for your projects with our reliable and affordable services.</p>
-                                <div class="button-container">
-                                    <button id="extend-services">Try Now</button>
-                                    <a class="button important disabled" href="pricing">Purchase</a>
-                               </div>
-                        </div>
-                        <div class="card-container">
-                            <div class="background"></div>
-                            <a href="face-swap" class="card">
-                                <div class="card-content">
-                                    <div class="card-title">Face Swap</div>
-                                    <div class="card-link">Try Face Swap</div>
-                                </div>
-                            </a>
-                            <a href="pricing" class="card disabled">
-                                <div class="card-content disabled">
-                                    <div class="card-title">Inpaint</div>
-                                    <div class="card-link">Try Inpaint</div>
-                                </div>
-                            </a>
-                            <a href="art-generator" class="card disabled">
-                                <div class="card-content disabled">
-                                    <div  class="card-title">Art Generator</div>
-                                    <div class="card-link">Create Art</div>
-                                </div>
-                            </a>
-                        </div>
-                    `);
+                                <div class="start-content" id="hover-div">
+                                    <p class="subtext">Discover the leading AI platform since 2023, renowned for its ease and excellence.</p>
+                                    <h1 class="text-gradient" id="dynamic-text">AI-Powered Services</h1>
+                                    <ul class="styled-list">
+                                        <li><strong>Daily Free Trial:</strong> <span>Experience our full-featured services without cost.</span></li>
+                                        <li><strong>Security & Support:</strong> <span>Your data is protected, with 24/7 support available.</span></li>
+                                        <li><strong>High Ratings:</strong> <span>Trusted by users with a 4.9 rating on<span>&nbsp;</span><a class="trusted-link" href="https://www.trustpilot.com/review/bodyswap.me" target="_blank" rel="noopener noreferrer">Trustpilot</a>.</li>
+                                        <li><strong>Cost-Effective:</strong> <span>Only 1 credit per image & frame processed.</span></li>
+                                        <li><strong>Fast Processing:</strong> <span>RTX 4090 GPUs in our servers for optimal performance.</span></li>
+                                        <li><strong>Pricing:</strong> <span>Dynamic plans tailored to every budget.</span></li>
+                                    </ul>
+                                    <p class="subtext" style="padding-bottom: 0.5vh;">Unlock the potential of AI for your projects with our reliable and affordable services.</p>
+                                    <div class="button-container">
+                                        <button id="extend-services">Try Now</button>
+                                        <a class="button important disabled" href="pricing">Purchase</a>
+                                   </div>
+                            </div>
+                            <div class="card-container">
+                                <div class="background"></div>
+                                <a href="face-swap" class="card">
+                                    <div class="card-content">
+                                        <div class="card-title">Face Swap</div>
+                                        <div class="card-link">Try Face Swap</div>
+                                    </div>
+                                </a>
+                                <a href="pricing" class="card disabled">
+                                    <div class="card-content disabled">
+                                        <div class="card-title">Inpaint</div>
+                                        <div class="card-link">Try Inpaint</div>
+                                    </div>
+                                </a>
+                                <a href="art-generator" class="card disabled">
+                                    <div class="card-content disabled">
+                                        <div  class="card-title">Art Generator</div>
+                                        <div class="card-link">Create Art</div>
+                                    </div>
+                                </a>
+                            </div>
+                        `);
                 } else {
                     pageContent.push(
                         `
-                        <div class="start-content-container">
-                            <div class="start-content" id="hover-div">
-                                <p class="subtext">Discover the leading AI platform since 2023, renowned for its ease and excellence.</p>
-                                <h1 class="text-gradient" id="dynamic-text">AI-Powered Services</h1>
-                                <ul class="styled-list">
-                                    <li><strong>Daily Free Trial:</strong> <span>Experience our full-featured services without cost.</span></li>
-                                    <li><strong>Security & Support:</strong> <span>Your data is protected, with 24/7 support available.</span></li>
-                                    <li><strong>High Ratings:</strong> <span>Trusted by users with a 4.9 rating on</span><span>&nbsp;</span><a class="trusted-link" href="https://www.trustpilot.com/review/bodyswap.me" target="_blank" rel="noopener noreferrer">Trustpilot</a>.</li>
-                                    <li><strong>Cost-Effective:</strong> <span>Only 1 credit per image & frame processed.</span></span></li>
-                                    <li><strong>Fast Processing:</strong> <span>RTX 4090 GPUs in our servers for optimal performance.</span></li>
-                                    <li><strong>Pricing:</strong> <span>Dynamic plans tailored to every budget.</span></li>
-                                </ul>
-                                <p class="subtext" style="padding-bottom: 0.5vh;">Unlock the potential of AI for your projects with our reliable and affordable services.</p>
-                                <div class="button-container">
-                                    <button id="extend-services">Try Now</button>
-                                    <a class="button important disabled" href="pricing">Purchase</a>
+                            <div class="start-content-container">
+                                <div class="start-content" id="hover-div">
+                                    <p class="subtext">Discover the leading AI platform since 2023, renowned for its ease and excellence.</p>
+                                    <h1 class="text-gradient" id="dynamic-text">AI-Powered Services</h1>
+                                    <ul class="styled-list">
+                                        <li><strong>Daily Free Trial:</strong> <span>Experience our full-featured services without cost.</span></li>
+                                        <li><strong>Security & Support:</strong> <span>Your data is protected, with 24/7 support available.</span></li>
+                                        <li><strong>High Ratings:</strong> <span>Trusted by users with a 4.9 rating on</span><span>&nbsp;</span><a class="trusted-link" href="https://www.trustpilot.com/review/bodyswap.me" target="_blank" rel="noopener noreferrer">Trustpilot</a>.</li>
+                                        <li><strong>Cost-Effective:</strong> <span>Only 1 credit per image & frame processed.</span></span></li>
+                                        <li><strong>Fast Processing:</strong> <span>RTX 4090 GPUs in our servers for optimal performance.</span></li>
+                                        <li><strong>Pricing:</strong> <span>Dynamic plans tailored to every budget.</span></li>
+                                    </ul>
+                                    <p class="subtext" style="padding-bottom: 0.5vh;">Unlock the potential of AI for your projects with our reliable and affordable services.</p>
+                                    <div class="button-container">
+                                        <button id="extend-services">Try Now</button>
+                                        <a class="button important disabled" href="pricing">Purchase</a>
+                                    </div>
+                                </div>
+                                <div class="end-content">
+                                    <img src="${getImageSrc('resize-large')}" id="resize-large" loading="eager" alt="Wide Image Example">
+                                    <img src="${getImageSrc('resize-middle')}" id="resize-middle" loading="eager" alt="Medium Image Example">
+                                    <img src="${getImageSrc('resize-long')}" id="resize-long" loading="eager" alt="Long Image Example">
                                 </div>
                             </div>
-                            <div class="end-content">
-                                <img src="${getImageSrc('resize-large')}" id="resize-large" loading="eager" alt="Wide Image Example">
-                                <img src="${getImageSrc('resize-middle')}" id="resize-middle" loading="eager" alt="Medium Image Example">
-                                <img src="${getImageSrc('resize-long')}" id="resize-long" loading="eager" alt="Long Image Example">
-                            </div>
-                        </div>
-                        <div class="card-container">
-                            <div class="background"></div>
-                            <a href="face-swap" class="card">
-                                <div class="card-content">
-                                    <div>
-                                        <div class="card-title">Face Swap</div>
-                                        <div class="card-description">Swap faces in your faces with ease.</div>
+                            <div class="card-container">
+                                <div class="background"></div>
+                                <a href="face-swap" class="card">
+                                    <div class="card-content">
+                                        <div>
+                                            <div class="card-title">Face Swap</div>
+                                            <div class="card-description">Swap faces in your faces with ease.</div>
+                                        </div>
+                                        <div class="card-link">Try Face Swap</div>
                                     </div>
-                                    <div class="card-link">Try Face Swap</div>
-                                </div>
-                            </a>
-                            <a href="pricing" class="card disabled">
-                                <div class="card-content disabled">
-                                    <div>
-                                        <div class="card-title">Inpaint</div>
-                                        <div class="card-description">Remove or add elements in your images.</div>
+                                </a>
+                                <a href="pricing" class="card disabled">
+                                    <div class="card-content disabled">
+                                        <div>
+                                            <div class="card-title">Inpaint</div>
+                                            <div class="card-description">Remove or add elements in your images.</div>
+                                        </div>
+                                        <div class="card-link">Try Inpaint</div>
                                     </div>
-                                    <div class="card-link">Try Inpaint</div>
-                                </div>
-                            </a>
-                            <a href="art-generator" class="card disabled">
-                                <div class="card-content disabled">
-                                    <div>
-                                        <div class="card-title">Art Generator</div>
-                                        <div class="card-description">Create stunning digital artworks.</div>
+                                </a>
+                                <a href="art-generator" class="card disabled">
+                                    <div class="card-content disabled">
+                                        <div>
+                                            <div class="card-title">Art Generator</div>
+                                            <div class="card-description">Create stunning digital artworks.</div>
+                                        </div>
+                                        <div class="card-link">Create Art</div>
                                     </div>
-                                    <div class="card-link">Create Art</div>
-                                </div>
-                            </a>
-                        </div>`);
+                                </a>
+                            </div>`);
                 }
             }
 

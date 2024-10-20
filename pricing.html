@@ -32,34 +32,169 @@
             }
         }
     </style>
-
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/styles.css?v=1.2.7">
     <script>
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = 'css/styles.css';
-        link.onload = function () {
-            const cssRules = Array.from(document.styleSheets).flatMap(sheet => { return Array.from(sheet.cssRules); });
+        window.addEventListener('DOMContentLoaded', () => {
+            const cssRules = Array.from(document.styleSheets).flatMap(sheet => Array.from(sheet.cssRules));
             const logoImgRule = cssRules.find(rule => rule.selectorText === '.logo img');
-            const content = logoImgRule.style.content;
-            const base64Match = content.match(/url\("?([^"]+)"?\)/);
-            link.href = base64Match[1];
-            const icon = document.createElement('link');
-            icon.rel = 'icon';
-            icon.href = base64Match[1];
-            icon.type = 'image/x-icon';
-            icon.title = 'DeepAny.AI Favicon';
-            document.head.appendChild(icon);
-            document.currentScript.remove();
-        };
 
-        document.head.appendChild(link);
+            if (logoImgRule && logoImgRule.style.content) {
+                const content = logoImgRule.style.content;
+                const base64Match = content.match(/url\("?([^"]+)"?\)/);
+
+                if (base64Match && base64Match[1]) {
+                    const icon = document.createElement('link');
+                    icon.rel = 'icon';
+                    icon.href = base64Match[1];
+                    icon.type = 'image/x-icon';
+                    icon.title = 'DeepAny.AI Favicon';
+                    document.head.appendChild(icon);
+                }
+            }
+
+            const currentScript = document.currentScript;
+            if (currentScript) {
+                currentScript.remove();
+            }
+        });
+    </script>
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "AggregateOffer",
+            "offerCount": "15",
+            "lowPrice": "9.99",
+            "highPrice": "1399.99",
+            "priceCurrency": "USD",
+            "offers": [
+                {
+                    "@type": "Offer",
+                    "priceCurrency": "USD",
+                    "price": "9.99",
+                    "availability": "https://schema.org/InStock",
+                    "url": "https://deepany.ai/face-swap",
+                    "name": "100 Credits"
+                },
+                {
+                    "@type": "Offer",
+                    "priceCurrency": "USD",
+                    "price": "19.99",
+                    "availability": "https://schema.org/InStock",
+                    "url": "https://deepany.ai/face-swap",
+                    "name": "250 Credits"
+                },
+                {
+                    "@type": "Offer",
+                    "priceCurrency": "USD",
+                    "price": "24.99",
+                    "availability": "https://schema.org/InStock",
+                    "url": "https://deepany.ai/face-swap",
+                    "name": "500 Credits"
+                },
+                {
+                    "@type": "Offer",
+                    "priceCurrency": "USD",
+                    "price": "44.99",
+                    "availability": "https://schema.org/InStock",
+                    "url": "https://deepany.ai/face-swap",
+                    "name": "1000 Credits"
+                },
+                {
+                    "@type": "Offer",
+                    "priceCurrency": "USD",
+                    "price": "99.99",
+                    "availability": "https://schema.org/InStock",
+                    "url": "https://deepany.ai/face-swap",
+                    "name": "2500 Credits"
+                },
+                {
+                    "@type": "Offer",
+                    "priceCurrency": "USD",
+                    "price": "174.99",
+                    "availability": "https://schema.org/InStock",
+                    "url": "https://deepany.ai/face-swap",
+                    "name": "5000 Credits"
+                },
+                {
+                    "@type": "Offer",
+                    "priceCurrency": "USD",
+                    "price": "299.99",
+                    "availability": "https://schema.org/InStock",
+                    "url": "https://deepany.ai/face-swap",
+                    "name": "10000 Credits"
+                },
+                {
+                    "@type": "Offer",
+                    "priceCurrency": "USD",
+                    "price": "624.99",
+                    "availability": "https://schema.org/InStock",
+                    "url": "https://deepany.ai/face-swap",
+                    "name": "25000 Credits"
+                },
+                {
+                    "@type": "Offer",
+                    "priceCurrency": "USD",
+                    "price": "999.99",
+                    "availability": "https://schema.org/InStock",
+                    "url": "https://deepany.ai/face-swap",
+                    "name": "50000 Credits"
+                },
+                {
+                    "@type": "Offer",
+                    "priceCurrency": "USD",
+                    "price": "19.99",
+                    "availability": "https://schema.org/InStock",
+                    "url": "https://deepany.ai/face-swap",
+                    "name": "1 Day Subscription"
+                },
+                {
+                    "@type": "Offer",
+                    "priceCurrency": "USD",
+                    "price": "69.99",
+                    "availability": "https://schema.org/InStock",
+                    "url": "https://deepany.ai/face-swap",
+                    "name": "7 Day Subscription"
+                },
+                {
+                    "@type": "Offer",
+                    "priceCurrency": "USD",
+                    "price": "149.99",
+                    "availability": "https://schema.org/InStock",
+                    "url": "https://deepany.ai/face-swap",
+                    "name": "30 Day Subscription"
+                },
+                {
+                    "@type": "Offer",
+                    "priceCurrency": "USD",
+                    "price": "269.99",
+                    "availability": "https://schema.org/InStock",
+                    "url": "https://deepany.ai/face-swap",
+                    "name": "90 Day Subscription"
+                },
+                {
+                    "@type": "Offer",
+                    "priceCurrency": "USD",
+                    "price": "726.99",
+                    "availability": "https://schema.org/InStock",
+                    "url": "https://deepany.ai/face-swap",
+                    "name": "1 Year Subscription"
+                },
+                {
+                    "@type": "Offer",
+                    "priceCurrency": "USD",
+                    "price": "1399.99",
+                    "availability": "https://schema.org/InStock",
+                    "url": "https://deepany.ai/face-swap",
+                    "name": "Lifetime Subscription"
+                }
+            ]
+        }
     </script>
 </head>
 <body lang="en">
     <div id="paymentContainer" style="margin: 0; padding: 0; overflow: hidden; display: none; width: 100%; height: 100vh; position: absolute; z-index: 99999;"></div>
     <script type="module" defer>
-        const version = '1.1.1';
+        const version = '1.2.7';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -67,7 +202,9 @@
 
         document.addEventListener('DOMContentLoaded', async function () {
             const functions = await loadModule('./scripts/functions.js');
-            const { setUser, setAuthentication, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserIpAddress } = functions;
+            const { getPageName, setUser, setAuthentication, fetchConversionRates, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserIpAddress } = functions;
+
+            const pageName = getPageName();
 
             function updateMainContent(screenMode, pageContent) {
                 pageContent.length = 0;
@@ -586,6 +723,18 @@
                                 } else {
                                     document.getElementById('paymentContainer').style.display = 'block';
                                     document.getElementById('paymentContainer').innerHTML = cardHtml;
+                                    gtag('event', 'conversion_event_purchase', {
+                                        'value': sliderElement.value,
+                                        'currency': selectedCurrency,
+                                        'transaction_id': 'TRANS_' + Date.now(), // Example transaction ID
+                                        'selected_mode': selectedMode,
+                                        'user_id': auth.currentUser.uid,
+                                        'user_email': auth.currentUser.email,
+                                        'event_callback': function () {
+                                            window.location = 'https://deepany.ai/pricing'; // Redirect to success page after event
+                                        },
+                                        'event_timeout': 2000
+                                    });
                                 }
                             } else {
                                 const coinResponse = await fetch(serverAddressAPI + '/create-charge-new', {
@@ -597,6 +746,18 @@
                                 const coinData = await coinResponse.json();
                                 if (coinData.data && coinData.data.hosted_url) {
                                     window.open(coinData.data.hosted_url, '_blank');
+                                    gtag('event', 'conversion_event_purchase', {
+                                        'value': sliderElement.value,
+                                        'currency': selectedCurrency,
+                                        'transaction_id': 'TRANS_' + Date.now(), // Example transaction ID
+                                        'selected_mode': selectedMode,
+                                        'user_id': auth.currentUser.uid,
+                                        'user_email': auth.currentUser.email,
+                                        'event_callback': function () {
+                                            window.location = coinData.data.hosted_url; // Redirect to success page after event
+                                        },
+                                        'event_timeout': 2000
+                                    });
                                 } else {
                                     alert(coinData.error);
                                 }

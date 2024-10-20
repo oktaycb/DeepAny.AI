@@ -32,28 +32,31 @@
             }
         }
     </style>
-
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/styles.css?v=1.2.7">
     <script>
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = 'css/styles.css';
-        link.onload = function () {
-            const cssRules = Array.from(document.styleSheets).flatMap(sheet => { return Array.from(sheet.cssRules); });
+        window.addEventListener('DOMContentLoaded', () => {
+            const cssRules = Array.from(document.styleSheets).flatMap(sheet => Array.from(sheet.cssRules));
             const logoImgRule = cssRules.find(rule => rule.selectorText === '.logo img');
-            const content = logoImgRule.style.content;
-            const base64Match = content.match(/url\("?([^"]+)"?\)/);
-            link.href = base64Match[1];
-            const icon = document.createElement('link');
-            icon.rel = 'icon';
-            icon.href = base64Match[1];
-            icon.type = 'image/x-icon';
-            icon.title = 'DeepAny.AI Favicon';
-            document.head.appendChild(icon);
-            document.currentScript.remove();
-        };
 
-        document.head.appendChild(link);
+            if (logoImgRule && logoImgRule.style.content) {
+                const content = logoImgRule.style.content;
+                const base64Match = content.match(/url\("?([^"]+)"?\)/);
+
+                if (base64Match && base64Match[1]) {
+                    const icon = document.createElement('link');
+                    icon.rel = 'icon';
+                    icon.href = base64Match[1];
+                    icon.type = 'image/x-icon';
+                    icon.title = 'DeepAny.AI Favicon';
+                    document.head.appendChild(icon);
+                }
+            }
+
+            const currentScript = document.currentScript;
+            if (currentScript) {
+                currentScript.remove();
+            }
+        });
     </script>
     <style>
         .background-container {
@@ -65,30 +68,31 @@
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = '1.1.2';
+        const version = '1.2.7';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
         }
 
-        const cachedUserData = JSON.parse(localStorage.getItem('cachedUserData'));
-
         document.addEventListener('DOMContentLoaded', async function () {
             const functions = await loadModule('./scripts/functions.js');
-            const { setUser, setAuthentication, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, handleImageUpload, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserIpAddress } = functions;
+            const { getCachedStaticUserData, getCachedDynamicUserDoc, setUser, setAuthentication, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, handleImageUpload, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserIpAddress } = functions;
+
+            const userData = getCachedStaticUserData();
+            const userDoc = getCachedDynamicUserDoc();
 
             function updateMainContent(screenMode, pageContent) {
                 pageContent.length = 0;
 
-                if (!cachedUserData) {
+                if (!userData) {
                     if (screenMode !== 1) {
                         pageContent.push(`
                                 <div style="display: flex;flex-direction: column;justify-content: center;gap: 1vh;align-items: center;text-align: center;">
                                     <h2>Account does not exist.</h2>
                                 </div>
                                 <div style="display: flex;justify-content: center;gap: calc((1vh * var(--scale-factor-h) + 12vw / 2 * var(--scale-factor-w)));">
-                                    <button id="registerButton" class="disabled">Register</button>
-                                    <button class="important" id="loginButton">Login</button>
+                                    <button id="openSignUpContainer">Sign Up</button>
+                                    <button class="important" id="openSignInContainer">Sign In</button>
                                 </div>
                             `);
                     }
@@ -209,7 +213,7 @@
                                                                         <h4 style="font-weight: 300;">Referral link</h4>
                                                                         <div style="display: flex;flex-direction: column;gap: calc((2vh * var(--scale-factor-h) + 4vw / 2 * var(--scale-factor-w)));">
                                                                             <div style="display: flex;gap: calc((2vh * var(--scale-factor-h) + 4vw / 2 * var(--scale-factor-w)));">
-                                                                                <input id="referralLink" class="important-outline" value="https://deepany.ai/register?referral=KYN1HG" readonly>
+                                                                                <input id="referralLink" class="important-outline" readonly>
                                                                                 <button id="copyButton">Copy</button>
                                                                             </div>
                                                                         <div style="display: flex;gap: calc((2vh * var(--scale-factor-h) + 4vw / 2 * var(--scale-factor-w)));">
@@ -283,7 +287,7 @@
                                                                     <h4 style="font-weight: 300;">Referral link</h4>
                                                                     <div style="display: flex; flex-direction: column; gap: calc((2vh * var(--scale-factor-h) + 4vw / 2 * var(--scale-factor-w)));">
                                                                         <div style="display: flex;  gap: calc((2vh * var(--scale-factor-h) + 4vw / 2 * var(--scale-factor-w)));">
-                                                                            <input id="referralLink" class="important-outline" value="https://deepany.ai/register?referral=KYN1HG" readonly>
+                                                                            <input id="referralLink" class="important-outline" readonly>
                                                                             <button id="copyButton">Copy</button>
                                                                         </div>
                                                                         <div style="display: flex;  gap: calc((2vh * var(--scale-factor-h) + 4vw / 2 * var(--scale-factor-w)));">
@@ -425,12 +429,16 @@
 
             loadPageContent(setUser, retrieveImageFromURL, getUserIpAddress, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, setAuthentication, updateMainContent);
 
-            if (!cachedUserData) {
+            if (!userData) {
                 return;
             }
 
+            const linkElement = document.getElementById('referralLink');
+            if (linkElement && userDoc.referral) {
+                linkElement.value = `https://deepany.ai/?referral=${encodeURIComponent(userDoc.referral)}`;
+            } 
+
             document.getElementById("copyButton").addEventListener('click', () => {
-                const linkElement = document.getElementById('referralLink');
                 linkElement.select();
                 linkElement.setSelectionRange(0, linkElement.value.length);
 
@@ -445,8 +453,8 @@
 
             handleImageUpload('profileImage', 'profileImageBase64');
 
-            document.getElementById("emailAddress").textContent = cachedUserData.email;
-            document.getElementById("email").value = cachedUserData.email;
+            document.getElementById("emailAddress").textContent = userData.email;
+            document.getElementById("email").value = userData.email;
         });
     </script>
     
