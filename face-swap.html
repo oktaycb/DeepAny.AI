@@ -32,7 +32,7 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="css/styles.css?v=1.3.0.3">
+    <link rel="stylesheet" href="css/styles.css?v=1.3.1.0">
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             const cssRules = Array.from(document.styleSheets).flatMap(sheet => Array.from(sheet.cssRules));
@@ -61,7 +61,7 @@
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = '1.3.0.3';
+        const version = '1.3.1.0';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -69,7 +69,7 @@
 
         document.addEventListener('DOMContentLoaded', async function () {
             const functions = await loadModule('./scripts/functions.js');
-            const { openDB, addToDB, countInDB, getFromDB, updateActiveState, initDB, updateInDB, deleteFromDB, setUser, setCurrentUserDoc, getCachedStaticUserData, getCachedDynamicUserDoc, setAuthentication, getFirebaseModules, getDocSnapshot, getDocsSnapshot, getScreenMode, getCurrentMain, updateContent, ScreenMode, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserIpAddress, fetchServerAddresses, getPageName } = functions;
+            const { fetchProcessState, openDB, addToDB, countInDB, getFromDB, updateActiveState, initDB, updateInDB, updateChunksInDB, deleteFromDB, setUser, setCurrentUserDoc, getCachedStaticUserData, getCachedDynamicUserDoc, setAuthentication, getFirebaseModules, getDocSnapshot, getDocsSnapshot, getScreenMode, getCurrentMain, updateContent, ScreenMode, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserIpAddress, fetchServerAddresses, getPageName } = functions;
 
             if (!window.indexedDB) {
                 alert('Your browser does not support IndexedDB.');
@@ -715,63 +715,120 @@
                     localStorage.setItem(`${dbConfig.objectStore}-count`, photoCount);
                 }
             }
-            const handleDownload = async (selectedOutputInfo) => {
-                if (selectedOutputInfo) {
-                    const { db, url, element, id, timestamp } = selectedOutputInfo;
-                    if (!db || !url || !element || !id || !timestamp)
-                        return;
 
-                    let downloadCanceled = false;
-                    element.innerHTML = `<initial url="${url}" id="${id}" timestamp="${timestamp}"><div class="process-text"></div><div class="delete-icon"></initial>`;
+            function deleteDownloadData(id) {
+                localStorage.removeItem(`downloadedBytes_${id}`);
+                localStorage.removeItem(`totalBytes_${id}`);
+            }
 
-                    const deleteIcon = element.querySelector('.delete-icon');
-                    deleteIcon.addEventListener('click', () => {
-                        downloadCanceled = true;
-                    });
+            const handleDownload = async ({ db, url, element, id, timestamp }) => {
+                if (!(db && url && element && id && timestamp)) {
+                    alert('No Output Selected');
+                    return;
+                }
 
+                let downloadCancelled = false;
+                let downloadedBytes = +localStorage.getItem(`downloadedBytes_${id}`) || 0;
+                let totalBytes = +localStorage.getItem(`totalBytes_${id}`) || 0;
+
+                const previousData = await getFromDB(db);
+                const previousEntry = previousData.find(item => item.url === url && item.id === id);
+                const chunks = previousEntry ? previousEntry.chunks : [];
+
+                const processText = msg => setProcessText(element, msg);
+
+                element.innerHTML = `<initial url="${url}" id="${id}" timestamp="${timestamp}"><div class="process-text">Downloading...</div><div class="delete-icon"></div></initial>`;
+                element.querySelector('.delete-icon').addEventListener('click', async () => {
+                    downloadCancelled = true;
+                    await updateChunksInDB(db, url, []);
+                    deleteDownloadData(id);
+                });
+
+                while (!downloadCancelled) {
                     try {
-                        const response = await fetch(url);
-                        const contentLengthHeader = Number(response.headers.get('Content-Length'));
-                        let downloadedBytes = 0;
+                        const headers = downloadedBytes ? { 'Range': `bytes=${downloadedBytes}-` } : {};
+                        const res = await fetch(url, { headers });
 
-                        let blob = new Blob([], { type: response.headers.get('Content-Type') });
+                        if (![200, 206, 416].includes(res.status)) {
+                            await updateChunksInDB(db, url, []);
+                            deleteDownloadData(id);
+                            throw new Error('Server does not support resumable downloads.');
+                        }
 
-                        const reader = response.body.getReader();
-                        while (true) {
-                            if (downloadCanceled) {
-                                setProcessText(element, 'Download Canceled');
-                                break;
-                            }
+                        const contentLength = +res.headers.get('Content-Range')?.split('/')[1] || +res.headers.get('Content-Length');
+                        totalBytes ||= contentLength;
 
+                        const reader = res.body.getReader();
+                        const contentType = res.headers.get('Content-Type');
+                        let lastSavedProgress = 0;
+
+                        while (!downloadCancelled) {
                             const { done, value } = await reader.read();
                             if (done) break;
+
                             downloadedBytes += value.length;
-                            blob = new Blob([blob, value], { type: response.headers.get('Content-Type') });
-                            const progress = (downloadedBytes / contentLengthHeader) * 100;
-                            setProcessText(element, `Downloaded: ${progress.toFixed(0)}%`);
-                        }
+                            chunks.push(value);
 
-                        if (!downloadCanceled) {
-                            const blobUrl = URL.createObjectURL(blob);
-                            const isVideo = url.slice(-1) === '0';
-                            if (isVideo) {
-                                element.innerHTML = `<video url="${url}" id="${id}" timestamp="${timestamp}" loop muted autoplay><source src="${blobUrl}" type="${blob.type}">Your browser does not support the video tag.</video><div class="delete-icon"></div>`;
-                            } else {
-                                element.innerHTML = `<img url="${url}" id="${id}" timestamp="${timestamp}" src="${blobUrl}" alt="Uploaded Photo"/><div class="delete-icon"></div>`;
+                            const progress = (downloadedBytes / totalBytes) * 100;
+                            if (Math.floor(progress) % 5 === 0 && Math.floor(progress) > lastSavedProgress) {
+                                await updateChunksInDB(db, url, chunks);
+                                localStorage.setItem(`downloadedBytes_${id}`, downloadedBytes);
+                                localStorage.setItem(`totalBytes_${id}`, totalBytes);
+                                lastSavedProgress = Math.floor(progress);
                             }
-
-                            setProcessText(element, '');
-                            await updateInDB(db, url, blob, saveCountIndex);
+                            processText(`Downloaded: ${progress.toFixed(0)}%`);
                         }
+
+                        const blob = new Blob(chunks.map(chunk => new Uint8Array(chunk)), { type: contentType });
+                        const blobUrl = URL.createObjectURL(blob);
+
+                        if (Math.abs(blob.size - totalBytes) > totalBytes * 0.01) {
+                            alert(`Warning: The downloaded file size (${blob.size} bytes) differs significantly from expected size (${totalBytes} bytes).`);
+                            await updateChunksInDB(db, url, []);
+                            deleteDownloadData(id);
+                            break;
+                        }
+
+                        const isVideo = url.slice(-1) === '0';
+                        element.innerHTML = isVideo
+                            ? `<video url="${url}" id="${id}" timestamp="${timestamp}" loop muted autoplay><source src="${blobUrl}" type="${contentType}">Your browser does not support the video tag.</video><div class="delete-icon"></div>`
+                            : `<img url="${url}" id="${id}" timestamp="${timestamp}" src="${blobUrl}" alt="Uploaded Photo"/><div class="delete-icon"></div>`;
+
+                        const media = element.querySelector(isVideo ? 'video' : 'img');
+                        if (!(await checkMediaDisplayable(media)) || blob.size === 0) {
+                            alert('Warning: Media not displayable');
+                            await updateChunksInDB(db, url, []);
+                            deleteDownloadData(id);
+                            break;
+                        }
+
+                        downloadCancelled = true;
+
+                        await Promise.all([
+                            updateInDB(db, url, blob),
+                            saveCountIndex()
+                        ]);
+
+                        deleteDownloadData(id);
+                        return;
                     } catch (error) {
-                        setProcessText(element, error.message);
-                        startProcessBtn.disabled = false;
+                        processText(`Error: ${error.message}. Retrying...`);
                     }
-                } else {
-                    alert('No Output Selected');
                 }
             };
 
+
+            const checkMediaDisplayable = (mediaElement) => {
+                return new Promise((resolve) => {
+                    if (mediaElement.tagName === 'VIDEO') {
+                        mediaElement.onloadeddata = () => resolve(true);
+                        mediaElement.onerror = () => resolve(false);
+                    } else {
+                        mediaElement.onload = () => resolve(true);
+                        mediaElement.onerror = () => resolve(false);
+                    }
+                });
+            };
 
             window.addEventListener('beforeunload', async () => { await saveCountIndex(); });
             window.addEventListener('pagehide', async () => { await saveCountIndex(); });
@@ -831,7 +888,7 @@
                 for (const activePhoto of container.querySelectorAll(".data-container.active")) {
                     activePhoto.classList.remove("active");
 
-                    const element = activePhoto.querySelector('img, video');
+                    const element = activePhoto.querySelector('img, video, initial');
                     const domIndex = parseInt(element.getAttribute('id'), 10);
 
                     if (!isNaN(domIndex)) {
@@ -909,7 +966,7 @@
                     if (activeContainers.length > 0) {
                         for (const container of activeContainers) {
                             container.classList.remove('active');
-                            const element = container.querySelector('img, video');
+                            const element = container.querySelector('img, video, initial');
                             const id = parseInt(element.getAttribute('id'), 10);
                             if (id) {
                                 await updateActiveState(db, id, false).catch(err => {
@@ -965,7 +1022,7 @@
             ];
 
             async function setClientStatus(message) {
-                console.log(message);
+                //console.log(message);
                 const outputs = document.querySelector('.outputs');
                 if (outputs) {
                     outputs.firstChild.querySelector('.process-text').textContent = message;
@@ -973,7 +1030,7 @@
             }
 
             const setProcessText = (element, message) => {
-                console.log(message);
+                //console.log(message);
                 const processTextElement = element.querySelector('.process-text');
                 if (processTextElement)
                     processTextElement.textContent = message;
@@ -1077,28 +1134,21 @@
                 }
 
                 async function handleDownloadFileIfNeeded() {
-                    if (!downloadFile)
-                        return;
-
+                    if (!downloadFile) return;
                     downloadFile = false;
 
                     const db = await openDB(`outputDB-${pageName}`, 'outputs');
                     const outputs = (await getFromDB(db)).reverse();
                     const lastOutput = outputs[outputs.length - 1];
                     const data = await fetchProcessState(lastOutput.url);
+
+                    setClientStatus(data.server);
+                    showNotification(`Request ${data.status} With Status ${data.server}.`, 'Fetch Information', 'default');
+
                     if (data.status === 'completed') {
                         setCurrentUserDoc(getDocSnapshot);
-                        setClientStatus(data.server);
-                        await tryHandleLastOutputDownload(lastOutput, 3);
-                    } else if (data.status === 'failed') 
-                        setClientStatus(data.server);
-
-                    showNotification(`Request ${data.status} With Status ${data.server}.`, 'Fetch Information', 'default');
-                }
-
-                async function fetchProcessState(url) {
-                    const response = await fetch(url.replace('download-video', 'get-process-state'));
-                    return await response.json();
+                        await handleLastOutputDownload(lastOutput);
+                    }
                 }
 
                 async function handleLastOutputDownload(lastOutput) {
@@ -1112,21 +1162,7 @@
                             id: lastOutput.id
                         };
 
-                        handleDownload(selectedOutputInfo);
-                    }
-                }
-
-                async function tryHandleLastOutputDownload(lastOutput, retries) {
-                    for (let attempt = 1; attempt <= retries; attempt++) {
-                        try {
-                            await handleLastOutputDownload(lastOutput);
-                            break;
-                        } catch (error) {
-                            console.error(`Attempt ${attempt} failed:`, error);
-                            if (attempt === retries) {
-                                console.error('All attempts failed.');
-                            }
-                        }
+                        await handleDownload(selectedOutputInfo);
                     }
                 }
             }
@@ -1809,7 +1845,7 @@
                             .then(async response => {
                                 if (response.status === STATUS_OK) {
                                     const db = await openDB(`outputDB-${pageName}`, 'outputs');
-                                    const url = serverAddress + ('/download-video/') + uniqueId;
+                                    const url = serverAddress + ('/download-output/') + uniqueId;
                                     const firstChild = outputs.firstChild;
 
                                     if (firstChild && !firstChild.dataset.created) {

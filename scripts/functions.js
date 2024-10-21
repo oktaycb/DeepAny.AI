@@ -256,7 +256,7 @@ export const countInDB = (db) => {
     });
 };
 
-export const addToDB = (db, data, saveCountIndex, isActive = false) => {
+export const addToDB = (db, data, saveCountIndex = null, isActive = false) => {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
         const objectStore = transaction.objectStore(db.objectStoreNames[0]);
@@ -264,8 +264,8 @@ export const addToDB = (db, data, saveCountIndex, isActive = false) => {
         const timestamp = new Date().getTime();
 
         let entry = {
-            timestamp, 
-            isActive 
+            timestamp,
+            isActive
         };
 
         if (data instanceof Blob) {
@@ -280,7 +280,9 @@ export const addToDB = (db, data, saveCountIndex, isActive = false) => {
         const request = objectStore.add(entry);
         request.onsuccess = async () => {
             resolve({ id: request.result, timestamp });
-            await saveCountIndex();
+
+            if (saveCountIndex)
+                await saveCountIndex();
         };
 
         request.onerror = (event) => {
@@ -303,13 +305,18 @@ export const getFromDB = (db, limit = null, offset = 0) => {
                 results = results.slice(offset, offset + limit);
             }
 
-            resolve(results.map(item => ({
-                blob: item.blob || null,
-                url: item.url || null,
-                id: item.id || null,
-                timestamp: item.timestamp || null,
-                isActive: item.isActive || false
-            })));
+            const mappedResults = results.map(item => {
+                return {
+                    blob: item.blob || null,
+                    url: item.url || null,
+                    id: item.id || null,
+                    chunks: item.chunks || [], // Ensure chunks is an array
+                    timestamp: item.timestamp || null,
+                    isActive: item.isActive || false
+                };
+            });
+
+            resolve(mappedResults);
         };
 
         request.onerror = (event) => {
@@ -344,6 +351,11 @@ export const updateActiveState = async (db, id, isActive) => {
         };
     });
 };
+
+export async function fetchProcessState(url) {
+    const response = await fetch(url.replace('download-output', 'get-process-state'));
+    return await response.json();
+}
 
 export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleDownload) => {
     try {
@@ -386,15 +398,21 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
                     content = blob.type.startsWith('video')
                         ? `<video id="${id}" timestamp="${timestamp}" playsinline preload="auto" disablePictureInPicture loop muted autoplay><source src="${blobUrl}" type="${blob.type}">Your browser does not support the video tag.</video>`
                         : `<img id="${id}" timestamp="${timestamp}" src="${blobUrl}" alt="Uploaded Photo"/>`;
+
+                    inputElements[indexInBatch].innerHTML = `${content}<div class="process-text"></div><div class="delete-icon"></div>`;
+
+                    if (isActive)
+                        inputElements[indexInBatch].classList.add('active');
                 } else if (url) {
-                    handleDownload({ db, url, element: inputElements[indexInBatch], id });
+                    const data = await fetchProcessState(url);
+                    if (data.status === 'completed') 
+                        handleDownload({ db, url, element: inputElements[indexInBatch], id, timestamp });
+                    else {
+                        const serverMessage = data.server ? data.server : 'Not Found';
+                        inputElements[indexInBatch].innerHTML = `${content}<div class="process-text">${serverMessage}</div><div class="delete-icon"></div>`;
+                    }
                 }
-
-                inputElements[indexInBatch].innerHTML = `${content}<div class="process-text"></div><div class="delete-icon"></div>`;
-
-                if (isActive) {
-                    inputElements[indexInBatch].classList.add('active');
-                }
+                else inputElements[indexInBatch].innerHTML = `${content}<div class="process-text">Not Indexed</div><div class="delete-icon"></div>`;
             }
 
             mediaContainer.style.display = mediaCount > 0 ? 'flex' : 'none';
@@ -404,8 +422,7 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
     }
 };
 
-
-export const updateInDB = (db, url, blob, saveCountIndex) => {
+export const updateChunksInDB = (db, url, chunks) => {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
         const objectStore = transaction.objectStore(db.objectStoreNames[0]);
@@ -413,14 +430,42 @@ export const updateInDB = (db, url, blob, saveCountIndex) => {
         const request = objectStore.openCursor();
         request.onsuccess = (event) => {
             const cursor = event.target.result;
+            if (!cursor) {
+                return resolve();
+            }
+
+            const { value } = cursor;
+            if (value.url === url) {
+                value.chunks = chunks;
+
+                const updateRequest = objectStore.put(value);
+                updateRequest.onsuccess = () => resolve();
+                updateRequest.onerror = () => reject('Error updating chunks.');
+            } else {
+                cursor.continue();
+            }
+        };
+
+        request.onerror = () => reject('Error accessing cursor.');
+    });
+};
+
+export const updateInDB = (db, url, blob) => {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
+        const objectStore = transaction.objectStore(db.objectStoreNames[0]);
+
+        const request = objectStore.openCursor();
+        request.onsuccess = async (event) => {
+            const cursor = event.target.result;
             if (cursor) {
                 if (cursor.value.url === url) {
                     cursor.value.blob = blob;
+                    cursor.value.chunks = [];
 
                     const updateRequest = cursor.update(cursor.value);
                     updateRequest.onsuccess = async () => {
                         resolve();
-                        await saveCountIndex();
                     };
 
                     updateRequest.onerror = (event) => {
@@ -439,6 +484,7 @@ export const updateInDB = (db, url, blob, saveCountIndex) => {
         };
     });
 };
+
 
 export const deleteFromDB = async (db, id, saveCountIndex) => {
     return new Promise((resolve, reject) => {
