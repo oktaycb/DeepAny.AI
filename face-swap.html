@@ -32,7 +32,7 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="css/styles.css?v=1.3.0.1">
+    <link rel="stylesheet" href="css/styles.css?v=1.3.0.3">
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             const cssRules = Array.from(document.styleSheets).flatMap(sheet => Array.from(sheet.cssRules));
@@ -61,7 +61,7 @@
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = '1.3.0.1';
+        const version = '1.3.0.3';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -412,7 +412,7 @@
             loadPageContent(setUser, retrieveImageFromURL, getUserIpAddress, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, setAuthentication, updateMainContent, savePageState);
 
             const mainContainers = document.querySelectorAll('.main-container');
-            mainContainers.forEach((mainContainer, index) => {
+            mainContainers.forEach((mainContainer, id) => {
                 mainContainer.style.justifyContent = 'flex-start';
             });
 
@@ -625,14 +625,14 @@
                     });
 
                     const multiboxQuery = document.querySelectorAll('.multibox');
-                    multiboxQuery.forEach((multibox, index) => {
+                    multiboxQuery.forEach((multibox, id) => {
                         const btnText = multibox.querySelector('.multibox-text');
                         const items = multibox.querySelectorAll('.item');
 
-                        if (state.multiboxes && state.multiboxes[index]) {
-                            btnText.innerText = state.multiboxes[index].text || '';
+                        if (state.multiboxes && state.multiboxes[id]) {
+                            btnText.innerText = state.multiboxes[id].text || '';
 
-                            if (state.multiboxes[index].open) {
+                            if (state.multiboxes[id].open) {
                                 multibox.classList.add('open');
                                 multibox.querySelector('.list-items').style.display = 'flex';
                             } else {
@@ -640,7 +640,7 @@
                                 multibox.querySelector('.list-items').style.display = 'none';
                             }
 
-                            state.multiboxes[index].items.forEach((itemState, itemIndex) => {
+                            state.multiboxes[id].items.forEach((itemState, itemIndex) => {
                                 if (itemIndex < items.length) {
                                     const checkbox = items[itemIndex].querySelector('input[type="checkbox"]');
                                     checkbox.checked = itemState.checked;
@@ -651,14 +651,14 @@
                     });
 
                     const comboboxQuery = document.querySelectorAll('.combobox');
-                    comboboxQuery.forEach((combobox, index) => {
+                    comboboxQuery.forEach((combobox, id) => {
                         const btnText = combobox.querySelector('.combobox-text');
                         const items = combobox.querySelectorAll('.item');
 
-                        if (state.comboboxes && state.comboboxes[index]) {
-                            btnText.innerText = state.comboboxes[index].text || '';
+                        if (state.comboboxes && state.comboboxes[id]) {
+                            btnText.innerText = state.comboboxes[id].text || '';
 
-                            if (state.comboboxes[index].open) {
+                            if (state.comboboxes[id].open) {
                                 combobox.classList.add('open');
                                 combobox.querySelector('.list-items').style.display = 'flex';
                             } else {
@@ -666,7 +666,7 @@
                                 combobox.querySelector('.list-items').style.display = 'none';
                             }
 
-                            state.comboboxes[index].items.forEach((itemState, itemIndex) => {
+                            state.comboboxes[id].items.forEach((itemState, itemIndex) => {
                                 if (itemIndex < items.length) {
                                     const checkbox = items[itemIndex].querySelector('input[type="checkbox"]');
                                     checkbox.checked = itemState.checked;
@@ -715,12 +715,19 @@
                     localStorage.setItem(`${dbConfig.objectStore}-count`, photoCount);
                 }
             }
-
             const handleDownload = async (selectedOutputInfo) => {
                 if (selectedOutputInfo) {
-                    const { db, url, element, index } = selectedOutputInfo;
-                    if (!db || !url || !element || !index)
+                    const { db, url, element, id, timestamp } = selectedOutputInfo;
+                    if (!db || !url || !element || !id || !timestamp)
                         return;
+
+                    let downloadCanceled = false;
+                    element.innerHTML = `<initial url="${url}" id="${id}" timestamp="${timestamp}"><div class="process-text"></div><div class="delete-icon"></initial>`;
+
+                    const deleteIcon = element.querySelector('.delete-icon');
+                    deleteIcon.addEventListener('click', () => {
+                        downloadCanceled = true;
+                    });
 
                     try {
                         const response = await fetch(url);
@@ -731,6 +738,11 @@
 
                         const reader = response.body.getReader();
                         while (true) {
+                            if (downloadCanceled) {
+                                setProcessText(element, 'Download Canceled');
+                                break;
+                            }
+
                             const { done, value } = await reader.read();
                             if (done) break;
                             downloadedBytes += value.length;
@@ -739,16 +751,18 @@
                             setProcessText(element, `Downloaded: ${progress.toFixed(0)}%`);
                         }
 
-                        const blobUrl = URL.createObjectURL(blob);
-                        const isVideo = url.slice(-1) === '0';
-                        if (isVideo) {
-                            element.innerHTML = `<video index="${index}" loop muted autoplay><source src="${blobUrl}" type="${blob.type}">Your browser does not support the video tag.</video><div class="delete-icon"></div>`;
-                        } else {
-                            element.innerHTML = `<img index="${index}" src="${blobUrl}" alt="Uploaded Photo"/><div class="delete-icon"></div>`;
-                        }
+                        if (!downloadCanceled) {
+                            const blobUrl = URL.createObjectURL(blob);
+                            const isVideo = url.slice(-1) === '0';
+                            if (isVideo) {
+                                element.innerHTML = `<video url="${url}" id="${id}" timestamp="${timestamp}" loop muted autoplay><source src="${blobUrl}" type="${blob.type}">Your browser does not support the video tag.</video><div class="delete-icon"></div>`;
+                            } else {
+                                element.innerHTML = `<img url="${url}" id="${id}" timestamp="${timestamp}" src="${blobUrl}" alt="Uploaded Photo"/><div class="delete-icon"></div>`;
+                            }
 
-                        setProcessText(element, '');
-                        await updateInDB(db, url, blob, saveCountIndex);
+                            setProcessText(element, '');
+                            await updateInDB(db, url, blob, saveCountIndex);
+                        }
                     } catch (error) {
                         setProcessText(element, error.message);
                         startProcessBtn.disabled = false;
@@ -757,6 +771,7 @@
                     alert('No Output Selected');
                 }
             };
+
 
             window.addEventListener('beforeunload', async () => { await saveCountIndex(); });
             window.addEventListener('pagehide', async () => { await saveCountIndex(); });
@@ -767,11 +782,11 @@
             const handleDelete = async (dbName, storeName, parent) => {
                 try {
                     const element = parent.querySelector('img, video, initial');
-                    const domIndex = parseInt(element.getAttribute('index'), 10);
+                    const domIndex = parseInt(element.getAttribute('id'), 10);
                     const db = await openDB(dbName, storeName);
                     const items = await getFromDB(db);
 
-                    let itemToDelete = items.find(item => item.index === domIndex);
+                    let itemToDelete = items.find(item => item.id === domIndex);
 
                     if (!itemToDelete) {
                         const domTimestamp = parseInt(element.getAttribute('timestamp'), 10);
@@ -812,21 +827,22 @@
                 }
 
                 const db = openDB(dbName, storeName);
+
                 for (const activePhoto of container.querySelectorAll(".data-container.active")) {
                     activePhoto.classList.remove("active");
 
                     const element = activePhoto.querySelector('img, video');
-                    const domIndex = parseInt(element.getAttribute('index'), 10);
+                    const domIndex = parseInt(element.getAttribute('id'), 10);
 
                     if (!isNaN(domIndex)) {
                         await updateActiveState(await db, domIndex, false);
                     } else {
-                        console.error(`Invalid index for active photo: ${activePhoto}`);
+                        console.error(`Invalid id for active photo: ${activePhoto}`);
                     }
                 }
 
                 const element = parent.querySelector('img, video, initial');
-                const domIndex = parseInt(element.getAttribute('index'), 10);
+                const domIndex = parseInt(element.getAttribute('id'), 10);
 
                 if (!isNaN(domIndex)) {
                     if (parent.classList.contains("active")) {
@@ -837,13 +853,33 @@
                         await updateActiveState(await db, domIndex, true);
                     }
                 } else {
-                    console.error(`Invalid index for parent photo: ${parent}`);
+                    console.error(`Invalid id for parent photo: ${parent}`);
                 }
             };
 
             const handleUpload = async (event, dataBaseIndexName, dataBaseObjectStoreName) => {
                 try {
-                    const db = await openDB(dataBaseIndexName, dataBaseObjectStoreName);
+                    if (!window.indexedDB) {
+                        alert('Your browser does not support IndexedDB.');
+                        return;
+                    }
+
+                    const db = await openDB(dataBaseIndexName, dataBaseObjectStoreName).catch((error) => {
+                        if (error.name === 'QuotaExceededError') {
+                            alert('Storage limit exceeded. Please free up space or clear cache.');
+                        } else if (error.name === 'SecurityError') {
+                            alert('Database access is restricted. Please check browser settings or disable private mode.');
+                        } else {
+                            alert(`Opening media database failed: ${error.message || error}`);
+                        }
+                        console.error("Database opening error:", error);
+                        return null;
+                    });
+
+                    if (!db) {
+                        return;
+                    }
+
                     const files = Array.from(event.target.files);
                     const mediaContainer = document.querySelector(`.${dataBaseObjectStoreName}`);
                     const fragment = document.createDocumentFragment();
@@ -855,10 +891,11 @@
                             reader.onload = async (e) => {
                                 try {
                                     const blob = new Blob([e.target.result], { type: file.type });
-                                    const { index, timestamp } = await addToDB(db, blob, saveCountIndex);
-                                    newMedia.push({ index, timestamp, blob, isVideo: file.type.startsWith('video') });
+                                    const { id, timestamp } = await addToDB(db, blob, saveCountIndex);
+                                    newMedia.push({ id, timestamp, blob, isVideo: file.type.startsWith('video') });
                                     resolve();
                                 } catch (error) {
+                                    alert(`Processing media failed: ${error.message || error}`);
                                     reject(`Processing media failed: ${error.message}`);
                                 }
                             };
@@ -869,42 +906,50 @@
                     await Promise.all(files.map(processFile));
 
                     const activeContainers = mediaContainer.querySelectorAll('.data-container.active');
-
-                    if (activeContainers.length > 0) { 
+                    if (activeContainers.length > 0) {
                         for (const container of activeContainers) {
                             container.classList.remove('active');
                             const element = container.querySelector('img, video');
-                            const index = parseInt(element.getAttribute('index'), 10);
-                            await updateActiveState(db, index, false);
+                            const id = parseInt(element.getAttribute('id'), 10);
+                            if (id) {
+                                await updateActiveState(db, id, false).catch(err => {
+                                    console.error(`Update failed for id ${id}:`, err);
+                                });
+                            }
                         }
                     }
 
                     newMedia.reverse();
 
-                    for (const { index, timestamp, blob, isVideo } of newMedia) {
+                    for (const { id, timestamp, blob, isVideo } of newMedia) {
                         const input = document.createElement('div');
                         input.className = 'data-container';
+
                         const blobUrl = URL.createObjectURL(blob);
                         if (isVideo) {
-                            input.innerHTML = `<video timestamp="${timestamp}" index="${index}" loop muted autoplay><source src="${blobUrl}" type="${blob.type}">Your browser does not support the video tag.</video><div class="delete-icon"></div>`;
+                            input.innerHTML = `<video timestamp="${timestamp}" id="${id}" loop muted autoplay><source src="${blobUrl}" type="${blob.type}">Your browser does not support the video tag.</video><div class="delete-icon"></div>`;
                         } else {
-                            input.innerHTML = `<img timestamp="${timestamp}" index="${index}" src="${blobUrl}" alt="Uploaded Photo"/><div class="delete-icon"></div>`;
+                            input.innerHTML = `<img timestamp="${timestamp}" id="${id}" src="${blobUrl}" alt="Uploaded Photo"/><div class="delete-icon"></div>`;
                         }
+
                         fragment.appendChild(input);
 
-                        if (index === newMedia[newMedia.length - 1].index) {
+                        if (id === newMedia[newMedia.length - 1].id) {
                             input.classList.add('active');
-                            await updateActiveState(db, index, true);
+                            if (id) {
+                                await updateActiveState(db, id, true).catch(err => {
+                                    alert(`Update failed for id ${id}: ${err}`);
+                                });
+                            }
                         }
                     }
 
                     mediaContainer.insertBefore(fragment, mediaContainer.firstChild);
                     localStorage.setItem(`${dataBaseObjectStoreName}-count`, await countInDB(db));
                 } catch (error) {
-                    alert(`Opening media database failed: ${error.message}`);
+                    alert(`Opening media database failed: ${error.message || error}`);
                 }
             };
-
 
             const setupFileUpload = ({ buttonId, inputId, dataBaseIndexName, dataBaseObjectStoreName, changeHandler }) => {
                 const input = document.getElementById(inputId);
@@ -920,6 +965,7 @@
             ];
 
             async function setClientStatus(message) {
+                console.log(message);
                 const outputs = document.querySelector('.outputs');
                 if (outputs) {
                     outputs.firstChild.querySelector('.process-text').textContent = message;
@@ -927,6 +973,7 @@
             }
 
             const setProcessText = (element, message) => {
+                console.log(message);
                 const processTextElement = element.querySelector('.process-text');
                 if (processTextElement)
                     processTextElement.textContent = message;
@@ -1041,6 +1088,7 @@
                     const data = await fetchProcessState(lastOutput.url);
                     if (data.status === 'completed') {
                         setCurrentUserDoc(getDocSnapshot);
+                        setClientStatus(data.server);
                         await tryHandleLastOutputDownload(lastOutput, 3);
                     } else if (data.status === 'failed') 
                         setClientStatus(data.server);
@@ -1055,13 +1103,13 @@
 
                 async function handleLastOutputDownload(lastOutput) {
                     const blobIsEmpty = !lastOutput.blob || Object.entries(lastOutput.blob).length === 0;
-
                     if (blobIsEmpty) {
                         const selectedOutputInfo = {
                             db: await openDB(`outputDB-${pageName}`, 'outputs'),
                             url: lastOutput.url,
+                            timestamp: lastOutput.timestamp,
                             element: document.querySelector('.outputs').firstChild,
-                            index: lastOutput.index
+                            id: lastOutput.id
                         };
 
                         handleDownload(selectedOutputInfo);
@@ -1382,6 +1430,14 @@
                     startProcessBtn.disabled = true;
 
                     try {
+                        if (!userData || !userData.uid) {
+                            const openSignInContainer = document.getElementById('openSignInContainer');
+                            if (openSignInContainer)
+                                openSignInContainer.click();
+                            startProcessBtn.disabled = false;
+                            return;
+                        }
+
                         const dataContainer = document.createElement('div');
                         dataContainer.className = 'data-container';
 
@@ -1392,12 +1448,6 @@
                         const outputs = document.querySelector('.outputs');
                         outputs.style.display = 'flex';
                         outputs.insertBefore(dataContainer, outputs.firstChild);
-
-                        if (!userData || !userData.uid) {
-                            setClientStatus('No User Logon Detected');
-                            startProcessBtn.disabled = false;
-                            return;
-                        }
 
                         if (!userData.emailVerified) {
                             setClientStatus('Verify Your Email');
@@ -1490,8 +1540,6 @@
                             return Infinity;
                         }
 
-                        let lowestQueueIndex = 0;
-
                         const serverForSmallProcesses = "https://4090-1-DF.bodyswap.me";
                         const serverPromises = serverAddresses.map(server => checkServerQueue(server));
                         const results = await Promise.all(serverPromises);
@@ -1501,10 +1549,9 @@
                             const everyServerEmpty = results.every(queue => queue === 0);
                             const someServerNotEmpty = results.some(queue => queue === 0);
                             if (someServerNotEmpty && !everyServerEmpty && primaryServerQueue > 0 || primaryServerQueue >= MAX_TASK_LIMIT) {
-                                const minQueueIndex = results.reduce((minIndex, queue, index, arr) => {
-                                    return (queue < arr[minIndex] && queue >= 0) ? index : minIndex;
+                                const minQueueIndex = results.reduce((minIndex, queue, id, arr) => {
+                                    return (queue < arr[minIndex] && queue >= 0) ? id : minIndex;
                                 }, 0);
-                                lowestQueueIndex = results[minQueueIndex];
                                 if (results[minQueueIndex] === Infinity) {
                                     startProcessBtn.disabled = false;
                                     setClientStatus('Offline');
@@ -1512,18 +1559,16 @@
                                 }
                                 serverAddresses = [serverAddresses[minQueueIndex]];
                             } else {
-                                lowestQueueIndex = primaryServerQueue;
                                 serverAddresses = [serverForSmallProcesses];
                             }
                         } else {
-                            const index = serverAddresses.indexOf(serverForSmallProcesses);
-                            if (index !== -1) {
-                                serverAddresses.splice(index, 1);
+                            const id = serverAddresses.indexOf(serverForSmallProcesses);
+                            if (id !== -1) {
+                                serverAddresses.splice(id, 1);
                             }
-                            const minQueueIndex = results.reduce((minIndex, queue, index, arr) => {
-                                return (queue < arr[minIndex]) ? index : minIndex;
+                            const minQueueIndex = results.reduce((minIndex, queue, id, arr) => {
+                                return (queue < arr[minIndex]) ? id : minIndex;
                             }, 0);
-                            lowestQueueIndex = results[minQueueIndex];
                             if (results[minQueueIndex] === Infinity) {
                                 startProcessBtn.disabled = false;
                                 setClientStatus('Offline');
@@ -1545,14 +1590,14 @@
                         const fileType = activeVideoInput ? 'video/mp4' : 'image/png';
                         const extension = activeVideoInput ? 'mp4' : 'png';
                         const timestamp = activeVideoInput?.getAttribute('timestamp') || activePhotoInput?.getAttribute('timestamp');
-                        const index = activeVideoInput?.getAttribute('index') || activePhotoInput?.getAttribute('index');
+                        const id = activeVideoInput?.getAttribute('id') || activePhotoInput?.getAttribute('id');
 
-                        if (!timestamp || !index) {
-                            console.error('Timestamp or index is missing. Cannot create input file name.');
+                        if (!timestamp || !id) {
+                            console.error('Timestamp or id is missing. Cannot create input file name.');
                             return;
                         }
 
-                        const inputFileName = `${timestamp}_${index}.${extension}`;
+                        const inputFileName = `${timestamp}_${id}.${extension}`;
                         const inputFile = await processBlobToFile(activeVideoInput ? activeVideoInput.querySelector('source').src : activePhotoInput.src, inputFileName, fileType);
                         const faceFile = await processBlobToFile(activePhoto.src, 'image.png', 'image/png');
 
@@ -1876,8 +1921,8 @@
                             ? activeInput.querySelector('source').src
                             : activeInput.src;
 
-                        const index = activeInput.getAttribute('index');
-                        fileName += `${index}.${activeInput.tagName === 'VIDEO' ? 'mp4' : 'png'}`;
+                        const id = activeInput.getAttribute('id');
+                        fileName += `${id}.${activeInput.tagName === 'VIDEO' ? 'mp4' : 'png'}`;
                     }
 
                     if (blobUrl) {

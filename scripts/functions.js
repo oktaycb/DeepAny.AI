@@ -132,7 +132,7 @@ export async function getUserIpAddress() {
 
     const controllers = urls.map(() => new AbortController()); 
     try {
-        const fetchPromises = urls.map((url, index) => fetchWithTimeout(url, 1000, controllers[index]));
+        const fetchPromises = urls.map((url, id) => fetchWithTimeout(url, 1000, controllers[id]));
         const data = await Promise.any(fetchPromises);
         controllers.forEach(controller => controller.abort());
         return data.ip;
@@ -261,18 +261,11 @@ export const addToDB = (db, data, saveCountIndex, isActive = false) => {
         const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
         const objectStore = transaction.objectStore(db.objectStoreNames[0]);
 
-        let currentIndex = localStorage.getItem(`${db.objectStoreNames[0]}-index`);
-        currentIndex = currentIndex === null ? 0 : parseInt(currentIndex, 10);
-        currentIndex += 1;
-        localStorage.setItem(`${db.objectStoreNames[0]}-index`, currentIndex);
+        const timestamp = new Date().getTime();
 
-        const timestamp = new Date().getTime(); // Capture the current timestamp
-
-        // Create the entry object with active state
         let entry = {
-            timestamp, // Add the timestamp here
-            index: currentIndex,
-            isActive // Set the isActive state
+            timestamp, 
+            isActive 
         };
 
         if (data instanceof Blob) {
@@ -286,13 +279,11 @@ export const addToDB = (db, data, saveCountIndex, isActive = false) => {
 
         const request = objectStore.add(entry);
         request.onsuccess = async () => {
+            resolve({ id: request.result, timestamp });
             await saveCountIndex();
-            resolve({ index: currentIndex, timestamp });
         };
 
         request.onerror = (event) => {
-            currentIndex -= 1;
-            localStorage.setItem(`${db.objectStoreNames[0]}-index`, currentIndex);
             alert('Error adding data to database: ' + event);
             reject(`Error adding data to database: ${event.target.error ? event.target.error.message : 'Unknown error'}`);
         };
@@ -307,7 +298,7 @@ export const getFromDB = (db, limit = null, offset = 0) => {
 
         request.onsuccess = (event) => {
             let results = event.target.result;
-            results = results.sort((a, b) => b.index - a.index);
+            results = results.sort((a, b) => b.id - a.id);
             if (limit !== null) {
                 results = results.slice(offset, offset + limit);
             }
@@ -315,7 +306,6 @@ export const getFromDB = (db, limit = null, offset = 0) => {
             resolve(results.map(item => ({
                 blob: item.blob || null,
                 url: item.url || null,
-                index: item.index || null,
                 id: item.id || null,
                 timestamp: item.timestamp || null,
                 isActive: item.isActive || false
@@ -328,21 +318,19 @@ export const getFromDB = (db, limit = null, offset = 0) => {
     });
 };
 
-export const updateActiveState = async (db, index, isActive) => {
+export const updateActiveState = async (db, id, isActive) => {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
         const objectStore = transaction.objectStore(db.objectStoreNames[0]);
-        const request = objectStore.get(index);
+        const request = objectStore.get(id);
 
         request.onsuccess = (event) => {
             const item = event.target.result;
             if (item) {
-                item.isActive = isActive; // Set active state based on parameter
+                item.isActive = isActive;
 
-                const updateRequest = objectStore.put(item); // Update the object
-
+                const updateRequest = objectStore.put(item);
                 updateRequest.onsuccess = () => {
-                    console.log(`Item ${isActive ? 'activated' : 'inactivated'}:`, item); // Log the item
                     resolve();
                 };
                 updateRequest.onerror = (event) => reject(`Error updating active state: ${event.target.error}`);
@@ -390,16 +378,16 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
             const mediaItems = await getFromDB(db);
             const inputElements = mediaContainer.querySelectorAll('.data-container');
 
-            for (const [indexInBatch, { blob, url, index, timestamp, isActive }] of mediaItems.entries()) {
-                let content = `<initial index="${index}" timestamp="${timestamp}"/></initial>`;
+            for (const [indexInBatch, { blob, url, id, timestamp, isActive }] of mediaItems.entries()) {
+                let content = `<initial id="${id}" timestamp="${timestamp}"/></initial>`;
 
                 if (blob && (blob.type.startsWith('video') || blob.type.startsWith('image'))) {
                     const blobUrl = URL.createObjectURL(blob);
                     content = blob.type.startsWith('video')
-                        ? `<video index="${index}" timestamp="${timestamp}" playsinline preload="auto" disablePictureInPicture loop muted autoplay><source src="${blobUrl}" type="${blob.type}">Your browser does not support the video tag.</video>`
-                        : `<img index="${index}" timestamp="${timestamp}" src="${blobUrl}" alt="Uploaded Photo"/>`;
+                        ? `<video id="${id}" timestamp="${timestamp}" playsinline preload="auto" disablePictureInPicture loop muted autoplay><source src="${blobUrl}" type="${blob.type}">Your browser does not support the video tag.</video>`
+                        : `<img id="${id}" timestamp="${timestamp}" src="${blobUrl}" alt="Uploaded Photo"/>`;
                 } else if (url) {
-                    handleDownload({ db, url, element: inputElements[indexInBatch], index });
+                    handleDownload({ db, url, element: inputElements[indexInBatch], id });
                 }
 
                 inputElements[indexInBatch].innerHTML = `${content}<div class="process-text"></div><div class="delete-icon"></div>`;
@@ -452,11 +440,11 @@ export const updateInDB = (db, url, blob, saveCountIndex) => {
     });
 };
 
-export const deleteFromDB = async (db, index, saveCountIndex) => {
+export const deleteFromDB = async (db, id, saveCountIndex) => {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
         const photosObjectStore = transaction.objectStore(db.objectStoreNames[0]);
-        const deleteRequest = photosObjectStore.delete(index);
+        const deleteRequest = photosObjectStore.delete(id);
 
         deleteRequest.onsuccess = async () => {
             resolve();
@@ -793,8 +781,6 @@ async function handleUserLoggedIn(userData, getUserIpAddress, ensureUniqueId, fe
 
                 const jsonResponse = await response.json();
                 const responseText = JSON.stringify(jsonResponse);
-                console.log(responseText);
-
                 if (responseText.includes("success")) {
                     location.reload();
                 }
@@ -1215,7 +1201,7 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserIpAddress,
 				<nav class="navbar">
 					<div class="container">
 						<div class="logo">
-							<img onclick="location.href='.'" style="cursor: pointer;" alt="DeepAny.AI Logo" width="calc((6vh * var(--scale-factor-h) + 12vw / 2 * var(--scale-factor-w)))" height="auto" loading="eager">
+							<img onclick="location.href='.'" style="cursor: pointer;" alt="DeepAny.AI Logo" width="6.5vh" height="auto" loading="eager">
 							<h2 onclick="location.href='.'" style="cursor: pointer;" translate="no">DeepAny.<span class="text-gradient" translate="no">AI</span></h2>
 						</div>
 					</div>
@@ -1297,7 +1283,7 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserIpAddress,
             }
             if (!hamburgerMenu) {
                 navContainer.insertAdjacentHTML('beforeend', `
-			<div id="menu-container" style="display: flex;gap: 2vw;">
+			<div id="menu-container" style="display: flex;gap: 1vw;">
 				<div class="indicator" style="margin-bottom: 0;">
 					<button class="zoom-minus" translate="no">-</button>
 					<button class="zoom-plus" translate="no">+</button>
@@ -1367,7 +1353,7 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserIpAddress,
 						<button class="important" id="openSignInContainer">Sign In</button>
 						<li id="userProfileLayout">
 							<a id="userLayout" style="display: flex;gap: calc(1vh * var(--scale-factor-h));align-items: center;">
-								<img alt="Profile Image" class="profile-image" style="width: calc((6vh* var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w)));height: calc((6vh* var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w)));" src="assets/profile.webp">
+								<img alt="Profile Image" class="profile-image" style="width: calc((6vh* var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w)));height: calc((6vh* var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w)));">
 								<div>
 									<p style="white-space: nowrap;">Hello, <span class="username">Username</span></p>
 									<div class="line" style="margin: unset;"></div>
@@ -1750,35 +1736,6 @@ export function showSidebar(sidebar, hamburgerMenu, setUser) {
 							Reddit
 						</a>
 					</div>
-                    <div class="line" style="margin: 0;"></div>
-                    <div style="display: flex;gap: 1vh;">
-						<button id="contactButton" href="mailto:durieun02@gmail.com">
-							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-							<g id="contact">
-							<path id="Vector" fill-rule="evenodd" clip-rule="evenodd" d="M8.8717 5.01934H22.1952L14.2817 10.4443L8.89889 6.75418C9.10383 6.20542 9.10556 5.58512 8.8717 5.01934ZM5.38716 8.16803L7.32919 6.98556C7.90552 6.63465 8.09681 5.88596 7.75941 5.30157L6.00614 2.26482C5.82628 1.95324 5.55403 1.75281 5.20312 1.67359C4.85217 1.59432 4.5203 1.65831 4.22395 1.86235L1.02652 4.06379C-0.495469 9.42648 6.34402 21.0365 11.5895 22.3594L15.0947 20.6911C15.4196 20.5365 15.641 20.281 15.7478 19.9374C15.8546 19.5939 15.8172 19.2579 15.6373 18.9464L13.884 15.9096C13.5466 15.3252 12.8026 15.1165 12.2105 15.4402L10.2155 16.5308C8.2425 14.7761 5.92031 10.754 5.38716 8.16803ZM23.1629 5.71703L14.5981 11.5885C14.3977 11.7253 14.1403 11.7146 13.954 11.5808L8.26809 7.68287C8.16037 7.77995 8.04239 7.86845 7.91423 7.94649L6.68592 8.69434C7.33125 10.777 8.92805 13.5427 10.409 15.1429L11.6708 14.4531C12.7983 13.8368 14.2158 14.2344 14.8582 15.3471L15.9455 17.2304H22.2787C22.7788 17.2304 23.1879 16.8212 23.1879 16.3212V5.92853C23.1879 5.85578 23.1792 5.78495 23.1629 5.71703Z" fill="#D1D1D1"/>
-							</g>
-							</svg>
-							Contact
-						</button>
-						<a class="button disabled" href=".">
-							<svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-							<g id="Layer 2">
-							<path id="Vector" d="M7.15112 10.9938L3.47837 10.5042C2.75859 10.4061 2.09857 10.051 1.62009 9.50438C1.14162 8.95779 0.876977 8.25658 0.875 7.53016V3.5C0.875397 3.1023 1.03356 2.721 1.31478 2.43978C1.596 2.15856 1.9773 2.0004 2.375 2H5.375C5.54228 1.99988 5.7048 2.05573 5.83666 2.15866C5.96853 2.26159 6.06217 2.40568 6.10266 2.56799L7.97766 10.068C8.00524 10.1786 8.00728 10.294 7.98361 10.4055C7.95994 10.5169 7.91119 10.6216 7.84105 10.7114C7.77092 10.8012 7.68124 10.8739 7.57883 10.9239C7.47642 10.9739 7.36397 10.9999 7.25 11L7.15112 10.9938ZM2.375 7.53016C2.37601 7.89334 2.50838 8.24389 2.74766 8.5171C2.98695 8.79031 3.317 8.96773 3.67688 9.0166L6.25427 9.36085L4.78943 3.5H2.37537L2.375 7.53016Z" fill="#D1D1D1"/>
-							<path id="Vector_2" d="M14.7499 11C14.6359 11 14.5234 10.9741 14.4209 10.9241C14.3184 10.8741 14.2287 10.8013 14.1586 10.7114C14.0884 10.6215 14.0397 10.5168 14.0162 10.4052C13.9926 10.2937 13.9948 10.1782 14.0226 10.0676L15.8976 2.56799C15.9378 2.4056 16.0313 2.26139 16.1632 2.15842C16.295 2.05545 16.4576 1.99967 16.6249 2H19.6249C20.0226 2.00046 20.4039 2.15864 20.6851 2.43984C20.9663 2.72105 21.1245 3.10232 21.1249 3.5V7.53016C21.1229 8.25649 20.8583 8.95761 20.3799 9.50414C19.9015 10.0507 19.2416 10.4057 18.5219 10.5038L14.8363 10.9952L14.7499 11ZM15.7453 9.36084L18.3234 9.01697C18.6832 8.96788 19.0132 8.79034 19.2523 8.51709C19.4915 8.24384 19.6239 7.89331 19.6249 7.53016V3.5H17.2108L15.7453 9.36084Z" fill="#D1D1D1"/>
-							<path id="Vector_3" d="M17.1875 8.31494V1.25C17.1865 1.10114 17.1269 0.958688 17.0216 0.853429C16.9163 0.748169 16.7739 0.688564 16.625 0.6875H5.37503C5.22619 0.688595 5.08375 0.74821 4.9785 0.853463C4.87324 0.958716 4.81363 1.10115 4.81253 1.25V8.31494C4.80833 9.53444 5.21209 10.7203 5.95956 11.6839C6.70703 12.6475 7.75528 13.3334 8.93753 13.6325V17.9375H6.90503C6.68825 17.9362 6.47458 17.989 6.28337 18.0912C6.09217 18.1933 5.92947 18.3416 5.81003 18.5225L5.30759 19.2725C5.17665 19.4705 5.10178 19.7003 5.09091 19.9375C5.08005 20.1747 5.1336 20.4103 5.24588 20.6195C5.35816 20.8287 5.52498 21.0036 5.72863 21.1256C5.93229 21.2476 6.16518 21.3122 6.40259 21.3125H15.1926C15.4519 21.3114 15.7051 21.2335 15.9203 21.0887C16.1354 20.9439 16.3028 20.7386 16.4015 20.4988C16.5002 20.259 16.5256 19.9953 16.4746 19.741C16.4237 19.4868 16.2986 19.2533 16.1151 19.07L15.3651 18.32C15.1197 18.0765 14.7884 17.9391 14.4426 17.9375H13.0625V13.6325C14.2448 13.3334 15.293 12.6475 16.0405 11.6839C16.788 10.7203 17.1917 9.53444 17.1875 8.31494ZM12.6202 7.2425L12.9652 8.6375C12.9847 8.71168 12.9818 8.78997 12.9568 8.86251C12.9319 8.93504 12.8861 8.99858 12.8251 9.0451C12.7641 9.09162 12.6907 9.11905 12.6142 9.12392C12.5376 9.1288 12.4613 9.11091 12.395 9.0725L11.195 8.39C11.1366 8.35322 11.069 8.3337 11 8.3337C10.931 8.3337 10.8634 8.35322 10.805 8.39L9.60514 9.07243C9.53875 9.11084 9.46248 9.12873 9.38593 9.12386C9.30939 9.11898 9.236 9.09155 9.17502 9.04503C9.11404 8.99851 9.0682 8.93498 9.04327 8.86244C9.01835 8.7899 9.01545 8.71161 9.03495 8.63743L9.38011 7.24243C9.39863 7.17689 9.39935 7.1076 9.38219 7.04169C9.36504 6.97578 9.33063 6.91563 9.28251 6.86743L8.54001 6.13243C8.48559 6.07756 8.44862 6.00781 8.43375 5.93197C8.41888 5.85612 8.42678 5.77758 8.45646 5.70622C8.48614 5.63486 8.53626 5.57387 8.60052 5.53094C8.66479 5.488 8.74031 5.46504 8.8176 5.46493H9.80765C9.88404 5.46239 9.9582 5.43858 10.0218 5.39618C10.0854 5.35379 10.1359 5.2945 10.1677 5.22497L10.6401 4.11497C10.6692 4.04344 10.7191 3.98222 10.7832 3.93913C10.8473 3.89604 10.9228 3.87302 11.0001 3.87302C11.0773 3.87302 11.1528 3.89604 11.2169 3.93913C11.2811 3.98222 11.3309 4.04344 11.3601 4.11497L11.8325 5.22497C11.8642 5.29452 11.9148 5.35383 11.9784 5.39622C12.042 5.43861 12.1162 5.46241 12.1926 5.46493H13.1827C13.26 5.46507 13.3355 5.48805 13.3997 5.531C13.464 5.57395 13.5141 5.63494 13.5437 5.7063C13.5734 5.77765 13.5812 5.85618 13.5664 5.93201C13.5515 6.00784 13.5145 6.07757 13.4601 6.13243L12.7176 6.86743C12.6695 6.91565 12.6351 6.97581 12.618 7.04174C12.6008 7.10766 12.6016 7.17696 12.6202 7.2425Z" fill="#D1D1D1"/>
-							</g>
-							</svg>
-							Affiliation
-						</a>
-						<a class="button disabled" href="settings">
-							<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-							<g clip-path="url(#clip0_3128_4961)">
-							<path d="M18.975 8.95L17.0812 7.05625V4.375C17.0805 3.98567 16.9256 3.61247 16.6503 3.33717C16.375 3.06187 16.0018 2.90691 15.6125 2.90625H12.9312L11.0375 1.0125C10.7613 0.739223 10.3885 0.585937 9.99995 0.585938C9.61143 0.585938 9.23861 0.739223 8.96245 1.0125L7.0687 2.90625H4.38745C3.99812 2.90691 3.62492 3.06187 3.34962 3.33717C3.07432 3.61247 2.91936 3.98567 2.9187 4.375V7.05625L1.02495 8.95C0.888287 9.08601 0.779841 9.24769 0.705842 9.42573C0.631843 9.60378 0.59375 9.79469 0.59375 9.9875C0.59375 10.1803 0.631843 10.3712 0.705842 10.5493C0.779841 10.7273 0.888287 10.889 1.02495 11.025L2.9187 12.925V15.6C2.91845 15.7929 2.95628 15.9841 3.03 16.1624C3.10372 16.3407 3.2119 16.5027 3.34834 16.6391C3.48477 16.7755 3.64678 16.8837 3.82509 16.9575C4.0034 17.0312 4.1945 17.069 4.38745 17.0688H7.0687L8.96245 18.9625C9.09846 19.0992 9.26013 19.2076 9.43818 19.2816C9.61623 19.3556 9.80714 19.3937 9.99995 19.3937C10.1928 19.3937 10.3837 19.3556 10.5617 19.2816C10.7398 19.2076 10.9014 19.0992 11.0375 18.9625L12.9312 17.0688H15.6125C15.8054 17.069 15.9965 17.0312 16.1748 16.9575C16.3531 16.8837 16.5151 16.7755 16.6516 16.6391C16.788 16.5027 16.8962 16.3407 16.9699 16.1624C17.0436 15.9841 17.0814 15.7929 17.0812 15.6V12.925L18.975 11.025C19.1116 10.889 19.2201 10.7273 19.2941 10.5493C19.3681 10.3712 19.4062 10.1803 19.4062 9.9875C19.4062 9.79469 19.3681 9.60378 19.2941 9.42573C19.2201 9.24769 19.1116 9.08601 18.975 8.95ZM9.99995 13.125C9.38188 13.125 8.7777 12.9417 8.26379 12.5983C7.74989 12.255 7.34935 11.7669 7.11283 11.1959C6.8763 10.6249 6.81442 9.99653 6.935 9.39034C7.05558 8.78415 7.3532 8.22733 7.79024 7.79029C8.22728 7.35325 8.7841 7.05563 9.39029 6.93505C9.99648 6.81447 10.6248 6.87635 11.1958 7.11288C11.7669 7.3494 12.2549 7.74994 12.5983 8.26384C12.9417 8.77775 13.125 9.38193 13.125 10C13.125 10.8288 12.7957 11.6237 12.2097 12.2097C11.6236 12.7958 10.8288 13.125 9.99995 13.125Z" fill="white"/>
-							</g>
-							</svg>
-							Settings
-						</a>
-					</div>
 				</div>
 				`;
 
@@ -1790,7 +1747,7 @@ export function showSidebar(sidebar, hamburgerMenu, setUser) {
                 sideBar = `
             			<li id="userProfileLayout" style="padding: 0;">
 							<a id="userLayout" style="display: flex;gap: calc(1vh * var(--scale-factor-h));align-items: center;">
-								<img alt="Profile Image" class="profile-image" style="width: calc((6vh* var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w)));height: calc((6vh* var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w)));" src="assets/profile.webp">
+								<img alt="Profile Image" class="profile-image" style="width: calc((6vh* var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w)));height: calc((6vh* var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w)));">
 								<div>
 									<p style="white-space: nowrap;">Hello, <span class="username">Username</span></p>
 									<div class="line" style="margin: unset;"></div>
@@ -1869,7 +1826,7 @@ export function createPages(contents) {
     const numberOfPages = contents.length;
     if (numberOfPages <= 0) return;
 
-    for (let index = 0; index < numberOfPages; index++) {
+    for (let id = 0; id < numberOfPages; id++) {
         const mainElement = document.createElement('main');
         const mainContainer = document.createElement('div');
         mainContainer.classList.add('main-container');
@@ -1920,13 +1877,12 @@ export function setupMainSize(mainQuery) {
     if (!mainQuery || !mainQuery.length)
         return;
 
-    mainQuery.forEach((main, index) => {
+    mainQuery.forEach((main, id) => {
         main.style.display = 'grid';
-        main.style.top = `${index * getWindowHeight() + getNavbarHeight()}px`;
+        main.style.top = `${id * getWindowHeight() + getNavbarHeight()}px`;
         main.style.height = `${getWindowHeight() - getNavbarHeight()}px`;
         main.style.width = `${getWindowWidth()}px`;
     });
-
 }
 
 const swipeThreshold = 50;
@@ -1938,22 +1894,22 @@ export function loadScrollingAndMain(navbar, mainQuery, sidebar, hamburgerMenu, 
     let touchStartY = 0;
     let touchEndY = 0;
     let touchStartTime = 0;
-    let scrollAttemptedOnce = false; // Track if the user has scrolled once
-    let lastScrollTime = 0; // Track the last scroll event time
-    let lastScrollDirection = ''; // Track the last scroll direction ('up' or 'down')
+    let scrollAttemptedOnce = false;
+    let lastScrollTime = 0;
+    let lastScrollDirection = '';
 
     function getCurrentMainElement() {
         const currentIndex = getCurrentMain();
-        return mainQuery[currentIndex]; // Return the current main element based on the index
+        return mainQuery[currentIndex];
     }
 
-    function showMain(index, transitionDuration = 250) {
-        if (mainQuery.length > 1 && index >= 0 && index < mainQuery.length && !scrolling) {
+    function showMain(id, transitionDuration = 250) {
+        if (mainQuery.length > 1 && id >= 0 && id < mainQuery.length && !scrolling) {
             if (sidebarActive && getScreenMode() !== ScreenMode.PC) return;
 
             scrolling = true;
-            const wentDown = index >= getCurrentMain();
-            setCurrentMain(index);
+            const wentDown = id >= getCurrentMain();
+            setCurrentMain(id);
             if (wentDown) {
                 removeNavbar(navbar, mainQuery, sidebar);
             } else {
@@ -1978,10 +1934,9 @@ export function loadScrollingAndMain(navbar, mainQuery, sidebar, hamburgerMenu, 
     };
 
     const handleWheel = (event) => {
-        if (event.ctrlKey) {
-            console.log('Wheel event ignored due to ctrlKey:', event.ctrlKey);
+        if (event.ctrlKey) 
             return;
-        }
+        
         handleScroll(event.deltaY > 0 ? 'down' : 'up');
     };
 
@@ -1995,50 +1950,37 @@ export function loadScrollingAndMain(navbar, mainQuery, sidebar, hamburgerMenu, 
         const atBottom = currentMainElement.scrollTop + currentMainElement.clientHeight >= currentMainElement.scrollHeight;
         const isMainScrollable = currentMainElement.scrollHeight > currentMainElement.clientHeight;
 
-        // Check the time since the last scroll attempt
         if (scrollAttemptedOnce && (currentTime - lastScrollTime < 500 / 2)) {
-            console.log('Scroll attempt ignored due to time constraint:', currentTime - lastScrollTime);
-            return; // Ignore the scroll attempt
+            return;
         }
 
-        // Update last scroll time
         lastScrollTime = currentTime;
 
-        // Reset the scroll attempt if the direction is different
         if (scrollAttemptedOnce && direction !== lastScrollDirection) {
-            console.log('Scroll attempt reset due to direction change:', direction);
-            scrollAttemptedOnce = false; // Reset for the next use
+            scrollAttemptedOnce = false;
         }
 
-        // Update last scroll direction
         lastScrollDirection = direction;
-
-        // If the main is not scrollable, directly use custom scrolling
         if (!isMainScrollable) {
             if (direction === 'down') {
                 showMain(getCurrentMain() + 1);
             } else {
                 showMain(getCurrentMain() - 1);
             }
-            return; // Exit after handling the custom scrolling
+            return;
         }
 
-        // For scrollable main, check top/bottom state for second scroll attempt
         if (atTop || atBottom) {
             if (scrollAttemptedOnce) {
-                console.log('Second scroll attempt:', direction);
                 if (direction === 'down') {
                     showMain(getCurrentMain() + 1);
                 } else {
                     showMain(getCurrentMain() - 1);
                 }
-                scrollAttemptedOnce = false; // Reset for next use
+                scrollAttemptedOnce = false;
             } else {
-                console.log('First scroll attempt, waiting for second:', direction);
-                scrollAttemptedOnce = true; // Set to true for the next scroll
+                scrollAttemptedOnce = true;
             }
-        } else {
-            console.log('Main is scrollable, normal scrolling allowed.');
         }
     };
 
@@ -2090,10 +2032,10 @@ export function loadScrollingAndMain(navbar, mainQuery, sidebar, hamburgerMenu, 
 
 export function updateContent(contents) {
     const mainContainers = document.querySelectorAll('.main-container');
-    mainContainers.forEach((mainContainer, index) => {
-        if (contents[index]) {
+    mainContainers.forEach((mainContainer, id) => {
+        if (contents[id]) {
             mainContainer.innerHTML = '';
-            mainContainer.insertAdjacentHTML('beforeend', contents[index]);
+            mainContainer.insertAdjacentHTML('beforeend', contents[id]);
         }
     });
 }
