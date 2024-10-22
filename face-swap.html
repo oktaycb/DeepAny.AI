@@ -32,7 +32,7 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="css/styles.css?v=1.3.1.0">
+    <link rel="stylesheet" href="css/styles.css?v=1.3.1.3">
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             const cssRules = Array.from(document.styleSheets).flatMap(sheet => Array.from(sheet.cssRules));
@@ -61,7 +61,7 @@
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = '1.3.1.0';
+        const version = '1.3.1.3';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -69,7 +69,7 @@
 
         document.addEventListener('DOMContentLoaded', async function () {
             const functions = await loadModule('./scripts/functions.js');
-            const { fetchProcessState, openDB, addToDB, countInDB, getFromDB, updateActiveState, initDB, updateInDB, updateChunksInDB, deleteFromDB, setUser, setCurrentUserDoc, getCachedStaticUserData, getCachedDynamicUserDoc, setAuthentication, getFirebaseModules, getDocSnapshot, getDocsSnapshot, getScreenMode, getCurrentMain, updateContent, ScreenMode, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserIpAddress, fetchServerAddresses, getPageName } = functions;
+            const { showNotification, fetchProcessState, openDB, addToDB, countInDB, getFromDB, updateActiveState, initDB, updateInDB, updateChunksInDB, deleteFromDB, setUser, setCurrentUserDoc, getCachedStaticUserData, getCachedDynamicUserDoc, setAuthentication, getFirebaseModules, getDocSnapshot, getDocsSnapshot, getScreenMode, getCurrentMain, updateContent, ScreenMode, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserIpAddress, fetchServerAddresses, getPageName } = functions;
 
             if (!window.indexedDB) {
                 alert('Your browser does not support IndexedDB.');
@@ -134,279 +134,279 @@
             function updateMainContent(screenMode, pageContent) {
                 pageContent.length = 0;
                 pageContent.push(`                      <div id="baseContainer" class="centered-container">
-                                                                    <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
-                                                                        <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
-                                                                            <div class="background-dot-container">
-                                                                                <div class="background-dot-container-content">
-                                                                                    <div style="display: flex;justify-content: space-between;">
-                                                                                        <div style="display: flex;flex-direction: column;align-items: center;">
-                                                                                            <div class="circular-button" id="circular-button-face-upload" title="Upload face" tooltip>
-                                                                                                <div class="tooltip">Add and choose the new face image to apply to the video or image input.</div>
-                                                                                                <input type="file" accept="image/*" id="face-upload" style="display: none" multiple>
+                                                                            <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
+                                                                                <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
+                                                                                    <div class="background-dot-container">
+                                                                                        <div class="background-dot-container-content">
+                                                                                            <div style="display: flex;justify-content: space-between;">
+                                                                                                <div style="display: flex;flex-direction: column;align-items: center;">
+                                                                                                    <div class="circular-button" id="circular-button-face-upload" title="Upload face" tooltip>
+                                                                                                        <div class="tooltip">Add and choose the new face image to apply to the video or image input.</div>
+                                                                                                        <input type="file" accept="image/*" id="face-upload" style="display: none" multiple>
+                                                                                                    </div>
+                                                                                                    <div class="faces"></div>
+                                                                                                </div>
+                                                                                                <div style="display: flex;flex-direction: column;align-items: center;">
+                                                                                                    <div class="circular-button" id="circular-button-input-upload" title="Upload input" tooltip>
+                                                                                                        <div class="tooltip">Add and choose the video or image where the face swap will occur.</div>
+                                                                                                        <input type="file" accept="video/*,image/*" id="input-upload" style="display: none" multiple>
+                                                                                                    </div>
+                                                                                                    <div class="inputs"></div>
+                                                                                                </div>
                                                                                             </div>
-                                                                                            <div class="faces"></div>
-                                                                                        </div>
-                                                                                        <div style="display: flex;flex-direction: column;align-items: center;">
-                                                                                            <div class="circular-button" id="circular-button-input-upload" title="Upload input" tooltip>
-                                                                                                <div class="tooltip">Add and choose the video or image where the face swap will occur.</div>
-                                                                                                <input type="file" accept="video/*,image/*" id="input-upload" style="display: none" multiple>
+                                                                                                <div class="line"></div>
+                                                                                                <div class="nav-links">
+                                                                                                    <li><a class="text" for="Facial">Facial</a></li>
+                                                                                                    <li><a class="text" for="Analyzer">Analyzer</a></li>
+                                                                                                    <li><a class="text" for="Other">Other</a></li>
+                                                                                                </div>
+                                                                                                <div id="Facial" class="section" style="display: none;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                    <div>
+                                                                                                        <h4 style="font-weight: 400;">Facial Enhancer</h4>
+                                                                                                        <div id="enhancement" class="combobox" tooltip style="gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                            <div class="tooltip">Choose a face enhancement model to improve the facial features. Each option applies a different method for enhancing or restoring the face's appearance.</div>
+                                                                                                            <span class="combobox-text" title="Enhancement"></span>
+                                                                                                            <div id="enhancerBlendContainer" style="display: flex;align-items: center;flex-direction: row-reverse;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                <input type="range" min="24" max="100" value="24" class="slider" id="enhancerBlendValue">
+                                                                                                                <div class="slider-value" id="enhancerBlendDisplayValue">Auto</div>
+                                                                                                            </div>
+                                                                                                            <span class="arrow-dwn"></span>
+                                                                                                            <ul class="list-items">
+                                                                                                                <li class="item">
+                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                        <input type="checkbox" id="natural_face_enhancer_1024"><span>Default</span>
+                                                                                                                        <div class="tooltip">Preserves realistic details, in 2048x2048 resolution.</div>
+                                                                                                                    </label>
+                                                                                                                </li>
+                                                                                                                <li class="item">
+                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                        <input type="checkbox" id="natural_face_enhancer_2048"><span>Detailed</span>
+                                                                                                                        <div class="tooltip">Preserves realistic details, in 1024x1024 resolution.</div>
+                                                                                                                    </label>
+                                                                                                                </li>
+                                                                                                                <li class="item">
+                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                        <input type="checkbox" id="natural_face_enhancer_512"><span>Natural</span>
+                                                                                                                        <div class="tooltip">Preserves realistic details, in 512x512 resolution.</div>
+                                                                                                                    </label>
+                                                                                                                </li>
+                                                                                                                <li class="item">
+                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                        <input type="checkbox" id="smooth_face_enhancer"><span>Smooth</span>
+                                                                                                                        <div class="tooltip">Applies smoothing techniques for a refined and polished look.</div>
+                                                                                                                    </label>
+                                                                                                                </li>
+                                                                                                            </ul>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                    <div>
+                                                                                                        <h4 style="font-weight: 400;">Pixel boost</h4>
+                                                                                                        <div class="combobox" tooltip>
+                                                                                                            <div class="tooltip">
+                                                                                                                The addition of a "pixel boost" option enhances the resolution of swapped faces, making results more realistic and detailed.
+                                                                                                            </div>
+                                                                                                            <span class="combobox-text" title="Pixel boost"></span>
+                                                                                                            <span class="arrow-dwn"></span>
+                                                                                                            <ul class="list-items">
+                                                                                                                <li class="item">
+                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                        <input type="checkbox" id="pixelBoost256x256"><span>256x256</span>
+                                                                                                                        <div class="tooltip">Takes 2x longer, but the quality and detail improves.</div>
+                                                                                                                    </label>
+                                                                                                                </li>
+                                                                                                                <li class="item">
+                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                        <input type="checkbox" id="pixelBoost512x512"><span>512x512</span>
+                                                                                                                        <div class="tooltip">Takes 4x longer, with significantly improved quality and details.</div>
+                                                                                                                    </label>
+                                                                                                                </li>
+                                                                                                                <li class="item">
+                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                        <input type="checkbox" id="pixelBoost1024x1024"><span>1024x1024</span>
+                                                                                                                        <div class="tooltip">Takes 8x longer, resulting in the highest quality and details.</div>
+                                                                                                                    </label>
+                                                                                                                </li>
+                                                                                                            </ul>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                    <div id="facialCheckboxes" style="display: flex;gap: calc(1.5vh* var(--scale-factor-h));flex-direction: column;">
+                                                                                                        <div style="width: 100%;">
+                                                                                                            <h4 style="font-weight: 400;">Improved Landmarks</h4>
+                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                <input type="checkbox" id="enableEnhancedLandmarks"><span>68 Landmarks</span>
+                                                                                                                <div class="tooltip">By enabling this feature, the system can more accurately identify and analyze specific facial components such as the eyebrows, eyes, nose, mouth, and jawline. It helps decreasing jitters in the face.</div>
+                                                                                                            </label>
+                                                                                                        </div>
+                                                                                                        <div style="width: 100%;">
+                                                                                                            <h4 style="font-weight: 400;">Facial Occlusion</h4>
+                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                <input type="checkbox" id="enableOccluder"><span>Obstruction Detection</span>
+                                                                                                                <div class="tooltip">Detects obstructing objects in front of the face, but this can cause slight unsimilarity as it will retain the unswapped original person's facial outline.</div>
+                                                                                                            </label>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                    <label class="checkbox" tooltip style="display: none;align-items: center;gap: calc(1.5vh* var(--scale-factor-h));justify-content: space-between;">
+                                                                                                        <div class="tooltip">Slide left to decrease to younger age (up to -100%) and slide right to increase to older age (up to +100%).</div>
+                                                                                                        <div style="display: flex;align-items: center;">
+                                                                                                            <input type="checkbox" id="ageModifier">
+                                                                                                            <span>Modify Age</span>
+                                                                                                        </div>
+                                                                                                        <div id="ageModifierContainer" style="display: flex;align-items: center;flex-direction: row-reverse;gap: calc(1.5vh* var(--scale-factor-h));">
+                                                                                                            <input type="range" min="-100" max="100" value="0" class="slider" id="age-modifier">
+                                                                                                            <div class="slider-value" id="age-modifier-value">0</div>
+                                                                                                        </div>
+                                                                                                    </label>
+                                                                                                </div>
+                                                                                                <div id="Analyzer" class="section" style="display: none;position: relative;flex-direction: column;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                    <div>
+                                                                                                        <h4 style="font-weight: 400;">Select Regions</h4>
+                                                                                                        <div class="multibox" tooltip>
+                                                                                                            <div class="tooltip">Select regions to customize in the new face. If an area is not enabled, it will remain unchanged from the original face.</div>
+                                                                                                            <span class="multibox-text" title="Select Regions"></span>
+                                                                                                            <span class="arrow-dwn"></span>
+                                                                                                            <ul class="list-items">
+                                                                                                                <li class="item">
+                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                        <input type="checkbox" id="skin"><span>Change Skin</span>
+                                                                                                                        <div class="tooltip">Swap the skin area with the new face.</div>
+                                                                                                                    </label>
+                                                                                                                </li>
+                                                                                                                <li class="item">
+                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                        <input type="checkbox" id="eyebrow"><span>Change Eyebrow</span>
+                                                                                                                        <div class="tooltip">Replace the eyebrow shape or color.</div>
+                                                                                                                    </label>
+                                                                                                                </li>
+                                                                                                                <li class="item">
+                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                        <input type="checkbox" id="eye"><span>Change Eye</span>
+                                                                                                                        <div class="tooltip">Change the eye appearance.</div>
+                                                                                                                    </label>
+                                                                                                                </li>
+                                                                                                                <li class="item">
+                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                        <input type="checkbox" id="glasses"><span>Change Glasses</span>
+                                                                                                                        <div class="tooltip">Modify or add eyewear styles.</div>
+                                                                                                                    </label>
+                                                                                                                </li>
+                                                                                                                <li class="item">
+                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                        <input type="checkbox" id="nose"><span>Change Nose</span>
+                                                                                                                        <div class="tooltip">Alter the nose shape or size.</div>
+                                                                                                                    </label>
+                                                                                                                </li>
+                                                                                                                <li class="item">
+                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                        <input type="checkbox" id="mouth"><span>Change Mouth</span>
+                                                                                                                        <div class="tooltip">Change the shape or expression of the mouth.</div>
+                                                                                                                    </label>
+                                                                                                                </li>
+                                                                                                                <li class="item">
+                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                        <input type="checkbox" id="lip"><span>Change Lip</span>
+                                                                                                                        <div class="tooltip">Adjust the color or shape of the lips.</div>
+                                                                                                                    </label>
+                                                                                                                </li>
+                                                                                                            </ul>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                    <div>
+                                                                                                        <h4 style="font-weight: 400;">Select Orientation</h4>
+                                                                                                        <div class="multibox" tooltip>
+                                                                                                            <div class="tooltip">Select head orientation to improve the analysis of the input video. Rotates the input to get the frontal head rotation.</div>
+                                                                                                            <span class="multibox-text" title="Orientation"></span>
+                                                                                                            <span class="arrow-dwn"></span>
+                                                                                                            <ul class="list-items">
+                                                                                                                <li class="item">
+                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                        <input type="checkbox" id="frontalRotation" checked disabled><span>Frontal Head (0°)</span>
+                                                                                                                        <div class="tooltip">The face is facing forward. Best for accurate analysis.</div>
+                                                                                                                    </label>
+                                                                                                                </li>
+                                                                                                                <li class="item">
+                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                        <input type="checkbox" id="rightRotation"><span>Tilted Right Head (90°)</span>
+                                                                                                                        <div class="tooltip">Select this if the face in the input is tilted to the right.</div>
+                                                                                                                    </label>
+                                                                                                                </li>
+                                                                                                                <li class="item">
+                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                        <input type="checkbox" id="invertedRotation"><span>Inverted Head (180°)</span>
+                                                                                                                        <div class="tooltip">Select this if the face in the input is upside down.</div>
+                                                                                                                    </label>
+                                                                                                                </li>
+                                                                                                                <li class="item">
+                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                        <div class="tooltip">Select this if the face in the input is tilted to the left.</div>
+                                                                                                                        <input type="checkbox" id="leftRotation"><span>Tilted Left Head (-90°)</span>
+                                                                                                                    </label>
+                                                                                                                </li>
+                                                                                                            </ul>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                    <div>
+                                                                                                        <h4 style="font-weight: 400;">Enhanced Analyzer</h4>
+                                                                                                        <label class="checkbox" tooltip>
+                                                                                                            <input type="checkbox" id="enableEnhancedAnalyzer"><span>Multiple Face Detectors</span>
+                                                                                                            <div class="tooltip">Use multiple detection algorithms (like YoloFace, RetinaFace, SCRFD) to get the best results. It helps decreasing flickerings.</div>
+                                                                                                        </label>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                                <div id="Other" class="section" style="display: none;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                    <div>
+                                                                                                        <h4 style="font-weight: 400;">Remove Banner</h4>
+                                                                                                        <label class="checkbox">
+                                                                                                            <input type="checkbox" id="removeBanner"><span>Remove banner</span>
+                                                                                                        </label>
+                                                                                                    </div>
+                                                                                                    <div>
+                                                                                                        <h4 style="font-weight: 400;">Keep Frames Per Second</h4>
+                                                                                                        <label class="checkbox" style="display: flex;align-items: center;gap: calc(1vh* var(--scale-factor-h));justify-content: space-between;">
+                                                                                                            <div style="display: flex;align-items: center;"><input type="checkbox" id="keepFPS"><span>Keep FPS</span></div>
+                                                                                                            <div id="keepFPSContainer" style="display: flex;align-items: center;flex-direction: row-reverse;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                <input type="range" min="1" max="60" value="30" class="slider" id="fps-slider">
+                                                                                                                <div class="slider-value" id="fps-value">30</div>
+                                                                                                            </div>
+                                                                                                        </label>
+                                                                                                    </div>
+                                                                                                    <div>
+                                                                                                        <h4 style="font-weight: 400;">Skip Servers With Low GPU's</h4>
+                                                                                                        <label class="checkbox">
+                                                                                                            <input type="checkbox" id="skipSlowServers">Skip Slow Servers</input>
+                                                                                                        </label>
+                                                                                                    </div>
+                                                                                                    <div>
+                                                                                                        <h4 style="font-weight: 400;">Preview Servers</h4>
+                                                                                                        <label class="checkbox">
+                                                                                                            <input type="checkbox" id="showServers">Server List</input>
+                                                                                                        </label>
+                                                                                                    </div>
+                                                                                                    <div id="serverList" style="display: flex;justify-content: space-evenly;flex-wrap: wrap;align-content: stretch;flex-direction: column;"></div>
+                                                                                                </div>
+                                                                                                <div class="line"></div>
+                                                                                            <div style="display: flex;gap: calc(1.5vh* var(--scale-factor-h));">
+                                                                                                <button class="wide" id="startProcessBtn">Start Process</button>
+                                                                                                <button class="wide" id="cancellProcessBtn" >Cancel Process</button>
                                                                                             </div>
-                                                                                            <div class="inputs"></div>
                                                                                         </div>
                                                                                     </div>
-                                                                                        <div class="line"></div>
-                                                                                        <div class="nav-links">
-                                                                                            <li><a class="text" for="Facial">Facial</a></li>
-                                                                                            <li><a class="text" for="Analyzer">Analyzer</a></li>
-                                                                                            <li><a class="text" for="Other">Other</a></li>
-                                                                                        </div>
-                                                                                        <div id="Facial" class="section" style="display: none;gap: calc(1vh* var(--scale-factor-h));">
-                                                                                            <div>
-                                                                                                <h4 style="font-weight: 400;">Facial Enhancer</h4>
-                                                                                                <div id="enhancement" class="combobox" tooltip style="gap: calc(1vh* var(--scale-factor-h));">
-                                                                                                    <div class="tooltip">Choose a face enhancement model to improve the facial features. Each option applies a different method for enhancing or restoring the face's appearance.</div>
-                                                                                                    <span class="combobox-text" title="Enhancement"></span>
-                                                                                                    <div id="enhancerBlendContainer" style="display: flex;align-items: center;flex-direction: row-reverse;gap: calc(1vh* var(--scale-factor-h));">
-                                                                                                        <input type="range" min="24" max="100" value="24" class="slider" id="enhancerBlendValue">
-                                                                                                        <div class="slider-value" id="enhancerBlendDisplayValue">Auto</div>
-                                                                                                    </div>
-                                                                                                    <span class="arrow-dwn"></span>
-                                                                                                    <ul class="list-items">
-                                                                                                        <li class="item">
-                                                                                                            <label class="checkbox" tooltip>
-                                                                                                                <input type="checkbox" id="natural_face_enhancer_1024"><span>Default</span>
-                                                                                                                <div class="tooltip">Preserves realistic details, in 2048x2048 resolution.</div>
-                                                                                                            </label>
-                                                                                                        </li>
-                                                                                                        <li class="item">
-                                                                                                            <label class="checkbox" tooltip>
-                                                                                                                <input type="checkbox" id="natural_face_enhancer_2048"><span>Detailed</span>
-                                                                                                                <div class="tooltip">Preserves realistic details, in 1024x1024 resolution.</div>
-                                                                                                            </label>
-                                                                                                        </li>
-                                                                                                        <li class="item">
-                                                                                                            <label class="checkbox" tooltip>
-                                                                                                                <input type="checkbox" id="natural_face_enhancer_512"><span>Natural</span>
-                                                                                                                <div class="tooltip">Preserves realistic details, in 512x512 resolution.</div>
-                                                                                                            </label>
-                                                                                                        </li>
-                                                                                                        <li class="item">
-                                                                                                            <label class="checkbox" tooltip>
-                                                                                                                <input type="checkbox" id="smooth_face_enhancer"><span>Smooth</span>
-                                                                                                                <div class="tooltip">Applies smoothing techniques for a refined and polished look.</div>
-                                                                                                            </label>
-                                                                                                        </li>
-                                                                                                    </ul>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            <div>
-                                                                                                <h4 style="font-weight: 400;">Pixel boost</h4>
-                                                                                                <div class="combobox" tooltip>
-                                                                                                    <div class="tooltip">
-                                                                                                        The addition of a "pixel boost" option enhances the resolution of swapped faces, making results more realistic and detailed.
-                                                                                                    </div>
-                                                                                                    <span class="combobox-text" title="Pixel boost"></span>
-                                                                                                    <span class="arrow-dwn"></span>
-                                                                                                    <ul class="list-items">
-                                                                                                        <li class="item">
-                                                                                                            <label class="checkbox" tooltip>
-                                                                                                                <input type="checkbox" id="pixelBoost256x256"><span>256x256</span>
-                                                                                                                <div class="tooltip">Takes 2x longer, but the quality and detail improves.</div>
-                                                                                                            </label>
-                                                                                                        </li>
-                                                                                                        <li class="item">
-                                                                                                            <label class="checkbox" tooltip>
-                                                                                                                <input type="checkbox" id="pixelBoost512x512"><span>512x512</span>
-                                                                                                                <div class="tooltip">Takes 4x longer, with significantly improved quality and details.</div>
-                                                                                                            </label>
-                                                                                                        </li>
-                                                                                                        <li class="item">
-                                                                                                            <label class="checkbox" tooltip>
-                                                                                                                <input type="checkbox" id="pixelBoost1024x1024"><span>1024x1024</span>
-                                                                                                                <div class="tooltip">Takes 8x longer, resulting in the highest quality and details.</div>
-                                                                                                            </label>
-                                                                                                        </li>
-                                                                                                    </ul>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            <div id="facialCheckboxes" style="display: flex;gap: calc(1.5vh* var(--scale-factor-h));flex-direction: column;">
-                                                                                                <div style="width: 100%;">
-                                                                                                    <h4 style="font-weight: 400;">Improved Landmarks</h4>
-                                                                                                    <label class="checkbox" tooltip>
-                                                                                                        <input type="checkbox" id="enableEnhancedLandmarks"><span>68 Landmarks</span>
-                                                                                                        <div class="tooltip">By enabling this feature, the system can more accurately identify and analyze specific facial components such as the eyebrows, eyes, nose, mouth, and jawline. It helps decreasing jitters in the face.</div>
-                                                                                                    </label>
-                                                                                                </div>
-                                                                                                <div style="width: 100%;">
-                                                                                                    <h4 style="font-weight: 400;">Facial Occlusion</h4>
-                                                                                                    <label class="checkbox" tooltip>
-                                                                                                        <input type="checkbox" id="enableOccluder"><span>Obstruction Detection</span>
-                                                                                                        <div class="tooltip">Detects obstructing objects in front of the face, but this can cause slight unsimilarity as it will retain the unswapped original person's facial outline.</div>
-                                                                                                    </label>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            <label class="checkbox" tooltip style="display: none;align-items: center;gap: calc(1.5vh* var(--scale-factor-h));justify-content: space-between;">
-                                                                                                <div class="tooltip">Slide left to decrease to younger age (up to -100%) and slide right to increase to older age (up to +100%).</div>
-                                                                                                <div style="display: flex;align-items: center;">
-                                                                                                    <input type="checkbox" id="ageModifier">
-                                                                                                    <span>Modify Age</span>
-                                                                                                </div>
-                                                                                                <div id="ageModifierContainer" style="display: flex;align-items: center;flex-direction: row-reverse;gap: calc(1.5vh* var(--scale-factor-h));">
-                                                                                                    <input type="range" min="-100" max="100" value="0" class="slider" id="age-modifier">
-                                                                                                    <div class="slider-value" id="age-modifier-value">0</div>
-                                                                                                </div>
-                                                                                            </label>
-                                                                                        </div>
-                                                                                        <div id="Analyzer" class="section" style="display: none;position: relative;flex-direction: column;gap: calc(1vh* var(--scale-factor-h));">
-                                                                                            <div>
-                                                                                                <h4 style="font-weight: 400;">Select Regions</h4>
-                                                                                                <div class="multibox" tooltip>
-                                                                                                    <div class="tooltip">Select regions to customize in the new face. If an area is not enabled, it will remain unchanged from the original face.</div>
-                                                                                                    <span class="multibox-text" title="Select Regions"></span>
-                                                                                                    <span class="arrow-dwn"></span>
-                                                                                                    <ul class="list-items">
-                                                                                                        <li class="item">
-                                                                                                            <label class="checkbox" tooltip>
-                                                                                                                <input type="checkbox" id="skin"><span>Change Skin</span>
-                                                                                                                <div class="tooltip">Swap the skin area with the new face.</div>
-                                                                                                            </label>
-                                                                                                        </li>
-                                                                                                        <li class="item">
-                                                                                                            <label class="checkbox" tooltip>
-                                                                                                                <input type="checkbox" id="eyebrow"><span>Change Eyebrow</span>
-                                                                                                                <div class="tooltip">Replace the eyebrow shape or color.</div>
-                                                                                                            </label>
-                                                                                                        </li>
-                                                                                                        <li class="item">
-                                                                                                            <label class="checkbox" tooltip>
-                                                                                                                <input type="checkbox" id="eye"><span>Change Eye</span>
-                                                                                                                <div class="tooltip">Change the eye appearance.</div>
-                                                                                                            </label>
-                                                                                                        </li>
-                                                                                                        <li class="item">
-                                                                                                            <label class="checkbox" tooltip>
-                                                                                                                <input type="checkbox" id="glasses"><span>Change Glasses</span>
-                                                                                                                <div class="tooltip">Modify or add eyewear styles.</div>
-                                                                                                            </label>
-                                                                                                        </li>
-                                                                                                        <li class="item">
-                                                                                                            <label class="checkbox" tooltip>
-                                                                                                                <input type="checkbox" id="nose"><span>Change Nose</span>
-                                                                                                                <div class="tooltip">Alter the nose shape or size.</div>
-                                                                                                            </label>
-                                                                                                        </li>
-                                                                                                        <li class="item">
-                                                                                                            <label class="checkbox" tooltip>
-                                                                                                                <input type="checkbox" id="mouth"><span>Change Mouth</span>
-                                                                                                                <div class="tooltip">Change the shape or expression of the mouth.</div>
-                                                                                                            </label>
-                                                                                                        </li>
-                                                                                                        <li class="item">
-                                                                                                            <label class="checkbox" tooltip>
-                                                                                                                <input type="checkbox" id="lip"><span>Change Lip</span>
-                                                                                                                <div class="tooltip">Adjust the color or shape of the lips.</div>
-                                                                                                            </label>
-                                                                                                        </li>
-                                                                                                    </ul>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            <div>
-                                                                                                <h4 style="font-weight: 400;">Select Orientation</h4>
-                                                                                                <div class="multibox" tooltip>
-                                                                                                    <div class="tooltip">Select head orientation to improve the analysis of the input video. Rotates the input to get the frontal head rotation.</div>
-                                                                                                    <span class="multibox-text" title="Orientation"></span>
-                                                                                                    <span class="arrow-dwn"></span>
-                                                                                                    <ul class="list-items">
-                                                                                                        <li class="item">
-                                                                                                            <label class="checkbox" tooltip>
-                                                                                                                <input type="checkbox" id="frontalRotation" checked disabled><span>Frontal Head (0°)</span>
-                                                                                                                <div class="tooltip">The face is facing forward. Best for accurate analysis.</div>
-                                                                                                            </label>
-                                                                                                        </li>
-                                                                                                        <li class="item">
-                                                                                                            <label class="checkbox" tooltip>
-                                                                                                                <input type="checkbox" id="rightRotation"><span>Tilted Right Head (90°)</span>
-                                                                                                                <div class="tooltip">Select this if the face in the input is tilted to the right.</div>
-                                                                                                            </label>
-                                                                                                        </li>
-                                                                                                        <li class="item">
-                                                                                                            <label class="checkbox" tooltip>
-                                                                                                                <input type="checkbox" id="invertedRotation"><span>Inverted Head (180°)</span>
-                                                                                                                <div class="tooltip">Select this if the face in the input is upside down.</div>
-                                                                                                            </label>
-                                                                                                        </li>
-                                                                                                        <li class="item">
-                                                                                                            <label class="checkbox" tooltip>
-                                                                                                                <div class="tooltip">Select this if the face in the input is tilted to the left.</div>
-                                                                                                                <input type="checkbox" id="leftRotation"><span>Tilted Left Head (-90°)</span>
-                                                                                                            </label>
-                                                                                                        </li>
-                                                                                                    </ul>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            <div>
-                                                                                                <h4 style="font-weight: 400;">Enhanced Analyzer</h4>
-                                                                                                <label class="checkbox" tooltip>
-                                                                                                    <input type="checkbox" id="enableEnhancedAnalyzer"><span>Multiple Face Detectors</span>
-                                                                                                    <div class="tooltip">Use multiple detection algorithms (like YoloFace, RetinaFace, SCRFD) to get the best results. It helps decreasing flickerings.</div>
-                                                                                                </label>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
+                                                                                <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
+                                                                                    <div class="background-dot-container">
+                                                                                        <div class="background-dot-container-content">
+                                                                                            <div class="outputs"></div>
+                                                                                            <div style="display: flex;justify-content: space-around;gap: calc(1.5vh* var(--scale-factor-h));">
+                                                                                                <button class="wide" id="downloadButton">Download</button>
+                                                                                                <button class="wide" id="viewOutput">View</button>
                                                                                             </div>
                                                                                         </div>
-                                                                                        <div id="Other" class="section" style="display: none;gap: calc(1vh* var(--scale-factor-h));">
-                                                                                            <div>
-                                                                                                <h4 style="font-weight: 400;">Remove Banner</h4>
-                                                                                                <label class="checkbox">
-                                                                                                    <input type="checkbox" id="removeBanner"><span>Remove banner</span>
-                                                                                                </label>
-                                                                                            </div>
-                                                                                            <div>
-                                                                                                <h4 style="font-weight: 400;">Keep Frames Per Second</h4>
-                                                                                                <label class="checkbox" style="display: flex;align-items: center;gap: calc(1vh* var(--scale-factor-h));justify-content: space-between;">
-                                                                                                    <div style="display: flex;align-items: center;"><input type="checkbox" id="keepFPS"><span>Keep FPS</span></div>
-                                                                                                    <div id="keepFPSContainer" style="display: flex;align-items: center;flex-direction: row-reverse;gap: calc(1vh* var(--scale-factor-h));">
-                                                                                                        <input type="range" min="1" max="60" value="30" class="slider" id="fps-slider">
-                                                                                                        <div class="slider-value" id="fps-value">30</div>
-                                                                                                    </div>
-                                                                                                </label>
-                                                                                            </div>
-                                                                                            <div>
-                                                                                                <h4 style="font-weight: 400;">Skip Servers With Low GPU's</h4>
-                                                                                                <label class="checkbox">
-								                                                                    <input type="checkbox" id="skipSlowServers">Skip Slow Servers</input>
-							                                                                    </label>
-                                                                                            </div>
-                                                                                            <div>
-                                                                                                <h4 style="font-weight: 400;">Preview Servers</h4>
-                                                                                                <label class="checkbox">
-                                                                                                    <input type="checkbox" id="showServers">Server List</input>
-                                                                                                </label>
-                                                                                            </div>
-                                                                                            <div id="serverList" style="display: flex;justify-content: space-evenly;flex-wrap: wrap;align-content: stretch;flex-direction: column;"></div>
-                                                                                        </div>
-                                                                                        <div class="line"></div>
-                                                                                    <div style="display: flex;gap: calc(1.5vh* var(--scale-factor-h));">
-                                                                                        <button class="wide" id="startProcessBtn">Start Process</button>
-                                                                                        <button class="wide" id="cancellProcessBtn" >Cancel Process</button>
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
-                                                                    </div>
-                                                                    <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
-                                                                        <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
-                                                                            <div class="background-dot-container">
-                                                                                <div class="background-dot-container-content">
-                                                                                    <div class="outputs"></div>
-                                                                                    <div style="display: flex;justify-content: space-around;gap: calc(1.5vh* var(--scale-factor-h));">
-                                                                                        <button class="wide" id="downloadButton">Download</button>
-                                                                                        <button class="wide" id="viewOutput">View</button>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                                `);
+                                                                        `);
             }
 
             loadPageContent(setUser, retrieveImageFromURL, getUserIpAddress, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, setAuthentication, updateMainContent, savePageState);
@@ -454,62 +454,6 @@
 
             let downloadFile = false;
             let maximumAllowedFrames = 36000;
-
-            function createNotificationsContainer() {
-                let container = document.getElementById('notification');
-                if (!container) {
-                    container = document.createElement('div');
-                    container.id = 'notification';
-                    container.className = 'indicator-container';
-                    document.body.appendChild(container);
-                }
-
-                const indicators = container.getElementsByClassName('indicator');
-                if (indicators.length > 0) {
-                    for (let i = 0; i < indicators.length - 0; i++) {
-                        const notification = indicators[i];
-                        notification.style.opacity = '0';
-                        setTimeout(() => {
-                            notification.remove();
-                        }, 300);
-                    }
-                }
-
-                return container;
-            }
-
-            function showNotification(message, featureChange, type) {
-                const container = createNotificationsContainer();
-                let waitTime = 5000;
-
-                const notification = document.createElement('div');
-                notification.className = 'indicator';
-
-                const featureChangeElement = document.createElement('p');
-                featureChangeElement.innerText = featureChange;
-                featureChangeElement.className = 'feature-change';
-
-                if (type === 'warning') {
-                    notification.classList.add('notification-warning');
-                    featureChangeElement.classList.add('feature-change-warning');
-                    waitTime = 10000;
-                }
-
-                const messageElement = document.createElement('p');
-                messageElement.innerText = message;
-
-                notification.appendChild(featureChangeElement);
-                notification.appendChild(messageElement);
-                container.appendChild(notification);
-
-                setTimeout(() => {
-                    notification.style.opacity = '0';
-                    setTimeout(() => {
-                        notification.remove();
-                    }, 300);
-                }, waitTime);
-            }
-
             let oldMaximumAllowedFrames = null;
 
             function updateFrameLimit(checkbox) {
@@ -573,7 +517,7 @@
                 if (!pageData || !checkbox || oldMaximumAllowedFrames === maximumAllowedFrames)
                     return;
 
-                const span = checkbox.nextElementSibling;   
+                const span = checkbox.nextElementSibling;
                 const featureText = span ? span.textContent : '';
 
                 const frameRate = 30;
@@ -716,10 +660,39 @@
                 }
             }
 
+            let downloadButton = document.getElementById('downloadButton');
+            let viewOutputButton = document.getElementById('viewOutput');
+
+            let downloadCancelled = false;
+            let abortController = null;
+
             function deleteDownloadData(id) {
                 localStorage.removeItem(`downloadedBytes_${id}`);
                 localStorage.removeItem(`totalBytes_${id}`);
+
+                downloadButton = document.getElementById('downloadButton');
+                viewOutputButton = document.getElementById('viewOutput');
+
+                if (downloadButton) {
+                    downloadButton.disabled = false;
+                    downloadButton.classList.remove("important");
+                    downloadButton.textContent = "Download";
+                }
+
+                if (viewOutputButton) {
+                    viewOutputButton.disabled = false;
+                    viewOutputButton.classList.remove("important");
+                    viewOutputButton.textContent = "View";
+                }
+
+                if (abortController)
+                    abortController.abort();
             }
+
+            let createdStopEvent = false;
+            let createdFetchEvent = false;
+            let lastProgress = 0;
+            const progressMap = {};
 
             const handleDownload = async ({ db, url, element, id, timestamp }) => {
                 if (!(db && url && element && id && timestamp)) {
@@ -727,9 +700,71 @@
                     return;
                 }
 
-                let downloadCancelled = false;
-                let downloadedBytes = +localStorage.getItem(`downloadedBytes_${id}`) || 0;
-                let totalBytes = +localStorage.getItem(`totalBytes_${id}`) || 0;
+                if (!(id in progressMap)) {
+                    progressMap[id] = 0;
+                }
+
+                downloadButton = document.getElementById('downloadButton');
+                viewOutputButton = document.getElementById('viewOutput');
+
+                lastProgress = progressMap[id];
+                downloadButton.disabled = false;
+                downloadButton.textContent = "Stop";
+
+                const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+                if (!isIOS) {
+                    viewOutputButton.disabled = false;
+                    viewOutputButton.textContent = "Fetch";
+                    viewOutputButton.classList.add("important");
+
+                    const handleFetchEvent = async () => {
+                        createdFetchEvent = true;
+                        if (viewOutputButton.textContent !== "Fetch")
+                            return;
+
+                        window.open(url, '_blank');
+
+                        if (abortController) abortController.abort();
+                        downloadButton.textContent = "Continue?";
+                        downloadCancelled = true;
+                        processText(`Stopped: ${lastProgress.toFixed(0)}%`);
+                    };
+
+                    if (!createdFetchEvent) 
+                        viewOutputButton.addEventListener('click', handleFetchEvent);
+                }
+                else {
+                    viewOutputButton.textContent = "View";
+                    viewOutputButton.disabled = true;
+                }
+
+                const handleStopContinueDownloadEvent = async () => {
+                    createdStopEvent = true;
+                    if (downloadButton.textContent === "Stop") {
+                        if (abortController) abortController.abort();
+
+                        downloadButton.classList.add("important");
+                        downloadButton.textContent = "Continue?";
+                        downloadCancelled = true;
+                        processText(`Stopped: ${lastProgress.toFixed(0)}%`);
+                    } else if (downloadButton.textContent === "Continue?") {
+                        downloadButton.disabled = true;
+                        downloadButton.classList.remove("important");
+                        downloadButton.textContent = "Continuing...";
+                        await handleDownload({ db, url, element, id, timestamp });
+                    }
+                };
+
+                if (!createdStopEvent) {
+                    downloadButton.addEventListener('click', handleStopContinueDownloadEvent);
+                }
+
+                downloadCancelled = false;
+                abortController = new AbortController();
+                const { signal } = abortController;
+
+                let downloadedBytes = parseInt(localStorage.getItem(`downloadedBytes_${id}`)) || 0;
+                let totalBytes = parseInt(localStorage.getItem(`totalBytes_${id}`)) || 0;
 
                 const previousData = await getFromDB(db);
                 const previousEntry = previousData.find(item => item.url === url && item.id === id);
@@ -747,7 +782,7 @@
                 while (!downloadCancelled) {
                     try {
                         const headers = downloadedBytes ? { 'Range': `bytes=${downloadedBytes}-` } : {};
-                        const res = await fetch(url, { headers });
+                        const res = await fetch(url, { headers, signal }); // Pass the signal to fetch
 
                         if (![200, 206, 416].includes(res.status)) {
                             await updateChunksInDB(db, url, []);
@@ -755,8 +790,8 @@
                             throw new Error('Server does not support resumable downloads.');
                         }
 
-                        const contentLength = +res.headers.get('Content-Range')?.split('/')[1] || +res.headers.get('Content-Length');
-                        totalBytes ||= contentLength;
+                        const contentLength = res.headers.get('Content-Range')?.split('/')[1] || res.headers.get('Content-Length');
+                        totalBytes ||= parseInt(contentLength);
 
                         const reader = res.body.getReader();
                         const contentType = res.headers.get('Content-Type');
@@ -769,15 +804,18 @@
                             downloadedBytes += value.length;
                             chunks.push(value);
 
-                            const progress = (downloadedBytes / totalBytes) * 100;
-                            if (Math.floor(progress) % 5 === 0 && Math.floor(progress) > lastSavedProgress) {
+                            lastProgress = (downloadedBytes / totalBytes) * 100;
+                            if (Math.floor(lastProgress) % 5 === 0 && Math.floor(lastProgress) > lastSavedProgress) {
                                 await updateChunksInDB(db, url, chunks);
                                 localStorage.setItem(`downloadedBytes_${id}`, downloadedBytes);
                                 localStorage.setItem(`totalBytes_${id}`, totalBytes);
-                                lastSavedProgress = Math.floor(progress);
+                                lastSavedProgress = Math.floor(lastProgress);
+                                progressMap[id] = lastProgress; // Store progress for this ID
                             }
-                            processText(`Downloaded: ${progress.toFixed(0)}%`);
+                            processText(`Downloaded: ${lastProgress.toFixed(0)}%`);
                         }
+
+                        if (downloadCancelled) return;
 
                         const blob = new Blob(chunks.map(chunk => new Uint8Array(chunk)), { type: contentType });
                         const blobUrl = URL.createObjectURL(blob);
@@ -793,6 +831,27 @@
                         element.innerHTML = isVideo
                             ? `<video url="${url}" id="${id}" timestamp="${timestamp}" loop muted autoplay><source src="${blobUrl}" type="${contentType}">Your browser does not support the video tag.</video><div class="delete-icon"></div>`
                             : `<img url="${url}" id="${id}" timestamp="${timestamp}" src="${blobUrl}" alt="Uploaded Photo"/><div class="delete-icon"></div>`;
+
+                        const activeContainers = document.querySelectorAll('.outputs .data-container.active');
+                        if (activeContainers.length > 0) {
+                            for (const container of activeContainers) {
+                                container.classList.remove('active');
+                                const element = container.querySelector('img, video, initial');
+                                const id = parseInt(element.getAttribute('id'), 10);
+                                if (id) {
+                                    await updateActiveState(db, id, false).catch(err => {
+                                        console.error(`Update failed for id ${id}:`, err);
+                                    });
+                                }
+                            }
+                        }
+
+                        element.classList.add('active');
+                        if (id) {
+                            await updateActiveState(db, id, true).catch(err => {
+                                alert(`Update failed for id ${id}: ${err}`);
+                            });
+                        }
 
                         const media = element.querySelector(isVideo ? 'video' : 'img');
                         if (!(await checkMediaDisplayable(media)) || blob.size === 0) {
@@ -810,13 +869,17 @@
                         ]);
 
                         deleteDownloadData(id);
+                        fetchableServerAddresses = (await fetchServerAddresses(getDocsSnapshot('servers'))).reverse();
                         return;
                     } catch (error) {
+                        if (error.name === 'AbortError') {
+                            console.log('Download aborted.');
+                            return; // Exit if the download was cancelled
+                        }
                         processText(`Error: ${error.message}. Retrying...`);
                     }
                 }
             };
-
 
             const checkMediaDisplayable = (mediaElement) => {
                 return new Promise((resolve) => {
@@ -861,26 +924,12 @@
                 }
             };
 
-            const downloadButton = document.getElementById('downloadButton');
-            const viewOutputButton = document.getElementById('viewOutput');
-
-            downloadButton.disabled = true;
-            viewOutputButton.disabled = true;
-
             const handleInputContainerEvents = async (event, dbName, storeName, container) => {
                 const parent = event.target.closest('.data-container');
                 if (!parent) return;
 
                 if (event.target.classList.contains('delete-icon')) {
                     return await handleDelete(dbName, storeName, parent);
-                }
-
-                if (container.className === 'outputs') {
-                    const downloadButton = document.getElementById('downloadButton');
-                    const viewOutputButton = document.getElementById('viewOutput');
-
-                    downloadButton.disabled = false;
-                    viewOutputButton.disabled = false;
                 }
 
                 const db = openDB(dbName, storeName);
@@ -1022,7 +1071,6 @@
             ];
 
             async function setClientStatus(message) {
-                //console.log(message);
                 const outputs = document.querySelector('.outputs');
                 if (outputs) {
                     outputs.firstChild.querySelector('.process-text').textContent = message;
@@ -1030,28 +1078,99 @@
             }
 
             const setProcessText = (element, message) => {
-                //console.log(message);
                 const processTextElement = element.querySelector('.process-text');
                 if (processTextElement)
                     processTextElement.textContent = message;
             };
 
+
+            function findServerWithUserRequest(results, userId) {
+                return results.find(serverData => serverData.requestQueue?.includes(userId));
+            }
+
+            function handleUserRequest(serverData, userId) {
+                const { processingAmount, remainingTime, elapsedTime, requestQueue } = serverData;
+                const userQueueIndex = requestQueue.indexOf(userId);
+
+                if (userQueueIndex === 0) {
+                    updateClientStatus(processingAmount, remainingTime, elapsedTime);
+                } else {
+                    setClientStatus(`Queue ${userQueueIndex}...`);
+                }
+
+                if (downloadFile)
+                    return;
+
+                downloadFile = true;
+            }
+
+            function updateClientStatus(processingAmount, remainingTime, elapsedTime) {
+                const statusMessage = processingAmount > 0
+                    ? `%${processingAmount} | Remaining/Elapsed: ${remainingTime}/${elapsedTime}`
+                    : 'Processing...';
+                setClientStatus(statusMessage);
+            }
+
+            async function handleDownloadFileIfNeeded() {
+                if (!downloadFile) return;
+                downloadFile = false;
+
+                const db = await openDB(`outputDB-${pageName}`, 'outputs');
+                const outputs = (await getFromDB(db)).reverse();
+                const lastOutput = outputs[outputs.length - 1];
+                const data = await fetchProcessState(lastOutput.url);
+
+                setClientStatus(data.server);
+                showNotification(`Request ${data.status} With Status ${data.server}.`, 'Fetch Information', 'default');
+
+                if (data.status === 'completed') {
+                    setCurrentUserDoc(getDocSnapshot);
+                    await handleLastOutputDownload(lastOutput);
+                }
+            }
+
+            async function handleLastOutputDownload(lastOutput) {
+                const blobIsEmpty = !lastOutput.blob || Object.entries(lastOutput.blob).length === 0;
+                if (blobIsEmpty) {
+                    const selectedOutputInfo = {
+                        db: await openDB(`outputDB-${pageName}`, 'outputs'),
+                        url: lastOutput.url,
+                        timestamp: lastOutput.timestamp,
+                        element: document.querySelector('.outputs').firstChild,
+                        id: lastOutput.id
+                    };
+
+                    await handleDownload(selectedOutputInfo);
+                }
+            }
+
             let serverListContainer = document.getElementById('serverList');
+            let fetchableServerAddresses = null;
 
             async function checkServerStatus() {
-                const allServerAddress = (await fetchServerAddresses(getDocsSnapshot('servers'))).reverse();
-                const serverPromises = allServerAddress.map(async server => {
+                serverListContainer = serverListContainer || document.getElementById('serverList');
+
+                if (!fetchableServerAddresses) {
+                    try {
+                        fetchableServerAddresses = (await fetchServerAddresses(getDocsSnapshot('servers'))).reverse()
+                    } catch (error) {
+                        alert(`Error fetching server addresses: ${error.message}`);
+                        return;
+                    }
+                }
+
+                if (!fetchableServerAddresses)
+                    return;
+
+                const serverPromises = fetchableServerAddresses.map(async (server) => {
                     try {
                         const response = await fetch(`${server}/get-online`);
-                        if (response.status === STATUS_NOTFOUND || response.status !== STATUS_OK) {
-                            console.error(`Server ${server} is offline.`);
+                        if (response.status !== STATUS_OK)
                             return { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Unknown" };
-                        }
+
                         const data = await response.json();
                         return {
                             queueAmount: data.server,
-                            faceDetectionError: data.faceDetectionError,
-                            videoUnsupportedTooLongError: data.videoUnsupportedTooLongError,
                             remainingTime: data.remainingTime,
                             elapsedTime: data.elapsedTime,
                             frameCount: data.frameCount,
@@ -1059,9 +1178,10 @@
                             requestQueue: data.requestQueue,
                             uniqueId: data.uniqueId,
                             processingAmount: data.processingAmount,
-                            SERVER_1: data.SERVER_1
+                            SERVER_1: data.SERVER_1,
                         };
                     } catch (error) {
+                        console.error(`Error fetching data from server ${server}: ${error.message}`);
                         return { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Unknown" };
                     }
                 });
@@ -1069,105 +1189,53 @@
                 const results = await Promise.all(serverPromises);
                 serverListContainer.innerHTML = '';
 
-                if (results.some(serverData => serverData.queueAmount !== Infinity)) {
-                    results.forEach((serverData, serverIndex) => {
+                const onlineServers = results.filter(serverData => serverData.queueAmount !== Infinity);
+                if (onlineServers.length) {
+                    onlineServers.forEach((serverData, serverIndex) => {
                         const listItem = document.createElement('div');
-
-                        var newTime = '00:00';
-
-                        if (serverData.remainingTime) {
-                            var currentTime = serverData.remainingTime;
-                            var timeArray = currentTime.split(':');
-                            var timeAdd = Math.max(0, (serverData.queueAmount - 1) * 10);
-                            var hours = parseInt(timeArray[0], 10);
-                            var minutes = parseInt(timeArray[1], 10);
-                            var currentDate = new Date();
-                            currentDate.setHours(hours);
-                            currentDate.setMinutes(minutes);
-                            currentDate.setMinutes(currentDate.getMinutes() + timeAdd);
-                            var newHours = ('0' + currentDate.getHours()).slice(-2);
-                            var newMinutes = ('0' + currentDate.getMinutes()).slice(-2);
-                            newTime = newHours + ':' + newMinutes;
-                        }
-
-                        listItem.innerHTML = `<p>Server ${serverIndex + 1} (${serverData.SERVER_1}) - Queue: ${serverData.queueAmount === Infinity ? "Offline" : serverData.queueAmount} - ${serverData.frameCount ? serverData.frameCount : 0}/${serverData.totalFrames ? serverData.totalFrames : 0} (%${serverData.processingAmount ? serverData.processingAmount : 0}) - ${!serverData.remainingTime ? "00:00" : newTime}</p>`;
+                        const newTime = calculateNewTime(serverData.remainingTime, serverData.queueAmount);
+                        listItem.innerHTML = `<p>Server ${serverIndex + 1} (${serverData.SERVER_1}) - Queue: ${serverData.queueAmount === Infinity ? "Offline" : serverData.queueAmount} - ${serverData.frameCount || 0}/${serverData.totalFrames || 0} (%${serverData.processingAmount || 0}) - ${newTime}</p>`;
                         serverListContainer.appendChild(listItem);
                     });
+                } else {
+                    //if (!displayedError)
+                        //alert('No servers are currently online.');
+                    //else
+                    console.error('No servers are currently online.');
+                    displayedError = true;
                 }
 
-                setTimeout(checkServerStatus, 1000);
-
-                if (!userData || !userData.uid)
+                if (!userData?.uid) {
                     return;
+                }
 
                 const serverWithUserRequest = findServerWithUserRequest(results, userData.uid);
-
                 if (serverWithUserRequest) {
                     handleUserRequest(serverWithUserRequest, userData.uid);
                 } else {
                     startProcessBtn.disabled = false;
                     await handleDownloadFileIfNeeded();
                 }
-
-                function findServerWithUserRequest(results, userId) {
-                    return results.find(serverData => serverData.requestQueue?.includes(userId));
-                }
-
-                function handleUserRequest(serverData, userId) {
-                    const { processingAmount, remainingTime, elapsedTime, requestQueue } = serverData;
-                    const userQueueIndex = requestQueue.indexOf(userId);
-
-                    if (userQueueIndex === 0) {
-                        updateClientStatus(processingAmount, remainingTime, elapsedTime);
-                    } else {
-                        setClientStatus(`Queue ${userQueueIndex}...`);
-                    }
-
-                    downloadFile = true;
-                }
-
-                function updateClientStatus(processingAmount, remainingTime, elapsedTime) {
-                    const statusMessage = processingAmount > 0
-                        ? `%${processingAmount} | Remaining/Elapsed: ${remainingTime}/${elapsedTime}`
-                        : 'Processing...';
-                    setClientStatus(statusMessage);
-                }
-
-                async function handleDownloadFileIfNeeded() {
-                    if (!downloadFile) return;
-                    downloadFile = false;
-
-                    const db = await openDB(`outputDB-${pageName}`, 'outputs');
-                    const outputs = (await getFromDB(db)).reverse();
-                    const lastOutput = outputs[outputs.length - 1];
-                    const data = await fetchProcessState(lastOutput.url);
-
-                    setClientStatus(data.server);
-                    showNotification(`Request ${data.status} With Status ${data.server}.`, 'Fetch Information', 'default');
-
-                    if (data.status === 'completed') {
-                        setCurrentUserDoc(getDocSnapshot);
-                        await handleLastOutputDownload(lastOutput);
-                    }
-                }
-
-                async function handleLastOutputDownload(lastOutput) {
-                    const blobIsEmpty = !lastOutput.blob || Object.entries(lastOutput.blob).length === 0;
-                    if (blobIsEmpty) {
-                        const selectedOutputInfo = {
-                            db: await openDB(`outputDB-${pageName}`, 'outputs'),
-                            url: lastOutput.url,
-                            timestamp: lastOutput.timestamp,
-                            element: document.querySelector('.outputs').firstChild,
-                            id: lastOutput.id
-                        };
-
-                        await handleDownload(selectedOutputInfo);
-                    }
-                }
             }
 
             checkServerStatus();
+
+            setInterval(checkServerStatus, 1000);
+
+            function calculateNewTime(remainingTime, queueAmount) {
+                if (!remainingTime) {
+                    return '00:00';
+                }
+                const timeAdd = Math.max(0, (queueAmount - 1) * 10);
+                const [hours, minutes] = remainingTime.split(':').map(Number);
+                const currentDate = new Date();
+                currentDate.setHours(hours);
+                currentDate.setMinutes(minutes + timeAdd);
+                const newHours = ('0' + currentDate.getHours()).slice(-2);
+                const newMinutes = ('0' + currentDate.getMinutes()).slice(-2);
+                const newTime = `${newHours}:${newMinutes}`;
+                return newTime;
+            }
 
             const cleanSiteData = async (automatic = false) => {
                 try {
@@ -1363,7 +1431,7 @@
                             if (!anyChecked) {
                                 btnText.innerText = defaultTitle + ": " + "Disabled";
                                 if (sliderInput)
-                                sliderInput.parentElement.style.display = 'none';
+                                    sliderInput.parentElement.style.display = 'none';
                             }
                             item.classList.remove("checked");
                         }
@@ -1386,7 +1454,7 @@
                                 if (!anyChecked) {
                                     btnText.innerText = defaultTitle + ": " + "Disabled";
                                     if (sliderInput)
-                                    sliderInput.parentElement.style.display = 'none';
+                                        sliderInput.parentElement.style.display = 'none';
                                 }
                                 item.classList.remove("checked");
                             }
@@ -1593,14 +1661,14 @@
                                     setClientStatus('Offline');
                                     return;
                                 }
-                                serverAddresses = [serverAddresses[minQueueIndex]];
+                                fetchableServerAddresses = [serverAddresses[minQueueIndex]];
                             } else {
-                                serverAddresses = [serverForSmallProcesses];
+                                fetchableServerAddresses = [serverForSmallProcesses];
                             }
                         } else {
-                            const id = serverAddresses.indexOf(serverForSmallProcesses);
+                            const id = fetchableServerAddresses.indexOf(serverForSmallProcesses);
                             if (id !== -1) {
-                                serverAddresses.splice(id, 1);
+                                fetchableServerAddresses.splice(id, 1);
                             }
                             const minQueueIndex = results.reduce((minIndex, queue, id, arr) => {
                                 return (queue < arr[minIndex]) ? id : minIndex;
@@ -1610,11 +1678,11 @@
                                 setClientStatus('Offline');
                                 return;
                             }
-                            serverAddresses = [serverAddresses[minQueueIndex]];
+                            fetchableServerAddresses = [serverAddresses[minQueueIndex]];
                         }
 
-                        const serverAddress = serverAddresses[0];
-                        console.log(serverAddresses[0]);
+                        const serverAddress = fetchableServerAddresses[0];
+                        console.log(fetchableServerAddresses[0]);
                         setClientStatus(`Connecting`);
 
                         const processBlobToFile = async (blobUrl, fileName, fileType) => {
@@ -1893,10 +1961,10 @@
                             const serverAddresses = await fetchServerAddresses(getDocsSnapshot('servers'));
                             const serverPromises = serverAddresses.map(server => {
                                 return fetch(`${server}/get-online`).then(response => {
-                                    if (response.status === STATUS_NOTFOUND) 
+                                    if (response.status === STATUS_NOTFOUND)
                                         return { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Unkown" };
 
-                                    else if (response.status === STATUS_OK) 
+                                    else if (response.status === STATUS_OK)
                                         return response.json();
 
                                     else return { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Unkown" };
@@ -1923,7 +1991,7 @@
                                                 setClientStatus(`Request got cancelled`);
                                             }
                                         }
-                                    } catch (error) { 
+                                    } catch (error) {
                                         console.error(`Error on server ${serverAddress}:`, error);
                                     }
                                 });
@@ -1943,7 +2011,11 @@
                     await cancelProcess(true);
                 });
 
+                downloadButton = document.getElementById('downloadButton');
                 downloadButton.addEventListener('click', async () => {
+                    if (downloadButton.textContent !== "Download")
+                        return;
+
                     const activeVideoInput = document.querySelector(".outputs .data-container.active video");
                     const activePhotoInput = document.querySelector(".outputs .data-container.active img");
 
@@ -2001,7 +2073,11 @@
                     }
                 });
 
+                viewOutputButton = document.getElementById('viewOutput');
                 viewOutputButton.addEventListener('click', async () => {
+                    if (viewOutputButton.textContent !== "View")
+                        return;
+
                     const activeDataContainer = document.querySelector(".outputs .data-container.active");
                     const activeInput = activeDataContainer.querySelector("video") || activeDataContainer.querySelector("img");
 

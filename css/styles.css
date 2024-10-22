@@ -1,10 +1,13 @@
 ﻿html, body {
     overflow: hidden;
+    overflow-y: hidden;
+    overflow-x: hidden;
     touch-action: none
 }
 
 main {
     overflow: auto;
+    overflow-x: hidden;
 }
 
 :root {
@@ -336,14 +339,10 @@ button svg, a.button svg {
     margin-right: calc(1vh * var(--scale-factor-h));
     width: calc((2.5vh * var(--scale-factor-h) ));
     opacity: .75;
-    -webkit-opacity: .75;
-    -moz-opacity: .75
 }
 
 button:hover svg, a.button:hover svg {
     opacity: 1;
-    -webkit-opacity: 1;
-    -moz-opacity: 1
 }
 
 button:hover, a.button:hover {
@@ -388,7 +387,7 @@ button:disabled, a.button.disabled {
 }
 
 input, select {
-    height: calc((7vh * var(--scale-factor-h) ))
+    height: calc((6vh * var(--scale-factor-h) ))
 }
 
 option {
@@ -901,6 +900,11 @@ input[type=range] {
     opacity: .05;
     user-select: none;
     pointer-events: none;
+    overflow: hidden;
+    overflow-y: hidden;
+    overflow-x: hidden;
+    max-width: 100vw;
+    max-height: 100vh;
     z-index: 0
 }
 

@@ -32,7 +32,7 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="css/styles.css?v=1.3.1.0">
+    <link rel="stylesheet" href="css/styles.css?v=1.3.1.3">
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             const cssRules = Array.from(document.styleSheets).flatMap(sheet => Array.from(sheet.cssRules));
@@ -61,7 +61,7 @@
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = '1.3.1.0';
+        const version = '1.3.1.3';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -69,7 +69,7 @@
 
         document.addEventListener('DOMContentLoaded', async function () {
             const functions = await loadModule('./scripts/functions.js');
-            const { getCachedStaticUserData, getCachedDynamicUserDoc, setUser, setAuthentication, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, handleImageUpload, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserIpAddress } = functions;
+            const { setCurrentUserDoc, showNotification, getCachedStaticUserData, getCachedDynamicUserDoc, setUser, setAuthentication, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, handleImageUpload, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserIpAddress } = functions;
 
             let userData = getCachedStaticUserData();
             let userDoc = getCachedDynamicUserDoc();
@@ -206,8 +206,8 @@
                                                                                 <button id="copyButton">Copy</button>
                                                                             </div>
                                                                         <div style="display: flex;gap: calc((2vh * var(--scale-factor-h) + 4vw / 2 * var(--scale-factor-w)));">
-                                                                                <button style="width: 100%">Referral Credits</input>
-                                                                                <button style="width: 100%">Daily Credits</input>
+                                                                                <button id="referralCredits" style="width: 100%">Referral Credits</input>
+                                                                                <button id="dailyCredits" style="width: 100%">Daily Credits</input>
                                                                             </div>
                                                                         </div>
                                                                     </div>
@@ -280,8 +280,8 @@
                                                                             <button id="copyButton">Copy</button>
                                                                         </div>
                                                                         <div style="display: flex;  gap: calc((2vh * var(--scale-factor-h) + 4vw / 2 * var(--scale-factor-w)));">
-                                                                            <button style="width: 100%">Referral Credits</button>
-                                                                            <button style="width: 100%">Daily Credits</button>
+                                                                            <button id="referralCredits" style="width: 100%">Referral Credits</button>
+                                                                            <button id="dailyCredits" style="width: 100%">Daily Credits</button>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -421,24 +421,19 @@
             userData = getCachedStaticUserData();
             userDoc = getCachedDynamicUserDoc();
 
-            console.log(userDoc);
-
-            if (!userData) {
+            if (!userData || !userDoc) {
                 return;
             }
 
-            if (!userDoc) {
-                // TODO: find a way so we don't need to reload to fetch data.
-                return;
-            }
+            const userId = userData.uid;
 
             const linkElement = document.getElementById('referralLink');
-            console.log(userDoc);
             if (linkElement && userDoc.referral) {
                 linkElement.value = `https://deepany.ai/?referral=${encodeURIComponent(userDoc.referral)}`;
             } 
 
-            document.getElementById("copyButton").addEventListener('click', () => {
+            const copyButton = document.getElementById('referralLink');
+            copyButton.addEventListener('click', () => {
                 linkElement.select();
                 linkElement.setSelectionRange(0, linkElement.value.length);
 
@@ -448,6 +443,53 @@
                     try {
                         document.execCommand('copy');
                     } catch (err) { alert('Failed to copy link:', err); }
+                }
+            });
+
+            const serverAddressAPI = await fetchServerAddress(getDocSnapshot('servers', '3050-1'), 'API');
+
+            const referralCredits = document.getElementById('referralCredits');
+            referralCredits.addEventListener('click', async () => {
+                referralCredits.disabled = true;
+
+                try {
+                    showNotification("Waiting for a response...", 'Referral Credits', 'normal');
+                    const response = await fetch(`${serverAddressAPI}/get-referral-credits`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId }),
+                    });
+
+                    const { message } = await response.json();
+                    setCurrentUserDoc(getDocSnapshot);
+                    showNotification(message, 'Referral Credits', 'normal');
+                } catch ({ message }) {
+                    showNotification(message, 'Referral Credits', 'warning');
+                } finally {
+                    referralCredits.disabled = false;
+                }
+            });
+
+            const dailyCredits = document.getElementById('dailyCredits');
+            dailyCredits.addEventListener('click', async () => {
+                dailyCredits.disabled = true;
+
+                try {
+                    showNotification("Waiting for a response...", 'Daily Credits', 'normal');
+                    // Todo: add a warning saying credits will not add up.
+                    const response = await fetch(`${serverAddressAPI}/earn-daily-credit`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId }),
+                    });
+
+                    const { message } = await response.json();
+                    setCurrentUserDoc(getDocSnapshot);
+                    showNotification(message, 'Daily Credits', 'normal');
+                } catch ({ message }) {
+                    showNotification(message, 'Daily Credits', 'warning');
+                } finally {
+                    dailyCredits.disabled = false;
                 }
             });
 
