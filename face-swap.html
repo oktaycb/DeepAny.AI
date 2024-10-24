@@ -47,7 +47,7 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="css/styles.css?v=1.3.1.6">
+    <link rel="stylesheet" href="css/styles.css?v=1.3.1.7">
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             const cssRules = Array.from(document.styleSheets).flatMap(sheet => Array.from(sheet.cssRules));
@@ -76,7 +76,7 @@
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = '1.3.1.6';
+        const version = '1.3.1.7';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -1158,27 +1158,22 @@
                     return;
 
                 const serverPromises = fetchableServerAddresses.map(async (server) => {
-                    try {
-                        const response = await fetch(`${server}/get-online`);
-                        if (response.status !== STATUS_OK)
-                            return { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Unknown" };
+                    const response = await fetch(`${server}/get-online`);
+                    if (response.status !== STATUS_OK)
+                        return { queueAmount: Infinity };
 
-                        const data = await response.json();
-                        return {
-                            queueAmount: data.server,
-                            remainingTime: data.remainingTime,
-                            elapsedTime: data.elapsedTime,
-                            frameCount: data.frameCount,
-                            totalFrames: data.totalFrames,
-                            requestQueue: data.requestQueue,
-                            uniqueId: data.uniqueId,
-                            processingAmount: data.processingAmount,
-                            SERVER_1: data.SERVER_1,
-                        };
-                    } catch (error) {
-                        alert(`Error fetching data from server ${server}: ${error.message}`);
-                        return { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Unknown" };
-                    }
+                    const data = await response.json();
+                    return {
+                        queueAmount: data.server,
+                        remainingTime: data.remainingTime,
+                        elapsedTime: data.elapsedTime,
+                        frameCount: data.frameCount,
+                        totalFrames: data.totalFrames,
+                        requestQueue: data.requestQueue,
+                        uniqueId: data.uniqueId,
+                        processingAmount: data.processingAmount,
+                        SERVER_1: data.SERVER_1,
+                    };
                 });
 
                 const results = await Promise.all(serverPromises);

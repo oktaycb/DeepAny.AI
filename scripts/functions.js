@@ -1503,6 +1503,115 @@ function detectIncognito() {
     });
 }
 
+function getModeName(userAgent) {
+    const browserModes = {
+        Chrome: "an Incognito Window",
+        Chromium: "an Incognito Window",
+        Safari: "a Private Window",
+        Firefox: "a Private Window",
+        Brave: "a Private Window",
+        Opera: "a Private Window",
+        Edge: "an InPrivate Window",
+        MSIE: "an InPrivate Window"
+    };
+
+    for (const [browser, mode] of Object.entries(browserModes)) {
+        if (new RegExp(browser).test(userAgent)) {
+            return mode;
+        }
+    }
+
+    return "a Private Window";
+}
+
+function createOverlay() {
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+    overlay.style.color = 'white';
+    overlay.style.display = 'flex';
+    overlay.style.justifyContent = 'center';
+    overlay.style.alignItems = 'center';
+    overlay.style.zIndex = '9999';
+    overlay.innerHTML = `
+            <div style="justify-items: center;">
+                <h2>Incognito Mode</h2>
+                <p>This website is not accessible in ${getModeName(navigator.userAgent)} mode.</p>
+            </div>
+        `;
+
+    document.body.appendChild(overlay);
+    return overlay;
+}
+
+function showIncognitoModeForm() {
+    const overlay = createOverlay();
+
+    overlay.addEventListener('click', (e) => e.stopPropagation());
+    overlay.addEventListener('touchstart', (e) => e.stopPropagation());
+    overlay.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    overlay.addEventListener('keydown', (e) => {
+        if (e.ctrlKey || e.metaKey || e.key === 'F12' || e.key === 'I' || e.key === 'J' || e.key === 'C' || e.key === 'U') {
+            e.preventDefault();
+        }
+    });
+}
+
+function handleIncognito() {
+    const isIncognitoFlag = localStorage.getItem('isIncognito');
+
+    if (isIncognitoFlag === 'true') {
+        showIncognitoModeForm();
+    } else {
+        detectIncognito().then((isIncognito) => {
+            if (isIncognito) {
+                localStorage.setItem('isIncognito', 'true');
+                showIncognitoModeForm();
+            } else {
+                localStorage.removeItem('isIncognito');
+            }
+        }).catch((error) => { console.error('Error checking incognito mode:', error); });
+    }
+}
+
+export function incognitoModeHandler() {
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
+    document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey || e.metaKey || e.key === 'F12' || e.key === 'I' || e.key === 'J' || e.key === 'C' || e.key === 'U') {
+            e.preventDefault();
+        }
+    });
+
+    function checkOverlay() {
+        const overlay = document.querySelector('div[style*="rgba(0, 0, 0, 0.7)"]');
+        if (!overlay) {
+            handleIncognito();
+        }
+    }
+
+    const overlayCheckInterval = setInterval(() => {
+        const isIncognitoFlag = localStorage.getItem('isIncognito');
+        if (!isIncognitoFlag) {
+            clearInterval(overlayCheckInterval);
+        } else {
+            checkOverlay();
+        }
+    }, 100);
+
+    document.addEventListener('click', checkOverlay);
+    document.addEventListener('keypress', checkOverlay);
+    document.addEventListener('input', checkOverlay);
+    document.addEventListener('touchstart', checkOverlay);
+    document.addEventListener('mousemove', checkOverlay);
+
+    handleIncognito();
+}
+
 export async function setAuthentication(retrieveImageFromURL, getUserIpAddress, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot) {
     const signOutButtons = document.querySelectorAll('.signOut');
     signOutButtons.forEach(signOut => {
@@ -1522,96 +1631,8 @@ export async function setAuthentication(retrieveImageFromURL, getUserIpAddress, 
         });
     });
 
-    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-        function getModeName(userAgent) {
-            const browserModes = {
-                Chrome: "an Incognito Window",
-                Chromium: "an Incognito Window",
-                Safari: "a Private Window",
-                Firefox: "a Private Window",
-                Brave: "a Private Window",
-                Opera: "a Private Window",
-                Edge: "an InPrivate Window",
-                MSIE: "an InPrivate Window"
-            };
-
-            for (const [browser, mode] of Object.entries(browserModes)) {
-                if (new RegExp(browser).test(userAgent)) {
-                    return mode;
-                }
-            }
-
-            return "a Private Window";
-        }
-
-        function createOverlay() {
-            const overlay = document.createElement('div');
-            overlay.style.position = 'fixed';
-            overlay.style.top = '0';
-            overlay.style.left = '0';
-            overlay.style.width = '100%';
-            overlay.style.height = '100%';
-            overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-            overlay.style.color = 'white';
-            overlay.style.display = 'flex';
-            overlay.style.justifyContent = 'center';
-            overlay.style.alignItems = 'center';
-            overlay.style.zIndex = '9999';
-            overlay.innerHTML = `
-                <div style="justify-items: center;">
-                    <h2>Incognito Mode</h2>
-                    <p>This website is not accessible in ${getModeName(navigator.userAgent)} mode.</p>
-                </div>
-            `;
-
-            document.body.appendChild(overlay);
-            return overlay;
-        }
-
-        function showIncognitoModeForm() {
-            const overlay = createOverlay();
-
-            overlay.addEventListener('click', (e) => e.stopPropagation());
-            overlay.addEventListener('touchstart', (e) => e.stopPropagation());
-            overlay.addEventListener('contextmenu', (e) => e.preventDefault());
-
-            overlay.addEventListener('keydown', (e) => {
-                if (e.ctrlKey || e.metaKey) {
-                    e.preventDefault();
-                }
-            });
-        }
-
-        function handleIncognito() {
-            const isIncognitoFlag = localStorage.getItem('isIncognito');
-
-            if (isIncognitoFlag === 'true') {
-                showIncognitoModeForm();
-            } else {
-                detectIncognito()
-                    .then((isIncognito) => {
-                        if (isIncognito) {
-                            localStorage.setItem('isIncognito', 'true');
-                            showIncognitoModeForm();
-                        } else {
-                            localStorage.removeItem('isIncognito');
-                        }
-                    })
-                    .catch((error) => {
-                        console.error('Error checking incognito mode:', error);
-                    });
-            }
-        }
-
-        document.addEventListener('contextmenu', (e) => e.preventDefault());
-        document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey || e.metaKey) {
-                e.preventDefault();
-            }
-        });
-
-        handleIncognito();
-    }
+    if (window.location.hostname !== 'localhost')
+        incognitoModeHandler();
 
     const userData = getCachedStaticUserData();
     if (userData) handleUserLoggedIn(userData, getUserIpAddress, ensureUniqueId, fetchServerAddress, getDocSnapshot, getFirebaseModules);
