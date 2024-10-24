@@ -264,13 +264,11 @@ function createNotificationsContainer() {
     }
 
     const indicators = container.getElementsByClassName('indicator');
-    if (indicators.length > 2) {
+    if (indicators.length > 0) {
         for (let i = 0; i < indicators.length - 0; i++) {
             const notification = indicators[i];
             notification.style.opacity = '0';
-            setTimeout(() => {
-                notification.remove();
-            }, 300);
+            notification.remove();
         }
     }
 
@@ -279,7 +277,7 @@ function createNotificationsContainer() {
 
 export function showNotification(message, featureChange, type) {
     const container = createNotificationsContainer();
-    let waitTime = 3000;
+    let waitTime = 5000;
 
     const notification = document.createElement('div');
     notification.className = 'indicator';
@@ -296,6 +294,7 @@ export function showNotification(message, featureChange, type) {
 
     const messageElement = document.createElement('p');
     messageElement.innerText = message;
+    messageElement.className = 'notification-explanation';
 
     notification.appendChild(featureChangeElement);
     notification.appendChild(messageElement);
@@ -307,6 +306,15 @@ export function showNotification(message, featureChange, type) {
             notification.remove();
         }, 300);
     }, waitTime);
+
+    document.addEventListener('click', (event) => {
+        if (!notification.contains(event.target) && container.contains(notification)) {
+            notification.style.opacity = '0';
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        }
+    }, { once: true })
 }
 
 export const openDB = (dataBaseIndexName, dataBaseObjectStoreName) => {
@@ -1525,20 +1533,13 @@ function getModeName(userAgent) {
 }
 
 function createOverlay() {
+    if (document.querySelector('.incognito-overlay'))
+        return null;
+
     const overlay = document.createElement('div');
-    overlay.style.position = 'fixed';
-    overlay.style.top = '0';
-    overlay.style.left = '0';
-    overlay.style.width = '100%';
-    overlay.style.height = '100%';
-    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-    overlay.style.color = 'white';
-    overlay.style.display = 'flex';
-    overlay.style.justifyContent = 'center';
-    overlay.style.alignItems = 'center';
-    overlay.style.zIndex = '9999';
+    overlay.classList.add('incognito-overlay');
     overlay.innerHTML = `
-            <div style="justify-items: center;">
+            <div class="overlay-content">
                 <h2>Incognito Mode</h2>
                 <p>This website is not accessible in ${getModeName(navigator.userAgent)} mode.</p>
             </div>
@@ -1548,68 +1549,69 @@ function createOverlay() {
     return overlay;
 }
 
+function removeOverlay() {
+    const overlay = document.querySelector('.incognito-overlay');
+    if (overlay) {
+        overlay.remove();
+    }
+}
+
 function showIncognitoModeForm() {
     const overlay = createOverlay();
+    if (!overlay) return;
 
-    overlay.addEventListener('click', (e) => e.stopPropagation());
-    overlay.addEventListener('touchstart', (e) => e.stopPropagation());
+    const stopPropagation = (e) => e.stopPropagation();
+
+    overlay.addEventListener('click', stopPropagation);
+    overlay.addEventListener('touchstart', stopPropagation);
     overlay.addEventListener('contextmenu', (e) => e.preventDefault());
-
     overlay.addEventListener('keydown', (e) => {
-        if (e.ctrlKey || e.metaKey || e.key === 'F12' || e.key === 'I' || e.key === 'J' || e.key === 'C' || e.key === 'U') {
+        if (e.ctrlKey || e.metaKey || ['F12', 'I', 'J', 'C', 'U'].includes(e.key)) {
             e.preventDefault();
         }
     });
 }
 
-function handleIncognito() {
-    const isIncognitoFlag = localStorage.getItem('isIncognito');
+let overlayCheckInterval;
 
-    if (isIncognitoFlag === 'true') {
-        showIncognitoModeForm();
-    } else {
-        detectIncognito().then((isIncognito) => {
-            if (isIncognito) {
-                localStorage.setItem('isIncognito', 'true');
-                showIncognitoModeForm();
-            } else {
-                localStorage.removeItem('isIncognito');
-            }
-        }).catch((error) => { console.error('Error checking incognito mode:', error); });
-    }
+function handleIncognito() {
+    detectIncognito().then((isIncognito) => {
+        if (isIncognito.isPrivate) {
+            showIncognitoModeForm();
+        } else {
+            clearInterval(overlayCheckInterval);
+            removeOverlay();
+        }
+    }).catch((error) => {
+        alert('Error checking incognito mode:', error); // Changed console.error to alert
+    });
 }
 
 export function incognitoModeHandler() {
-    document.addEventListener('contextmenu', (e) => e.preventDefault());
-    document.addEventListener('keydown', (e) => {
-        if (e.ctrlKey || e.metaKey || e.key === 'F12' || e.key === 'I' || e.key === 'J' || e.key === 'C' || e.key === 'U') {
+    const preventShortcuts = (e) => {
+        if (!document.querySelector('.incognito-overlay'))
+            return;
+
+        if (e.ctrlKey || e.metaKey || ['F12', 'I', 'J', 'C', 'U'].includes(e.key)) {
             e.preventDefault();
         }
-    });
+    };
+
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
+    document.addEventListener('keydown', preventShortcuts);
 
     function checkOverlay() {
-        const overlay = document.querySelector('div[style*="rgba(0, 0, 0, 0.7)"]');
-        if (!overlay) {
+        if (!document.querySelector('.incognito-overlay'))
             handleIncognito();
-        }
     }
 
-    const overlayCheckInterval = setInterval(() => {
-        const isIncognitoFlag = localStorage.getItem('isIncognito');
-        if (!isIncognitoFlag) {
-            clearInterval(overlayCheckInterval);
-        } else {
-            checkOverlay();
-        }
-    }, 100);
+    overlayCheckInterval = setInterval(checkOverlay, 100);
 
-    document.addEventListener('click', checkOverlay);
-    document.addEventListener('keypress', checkOverlay);
-    document.addEventListener('input', checkOverlay);
-    document.addEventListener('touchstart', checkOverlay);
-    document.addEventListener('mousemove', checkOverlay);
+    ['click', 'keypress', 'input', 'touchstart', 'mousemove'].forEach((event) => {
+        document.addEventListener(event, checkOverlay);
+    });
 
-    handleIncognito();
+    checkOverlay();
 }
 
 export async function setAuthentication(retrieveImageFromURL, getUserIpAddress, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot) {
@@ -1631,8 +1633,7 @@ export async function setAuthentication(retrieveImageFromURL, getUserIpAddress, 
         });
     });
 
-    if (window.location.hostname !== 'localhost')
-        incognitoModeHandler();
+    incognitoModeHandler();
 
     const userData = getCachedStaticUserData();
     if (userData) handleUserLoggedIn(userData, getUserIpAddress, ensureUniqueId, fetchServerAddress, getDocSnapshot, getFirebaseModules);
@@ -1988,7 +1989,6 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserIpAddress,
         }
 
         updateContent(pageContent);
-        setAuthentication(retrieveImageFromURL, getUserIpAddress, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
 
         mainQuery = document.querySelectorAll('main');
         sidebar = document.querySelector('.sidebar');
@@ -1996,6 +1996,8 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserIpAddress,
         hamburgerMenu = document.querySelector('.hamburger-menu');
 
         createUserData(sidebar, screenMode);
+        setAuthentication(retrieveImageFromURL, getUserIpAddress, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
+
         setNavbar(navbar, mainQuery, sidebar);
         setSidebar(sidebar);
         setupMainSize(mainQuery);
@@ -2057,24 +2059,6 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserIpAddress,
 
     document.documentElement.classList.remove('loading-screen');
     pageUpdated = true;
-
-    window.gtag = function () {
-        if (!window.dataLayer)
-            window.dataLayer = window.dataLayer || [];
-
-        if (window.dataLayer)
-            window.dataLayer.push(arguments);
-    };
-
-    const script = document.createElement('script');
-    script.src = 'https://www.googletagmanager.com/gtag/js?id=G-BFR70Q5VX1';
-    script.defer = true;
-    document.head.appendChild(script);
-
-    script.onload = function () {
-        gtag('js', new Date());
-        gtag('config', 'G-BFR70Q5VX1');
-    };
 }
 
 let currentMain = 0;

@@ -617,10 +617,29 @@ ul {
     color: #f7f8f8
 }
 
+.incognito-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.overlay-content {
+    justify-items: center;
+    text-align: center;
+}
+
 .indicator-container {
     position: absolute;
     top: 2vh;
-    left: 2vh;
+    margin: 0 2vh;
     z-index: 99999
 }
 
@@ -647,24 +666,6 @@ ul {
         font-weight: 400;
         padding: revert
     }
-
-#notification {
-    top: 4vh;
-}
-
-.feature-change {
-    position: absolute;
-    top: -1.75vh;
-    left: 1vh;
-    font-size: 1.75vh !important;
-    line-height: 2vh !important;
-    font-weight: 400;
-    background-color: var(--background-color);
-    padding: 0 1vh !important; /* Adjust padding as needed */
-    border: var(--border) solid;
-    border-color: rgba(var(--grey),1);
-    border-radius: 1vh;
-}
 
 .background-container, .background-dot-container-content {
     gap: calc(1vh* var(--scale-factor-h));
@@ -1069,7 +1070,7 @@ input[type=range] {
     width: 100%
 }
 
-.ar-4-3 .indicator {
+.ar-4-3 #menu-container .indicator {
     background-color: unset;
     border: unset;
     padding: unset;
@@ -1078,10 +1079,10 @@ input[type=range] {
     font-weight: 700;
     display: flex;
     align-items: center;
-    gap: 1vw
+    gap: 1vw;
 }
 
-    .ar-4-3 .indicator button, .ar-4-3 .indicator p {
+    .ar-4-3 #menu-container .indicator button, #menu-container .ar-4-3 .indicator p {
         font-size: 3vh;
         width: var(--line-width);
         height: calc(3 * (var(--line-height) + var(--line-spacing)));
@@ -1564,6 +1565,35 @@ label.checkbox input[type="checkbox"]:checked {
     position: relative;
     background-color: grey;
     color: white;
+}
+
+#notification {
+    top: 4vh;
+}
+
+.feature-change {
+    position: absolute !important;
+    top: -1.75vh !important;
+    left: 1vh !important;
+    width: unset !important;
+    height: unset !important;
+    white-space: nowrap;
+    font-size: 1.75vh !important;
+    line-height: 2vh !important;
+    font-weight: 400 !important;
+    background-color: var(--background-color) !important;
+    padding: 0 1vh !important;
+    border: var(--border) solid;
+    border-color: rgba(var(--grey),1);
+    border-radius: 1vh !important;
+}
+
+.notification-explanation {
+    font-size: unset !important;
+    width: unset !important;
+    height: unset !important;
+    line-height: unset !important;
+    padding: unset !important;
 }
 
 .rectangle-container {

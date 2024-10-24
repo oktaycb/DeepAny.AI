@@ -32,7 +32,25 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="css/styles.css?v=1.3.1.7">
+    <script>
+        window.gtag = function () {
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push(arguments);
+        };
+
+        window.addEventListener('load', function () {
+            const gtagScript = document.createElement('script');
+            gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-BFR70Q5VX1';
+            gtagScript.async = true;
+            document.head.appendChild(gtagScript);
+
+            gtagScript.onload = function () {
+                gtag('js', new Date());
+                gtag('config', 'G-BFR70Q5VX1');
+            };
+        });
+    </script>
+    <link rel="stylesheet" href="css/styles.css?v=1.3.2.1">
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             const cssRules = Array.from(document.styleSheets).flatMap(sheet => Array.from(sheet.cssRules));
@@ -194,7 +212,7 @@
 <body lang="en">
     <div id="paymentContainer" style="margin: 0; padding: 0; overflow: hidden; display: none; width: 100%; height: 100vh; position: absolute; z-index: 99999;"></div>
     <script type="module" defer>
-        const version = '1.3.1.7';
+        const version = '1.3.2.1';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -726,12 +744,12 @@
                                     gtag('event', 'conversion_event_purchase', {
                                         'value': sliderElement.value,
                                         'currency': selectedCurrency,
-                                        'transaction_id': 'TRANS_' + Date.now(), // Example transaction ID
+                                        'transaction_id': 'TRANS_' + Date.now(),
                                         'selected_mode': selectedMode,
                                         'user_id': auth.currentUser.uid,
                                         'user_email': auth.currentUser.email,
                                         'event_callback': function () {
-                                            window.location = 'https://deepany.ai/pricing'; // Redirect to success page after event
+                                            window.location = 'https://deepany.ai/pricing';
                                         },
                                         'event_timeout': 2000
                                     });
@@ -749,12 +767,12 @@
                                     gtag('event', 'conversion_event_purchase', {
                                         'value': sliderElement.value,
                                         'currency': selectedCurrency,
-                                        'transaction_id': 'TRANS_' + Date.now(), // Example transaction ID
+                                        'transaction_id': 'TRANS_' + Date.now(),
                                         'selected_mode': selectedMode,
                                         'user_id': auth.currentUser.uid,
                                         'user_email': auth.currentUser.email,
                                         'event_callback': function () {
-                                            window.location = coinData.data.hosted_url; // Redirect to success page after event
+                                            window.location = coinData.data.hosted_url;
                                         },
                                         'event_timeout': 2000
                                     });
