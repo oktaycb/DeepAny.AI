@@ -47,25 +47,7 @@
             }
         }
     </style>
-    <script>
-        window.gtag = function () {
-            window.dataLayer = window.dataLayer || [];
-            window.dataLayer.push(arguments);
-        };
-
-        window.addEventListener('load', function () {
-            const gtagScript = document.createElement('script');
-            gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-BFR70Q5VX1';
-            gtagScript.async = true;
-            document.head.appendChild(gtagScript);
-
-            gtagScript.onload = function () {
-                gtag('js', new Date());
-                gtag('config', 'G-BFR70Q5VX1');
-            };
-        });
-    </script>
-    <link rel="stylesheet" href="css/styles.css?v=1.3.2.1">
+    <link rel="stylesheet" href="css/styles.css?v=1.3.2.3">
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             const cssRules = Array.from(document.styleSheets).flatMap(sheet => Array.from(sheet.cssRules));
@@ -94,7 +76,7 @@
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = '1.3.2.1';
+        const version = '1.3.2.3';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -167,279 +149,279 @@
             function updateMainContent(screenMode, pageContent) {
                 pageContent.length = 0;
                 pageContent.push(`                      <div id="baseContainer" class="centered-container">
-                                                                            <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
-                                                                                <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
-                                                                                    <div class="background-dot-container">
-                                                                                        <div class="background-dot-container-content">
-                                                                                            <div style="display: flex;justify-content: space-between;">
-                                                                                                <div style="display: flex;flex-direction: column;align-items: center;">
-                                                                                                    <div class="circular-button" id="circular-button-face-upload" title="Upload face" tooltip>
-                                                                                                        <div class="tooltip">Add and choose the new face image to apply to the video or image input.</div>
-                                                                                                        <input type="file" accept="image/*" id="face-upload" style="display: none" multiple>
+                                                                                    <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
+                                                                                        <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
+                                                                                            <div class="background-dot-container">
+                                                                                                <div class="background-dot-container-content">
+                                                                                                    <div style="display: flex;justify-content: space-between;">
+                                                                                                        <div style="display: flex;flex-direction: column;align-items: center;">
+                                                                                                            <div class="circular-button" id="circular-button-face-upload" title="Upload face" tooltip>
+                                                                                                                <div class="tooltip">Add and choose the new face image to apply to the video or image input.</div>
+                                                                                                                <input type="file" accept="image/*" id="face-upload" style="display: none" multiple>
+                                                                                                            </div>
+                                                                                                            <div class="faces"></div>
+                                                                                                        </div>
+                                                                                                        <div style="display: flex;flex-direction: column;align-items: center;">
+                                                                                                            <div class="circular-button" id="circular-button-input-upload" title="Upload input" tooltip>
+                                                                                                                <div class="tooltip">Add and choose the video or image where the face swap will occur.</div>
+                                                                                                                <input type="file" accept="video/*,image/*" id="input-upload" style="display: none" multiple>
+                                                                                                            </div>
+                                                                                                            <div class="inputs"></div>
+                                                                                                        </div>
                                                                                                     </div>
-                                                                                                    <div class="faces"></div>
-                                                                                                </div>
-                                                                                                <div style="display: flex;flex-direction: column;align-items: center;">
-                                                                                                    <div class="circular-button" id="circular-button-input-upload" title="Upload input" tooltip>
-                                                                                                        <div class="tooltip">Add and choose the video or image where the face swap will occur.</div>
-                                                                                                        <input type="file" accept="video/*,image/*" id="input-upload" style="display: none" multiple>
+                                                                                                        <div class="line"></div>
+                                                                                                        <div class="nav-links">
+                                                                                                            <li><a class="text" for="Facial">Facial</a></li>
+                                                                                                            <li><a class="text" for="Analyzer">Analyzer</a></li>
+                                                                                                            <li><a class="text" for="Other">Other</a></li>
+                                                                                                        </div>
+                                                                                                        <div id="Facial" class="section" style="display: none;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                            <div>
+                                                                                                                <h4 style="font-weight: 400;">Facial Enhancer</h4>
+                                                                                                                <div id="enhancement" class="combobox" tooltip style="gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                    <div class="tooltip">Choose a face enhancement model to improve the facial features. Each option applies a different method for enhancing or restoring the face's appearance.</div>
+                                                                                                                    <span class="combobox-text" title="Enhancement"></span>
+                                                                                                                    <div id="enhancerBlendContainer" style="display: flex;align-items: center;flex-direction: row-reverse;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                        <input type="range" min="24" max="100" value="24" class="slider" id="enhancerBlendValue">
+                                                                                                                        <div class="slider-value" id="enhancerBlendDisplayValue">Auto</div>
+                                                                                                                    </div>
+                                                                                                                    <span class="arrow-dwn"></span>
+                                                                                                                    <ul class="list-items">
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                                <input type="checkbox" id="natural_face_enhancer_1024"><span>Default</span>
+                                                                                                                                <div class="tooltip">Preserves realistic details, in 2048x2048 resolution.</div>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                                <input type="checkbox" id="natural_face_enhancer_2048"><span>Detailed</span>
+                                                                                                                                <div class="tooltip">Preserves realistic details, in 1024x1024 resolution.</div>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                                <input type="checkbox" id="natural_face_enhancer_512"><span>Natural</span>
+                                                                                                                                <div class="tooltip">Preserves realistic details, in 512x512 resolution.</div>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                                <input type="checkbox" id="smooth_face_enhancer"><span>Smooth</span>
+                                                                                                                                <div class="tooltip">Applies smoothing techniques for a refined and polished look.</div>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                    </ul>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            <div>
+                                                                                                                <h4 style="font-weight: 400;">Pixel boost</h4>
+                                                                                                                <div class="combobox" tooltip>
+                                                                                                                    <div class="tooltip">
+                                                                                                                        The addition of a "pixel boost" option enhances the resolution of swapped faces, making results more realistic and detailed.
+                                                                                                                    </div>
+                                                                                                                    <span class="combobox-text" title="Pixel boost"></span>
+                                                                                                                    <span class="arrow-dwn"></span>
+                                                                                                                    <ul class="list-items">
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                                <input type="checkbox" id="pixelBoost256x256"><span>256x256</span>
+                                                                                                                                <div class="tooltip">Takes 2x longer, but the quality and detail improves.</div>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                                <input type="checkbox" id="pixelBoost512x512"><span>512x512</span>
+                                                                                                                                <div class="tooltip">Takes 4x longer, with significantly improved quality and details.</div>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                                <input type="checkbox" id="pixelBoost1024x1024"><span>1024x1024</span>
+                                                                                                                                <div class="tooltip">Takes 8x longer, resulting in the highest quality and details.</div>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                    </ul>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            <div id="facialCheckboxes" style="display: flex;gap: calc(1.5vh* var(--scale-factor-h));flex-direction: column;">
+                                                                                                                <div style="width: 100%;">
+                                                                                                                    <h4 style="font-weight: 400;">Improved Landmarks</h4>
+                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                        <input type="checkbox" id="enableEnhancedLandmarks"><span>68 Landmarks</span>
+                                                                                                                        <div class="tooltip">By enabling this feature, the system can more accurately identify and analyze specific facial components such as the eyebrows, eyes, nose, mouth, and jawline. It helps decreasing jitters in the face.</div>
+                                                                                                                    </label>
+                                                                                                                </div>
+                                                                                                                <div style="width: 100%;">
+                                                                                                                    <h4 style="font-weight: 400;">Facial Occlusion</h4>
+                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                        <input type="checkbox" id="enableOccluder"><span>Obstruction Detection</span>
+                                                                                                                        <div class="tooltip">Detects obstructing objects in front of the face, but this can cause slight unsimilarity as it will retain the unswapped original person's facial outline.</div>
+                                                                                                                    </label>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            <label class="checkbox" tooltip style="display: none;align-items: center;gap: calc(1.5vh* var(--scale-factor-h));justify-content: space-between;">
+                                                                                                                <div class="tooltip">Slide left to decrease to younger age (up to -100%) and slide right to increase to older age (up to +100%).</div>
+                                                                                                                <div style="display: flex;align-items: center;">
+                                                                                                                    <input type="checkbox" id="ageModifier">
+                                                                                                                    <span>Modify Age</span>
+                                                                                                                </div>
+                                                                                                                <div id="ageModifierContainer" style="display: flex;align-items: center;flex-direction: row-reverse;gap: calc(1.5vh* var(--scale-factor-h));">
+                                                                                                                    <input type="range" min="-100" max="100" value="0" class="slider" id="age-modifier">
+                                                                                                                    <div class="slider-value" id="age-modifier-value">0</div>
+                                                                                                                </div>
+                                                                                                            </label>
+                                                                                                        </div>
+                                                                                                        <div id="Analyzer" class="section" style="display: none;position: relative;flex-direction: column;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                            <div>
+                                                                                                                <h4 style="font-weight: 400;">Select Regions</h4>
+                                                                                                                <div class="multibox" tooltip>
+                                                                                                                    <div class="tooltip">Select regions to customize in the new face. If an area is not enabled, it will remain unchanged from the original face.</div>
+                                                                                                                    <span class="multibox-text" title="Select Regions"></span>
+                                                                                                                    <span class="arrow-dwn"></span>
+                                                                                                                    <ul class="list-items">
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                                <input type="checkbox" id="skin"><span>Change Skin</span>
+                                                                                                                                <div class="tooltip">Swap the skin area with the new face.</div>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                                <input type="checkbox" id="eyebrow"><span>Change Eyebrow</span>
+                                                                                                                                <div class="tooltip">Replace the eyebrow shape or color.</div>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                                <input type="checkbox" id="eye"><span>Change Eye</span>
+                                                                                                                                <div class="tooltip">Change the eye appearance.</div>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                                <input type="checkbox" id="glasses"><span>Change Glasses</span>
+                                                                                                                                <div class="tooltip">Modify or add eyewear styles.</div>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                                <input type="checkbox" id="nose"><span>Change Nose</span>
+                                                                                                                                <div class="tooltip">Alter the nose shape or size.</div>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                                <input type="checkbox" id="mouth"><span>Change Mouth</span>
+                                                                                                                                <div class="tooltip">Change the shape or expression of the mouth.</div>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                                <input type="checkbox" id="lip"><span>Change Lip</span>
+                                                                                                                                <div class="tooltip">Adjust the color or shape of the lips.</div>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                    </ul>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            <div>
+                                                                                                                <h4 style="font-weight: 400;">Select Orientation</h4>
+                                                                                                                <div class="multibox" tooltip>
+                                                                                                                    <div class="tooltip">Select head orientation to improve the analysis of the input video. Rotates the input to get the frontal head rotation.</div>
+                                                                                                                    <span class="multibox-text" title="Orientation"></span>
+                                                                                                                    <span class="arrow-dwn"></span>
+                                                                                                                    <ul class="list-items">
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                                <input type="checkbox" id="frontalRotation" checked disabled><span>Frontal Head (0°)</span>
+                                                                                                                                <div class="tooltip">The face is facing forward. Best for accurate analysis.</div>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                                <input type="checkbox" id="rightRotation"><span>Tilted Right Head (90°)</span>
+                                                                                                                                <div class="tooltip">Select this if the face in the input is tilted to the right.</div>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                                <input type="checkbox" id="invertedRotation"><span>Inverted Head (180°)</span>
+                                                                                                                                <div class="tooltip">Select this if the face in the input is upside down.</div>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                                <div class="tooltip">Select this if the face in the input is tilted to the left.</div>
+                                                                                                                                <input type="checkbox" id="leftRotation"><span>Tilted Left Head (-90°)</span>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                    </ul>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            <div>
+                                                                                                                <h4 style="font-weight: 400;">Enhanced Analyzer</h4>
+                                                                                                                <label class="checkbox" tooltip>
+                                                                                                                    <input type="checkbox" id="enableEnhancedAnalyzer"><span>Multiple Face Detectors</span>
+                                                                                                                    <div class="tooltip">Use multiple detection algorithms (like YoloFace, RetinaFace, SCRFD) to get the best results. It helps decreasing flickerings.</div>
+                                                                                                                </label>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                        <div id="Other" class="section" style="display: none;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                            <div>
+                                                                                                                <h4 style="font-weight: 400;">Remove Banner</h4>
+                                                                                                                <label class="checkbox">
+                                                                                                                    <input type="checkbox" id="removeBanner"><span>Remove banner</span>
+                                                                                                                </label>
+                                                                                                            </div>
+                                                                                                            <div>
+                                                                                                                <h4 style="font-weight: 400;">Keep Frames Per Second</h4>
+                                                                                                                <label class="checkbox" style="display: flex;align-items: center;gap: calc(1vh* var(--scale-factor-h));justify-content: space-between;">
+                                                                                                                    <div style="display: flex;align-items: center;"><input type="checkbox" id="keepFPS"><span>Keep FPS</span></div>
+                                                                                                                    <div id="keepFPSContainer" style="display: flex;align-items: center;flex-direction: row-reverse;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                        <input type="range" min="1" max="60" value="30" class="slider" id="fps-slider">
+                                                                                                                        <div class="slider-value" id="fps-value">30</div>
+                                                                                                                    </div>
+                                                                                                                </label>
+                                                                                                            </div>
+                                                                                                            <div>
+                                                                                                                <h4 style="font-weight: 400;">Skip Servers With Low GPU's</h4>
+                                                                                                                <label class="checkbox">
+                                                                                                                    <input type="checkbox" id="skipSlowServers">Skip Slow Servers</input>
+                                                                                                                </label>
+                                                                                                            </div>
+                                                                                                            <div>
+                                                                                                                <h4 style="font-weight: 400;">Preview Servers</h4>
+                                                                                                                <label class="checkbox">
+                                                                                                                    <input type="checkbox" id="showServers">Server List</input>
+                                                                                                                </label>
+                                                                                                            </div>
+                                                                                                            <div id="serverList" style="display: flex;justify-content: space-evenly;flex-wrap: wrap;align-content: stretch;flex-direction: column;"></div>
+                                                                                                        </div>
+                                                                                                        <div class="line"></div>
+                                                                                                    <div style="display: flex;gap: calc(1.5vh* var(--scale-factor-h));">
+                                                                                                        <button class="wide" id="startProcessBtn">Start Process</button>
+                                                                                                        <button class="wide" id="cancellProcessBtn" >Cancel Process</button>
                                                                                                     </div>
-                                                                                                    <div class="inputs"></div>
                                                                                                 </div>
                                                                                             </div>
-                                                                                                <div class="line"></div>
-                                                                                                <div class="nav-links">
-                                                                                                    <li><a class="text" for="Facial">Facial</a></li>
-                                                                                                    <li><a class="text" for="Analyzer">Analyzer</a></li>
-                                                                                                    <li><a class="text" for="Other">Other</a></li>
-                                                                                                </div>
-                                                                                                <div id="Facial" class="section" style="display: none;gap: calc(1vh* var(--scale-factor-h));">
-                                                                                                    <div>
-                                                                                                        <h4 style="font-weight: 400;">Facial Enhancer</h4>
-                                                                                                        <div id="enhancement" class="combobox" tooltip style="gap: calc(1vh* var(--scale-factor-h));">
-                                                                                                            <div class="tooltip">Choose a face enhancement model to improve the facial features. Each option applies a different method for enhancing or restoring the face's appearance.</div>
-                                                                                                            <span class="combobox-text" title="Enhancement"></span>
-                                                                                                            <div id="enhancerBlendContainer" style="display: flex;align-items: center;flex-direction: row-reverse;gap: calc(1vh* var(--scale-factor-h));">
-                                                                                                                <input type="range" min="24" max="100" value="24" class="slider" id="enhancerBlendValue">
-                                                                                                                <div class="slider-value" id="enhancerBlendDisplayValue">Auto</div>
-                                                                                                            </div>
-                                                                                                            <span class="arrow-dwn"></span>
-                                                                                                            <ul class="list-items">
-                                                                                                                <li class="item">
-                                                                                                                    <label class="checkbox" tooltip>
-                                                                                                                        <input type="checkbox" id="natural_face_enhancer_1024"><span>Default</span>
-                                                                                                                        <div class="tooltip">Preserves realistic details, in 2048x2048 resolution.</div>
-                                                                                                                    </label>
-                                                                                                                </li>
-                                                                                                                <li class="item">
-                                                                                                                    <label class="checkbox" tooltip>
-                                                                                                                        <input type="checkbox" id="natural_face_enhancer_2048"><span>Detailed</span>
-                                                                                                                        <div class="tooltip">Preserves realistic details, in 1024x1024 resolution.</div>
-                                                                                                                    </label>
-                                                                                                                </li>
-                                                                                                                <li class="item">
-                                                                                                                    <label class="checkbox" tooltip>
-                                                                                                                        <input type="checkbox" id="natural_face_enhancer_512"><span>Natural</span>
-                                                                                                                        <div class="tooltip">Preserves realistic details, in 512x512 resolution.</div>
-                                                                                                                    </label>
-                                                                                                                </li>
-                                                                                                                <li class="item">
-                                                                                                                    <label class="checkbox" tooltip>
-                                                                                                                        <input type="checkbox" id="smooth_face_enhancer"><span>Smooth</span>
-                                                                                                                        <div class="tooltip">Applies smoothing techniques for a refined and polished look.</div>
-                                                                                                                    </label>
-                                                                                                                </li>
-                                                                                                            </ul>
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                    <div>
-                                                                                                        <h4 style="font-weight: 400;">Pixel boost</h4>
-                                                                                                        <div class="combobox" tooltip>
-                                                                                                            <div class="tooltip">
-                                                                                                                The addition of a "pixel boost" option enhances the resolution of swapped faces, making results more realistic and detailed.
-                                                                                                            </div>
-                                                                                                            <span class="combobox-text" title="Pixel boost"></span>
-                                                                                                            <span class="arrow-dwn"></span>
-                                                                                                            <ul class="list-items">
-                                                                                                                <li class="item">
-                                                                                                                    <label class="checkbox" tooltip>
-                                                                                                                        <input type="checkbox" id="pixelBoost256x256"><span>256x256</span>
-                                                                                                                        <div class="tooltip">Takes 2x longer, but the quality and detail improves.</div>
-                                                                                                                    </label>
-                                                                                                                </li>
-                                                                                                                <li class="item">
-                                                                                                                    <label class="checkbox" tooltip>
-                                                                                                                        <input type="checkbox" id="pixelBoost512x512"><span>512x512</span>
-                                                                                                                        <div class="tooltip">Takes 4x longer, with significantly improved quality and details.</div>
-                                                                                                                    </label>
-                                                                                                                </li>
-                                                                                                                <li class="item">
-                                                                                                                    <label class="checkbox" tooltip>
-                                                                                                                        <input type="checkbox" id="pixelBoost1024x1024"><span>1024x1024</span>
-                                                                                                                        <div class="tooltip">Takes 8x longer, resulting in the highest quality and details.</div>
-                                                                                                                    </label>
-                                                                                                                </li>
-                                                                                                            </ul>
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                    <div id="facialCheckboxes" style="display: flex;gap: calc(1.5vh* var(--scale-factor-h));flex-direction: column;">
-                                                                                                        <div style="width: 100%;">
-                                                                                                            <h4 style="font-weight: 400;">Improved Landmarks</h4>
-                                                                                                            <label class="checkbox" tooltip>
-                                                                                                                <input type="checkbox" id="enableEnhancedLandmarks"><span>68 Landmarks</span>
-                                                                                                                <div class="tooltip">By enabling this feature, the system can more accurately identify and analyze specific facial components such as the eyebrows, eyes, nose, mouth, and jawline. It helps decreasing jitters in the face.</div>
-                                                                                                            </label>
-                                                                                                        </div>
-                                                                                                        <div style="width: 100%;">
-                                                                                                            <h4 style="font-weight: 400;">Facial Occlusion</h4>
-                                                                                                            <label class="checkbox" tooltip>
-                                                                                                                <input type="checkbox" id="enableOccluder"><span>Obstruction Detection</span>
-                                                                                                                <div class="tooltip">Detects obstructing objects in front of the face, but this can cause slight unsimilarity as it will retain the unswapped original person's facial outline.</div>
-                                                                                                            </label>
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                    <label class="checkbox" tooltip style="display: none;align-items: center;gap: calc(1.5vh* var(--scale-factor-h));justify-content: space-between;">
-                                                                                                        <div class="tooltip">Slide left to decrease to younger age (up to -100%) and slide right to increase to older age (up to +100%).</div>
-                                                                                                        <div style="display: flex;align-items: center;">
-                                                                                                            <input type="checkbox" id="ageModifier">
-                                                                                                            <span>Modify Age</span>
-                                                                                                        </div>
-                                                                                                        <div id="ageModifierContainer" style="display: flex;align-items: center;flex-direction: row-reverse;gap: calc(1.5vh* var(--scale-factor-h));">
-                                                                                                            <input type="range" min="-100" max="100" value="0" class="slider" id="age-modifier">
-                                                                                                            <div class="slider-value" id="age-modifier-value">0</div>
-                                                                                                        </div>
-                                                                                                    </label>
-                                                                                                </div>
-                                                                                                <div id="Analyzer" class="section" style="display: none;position: relative;flex-direction: column;gap: calc(1vh* var(--scale-factor-h));">
-                                                                                                    <div>
-                                                                                                        <h4 style="font-weight: 400;">Select Regions</h4>
-                                                                                                        <div class="multibox" tooltip>
-                                                                                                            <div class="tooltip">Select regions to customize in the new face. If an area is not enabled, it will remain unchanged from the original face.</div>
-                                                                                                            <span class="multibox-text" title="Select Regions"></span>
-                                                                                                            <span class="arrow-dwn"></span>
-                                                                                                            <ul class="list-items">
-                                                                                                                <li class="item">
-                                                                                                                    <label class="checkbox" tooltip>
-                                                                                                                        <input type="checkbox" id="skin"><span>Change Skin</span>
-                                                                                                                        <div class="tooltip">Swap the skin area with the new face.</div>
-                                                                                                                    </label>
-                                                                                                                </li>
-                                                                                                                <li class="item">
-                                                                                                                    <label class="checkbox" tooltip>
-                                                                                                                        <input type="checkbox" id="eyebrow"><span>Change Eyebrow</span>
-                                                                                                                        <div class="tooltip">Replace the eyebrow shape or color.</div>
-                                                                                                                    </label>
-                                                                                                                </li>
-                                                                                                                <li class="item">
-                                                                                                                    <label class="checkbox" tooltip>
-                                                                                                                        <input type="checkbox" id="eye"><span>Change Eye</span>
-                                                                                                                        <div class="tooltip">Change the eye appearance.</div>
-                                                                                                                    </label>
-                                                                                                                </li>
-                                                                                                                <li class="item">
-                                                                                                                    <label class="checkbox" tooltip>
-                                                                                                                        <input type="checkbox" id="glasses"><span>Change Glasses</span>
-                                                                                                                        <div class="tooltip">Modify or add eyewear styles.</div>
-                                                                                                                    </label>
-                                                                                                                </li>
-                                                                                                                <li class="item">
-                                                                                                                    <label class="checkbox" tooltip>
-                                                                                                                        <input type="checkbox" id="nose"><span>Change Nose</span>
-                                                                                                                        <div class="tooltip">Alter the nose shape or size.</div>
-                                                                                                                    </label>
-                                                                                                                </li>
-                                                                                                                <li class="item">
-                                                                                                                    <label class="checkbox" tooltip>
-                                                                                                                        <input type="checkbox" id="mouth"><span>Change Mouth</span>
-                                                                                                                        <div class="tooltip">Change the shape or expression of the mouth.</div>
-                                                                                                                    </label>
-                                                                                                                </li>
-                                                                                                                <li class="item">
-                                                                                                                    <label class="checkbox" tooltip>
-                                                                                                                        <input type="checkbox" id="lip"><span>Change Lip</span>
-                                                                                                                        <div class="tooltip">Adjust the color or shape of the lips.</div>
-                                                                                                                    </label>
-                                                                                                                </li>
-                                                                                                            </ul>
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                    <div>
-                                                                                                        <h4 style="font-weight: 400;">Select Orientation</h4>
-                                                                                                        <div class="multibox" tooltip>
-                                                                                                            <div class="tooltip">Select head orientation to improve the analysis of the input video. Rotates the input to get the frontal head rotation.</div>
-                                                                                                            <span class="multibox-text" title="Orientation"></span>
-                                                                                                            <span class="arrow-dwn"></span>
-                                                                                                            <ul class="list-items">
-                                                                                                                <li class="item">
-                                                                                                                    <label class="checkbox" tooltip>
-                                                                                                                        <input type="checkbox" id="frontalRotation" checked disabled><span>Frontal Head (0°)</span>
-                                                                                                                        <div class="tooltip">The face is facing forward. Best for accurate analysis.</div>
-                                                                                                                    </label>
-                                                                                                                </li>
-                                                                                                                <li class="item">
-                                                                                                                    <label class="checkbox" tooltip>
-                                                                                                                        <input type="checkbox" id="rightRotation"><span>Tilted Right Head (90°)</span>
-                                                                                                                        <div class="tooltip">Select this if the face in the input is tilted to the right.</div>
-                                                                                                                    </label>
-                                                                                                                </li>
-                                                                                                                <li class="item">
-                                                                                                                    <label class="checkbox" tooltip>
-                                                                                                                        <input type="checkbox" id="invertedRotation"><span>Inverted Head (180°)</span>
-                                                                                                                        <div class="tooltip">Select this if the face in the input is upside down.</div>
-                                                                                                                    </label>
-                                                                                                                </li>
-                                                                                                                <li class="item">
-                                                                                                                    <label class="checkbox" tooltip>
-                                                                                                                        <div class="tooltip">Select this if the face in the input is tilted to the left.</div>
-                                                                                                                        <input type="checkbox" id="leftRotation"><span>Tilted Left Head (-90°)</span>
-                                                                                                                    </label>
-                                                                                                                </li>
-                                                                                                            </ul>
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                    <div>
-                                                                                                        <h4 style="font-weight: 400;">Enhanced Analyzer</h4>
-                                                                                                        <label class="checkbox" tooltip>
-                                                                                                            <input type="checkbox" id="enableEnhancedAnalyzer"><span>Multiple Face Detectors</span>
-                                                                                                            <div class="tooltip">Use multiple detection algorithms (like YoloFace, RetinaFace, SCRFD) to get the best results. It helps decreasing flickerings.</div>
-                                                                                                        </label>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
+                                                                                        <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
+                                                                                            <div class="background-dot-container">
+                                                                                                <div class="background-dot-container-content">
+                                                                                                    <div class="outputs"></div>
+                                                                                                    <div style="display: flex;justify-content: space-around;gap: calc(1.5vh* var(--scale-factor-h));">
+                                                                                                        <button class="wide" id="downloadOutput">Download</button>
+                                                                                                        <button class="wide" id="viewOutput">View</button>
                                                                                                     </div>
                                                                                                 </div>
-                                                                                                <div id="Other" class="section" style="display: none;gap: calc(1vh* var(--scale-factor-h));">
-                                                                                                    <div>
-                                                                                                        <h4 style="font-weight: 400;">Remove Banner</h4>
-                                                                                                        <label class="checkbox">
-                                                                                                            <input type="checkbox" id="removeBanner"><span>Remove banner</span>
-                                                                                                        </label>
-                                                                                                    </div>
-                                                                                                    <div>
-                                                                                                        <h4 style="font-weight: 400;">Keep Frames Per Second</h4>
-                                                                                                        <label class="checkbox" style="display: flex;align-items: center;gap: calc(1vh* var(--scale-factor-h));justify-content: space-between;">
-                                                                                                            <div style="display: flex;align-items: center;"><input type="checkbox" id="keepFPS"><span>Keep FPS</span></div>
-                                                                                                            <div id="keepFPSContainer" style="display: flex;align-items: center;flex-direction: row-reverse;gap: calc(1vh* var(--scale-factor-h));">
-                                                                                                                <input type="range" min="1" max="60" value="30" class="slider" id="fps-slider">
-                                                                                                                <div class="slider-value" id="fps-value">30</div>
-                                                                                                            </div>
-                                                                                                        </label>
-                                                                                                    </div>
-                                                                                                    <div>
-                                                                                                        <h4 style="font-weight: 400;">Skip Servers With Low GPU's</h4>
-                                                                                                        <label class="checkbox">
-                                                                                                            <input type="checkbox" id="skipSlowServers">Skip Slow Servers</input>
-                                                                                                        </label>
-                                                                                                    </div>
-                                                                                                    <div>
-                                                                                                        <h4 style="font-weight: 400;">Preview Servers</h4>
-                                                                                                        <label class="checkbox">
-                                                                                                            <input type="checkbox" id="showServers">Server List</input>
-                                                                                                        </label>
-                                                                                                    </div>
-                                                                                                    <div id="serverList" style="display: flex;justify-content: space-evenly;flex-wrap: wrap;align-content: stretch;flex-direction: column;"></div>
-                                                                                                </div>
-                                                                                                <div class="line"></div>
-                                                                                            <div style="display: flex;gap: calc(1.5vh* var(--scale-factor-h));">
-                                                                                                <button class="wide" id="startProcessBtn">Start Process</button>
-                                                                                                <button class="wide" id="cancellProcessBtn" >Cancel Process</button>
                                                                                             </div>
                                                                                         </div>
                                                                                     </div>
                                                                                 </div>
-                                                                            </div>
-                                                                            <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
-                                                                                <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
-                                                                                    <div class="background-dot-container">
-                                                                                        <div class="background-dot-container-content">
-                                                                                            <div class="outputs"></div>
-                                                                                            <div style="display: flex;justify-content: space-around;gap: calc(1.5vh* var(--scale-factor-h));">
-                                                                                                <button class="wide" id="downloadOutput">Download</button>
-                                                                                                <button class="wide" id="viewOutput">View</button>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                        `);
+                                                                                `);
             }
 
             loadPageContent(setUser, retrieveImageFromURL, getUserIpAddress, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, setAuthentication, updateMainContent, savePageState);
@@ -733,7 +715,7 @@
 
                 const processText = msg => setProcessText(element, msg);
 
-                if (active && !element.classList.contains('active')) 
+                if (active && !element.classList.contains('active'))
                     element.classList.add('active');
 
                 element.innerHTML = `<initial url="${url}" id="${id}" timestamp="${timestamp}" active="${active}"><div class="process-text">Downloading...</div><div class="delete-icon"></div></initial>`;
@@ -1207,9 +1189,9 @@
                     });
                 } else {
                     //if (!displayedError)
-                        //alert('No servers are currently online.');
+                    //alert('No servers are currently online.');
                     //else
-                        //alert('No servers are currently online.');
+                    //alert('No servers are currently online.');
                     //displayedError = true;
                 }
 
@@ -2026,7 +2008,7 @@
                 const downloadOutput = document.getElementById('downloadOutput');
                 if (downloadOutput) {
                     const activeDataContainer = document.querySelector(".outputs .data-container.active");
-                    if (!activeDataContainer) 
+                    if (!activeDataContainer)
                         downloadOutput.disabled = true;
 
                     downloadOutput.addEventListener('click', async () => {
@@ -2111,7 +2093,7 @@
                 const viewOutput = document.getElementById('viewOutput');
                 if (viewOutput) {
                     const activeDataContainer = document.querySelector(".outputs .data-container.active");
-                    if (!activeDataContainer) 
+                    if (!activeDataContainer)
                         viewOutput.disabled = true;
 
                     viewOutput.addEventListener('click', async () => {
@@ -2161,6 +2143,26 @@
             sizeBasedElements();
 
             window.addEventListener('resize', sizeBasedElements);
+        });
+    </script>
+    <script defer>
+        window.gtag = function () {
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push(arguments);
+        };
+
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(function () {
+                const gtagScript = document.createElement('script');
+                gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-BFR70Q5VX1';
+                gtagScript.async = true;
+                document.head.appendChild(gtagScript);
+
+                gtagScript.onload = function () {
+                    gtag('js', new Date());
+                    gtag('config', 'G-BFR70Q5VX1');
+                };
+            }, 500);
         });
     </script>
 </body>

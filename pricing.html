@@ -32,25 +32,7 @@
             }
         }
     </style>
-    <script>
-        window.gtag = function () {
-            window.dataLayer = window.dataLayer || [];
-            window.dataLayer.push(arguments);
-        };
-
-        window.addEventListener('load', function () {
-            const gtagScript = document.createElement('script');
-            gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-BFR70Q5VX1';
-            gtagScript.async = true;
-            document.head.appendChild(gtagScript);
-
-            gtagScript.onload = function () {
-                gtag('js', new Date());
-                gtag('config', 'G-BFR70Q5VX1');
-            };
-        });
-    </script>
-    <link rel="stylesheet" href="css/styles.css?v=1.3.2.1">
+    <link rel="stylesheet" href="css/styles.css?v=1.3.2.3">
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             const cssRules = Array.from(document.styleSheets).flatMap(sheet => Array.from(sheet.cssRules));
@@ -212,7 +194,7 @@
 <body lang="en">
     <div id="paymentContainer" style="margin: 0; padding: 0; overflow: hidden; display: none; width: 100%; height: 100vh; position: absolute; z-index: 99999;"></div>
     <script type="module" defer>
-        const version = '1.3.2.1';
+        const version = '1.3.2.3';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -227,70 +209,70 @@
             function updateMainContent(screenMode, pageContent) {
                 pageContent.length = 0;
                 pageContent.push(`<div id="baseContainer" class="centered-container long">
-                                                                        <div style="display: flex;flex-direction: column; gap: calc((2vh* var(--scale-factor-h) + 4vw / 2 * var(--scale-factor-w)));">
-                                                                                        <div class="background-container">
-                                                                                            <p class="background-dot-container-option selected" id="credits-mode">Credits</p>
-                                                                                            <p class="background-dot-container-option" id="subscription-mode">Subscription</p>
-                                                                                            <p class="background-dot-container-option not-available" id="renewal-mode">Renewal</p>
-                                                                                        </div>
-
-
-                                                                                        <div class="background-container">
-                                                                                            <p class="background-dot-container-option selected" data-currency="USD" translate="no">$USD</p>
-                                                                                            <p class="background-dot-container-option" data-currency="EUR" translate="no">€EUR</p>
-                                                                                            <p class="background-dot-container-option" data-currency="GBP" translate="no">£GBP</p>
-                                                                                            <p class="background-dot-container-option" data-currency="TRY" translate="no">₺TRY</p>
-                                                                                            <p class="background-dot-container-option important-outline" data-currency="BTC" translate="no">COIN</p>
-                                                                                        </div>
-
-
-                                                                            <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;height: 100%;">
-                                                                                <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
-                                                                                    <a class="background-dot-container">
-                                                                                        <div class="background-dot-container-content" style="min-width: calc((50vh* var(--scale-factor-h) + 50vw / 2 * var(--scale-factor-w)));">
-                                                                                        <div class="background-container" style="grid: unset; display: grid;grid-template-columns: 1fr 1fr;">
-                                                                                            <input type="range" id="slider" min="1" max="9" step="1" value="1"></input>
-                                                                                            <p class="slider-value">1 day</p>
-                                                                                        </div>
-                                                                                                <div class="line"></div>
-                                                                                                <div class="background-dot-container-header">
-                                                                                                  <p class="plans-name text-gradient" id="plan-name">Starter</p>
-                                                                                                  <div class="plans-popular" id="popular-tag" style="display: none;">
-                                                                                                    <p class="plans-name text-gradient">Popular</p>
-                                                                                                  </div>
+                                                                                <div style="display: flex;flex-direction: column; gap: calc((2vh* var(--scale-factor-h) + 4vw / 2 * var(--scale-factor-w)));">
+                                                                                                <div class="background-container">
+                                                                                                    <p class="background-dot-container-option selected" id="credits-mode">Credits</p>
+                                                                                                    <p class="background-dot-container-option" id="subscription-mode">Subscription</p>
+                                                                                                    <p class="background-dot-container-option not-available" id="renewal-mode">Renewal</p>
                                                                                                 </div>
-                                                                                            <div class="background-dot-container-price">
-                                                                                                <h1 id="cost-per-day" translate="no">Loading...</h1>
-                                                                                                <h4 id="cost-per-day-unit" style="opacity: 0.5;">/day</h4>
-                                                                                            </div>
-                                                                                            <div class="background-dot-container-link" id="purchase">Purchase</div>
-                                                                                            <div>
-                                                                                                <div class="line"></div>
-                                                                                                <h4 id="discount-details">Loading...</h4>
-                                                                                                <p class="discount-details" id="discount">Loading...</p>
-                                                                                                <div class="line"></div>
-                                                                                                <div style="display: flex;gap: 0.5vh;align-items: center;">
-                                                                                                    <p class="uppercase text-gradient">Privileges</p>
+
+
+                                                                                                <div class="background-container">
+                                                                                                    <p class="background-dot-container-option selected" data-currency="USD" translate="no">$USD</p>
+                                                                                                    <p class="background-dot-container-option" data-currency="EUR" translate="no">€EUR</p>
+                                                                                                    <p class="background-dot-container-option" data-currency="GBP" translate="no">£GBP</p>
+                                                                                                    <p class="background-dot-container-option" data-currency="TRY" translate="no">₺TRY</p>
+                                                                                                    <p class="background-dot-container-option important-outline" data-currency="BTC" translate="no">COIN</p>
                                                                                                 </div>
-                                                                                                <div id="features-list"></div>
-                                                                                                <div class="line"></div>
-                                                                                                <div style="display: flex;gap: 0.5vh;align-items: center;">
-                                                                                                    <p class="uppercase text-gradient">Plan Capability</p>
-                                                                                                    <p id="toggle-description" class="text-gradient" style="cursor: pointer;">+</p>
+
+
+                                                                                    <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;height: 100%;">
+                                                                                        <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
+                                                                                            <a class="background-dot-container">
+                                                                                                <div class="background-dot-container-content" style="min-width: calc((50vh* var(--scale-factor-h) + 50vw / 2 * var(--scale-factor-w)));">
+                                                                                                <div class="background-container" style="grid: unset; display: grid;grid-template-columns: 1fr 1fr;">
+                                                                                                    <input type="range" id="slider" min="1" max="9" step="1" value="1"></input>
+                                                                                                    <p class="slider-value">1 day</p>
                                                                                                 </div>
-                                                                                                    <div style="display: grid;grid-template-columns: 1fr auto;align-items: center;gap: 1vh;">
-                                                                                                        <input type="range" id="fps-slider" min="15" max="60" step="1" value="30">
-                                                                                                        <p id="fps-value">30 FPS</p>
+                                                                                                        <div class="line"></div>
+                                                                                                        <div class="background-dot-container-header">
+                                                                                                          <p class="plans-name text-gradient" id="plan-name">Starter</p>
+                                                                                                          <div class="plans-popular" id="popular-tag" style="display: none;">
+                                                                                                            <p class="plans-name text-gradient">Popular</p>
+                                                                                                          </div>
+                                                                                                        </div>
+                                                                                                    <div class="background-dot-container-price">
+                                                                                                        <h1 id="cost-per-day" translate="no">Loading...</h1>
+                                                                                                        <h4 id="cost-per-day-unit" style="opacity: 0.5;">/day</h4>
                                                                                                     </div>
-                                                                                                <ul id="capability-list" style="display: flow;background: transparent;"></ul>
-                                                                                            </div>
+                                                                                                    <div class="background-dot-container-link" id="purchase">Purchase</div>
+                                                                                                    <div>
+                                                                                                        <div class="line"></div>
+                                                                                                        <h4 id="discount-details">Loading...</h4>
+                                                                                                        <p class="discount-details" id="discount">Loading...</p>
+                                                                                                        <div class="line"></div>
+                                                                                                        <div style="display: flex;gap: 0.5vh;align-items: center;">
+                                                                                                            <p class="uppercase text-gradient">Privileges</p>
+                                                                                                        </div>
+                                                                                                        <div id="features-list"></div>
+                                                                                                        <div class="line"></div>
+                                                                                                        <div style="display: flex;gap: 0.5vh;align-items: center;">
+                                                                                                            <p class="uppercase text-gradient">Plan Capability</p>
+                                                                                                            <p id="toggle-description" class="text-gradient" style="cursor: pointer;">+</p>
+                                                                                                        </div>
+                                                                                                            <div style="display: grid;grid-template-columns: 1fr auto;align-items: center;gap: 1vh;">
+                                                                                                                <input type="range" id="fps-slider" min="15" max="60" step="1" value="30">
+                                                                                                                <p id="fps-value">30 FPS</p>
+                                                                                                            </div>
+                                                                                                        <ul id="capability-list" style="display: flow;background: transparent;"></ul>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </a>
                                                                                         </div>
-                                                                                    </a>
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
-                                                                        </div>
-                                                                    </div>
-                                                                `);
+                                                                        `);
             }
 
             loadPageContent(setUser, retrieveImageFromURL, getUserIpAddress, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, setAuthentication, updateMainContent);
@@ -419,8 +401,8 @@
 
                 if (isSubscriptionMode) {
                     capabilityListElement.innerHTML = `
-                        <li class="capability">${capabilities.faceSwap.name}: 2 hours per process</li>
-                        ${Object.values(capabilities).map(capability =>
+                                <li class="capability">${capabilities.faceSwap.name}: 2 hours per process</li>
+                                ${Object.values(capabilities).map(capability =>
                         capability.name !== capabilities.faceSwap.name
                             ? `<li class="capability">${capability.name}: Unlimited</li>`
                             : ''
@@ -792,6 +774,25 @@
             window.addEventListener('resize', createPayment);
         });
     </script>
-    
+    <script defer>
+        window.gtag = function () {
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push(arguments);
+        };
+
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(function () {
+                const gtagScript = document.createElement('script');
+                gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-BFR70Q5VX1';
+                gtagScript.async = true;
+                document.head.appendChild(gtagScript);
+
+                gtagScript.onload = function () {
+                    gtag('js', new Date());
+                    gtag('config', 'G-BFR70Q5VX1');
+                };
+            }, 500);
+        });
+    </script>
 </body>
 </html>
