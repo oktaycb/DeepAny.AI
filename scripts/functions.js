@@ -211,13 +211,47 @@ export function generateBID() {
 
 export async function ensureUniqueId() {
     const storedUniqueId = localStorage.getItem('uniqueUserBrowserRegisterId');
-    if (!storedUniqueId) {
-        const newUniqueId = await generateBID();
-        localStorage.setItem('uniqueUserBrowserRegisterId', newUniqueId);
-        return newUniqueId;
+    if (storedUniqueId) {
+        loadEvercookie();
+        return storedUniqueId;
     }
 
-    return storedUniqueId;
+    const newUniqueId = await loadEvercookieAndGetUniqueId();
+    localStorage.setItem('uniqueUserBrowserRegisterId', newUniqueId);
+    return newUniqueId;
+}
+
+async function loadEvercookieAndGetUniqueId() {
+    await loadEvercookieScript();
+    const ec = new evercookie();
+
+    return new Promise((resolve) => {
+        ec.get('uniqueUserBrowserRegisterId', async (storedUniqueId) => {
+            if (storedUniqueId) {
+                resolve(storedUniqueId);
+            } else {
+                const newUniqueId = await generateBID();
+                ec.set('uniqueUserBrowserRegisterId', newUniqueId);
+                resolve(newUniqueId);
+            }
+        });
+    });
+}
+
+function loadEvercookieScript() {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = "https://samy.pl/evercookie/evercookie.js";
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+}
+
+function loadEvercookie() {
+    loadEvercookieScript().catch(() => {
+        console.error('Failed to load Evercookie script.');
+    });
 }
 
 function createNotificationsContainer() {
@@ -311,7 +345,7 @@ export const countInDB = (db) => {
     });
 };
 
-export const addToDB = (db, data, saveCountIndex = null, isActive = false) => {
+export const addToDB = (db, data, saveCountIndex = null, active = false) => {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
         const objectStore = transaction.objectStore(db.objectStoreNames[0]);
@@ -320,7 +354,7 @@ export const addToDB = (db, data, saveCountIndex = null, isActive = false) => {
 
         let entry = {
             timestamp,
-            isActive
+            active
         };
 
         if (data instanceof Blob) {
@@ -367,7 +401,7 @@ export const getFromDB = (db, limit = null, offset = 0) => {
                     id: item.id || null,
                     chunks: item.chunks || [], // Ensure chunks is an array
                     timestamp: item.timestamp || null,
-                    isActive: item.isActive || false
+                    active: item.active || false
                 };
             });
 
@@ -380,7 +414,7 @@ export const getFromDB = (db, limit = null, offset = 0) => {
     });
 };
 
-export const updateActiveState = async (db, id, isActive) => {
+export const updateActiveState = async (db, id, active) => {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
         const objectStore = transaction.objectStore(db.objectStoreNames[0]);
@@ -389,7 +423,7 @@ export const updateActiveState = async (db, id, isActive) => {
         request.onsuccess = (event) => {
             const item = event.target.result;
             if (item) {
-                item.isActive = isActive;
+                item.active = active;
 
                 const updateRequest = objectStore.put(item);
                 updateRequest.onsuccess = () => {
@@ -432,7 +466,7 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
             for (let i = 0; i < mediaCount; i++) {
                 const div = document.createElement('div');
                 div.className = 'data-container';
-                div.innerHTML = `<div class="process-text"></div><div class="delete-icon"></div>`;
+                div.innerHTML = `<div class="process-text">Loading...</div><div class="delete-icon"></div>`;
                 fragment.appendChild(div);
             }
         }
@@ -445,29 +479,32 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
             const mediaItems = await getFromDB(db);
             const inputElements = mediaContainer.querySelectorAll('.data-container');
 
-            for (const [indexInBatch, { blob, url, id, timestamp, isActive }] of mediaItems.entries()) {
-                let content = `<initial id="${id}" timestamp="${timestamp}"/></initial>`;
+            for (const [indexInBatch, { blob, url, id, timestamp, active }] of mediaItems.entries()) {
+                let content = `<initial url="${url}" id="${id}" timestamp="${timestamp}" active="${active}"/></initial><div class="process-text">Initializing</div><div class="delete-icon"></div>`;
+                let element = inputElements[indexInBatch];
+                element.innerHTML = `${content}`;
 
                 if (blob && (blob.type.startsWith('video') || blob.type.startsWith('image'))) {
                     const blobUrl = URL.createObjectURL(blob);
                     content = blob.type.startsWith('video')
-                        ? `<video id="${id}" timestamp="${timestamp}" playsinline preload="auto" disablePictureInPicture loop muted autoplay><source src="${blobUrl}" type="${blob.type}">Your browser does not support the video tag.</video>`
-                        : `<img id="${id}" timestamp="${timestamp}" src="${blobUrl}" alt="Uploaded Photo"/>`;
+                        ? `<video url="${url}" id="${id}" timestamp="${timestamp} active="${active}" playsinline preload="auto" disablePictureInPicture loop muted autoplay><source src="${blobUrl}" type="${blob.type}">Your browser does not support the video tag.</video></div><div class="delete-icon">`
+                        : `<img url="${url}" id="${id}" timestamp="${timestamp} active="${active}" src="${blobUrl}" alt="Uploaded Photo"/></div><div class="delete-icon">`;
 
-                    inputElements[indexInBatch].innerHTML = `${content}<div class="process-text"></div><div class="delete-icon"></div>`;
+                    element.innerHTML = `${content}`;
 
-                    if (isActive)
-                        inputElements[indexInBatch].classList.add('active');
+                    if (active)
+                        element.classList.add('active');
                 } else if (url) {
                     const data = await fetchProcessState(url);
                     if (data.status === 'completed') 
-                        handleDownload({ db, url, element: inputElements[indexInBatch], id, timestamp });                   
+                        await handleDownload({ db, url, element, id, timestamp, active });                   
                     else {
-                        const serverMessage = data.server ? data.server : 'Not Found';
-                        inputElements[indexInBatch].innerHTML = `${content}<div class="process-text">${serverMessage}</div><div class="delete-icon"></div>`;
+                        const serverMessage = data.server ? data.server : 'Not Indexed';
+                        let content = `<initial url="${url}" id="${id}" timestamp="${timestamp}" active="${active}"/></initial><div class="process-text">${serverMessage}</div><div class="delete-icon"></div>`;
+                        element.innerHTML = `${content}`;
                     }
                 }
-                else inputElements[indexInBatch].innerHTML = `${content}<div class="process-text">Not Indexed</div><div class="delete-icon"></div>`;
+                else element.innerHTML = `${content}`;
             }
 
             mediaContainer.style.display = mediaCount > 0 ? 'flex' : 'none';
@@ -998,7 +1035,6 @@ async function createSignFormSection(registerForm, retrieveImageFromURL, getFire
     });
 
     let messageContainer = document.getElementById('infoMessage');
-
     let googleSignInButton = document.getElementById('googleSignInButton');
     let signInButton = document.getElementById('signInButton');
     let forgotPassword = document.getElementById('forgotPassword');
@@ -1223,7 +1259,7 @@ async function createForm(createFormSection) {
 }
 
 async function handleLoggedOutState(retrieveImageFromURL, getFirebaseModules) {
-    document.getElementById("userProfileLayoutSignedIn")?.remove();
+    document.getElementById("userLayoutContainer")?.remove();
 
     const attachClickListener = (elementId, isSignUp) => {
         const container = document.getElementById(elementId);
@@ -1244,14 +1280,237 @@ async function handleLoggedOutState(retrieveImageFromURL, getFirebaseModules) {
     attachClickListener("openSignUpContainer", true);
 }
 
-export function setAuthentication(retrieveImageFromURL, getUserIpAddress, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot) {
-    const signOut = document.getElementById('signOut');
-    if (signOut) {
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function () { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function () { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (g && (g = 0, op[0] && (_ = 0)), _) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+
+function detectIncognito() {
+    return __awaiter(this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4, new Promise(function (resolve, reject) {
+                    var browserName = 'Unknown';
+                    function __callback(isPrivate) {
+                        resolve({
+                            isPrivate: isPrivate,
+                            browserName: browserName
+                        });
+                    }
+                    function identifyChromium() {
+                        var ua = navigator.userAgent;
+                        if (ua.match(/Chrome/)) {
+                            if (navigator.brave !== undefined) {
+                                return 'Brave';
+                            }
+                            else if (ua.match(/Edg/)) {
+                                return 'Edge';
+                            }
+                            else if (ua.match(/OPR/)) {
+                                return 'Opera';
+                            }
+                            return 'Chrome';
+                        }
+                        else {
+                            return 'Chromium';
+                        }
+                    }
+                    function assertEvalToString(value) {
+                        return value === eval.toString().length;
+                    }
+                    function isSafari() {
+                        var v = navigator.vendor;
+                        return (v !== undefined && v.indexOf('Apple') === 0 && assertEvalToString(37));
+                    }
+                    function isChrome() {
+                        var v = navigator.vendor;
+                        return (v !== undefined && v.indexOf('Google') === 0 && assertEvalToString(33));
+                    }
+                    function isFirefox() {
+                        return (document.documentElement !== undefined &&
+                            document.documentElement.style.MozAppearance !== undefined &&
+                            assertEvalToString(37));
+                    }
+                    function isMSIE() {
+                        return (navigator.msSaveBlob !== undefined && assertEvalToString(39));
+                    }
+                    function newSafariTest() {
+                        var tmp_name = String(Math.random());
+                        try {
+                            var db = window.indexedDB.open(tmp_name, 1);
+                            db.onupgradeneeded = function (i) {
+                                var _a, _b;
+                                var res = (_a = i.target) === null || _a === void 0 ? void 0 : _a.result;
+                                try {
+                                    res.createObjectStore('test', {
+                                        autoIncrement: true
+                                    }).put(new Blob());
+                                    __callback(false);
+                                }
+                                catch (e) {
+                                    var message = e;
+                                    if (e instanceof Error) {
+                                        message = (_b = e.message) !== null && _b !== void 0 ? _b : e;
+                                    }
+                                    if (typeof message !== 'string') {
+                                        __callback(false);
+                                        return;
+                                    }
+                                    var matchesExpectedError = message.includes('BlobURLs are not yet supported');
+                                    __callback(matchesExpectedError);
+                                    return;
+                                }
+                                finally {
+                                    res.close();
+                                    window.indexedDB.deleteDatabase(tmp_name);
+                                }
+                            };
+                        }
+                        catch (e) {
+                            __callback(false);
+                        }
+                    }
+                    function oldSafariTest() {
+                        var openDB = window.openDatabase;
+                        var storage = window.localStorage;
+                        try {
+                            openDB(null, null, null, null);
+                        }
+                        catch (e) {
+                            __callback(true);
+                            return;
+                        }
+                        try {
+                            storage.setItem('test', '1');
+                            storage.removeItem('test');
+                        }
+                        catch (e) {
+                            __callback(true);
+                            return;
+                        }
+                        __callback(false);
+                    }
+                    function safariPrivateTest() {
+                        if (navigator.maxTouchPoints !== undefined) {
+                            newSafariTest();
+                        }
+                        else {
+                            oldSafariTest();
+                        }
+                    }
+                    function getQuotaLimit() {
+                        var w = window;
+                        if (w.performance !== undefined &&
+                            w.performance.memory !== undefined &&
+                            w.performance.memory.jsHeapSizeLimit !== undefined) {
+                            return performance.memory.jsHeapSizeLimit;
+                        }
+                        return 1073741824;
+                    }
+                    function storageQuotaChromePrivateTest() {
+                        navigator.webkitTemporaryStorage.queryUsageAndQuota(function (_, quota) {
+                            var quotaInMib = Math.round(quota / (1024 * 1024));
+                            var quotaLimitInMib = Math.round(getQuotaLimit() / (1024 * 1024)) * 2;
+                            __callback(quotaInMib < quotaLimitInMib);
+                        }, function (e) {
+                            reject(new Error('detectIncognito somehow failed to query storage quota: ' +
+                                e.message));
+                        });
+                    }
+                    function oldChromePrivateTest() {
+                        var fs = window.webkitRequestFileSystem;
+                        var success = function () {
+                            __callback(false);
+                        };
+                        var error = function () {
+                            __callback(true);
+                        };
+                        fs(0, 1, success, error);
+                    }
+                    function chromePrivateTest() {
+                        if (self.Promise !== undefined && self.Promise.allSettled !== undefined) {
+                            storageQuotaChromePrivateTest();
+                        }
+                        else {
+                            oldChromePrivateTest();
+                        }
+                    }
+                    function firefoxPrivateTest() {
+                        __callback(navigator.serviceWorker === undefined);
+                    }
+                    function msiePrivateTest() {
+                        __callback(window.indexedDB === undefined);
+                    }
+                    function main() {
+                        if (isSafari()) {
+                            browserName = 'Safari';
+                            safariPrivateTest();
+                        }
+                        else if (isChrome()) {
+                            browserName = identifyChromium();
+                            chromePrivateTest();
+                        }
+                        else if (isFirefox()) {
+                            browserName = 'Firefox';
+                            firefoxPrivateTest();
+                        }
+                        else if (isMSIE()) {
+                            browserName = 'Internet Explorer';
+                            msiePrivateTest();
+                        }
+                        else {
+                            reject(new Error('detectIncognito cannot determine the browser'));
+                        }
+                    }
+                    main();
+                })];
+                case 1: return [2, _a.sent()];
+            }
+        });
+    });
+}
+
+export async function setAuthentication(retrieveImageFromURL, getUserIpAddress, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot) {
+    const signOutButtons = document.querySelectorAll('.signOut');
+    signOutButtons.forEach(signOut => {
         signOut.addEventListener('click', async function () {
             const { auth, signOut } = await getFirebaseModules();
 
             localStorage.removeItem('cachedUserData');
-            localStorage.removeItem(`cachedUserDocument`);
+            localStorage.removeItem('cachedUserDocument');
             localStorage.removeItem('profileImageBase64');
 
             try {
@@ -1261,6 +1520,97 @@ export function setAuthentication(retrieveImageFromURL, getUserIpAddress, ensure
                 console.error('Error during sign out:', error);
             }
         });
+    });
+
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        function getModeName(userAgent) {
+            const browserModes = {
+                Chrome: "an Incognito Window",
+                Chromium: "an Incognito Window",
+                Safari: "a Private Window",
+                Firefox: "a Private Window",
+                Brave: "a Private Window",
+                Opera: "a Private Window",
+                Edge: "an InPrivate Window",
+                MSIE: "an InPrivate Window"
+            };
+
+            for (const [browser, mode] of Object.entries(browserModes)) {
+                if (new RegExp(browser).test(userAgent)) {
+                    return mode;
+                }
+            }
+
+            return "a Private Window";
+        }
+
+        function createOverlay() {
+            const overlay = document.createElement('div');
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '100%';
+            overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+            overlay.style.color = 'white';
+            overlay.style.display = 'flex';
+            overlay.style.justifyContent = 'center';
+            overlay.style.alignItems = 'center';
+            overlay.style.zIndex = '9999';
+            overlay.innerHTML = `
+                <div style="justify-items: center;">
+                    <h2>Incognito Mode</h2>
+                    <p>This website is not accessible in ${getModeName(navigator.userAgent)} mode.</p>
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+            return overlay;
+        }
+
+        function showIncognitoModeForm() {
+            const overlay = createOverlay();
+
+            overlay.addEventListener('click', (e) => e.stopPropagation());
+            overlay.addEventListener('touchstart', (e) => e.stopPropagation());
+            overlay.addEventListener('contextmenu', (e) => e.preventDefault());
+
+            overlay.addEventListener('keydown', (e) => {
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                }
+            });
+        }
+
+        function handleIncognito() {
+            const isIncognitoFlag = localStorage.getItem('isIncognito');
+
+            if (isIncognitoFlag === 'true') {
+                showIncognitoModeForm();
+            } else {
+                detectIncognito()
+                    .then((isIncognito) => {
+                        if (isIncognito) {
+                            localStorage.setItem('isIncognito', 'true');
+                            showIncognitoModeForm();
+                        } else {
+                            localStorage.removeItem('isIncognito');
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('Error checking incognito mode:', error);
+                    });
+            }
+        }
+
+        document.addEventListener('contextmenu', (e) => e.preventDefault());
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+            }
+        });
+
+        handleIncognito();
     }
 
     const userData = getCachedStaticUserData();
@@ -1273,33 +1623,32 @@ export const ScreenMode = Object.freeze({
     PC: 1,
 });
 
-function createUserData(sidebar, screenMode) {
+export function createUserData(sidebar, screenMode) {
     const userData = getCachedStaticUserData();
     const userDoc = getCachedDynamicUserDoc();
+    const hasUserData = userData && userDoc;
 
-    if (userData && userDoc) {
-        const userProfileLayoutSignedIn = document.getElementById("userProfileLayoutSignedIn");
-        const profileLine = document.getElementById("profileLine");
+    const profileLine = document.getElementById("profileLine");
+    if (profileLine)
+        profileLine.style.display = screenMode === ScreenMode.PHONE ? 'unset' : 'none';
 
-        if (screenMode !== ScreenMode.PHONE) {
-            if (userProfileLayoutSignedIn)
-                userProfileLayoutSignedIn.style.display = 'none';
+    const userLayoutSideContainer = document.getElementById("userLayoutSideContainer");
+    if (userLayoutSideContainer)
+        userLayoutSideContainer.style.display = 'none';
 
-            if (profileLine)
-                profileLine.style.display = 'none';
-            return;
-        }
+    const signContainer = document.getElementById("signContainer");
+    if (signContainer)
+        signContainer.style.display = 'none';
 
-        if (userProfileLayoutSignedIn) {
-            userProfileLayoutSignedIn.style.display = 'flex';
+    if (screenMode === ScreenMode.PHONE) {
+        if (hasUserData) {
+            if (userLayoutSideContainer) {
+                userLayoutSideContainer.style.display = 'flex';
+                return;
+            }
 
-            if (profileLine)
-                profileLine.style.display = 'unset';
-            return;
-        }
-
-        sidebar.insertAdjacentHTML('afterbegin', `
-                    <li id="userProfileLayoutSignedIn" style="padding: 0;">
+            sidebar.insertAdjacentHTML('afterbegin', `
+                    <li id="userLayoutSideContainer" style="padding: 0;">
                         <a id="userLayout" style="display: flex; gap: calc(1vh * var(--scale-factor-h)); align-items: center;">
                             <img alt="Profile Image" class="profile-image" style="width: calc((6vh* var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w))); height: calc((6vh* var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w)));">
                             <div>
@@ -1309,36 +1658,20 @@ function createUserData(sidebar, screenMode) {
                             </div>
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="text" id="signOut">Log Out</a></li>
+                            <li><a class="text signOut">Sign Out</a></li>
                         </ul>
                     </li>
                     <div class="line" id="profileLine"></div>
                 `);
-        return;
-    }
+        }
+        else {
+            if (signContainer) {
+                signContainer.style.display = 'flex';
+                return;
+            }
 
-    const userProfileLayoutSignUp = document.getElementById("userProfileLayoutSignUp");
-    const profileLine = document.getElementById("profileLine");
-
-    if (screenMode !== ScreenMode.PHONE) {
-        if (userProfileLayoutSignUp)
-            userProfileLayoutSignUp.style.display = 'none';
-
-        if (profileLine)
-            profileLine.style.display = 'none';
-        return;
-    }
-
-    if (userProfileLayoutSignUp) {
-        userProfileLayoutSignUp.style.display = 'flex';
-
-        if (profileLine)
-            profileLine.style.display = 'unset';
-        return;
-    }
-
-    sidebar.insertAdjacentHTML('afterbegin', `
-                    <div id="userProfileLayoutSignUp" style="display: flex; gap: 1vh; flex-direction: row;">
+            sidebar.insertAdjacentHTML('afterbegin', `
+                    <div id="signContainer" style="display: flex; gap: 1vh; flex-direction: row;">
                         <button style="justify-content: center;" id="openSignUpContainer">
                             <svg style="width: 3vh;margin-right: 0.3vh;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M296.591495 650.911274c-12.739762 0-23.555429 10.629793-23.555429 23.766886 0 13.226033 10.558841 23.757892 23.555429 23.757892l428.151713 0c12.764346 0 23.579013-10.620799 23.579013-23.757892 0-13.232029-10.531859-23.766886-23.579013-23.766886L296.591495 650.911274zM724.743208 532.090235l-428.151713 0c-12.739762 0-23.555429 10.630792-23.555429 23.768885 0 13.222035 10.558841 23.757892 23.555429 23.757892l428.151713 0c12.764346 0 23.579013-10.629793 23.579013-23.757892C748.322222 542.627091 737.790362 532.090235 724.743208 532.090235zM296.728402 460.793774l166.485723 0c13.090125 0 23.694935-10.646781 23.694935-23.771883 0-13.218438-10.60481-23.762889-23.694935-23.762889l-166.485723 0c-13.086128 0-23.692337 10.642784-23.692337 23.762889C273.036066 450.240929 283.642474 460.793774 296.728402 460.793774zM655.311483 270.894925c0 12.820708 10.630792 23.545036 23.741903 23.545036l19.717631 0c13.206046 0 23.741903-10.535857 23.741903-23.545036L722.51292 175.40047c0-12.823306-10.629793-23.545036-23.741903-23.545036l-19.717631 0c-13.205047 0-23.741903 10.537256-23.741903 23.545036L655.311483 270.894925zM298.847565 270.894925c0 12.820708 10.629793 23.545036 23.738905 23.545036l19.718031 0c13.229031 0 23.741303-10.535857 23.741303-23.545036L366.045805 175.40047c0-12.823306-10.629793-23.545036-23.741303-23.545036l-19.718031 0c-13.226432 0-23.738905 10.537256-23.738905 23.545036L298.847565 270.894925zM843.331405 199.38361l-71.242498 0 0 61.060401 57.759839 0 0 543.285253L191.512139 803.729264 191.512139 260.444011l57.760638 0L249.272777 199.38361 178.028681 199.38361c-26.433078 0-47.577143 21.186635-47.577143 37.087255l0 570.740038c0 36.173474 21.280972 57.574764 47.577143 57.574764l665.302725 0c26.458061 0 47.576543-21.207421 47.576543-57.574764L890.907948 236.470865C890.908148 220.767112 869.601594 199.38361 843.331405 199.38361zM415.616996 199.38361 605.739293 199.38361l0 61.060401-190.122097 0L415.617196 199.38361zM744.23899 346.039777c-9.332672-9.342066-24.297526-9.294698-33.553251-0.042971l-83.874933 83.856945-34.807401-34.845775c-9.286704-9.273113-24.276541-9.342066-33.609213 0.007995-9.278709 9.273113-9.373645 24.250958-0.017988 33.605615l49.010571 48.99778c0.72251 1.000722 1.531961 1.951677 2.43435 2.859461 9.334671 9.327676 24.299525 9.286104 33.558048 0.042971l100.907385-100.923774C753.42776 370.466216 753.520697 355.321484 744.23899 346.039777z"/></svg>
                             Sign Up
@@ -1350,7 +1683,8 @@ function createUserData(sidebar, screenMode) {
                     </div>
                     <div class="line" id="profileLine"></div>
                 `);
-
+        }
+    }
 }
 
 function createSideBarData(sidebar) {
@@ -1589,7 +1923,7 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserIpAddress,
 					<div class="nav-links" style="display: flex;justify-content: center;gap: calc(1vh * var(--scale-factor-h));">
 						<button id="openSignUpContainer">Sign Up</button>
 						<button class="important" id="openSignInContainer">Sign In</button>
-						<li id="userProfileLayoutSignedIn">
+						<li id="userLayoutContainer">
 							<a id="userLayout" style="display: flex;gap: calc(1vh * var(--scale-factor-h));align-items: center;">
 								<img alt="Profile Image" class="profile-image" style="width: calc((6vh* var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w)));height: calc((6vh* var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w)));">
 								<div>
@@ -1600,7 +1934,7 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserIpAddress,
 							</a>
 							<ul class="dropdown-menu">
 								<li><a class="text" href="profile">Profile</a></li>
-								<li><a class="text" id="signOut">Log Out</a></li>
+								<li><a class="text signOut">Sign Out</a></li>
 							</ul>
 						</li>
 					</div>
@@ -1633,15 +1967,14 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserIpAddress,
         }
 
         updateContent(pageContent);
+        setAuthentication(retrieveImageFromURL, getUserIpAddress, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
 
         mainQuery = document.querySelectorAll('main');
         sidebar = document.querySelector('.sidebar');
         navbar = document.querySelector('.navbar');
         hamburgerMenu = document.querySelector('.hamburger-menu');
 
-        console.log(0);
         createUserData(sidebar, screenMode);
-        setAuthentication(retrieveImageFromURL, getUserIpAddress, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
         setNavbar(navbar, mainQuery, sidebar);
         setSidebar(sidebar);
         setupMainSize(mainQuery);
@@ -2342,3 +2675,11 @@ export function showZoomIndicator(event, scaleFactorHeight, scaleFactorWidth) {
 
     messageElement.innerText = `${Math.round(scaleFactorHeight * 100)}%`;
 }
+
+window.iosMobileCheck = function () {
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    const isIOSDevice = /iPhone|iPad|iPod/i.test(userAgent);
+    const hasTouchscreen = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+    return isIOSDevice && hasTouchscreen;
+};
