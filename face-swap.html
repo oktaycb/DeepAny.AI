@@ -47,7 +47,7 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="css/styles.css?v=1.3.3.3">
+    <link rel="stylesheet" href="css/styles.css?v=1.3.3.5">
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             const cssRules = Array.from(document.styleSheets).flatMap(sheet => Array.from(sheet.cssRules));
@@ -76,7 +76,7 @@
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = '1.3.3.3';
+        const version = '1.3.3.5';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -1678,7 +1678,7 @@
                             }
                         }
 
-                        const serverForSmallProcesses = "https://3080TI-1-DF.bodyswap.me";
+                        const serverForSmallProcesses = "https://4090-1-DF.bodyswap.me";
                         const serverPromises = serverAddresses.map(server => checkServerQueue(server));
                         const results = await Promise.all(serverPromises);
 
