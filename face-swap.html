@@ -47,7 +47,7 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="css/styles.css?v=1.3.2.3">
+    <link rel="stylesheet" href="css/styles.css?v=1.3.3.3">
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             const cssRules = Array.from(document.styleSheets).flatMap(sheet => Array.from(sheet.cssRules));
@@ -76,7 +76,7 @@
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = '1.3.2.3';
+        const version = '1.3.3.3';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -84,7 +84,7 @@
 
         document.addEventListener('DOMContentLoaded', async function () {
             const functions = await loadModule('./scripts/functions.js');
-            const { showNotification, fetchProcessState, openDB, addToDB, countInDB, getFromDB, updateActiveState, initDB, updateInDB, updateChunksInDB, deleteFromDB, setUser, setCurrentUserDoc, getCachedStaticUserData, getCachedDynamicUserDoc, setAuthentication, getFirebaseModules, getDocSnapshot, getDocsSnapshot, getScreenMode, getCurrentMain, updateContent, ScreenMode, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserIpAddress, fetchServerAddresses, getPageName } = functions;
+            const { showNotification, fetchProcessState, openDB, addToDB, countInDB, getFromDB, updateActiveState, initDB, updateInDB, updateChunksInDB, deleteFromDB, setUser, setCurrentUserDoc, getUserData, getUserDoc, setAuthentication, getFirebaseModules, getDocSnapshot, getDocsSnapshot, getScreenMode, getCurrentMain, updateContent, ScreenMode, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol, fetchServerAddresses, getPageName } = functions;
 
             if (!window.indexedDB) {
                 alert('Your browser does not support IndexedDB.');
@@ -143,8 +143,8 @@
                 localStorage.setItem(pageName, JSON.stringify(state));
             }
 
-            let userData = getCachedStaticUserData();
-            let userDoc = getCachedDynamicUserDoc();
+            let userData = getUserData();
+            let userDoc = getUserDoc();
 
             function updateMainContent(screenMode, pageContent) {
                 pageContent.length = 0;
@@ -424,7 +424,7 @@
                                                                                 `);
             }
 
-            loadPageContent(setUser, retrieveImageFromURL, getUserIpAddress, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, setAuthentication, updateMainContent, savePageState);
+            loadPageContent(setUser, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, setAuthentication, updateMainContent, savePageState);
 
             const mainContainers = document.querySelectorAll('.main-container');
             mainContainers.forEach((mainContainer, id) => {
@@ -494,7 +494,7 @@
 
                 const enabledPixelBoost = getSelectedInputId(pixelBoosters);
                 if (enabledPixelBoost)
-                    maximumAllowedFrames /= parseInt(enabledPixelBoost.match(/\d+x\d+/)[0].split('x')[0], 10) / 128;
+                    maximumAllowedFrames /= parseInt(enabledPixelBoost.match(/\d+x\d+/)[0].split('x')[0]) / 128;
 
                 if (!document.getElementById("enableEnhancedLandmarks").checked)
                     maximumAllowedFrames *= 1.1;
@@ -798,7 +798,7 @@
                             }
 
                             lastProgress = (downloadedBytes / totalBytes) * 100;
-                            if (Math.floor(lastProgress) % 5 === 0 && Math.floor(lastProgress) > lastSavedProgress) {
+                            if (Math.floor(lastProgress) % 1 === 0 && Math.floor(lastProgress) > lastSavedProgress) {
                                 await updateChunksInDB(db, url, chunks);
                                 localStorage.setItem(`downloadedBytes_${id}`, downloadedBytes);
                                 lastSavedProgress = Math.floor(lastProgress);
@@ -832,7 +832,7 @@
                             for (const container of activeContainers) {
                                 container.classList.remove('active');
                                 const element = container.querySelector('img, video, initial');
-                                const id = parseInt(element.getAttribute('id'), 10);
+                                const id = parseInt(element.getAttribute('id'));
                                 if (id) {
                                     await updateActiveState(db, id, false).catch(err => {
                                         alert(`Update failed for id ${id}:`, err);
@@ -886,14 +886,14 @@
             const handleDelete = async (dbName, storeName, parent) => {
                 try {
                     const element = parent.querySelector('img, video, initial');
-                    const domIndex = parseInt(element.getAttribute('id'), 10);
+                    const domIndex = parseInt(element.getAttribute('id'));
                     const db = await openDB(dbName, storeName);
                     const items = await getFromDB(db);
 
                     let itemToDelete = items.find(item => item.id === domIndex);
 
                     if (!itemToDelete) {
-                        const domTimestamp = parseInt(element.getAttribute('timestamp'), 10);
+                        const domTimestamp = parseInt(element.getAttribute('timestamp'));
                         itemToDelete = items.find(item => item.timestamp === domTimestamp);
                     }
 
@@ -932,7 +932,7 @@
                     activeElement.classList.remove("active");
 
                     const element = activeElement.querySelector('img, video, initial');
-                    const domIndex = parseInt(element.getAttribute('id'), 10);
+                    const domIndex = parseInt(element.getAttribute('id'));
 
                     if (!isNaN(domIndex)) {
                         await updateActiveState(await db, domIndex, false);
@@ -942,7 +942,7 @@
                 }
 
                 const element = parent.querySelector('img, video, initial');
-                const domIndex = parseInt(element.getAttribute('id'), 10);
+                const domIndex = parseInt(element.getAttribute('id'));
 
                 if (!isNaN(domIndex)) {
                     if (parent.classList.contains("active")) {
@@ -1010,7 +1010,7 @@
                         for (const container of activeContainers) {
                             container.classList.remove('active');
                             const element = container.querySelector('img, video, initial');
-                            const id = parseInt(element.getAttribute('id'), 10);
+                            const id = parseInt(element.getAttribute('id'));
                             if (id) {
                                 await updateActiveState(db, id, false).catch(err => {
                                     alert(`Update failed for id ${id}:`, err);
@@ -1095,7 +1095,7 @@
                 if (downloadFile)
                     return;
 
-                downloadFile = true;
+                updateDownloadFile(true);
             }
 
             function updateClientStatus(processingAmount, remainingTime, elapsedTime) {
@@ -1107,7 +1107,7 @@
 
             async function handleDownloadFileIfNeeded() {
                 if (!downloadFile) return;
-                downloadFile = false;
+                updateDownloadFile(false);
 
                 const db = await openDB(`outputDB-${pageName}`, 'outputs');
                 const outputs = (await getFromDB(db)).reverse();
@@ -1142,58 +1142,71 @@
             let serverListContainer = document.getElementById('serverList');
             let fetchableServerAddresses = null;
 
+            const loadCachedServerData = () => {
+                serverListContainer = document.getElementById('serverList');
+                serverListContainer.innerHTML = '';
+
+                const cachedData = localStorage.getItem('serverData');
+                if (cachedData) {
+                    const results = JSON.parse(cachedData);
+                    results.forEach((serverData, serverIndex) => {
+                        const newTime = calculateNewTime(serverData.remainingTime, serverData.queueAmount);
+                        const listItem = document.createElement('div');
+                        listItem.innerHTML = `<p>Server ${serverIndex + 1} (${serverData.SERVER_1}) - Queue: ${serverData.queueAmount !== null ? serverData.queueAmount : Infinity} - ${serverData.frameCount || 0}/${serverData.totalFrames || 0} (%${serverData.processingAmount || 0}) - ${newTime}</p>`;
+                        serverListContainer.appendChild(listItem);
+                    });
+                }
+            };
+
             async function checkServerStatus() {
-                serverListContainer = serverListContainer || document.getElementById('serverList');
+                loadCachedServerData();
 
                 if (!fetchableServerAddresses) {
                     try {
-                        fetchableServerAddresses = (await fetchServerAddresses(getDocsSnapshot('servers'))).reverse()
+                        fetchableServerAddresses = (await fetchServerAddresses(getDocsSnapshot('servers'))).reverse();
                     } catch (error) {
                         alert(`Error fetching server addresses: ${error.message}`);
                         return;
                     }
                 }
 
-                if (!fetchableServerAddresses)
-                    return;
+                if (!fetchableServerAddresses) return;
 
                 const serverPromises = fetchableServerAddresses.map(async (server) => {
-                    const response = await fetch(`${server}/get-online`);
-                    if (response.status !== STATUS_OK)
-                        return { queueAmount: Infinity };
-
-                    const data = await response.json();
-                    return {
-                        queueAmount: data.server,
-                        remainingTime: data.remainingTime,
-                        elapsedTime: data.elapsedTime,
-                        frameCount: data.frameCount,
-                        totalFrames: data.totalFrames,
-                        requestQueue: data.requestQueue,
-                        uniqueId: data.uniqueId,
-                        processingAmount: data.processingAmount,
-                        SERVER_1: data.SERVER_1,
-                    };
+                    try {
+                        const response = await fetch(`${server}/get-online`);
+                        if (response.status === STATUS_OK) {
+                            const data = await response.json();
+                            return {
+                                queueAmount: data.server,
+                                remainingTime: data.remainingTime,
+                                elapsedTime: data.elapsedTime,
+                                frameCount: data.frameCount,
+                                totalFrames: data.totalFrames,
+                                requestQueue: data.requestQueue,
+                                uniqueId: data.uniqueId,
+                                processingAmount: data.processingAmount,
+                                SERVER_1: data.SERVER_1,
+                            };
+                        } else {
+                            return { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Unknown" };
+                        }
+                    } catch (error) {
+                        return { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Offline" };
+                    }
                 });
 
                 const results = await Promise.all(serverPromises);
                 serverListContainer.innerHTML = '';
 
-                const onlineServers = results.filter(serverData => serverData.queueAmount !== Infinity);
-                if (onlineServers.length) {
-                    onlineServers.forEach((serverData, serverIndex) => {
-                        const listItem = document.createElement('div');
-                        const newTime = calculateNewTime(serverData.remainingTime, serverData.queueAmount);
-                        listItem.innerHTML = `<p>Server ${serverIndex + 1} (${serverData.SERVER_1}) - Queue: ${serverData.queueAmount === Infinity ? "Offline" : serverData.queueAmount} - ${serverData.frameCount || 0}/${serverData.totalFrames || 0} (%${serverData.processingAmount || 0}) - ${newTime}</p>`;
-                        serverListContainer.appendChild(listItem);
-                    });
-                } else {
-                    //if (!displayedError)
-                    //alert('No servers are currently online.');
-                    //else
-                    //alert('No servers are currently online.');
-                    //displayedError = true;
-                }
+                results.forEach((serverData, serverIndex) => {
+                    const newTime = calculateNewTime(serverData.remainingTime, serverData.queueAmount);
+                    const listItem = document.createElement('div');
+                    listItem.innerHTML = `<p>Server ${serverIndex + 1} (${serverData.SERVER_1}) - Queue: ${serverData.queueAmount} - ${serverData.frameCount || 0}/${serverData.totalFrames || 0} (%${serverData.processingAmount || 0}) - ${newTime}</p>`;
+                    serverListContainer.appendChild(listItem);
+                });
+
+                localStorage.setItem('serverData', JSON.stringify(results));
 
                 if (!userData?.uid) {
                     return;
@@ -1208,9 +1221,23 @@
                 }
             }
 
-            checkServerStatus();
+            let intervalId;
 
-            setInterval(checkServerStatus, 1000);
+            const setDynamicInterval = () => {
+                if (intervalId) {
+                    clearInterval(intervalId);
+                }
+
+                intervalId = setInterval(checkServerStatus, downloadFile ? 1000 : 5000);
+            };
+
+            checkServerStatus();
+            setDynamicInterval();
+
+            function updateDownloadFile(newValue) {
+                downloadFile = newValue; 
+                setDynamicInterval();
+            }
 
             function calculateNewTime(remainingTime, queueAmount) {
                 if (!remainingTime) {
@@ -1509,10 +1536,10 @@
                 const enhancerBlendDisplayValue = document.getElementById('enhancerBlendDisplayValue');
 
                 if (enhancerBlendDisplayValue && enhancerBlendValueSlider) {
-                    enhancerBlendDisplayValue.innerText = parseInt(enhancerBlendValueSlider.value, 10) < 25 ? 'Auto' : enhancerBlendValueSlider.value + "%";
+                    enhancerBlendDisplayValue.innerText = parseInt(enhancerBlendValueSlider.value) < 25 ? 'Auto' : enhancerBlendValueSlider.value + "%";
 
                     enhancerBlendValueSlider.addEventListener('input', () => {
-                        enhancerBlendDisplayValue.innerText = parseInt(enhancerBlendValueSlider.value, 10) < 25 ? 'Auto' : enhancerBlendValueSlider.value + "%";
+                        enhancerBlendDisplayValue.innerText = parseInt(enhancerBlendValueSlider.value) < 25 ? 'Auto' : enhancerBlendValueSlider.value + "%";
                     });
                 }
 
@@ -1548,7 +1575,7 @@
                             return;
                         }
 
-                        userDoc = getCachedDynamicUserDoc();
+                        userDoc = getUserDoc();
 
                         const activeVideoInput = document.querySelector(".inputs .data-container.active video");
                         const activePhotoInput = document.querySelector(".inputs .data-container.active img");
@@ -1578,8 +1605,13 @@
                             }
 
                             if (videoDurationTotalFrames > maximumAllowedFrames && !userDoc.admin) {
-                                setClientStatus(`Exceeding Frame Limit | Lower the settings`);
-                                showNotification(!keepFPS.checked ? 'If your video has less than 60 FPS, please specify by closing Keep FPS option.' : 'Lowering the settings will increase frame limit.', 'Warning - Exceeding Frame Limit', 'warning');
+                                setClientStatus(`Exceeding Frame Limit ${maximumAllowedFrames}`);
+
+                                const message = !keepFPS.checked
+                                    ? `Your video has ${videoDurationTotalFrames} frames, exceeding the limit of ${maximumAllowedFrames}. If your video has less than 60 FPS, please specify by disabling the "Keep FPS" option.`
+                                    : `Your video has ${videoDurationTotalFrames} frames, exceeding the limit of ${maximumAllowedFrames}. Lowering the settings will increase the allowed frame limit.`;
+
+                                showNotification(message, 'Warning - Exceeding Frame Limit', 'warning');
                                 startProcessBtn.disabled = false;
                                 return;
                             }
@@ -1617,23 +1649,36 @@
                             return await fetchServerAddresses(getDocsSnapshot('servers'), enabledPixelBoost === '128x128' && (activePhotoInput || neededCredits < 1) || !document.getElementById('skipSlowServers').checked);
                         }
 
-                        let [userIpAddress, browserUniqueId, serverAddresses] = await Promise.all([
-                            getUserIpAddress(),
+                        let [userInternetProtocol, userUniqueBrowserId, serverAddresses] = await Promise.all([
+                            getUserInternetProtocol(),
                             ensureUniqueId(),
                             getServerAddresses()
                         ]);
 
-                        async function checkServerQueue(server) {
-                            const response = await fetch(`${server}/get-online`);
-                            if (response.status === STATUS_OK) {
-                                const data = await response.json();
-                                return data.server;
-                            }
+                        if (userInternetProtocol.isTOR) 
+                            showNotification(`TOR users will soon not be allowed on this website due to multi-accounting concerns. Please disable your proxy to avoid potential issues with your account.`, 'Warning - Proxy', 'warning-important');
+                        
+                        if (userInternetProtocol.isVPN)
+                            showNotification(`Using a VPN might cause errors, slow down processes, and affect downloads. Please consider disabling your VPN for better performance.`, 'Warning - VPN', 'warning-important');
 
-                            return Infinity;
+                        else if (userInternetProtocol.isProxy)
+                            showNotification(`Using a proxy might cause errors, slow down processes, and affect downloads. Please consider disabling your proxy for better performance.`, 'Warning - Proxy', 'warning-important');
+
+                        async function checkServerQueue(server) {
+                            try {
+                                const response = await fetch(`${server}/get-online`);
+                                if (response.ok && response.status === STATUS_OK) {
+                                    const data = await response.json();
+                                    return data.server;
+                                } 
+
+                                return Infinity;
+                            } catch (error) {
+                                return Infinity;
+                            }
                         }
 
-                        const serverForSmallProcesses = "https://4090-1-DF.bodyswap.me";
+                        const serverForSmallProcesses = "https://3080TI-1-DF.bodyswap.me";
                         const serverPromises = serverAddresses.map(server => checkServerQueue(server));
                         const results = await Promise.all(serverPromises);
 
@@ -1648,6 +1693,7 @@
                                 if (results[minQueueIndex] === Infinity) {
                                     startProcessBtn.disabled = false;
                                     setClientStatus('Offline');
+                                    showNotification(`Cannot fetch the server. A VPN could cause this or our server is currently offline. Contact an admin for more information.`, 'Warning - Process Failed', 'warning');
                                     return;
                                 }
                                 fetchableServerAddresses = [serverAddresses[minQueueIndex]];
@@ -1665,19 +1711,28 @@
                             if (results[minQueueIndex] === Infinity) {
                                 startProcessBtn.disabled = false;
                                 setClientStatus('Offline');
+                                showNotification(`Cannot fetch the server. A VPN could cause this or our server is currently offline. Contact an admin for more information.`, 'Warning - Process Failed', 'warning');
                                 return;
                             }
                             fetchableServerAddresses = [serverAddresses[minQueueIndex]];
                         }
 
                         const serverAddress = fetchableServerAddresses[0];
-                        console.log(fetchableServerAddresses[0]);
                         setClientStatus(`Connecting`);
+                        showNotification(`Connecting...`, 'Process Information', 'information');
 
                         const processBlobToFile = async (blobUrl, fileName, fileType) => {
-                            const response = await fetch(blobUrl);
-                            const blob = await response.blob();
-                            return new File([blob], fileName, { type: fileType });
+                            try {
+                                const response = await fetch(blobUrl);
+                                if (!response.ok) {
+                                    throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
+                                }
+
+                                const blob = await response.blob();
+                                return new File([blob], fileName, { type: fileType });
+                            } catch (error) {
+                                return null;
+                            }
                         };
 
                         const fileType = activeVideoInput ? 'video/mp4' : 'image/png';
@@ -1686,7 +1741,8 @@
                         const id = activeVideoInput?.getAttribute('id') || activePhotoInput?.getAttribute('id');
 
                         if (!timestamp || !id) {
-                            alert('Timestamp or id is missing. Cannot create input file name.');
+                            setClientStatus(`Timestamp or id is missing.`);
+                            showNotification(`Timestamp or id is missing. Cannot create input file name. Please contact an administrator.`, 'Warning - Process Failed', 'warning');
                             return;
                         }
 
@@ -1694,9 +1750,17 @@
                         const inputFile = await processBlobToFile(activeVideoInput ? activeVideoInput.querySelector('source').src : activePhotoInput.src, inputFileName, fileType);
                         const faceFile = await processBlobToFile(activePhoto.src, 'image.png', 'image/png');
 
-                        if ((faceFile.size + inputFile.size) / (1024 * 1024) > FILE_SIZE_LIMIT_MB) {
+                        if (!faceFile || !faceFile) {
+                            startProcessBtn.disabled = false;
+                            setClientStatus(`Blob to file failed`);
+                            showNotification(`Blob to file failed. Please contact an administrator`, 'Process Information', 'warning');
+                            return;
+                        }
+
+                        if ((faceFile.size + inputFile.size) / 1048576 > FILE_SIZE_LIMIT_MB) {
                             startProcessBtn.disabled = false;
                             setClientStatus(`Size exceeds ${FILE_SIZE_LIMIT_MB}MB limit`);
+                            showNotification(`Size exceeds ${FILE_SIZE_LIMIT_MB}MB limit`, 'Process Information', 'warning');
                             return;
                         }
 
@@ -1770,12 +1834,14 @@
                         const userEmail = userDoc.email;
                         const processCount = userDoc.processCount || 0;
 
-                        const uniqueId = `${userName}_${userEmail}_${processCount}_${neededCredits}_${activeVideoInput ? 0 : 1}`
+                        const fileOutputId = `${userName}_${userEmail}_${processCount}_${neededCredits}_${activeVideoInput ? 0 : 1}`
                             .replace(/[^a-zA-Z0-9_-]/g, '_')
                             .replace(/\s/g, '');
 
+                        showNotification(`Creating output database using IndexedDB...`, 'Database - IndexedDB', 'information');
+
                         const db = await openDB(`outputDB-${pageName}`, 'outputs');
-                        const url = serverAddress + '/download-output/' + uniqueId;
+                        const url = serverAddress + '/download-output/' + fileOutputId;
                         const firstChild = outputs.firstChild;
 
                         if (firstChild && !firstChild.dataset.created) {
@@ -1839,10 +1905,22 @@
                         const uploadedSizes = new Array(maxChunkNumber).fill(0);
 
                         async function fetchUploadedChunks(fileName) {
-                            const response = await fetch(`${serverAddress}/uploaded-chunks?fileName=${fileName}`);
-                            const uploadedChunks = await response.json();
-                            return uploadedChunks;
+                            try {
+                                const response = await fetch(`${serverAddress}/uploaded-chunks?fileName=${fileName}`);
+                                if (!response.ok) {
+                                    showNotification(`Failed to fetch uploaded chunks: ${response.status} ${response.statusText}.`, 'Warning - Fetching Failed', 'warning');
+                                    throw new Error(`Failed to fetch uploaded chunks: ${response.status} ${response.statusText}`);
+                                }
+
+                                const uploadedChunks = await response.json();
+                                return uploadedChunks;
+                            } catch (error) {
+                                showNotification(`Error fetching uploaded chunks for ${fileName}: ${error.message}.`, 'Warning - Fetching Failed', 'warning');
+                                return null; 
+                            }
                         }
+
+                        showNotification(`Uploading chunks...`, 'Upload', 'information');
 
                         const uploadedChunks = await fetchUploadedChunks(inputFile.name);
 
@@ -1871,26 +1949,25 @@
                             });
                         }
 
-                        setClientStatus('Configurating');
-
                         const formData = new FormData();
                         formData.append('face', faceFile);
                         formData.append('inputFileName', inputFile.name);
                         formData.append('userId', userData.uid);
-                        formData.append('userIpAddress', userIpAddress);
-                        formData.append('uniqueId', uniqueId);
-                        formData.append('uniqueUserBrowserProcessId', browserUniqueId);
+                        formData.append('userInternetProtocolAddress', userInternetProtocol.publicAdress);
+                        formData.append('userUniqueInternetProtocolId', userInternetProtocol.UID);
+                        formData.append('fileOutputId', fileOutputId);
+                        formData.append('userUniqueBrowserId', userUniqueBrowserId);
                         formData.append('enableBox', true);
                         formData.append('enableOccluder', document.getElementById("enableOccluder").checked);
                         formData.append('enableEnhancer', enableEnhancer);
                         formData.append('enabledEnhancer', enabledEnhancer);
-                        formData.append('enhancerBlendValue', parseInt(document.getElementById('enhancerBlendValue').value, 10) < 25 ? parseInt(enhancerBlendValue, 10) : parseInt(document.getElementById('enhancerBlendValue').value, 10));
+                        formData.append('enhancerBlendValue', parseInt(document.getElementById('enhancerBlendValue').value) < 25 ? parseInt(enhancerBlendValue) : parseInt(document.getElementById('enhancerBlendValue').value));
                         formData.append('enabledPixelBoost', enabledPixelBoost);
                         formData.append('removeBanner', removeBanner.checked);
                         formData.append('keepFPS', document.getElementById("keepFPS").checked);
                         formData.append('fpsValue', document.getElementById("fps-slider").value);
                         formData.append('ageModifier', Math.abs(document.getElementById("age-modifier").value) <= 5 ? null : document.getElementById("ageModifier").checked);
-                        formData.append('ageModifierValue', Math.abs(document.getElementById("age-modifier").value) <= 5 ? null : parseInt(document.getElementById("age-modifier").value, 10));
+                        formData.append('ageModifierValue', Math.abs(document.getElementById("age-modifier").value) <= 5 ? null : parseInt(document.getElementById("age-modifier").value));
                         formData.append('skin', document.getElementById("skin").checked);
                         formData.append('eyebrow', document.getElementById("eyebrow").checked);
                         formData.append('eye', document.getElementById("eye").checked);
@@ -1910,34 +1987,27 @@
                         formData.append('imageSize', 'none');
                         formData.append('imageModel', 'none');
 
-                        setClientStatus('Starting...');
-                        fetch(`${serverAddress}/start-process`, {
+                        showNotification(`Sending your configuration to the server...`, 'Upload', 'information');
+                        setClientStatus('Configurating...');
+
+                        const response = await fetch(`${serverAddress}/start-process`, {
                             method: 'POST',
-                            body: formData,
-                        })
-                            .then(async response => {
-                                if (response.status === STATUS_OK) {
-                                    return response.json();
-                                } else if (response.status === STATUS_NOTFOUND) {
-                                    cancelProcess(false);
-                                    setClientStatus('Offline');
-                                    startProcessBtn.disabled = false;
-                                } else {
-                                    return response.json().then(data => {
-                                        startProcessBtn.disabled = false;
-                                        cancelProcess(false);
-                                        throw new Error(data.server);
-                                    });
-                                }
-                            })
-                            .catch(error => {
-                                startProcessBtn.disabled = false;
-                                setClientStatus(error.message);
-                                cancelProcess(false);
-                            });
+                            body: formData
+                        });
+
+                        if (response.status !== STATUS_OK) {
+                            const data = await response.json();
+                            throw new Error(data.server);
+                        }
+
+                        const result = await response.json();
+                        showNotification(`Starting the process...`, 'Upload', 'information');
+                        setClientStatus('Starting...');
+                        updateDownloadFile(true);
+                        return result;
                     } catch (error) {
                         startProcessBtn.disabled = false;
-                        setClientStatus(error.message);
+                        setClientStatus(error.message); 
                         cancelProcess(false);
                     }
                 }
@@ -1949,7 +2019,7 @@
                 function cancelProcess(showAlertion) {
                     return new Promise(async (resolve) => {
                         try {
-                            await setCurrentUserDoc(getDocSnapshot); userDoc = getCachedDynamicUserDoc();
+                            await setCurrentUserDoc(getDocSnapshot); userDoc = getUserDoc();
 
                             const userIsProcessing = userDoc.isProcessing;
                             const serverAddresses = await fetchServerAddresses(getDocsSnapshot('servers'));
@@ -1962,7 +2032,7 @@
                                         return response.json();
 
                                     else return { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Unkown" };
-                                }).then(data => ({ queueAmount: data.server, faceDetectionError: data.faceDetectionError, videoUnsupportedTooLongError: data.videoUnsupportedTooLongError, remainingTime: data.remainingTime, elapsedTime: data.elapsedTime, frameCount: data.frameCount, totalFrames: data.totalFrames, requestQueue: data.requestQueue, uniqueId: data.uniqueId, processingAmount: data.processingAmount, SERVER_1: data.SERVER_1 })).catch(error => {
+                                }).then(data => ({ queueAmount: data.server, faceDetectionError: data.faceDetectionError, videoUnsupportedTooLongError: data.videoUnsupportedTooLongError, remainingTime: data.remainingTime, elapsedTime: data.elapsedTime, frameCount: data.frameCount, totalFrames: data.totalFrames, requestQueue: data.requestQueue, fileOutputId: data.fileOutputId, processingAmount: data.processingAmount, SERVER_1: data.SERVER_1 })).catch(error => {
                                     return { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Unkown" };
                                 });
                             });

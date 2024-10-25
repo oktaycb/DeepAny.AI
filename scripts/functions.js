@@ -124,22 +124,71 @@ async function fetchWithTimeout(url, timeout, controller) {
     return Promise.race([fetchPromise, timeoutPromise]);
 }
 
-export async function getUserIpAddress() {
+/*export async function isUsingVPN(userInternetProtocolAddress) {
+    const proxycheck = `https://proxycheck.io/v2/${userInternetProtocolAddress}?vpn=1&asn=1`;
+}*/
+
+export async function getUserInternetProtocol() {
     const urls = [
+        'https://ipapi.is/json/',
         'https://ipinfo.io/json',
-        'https://api64.ipify.org?format=json'
+        'https://api64.ipify.org?format=json',
+        'https://ifconfig.me/all.json',
+        'https://ipapi.co/json/',
     ];
 
-    const controllers = urls.map(() => new AbortController()); 
+    const controllers = urls.map(() => new AbortController());
+    const rawData = [];
+
     try {
-        const fetchPromises = urls.map((url, id) => fetchWithTimeout(url, 1000, controllers[id]));
-        const data = await Promise.any(fetchPromises);
-        controllers.forEach(controller => controller.abort());
-        return data.ip;
+        for (let i = 0; i < urls.length; i++) {
+            try {
+                const data = await fetchWithTimeout(urls[i], 1000, controllers[i]);
+
+                if ('elapsed_ms' in data) {
+                    delete data.elapsed_ms;
+                }
+
+                rawData.push(JSON.stringify(data));
+
+                if (data.ip || data.ip_addr) {
+                    controllers.slice(i + 1).forEach(controller => controller.abort());
+                    const UID = await createStaticIdentifier(rawData);
+
+                    return {
+                        publicAdress: data.ip || data.ip_addr,
+                        isVPN: data.is_vpn || false,
+                        isProxy: data.is_proxy || false,
+                        isTOR: data.is_tor || false,
+                        isCrawler: data.is_crawler || false,
+                        UID,
+                        rawData
+                    };
+                }
+            } catch (error) {
+                console.log(`Error fetching from ${urls[i]}: ${error.message}`);
+            }
+        }
+
+        throw new Error('No IP field in any response');
     } catch (error) {
-        console.error('All attempts to fetch IP address failed:', error);
+        alert('All attempts to fetch internet protocol data failed: ' + error.message);
         return null;
     }
+}
+
+export async function createStaticIdentifier(jsonData) {
+    if (!Array.isArray(jsonData)) {
+        throw new Error('Input must be an array');
+    }
+
+    const combinedData = jsonData.map(item => JSON.stringify(item)).join('');
+    const encoder = new TextEncoder();
+    const data = encoder.encode(combinedData);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => ('00' + b.toString(16)).slice(-2)).join('');
+    return hashHex;
 }
 
 export function getPageName() {
@@ -197,11 +246,11 @@ export async function fetchConversionRates() {
     }
 }
 
-export function generateBID() {
+export function generateUID() {
     var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789%^&*()_-+=';
     var uniqueId = '';
 
-    for (var i = 0; i < 12; i++) {
+    for (var i = 0; i < 24; i++) {
         var randomIndex = Math.floor(Math.random() * characters.length);
         uniqueId += characters.charAt(randomIndex);
     }
@@ -210,28 +259,41 @@ export function generateBID() {
 }
 
 export async function ensureUniqueId() {
-    const storedUniqueId = localStorage.getItem('uniqueUserBrowserRegisterId');
-    if (storedUniqueId) {
-        loadEvercookie();
-        return storedUniqueId;
+    const oldStoredUniqueId = localStorage.getItem('UserUniqueBrowserId');
+    if (oldStoredUniqueId) {
+        if (typeof uniqueUserBrowserRegisterId !== 'undefined') {
+            localStorage.setItem('userUniqueBrowserId', uniqueUserBrowserRegisterId);
+            localStorage.removeItem(oldStoredUniqueId);
+        }
     }
 
-    const newUniqueId = await loadEvercookieAndGetUniqueId();
-    localStorage.setItem('uniqueUserBrowserRegisterId', newUniqueId);
-    return newUniqueId;
+    const storedUniqueId = localStorage.getItem('userUniqueBrowserId');
+    if (!storedUniqueId) {
+        const newUniqueId = await loadEvercookieUserUniqueBrowserId();
+        return newUniqueId;
+    }
+
+    return storedUniqueId;
 }
 
-async function loadEvercookieAndGetUniqueId() {
-    await loadEvercookieScript();
+async function loadEvercookieUserUniqueBrowserId() {
+    await loadJQueryAndEvercookie();
     const ec = new evercookie();
 
     return new Promise((resolve) => {
-        ec.get('uniqueUserBrowserRegisterId', async (storedUniqueId) => {
+        ec.get('userUniqueBrowserId', async (storedUniqueId, all) => {
+            /*for (var item in all) {
+                const mechanism = all[item];
+                console.log(item + ' mechanism: ' + mechanism);
+            }*/
+
             if (storedUniqueId) {
                 resolve(storedUniqueId);
             } else {
-                const newUniqueId = await generateBID();
-                ec.set('uniqueUserBrowserRegisterId', newUniqueId);
+                const userDoc = getUserDoc();
+                const existingUID = userDoc.uniqueId || null;
+                const newUniqueId = existingUID ? existingUID : await generateUID();
+                ec.set('userUniqueBrowserId', newUniqueId);
                 resolve(newUniqueId);
             }
         });
@@ -241,16 +303,34 @@ async function loadEvercookieAndGetUniqueId() {
 function loadEvercookieScript() {
     return new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = "https://samy.pl/evercookie/evercookie.js";
+        script.src = "/libraries/evercookie/evercookie3.js?v=1.3.3.3";
         script.onload = resolve;
         script.onerror = reject;
         document.head.appendChild(script);
     });
 }
 
-function loadEvercookie() {
-    loadEvercookieScript().catch(() => {
-        console.error('Failed to load Evercookie script.');
+function loadJQueryAndEvercookie() {
+    return new Promise((resolve, reject) => {
+        const jqueryScript = document.createElement('script');
+        jqueryScript.src = "/libraries/evercookie/jquery-1.4.2.min.js?v=1.3.3.3";
+        jqueryScript.onload = () => {
+            const swfScript = document.createElement('script');
+            swfScript.src = "/libraries/evercookie/swfobject-2.2.min.js?v=1.3.3.3";
+            swfScript.onload = () => {
+                const dtjavaScript = document.createElement('script');
+                dtjavaScript.src = "/libraries/evercookie/dtjava.js?v=1.3.3.3";
+                dtjavaScript.onload = () => {
+                    loadEvercookieScript().then(resolve).catch(reject);
+                };
+                dtjavaScript.onerror = reject;
+                document.head.appendChild(dtjavaScript);
+            };
+            swfScript.onerror = reject;
+            document.head.appendChild(swfScript);
+        };
+        jqueryScript.onerror = reject;
+        document.head.appendChild(jqueryScript);
     });
 }
 
@@ -265,10 +345,12 @@ function createNotificationsContainer() {
 
     const indicators = container.getElementsByClassName('indicator');
     if (indicators.length > 0) {
-        for (let i = 0; i < indicators.length - 0; i++) {
+        for (let i = 0; i < indicators.length; i++) {
             const notification = indicators[i];
-            notification.style.opacity = '0';
-            notification.remove();
+            if (!notification.classList.contains('notification-warning-important')) {
+                notification.style.opacity = '0';
+                notification.remove();
+            }
         }
     }
 
@@ -289,7 +371,11 @@ export function showNotification(message, featureChange, type) {
     if (type === 'warning') {
         notification.classList.add('notification-warning');
         featureChangeElement.classList.add('feature-change-warning');
-        waitTime = 10000;
+        waitTime = 60000;
+    } else if (type === 'warning-important') {
+        notification.classList.add('notification-warning-important');
+        featureChangeElement.classList.add('feature-change-warning-important');
+        waitTime = 60000;
     }
 
     const messageElement = document.createElement('p');
@@ -300,13 +386,6 @@ export function showNotification(message, featureChange, type) {
     notification.appendChild(messageElement);
     container.appendChild(notification);
 
-    setTimeout(() => {
-        notification.style.opacity = '0';
-        setTimeout(() => {
-            notification.remove();
-        }, 300);
-    }, waitTime);
-
     document.addEventListener('click', (event) => {
         if (!notification.contains(event.target) && container.contains(notification)) {
             notification.style.opacity = '0';
@@ -314,7 +393,14 @@ export function showNotification(message, featureChange, type) {
                 notification.remove();
             }, 300);
         }
-    }, { once: true })
+    }, { once: true });
+
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, waitTime);
 }
 
 export const openDB = (dataBaseIndexName, dataBaseObjectStoreName) => {
@@ -495,8 +581,8 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
                 if (blob && (blob.type.startsWith('video') || blob.type.startsWith('image'))) {
                     const blobUrl = URL.createObjectURL(blob);
                     content = blob.type.startsWith('video')
-                        ? `<video url="${url}" id="${id}" timestamp="${timestamp} active="${active}" playsinline preload="auto" disablePictureInPicture loop muted autoplay><source src="${blobUrl}" type="${blob.type}">Your browser does not support the video tag.</video></div><div class="delete-icon">`
-                        : `<img url="${url}" id="${id}" timestamp="${timestamp} active="${active}" src="${blobUrl}" alt="Uploaded Photo"/></div><div class="delete-icon">`;
+                        ? `<video url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" playsinline preload="auto" disablePictureInPicture loop muted autoplay><source src="${blobUrl}">Your browser does not support the video tag.</video></div><div class="delete-icon">` // type = "${blob.type}"
+                        : `<img url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" src="${blobUrl}" alt="Uploaded Photo"/></div><div class="delete-icon">`;
 
                     element.innerHTML = `${content}`;
 
@@ -684,12 +770,12 @@ export async function getDocsSnapshot(collectionId) {
     return await getDocs(collection(db, collectionId));
 }
 
-export const getCachedStaticUserData = () => {
+export const getUserData = () => {
     const cachedUserData = localStorage.getItem('cachedUserData');
     return cachedUserData ? JSON.parse(cachedUserData) : null;
 };
 
-export const getCachedDynamicUserDoc = () => {
+export const getUserDoc = () => {
     const cachedUserDocument = localStorage.getItem('cachedUserDocument');
     if (!cachedUserDocument) {
         return null;
@@ -704,7 +790,7 @@ export async function setCurrentUserData(getFirebaseModules) {
     localStorage.setItem('cachedUserData', JSON.stringify(cachedUserData));
 }
 
-const CACHE_EXPIRATION_TIME = 1 * 60 * 60 * 1000; // Update every hour.
+const CACHE_EXPIRATION_TIME = 6 * 60 * 60 * 1000; // Update every hour.
 
 export async function setCurrentUserDoc(getDocSnapshot, useCache = false) {
     if (useCache) {
@@ -721,7 +807,7 @@ export async function setCurrentUserDoc(getDocSnapshot, useCache = false) {
         }
     }
 
-    const userData = getCachedStaticUserData();
+    const userData = getUserData();
     const userDocSnap = await getDocSnapshot('users', userData.uid);
     if (!userDocSnap || !userDocSnap.exists()) {
         return false;
@@ -738,7 +824,7 @@ export async function setCurrentUserDoc(getDocSnapshot, useCache = false) {
     return true;
 }
 
-export function setUser(userDoc = getCachedDynamicUserDoc()) {
+export function setUser(userDoc = getUserDoc()) {
     if (!userDoc) return false;
 
     function setCachedImageForElements(className, storageKey) {
@@ -809,7 +895,7 @@ export function setUser(userDoc = getCachedDynamicUserDoc()) {
     return true;
 }
 
-async function handleUserLoggedIn(userData, getUserIpAddress, ensureUniqueId, fetchServerAddress, getDocSnapshot, getFirebaseModules) {
+async function handleUserLoggedIn(userData, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getDocSnapshot, getFirebaseModules) {
     if (!userData) return;
 
     const openSignInContainer = document.getElementById("openSignInContainer");
@@ -863,7 +949,7 @@ async function handleUserLoggedIn(userData, getUserIpAddress, ensureUniqueId, fe
                 try {
                     await setCurrentUserData(getFirebaseModules);
 
-                    const userData = getCachedStaticUserData();
+                    const userData = getUserData();
                     if (!userData.emailVerified)
                         throw new Error('Your email is still not verified.');
                     else {
@@ -895,8 +981,8 @@ async function handleUserLoggedIn(userData, getUserIpAddress, ensureUniqueId, fe
                     return await fetchServerAddress(getDocSnapshot('servers', '3050-1'), 'API');
                 }
 
-                const [userIpAddress, uniqueId, serverAddressAPI] = await Promise.all([
-                    getUserIpAddress(),
+                const [userInternetProtocol, uniqueId, serverAddressAPI] = await Promise.all([
+                    getUserInternetProtocol(),
                     ensureUniqueId(),
                     getServerAddressAPI()
                 ]);
@@ -911,10 +997,11 @@ async function handleUserLoggedIn(userData, getUserIpAddress, ensureUniqueId, fe
                         userId,
                         email: userData.email,
                         username: userData.displayName,
-                        //phoneNumber: userData.phoneNumber,
-                        //emailVerified: userData.emailVerified,
+                        // phoneNumber: userData.phoneNumber,
+                        // emailVerified: userData.emailVerified,
                         isAnonymous: userData.isAnonymous,
-                        userIpAddress,
+                        userInternetProtocolAddress: userInternetProtocol.publicAdress,
+                        userUniqueInternetProtocolId: userInternetProtocol.UID,
                         uniqueId,
                         referral: referral || null,
                     }),
@@ -938,6 +1025,7 @@ async function handleUserLoggedIn(userData, getUserIpAddress, ensureUniqueId, fe
         return;
     }
 
+    ensureUniqueId();
     await setCurrentUserDoc(getDocSnapshot, true);
 }
 
@@ -1175,8 +1263,8 @@ async function createSignFormSection(registerForm, retrieveImageFromURL, getFire
                     return await fetchServerAddress(getDocSnapshot('servers', '3050-1'), 'API');
                 }
 
-                const [userIpAddress, uniqueId, serverAddressAPI] = await Promise.all([
-                    getUserIpAddress(),
+                const [userInternetProtocol, uniqueId, serverAddressAPI] = await Promise.all([
+                    getUserInternetProtocol(),
                     ensureUniqueId(),
                     getServerAddressAPI()
                 ]);
@@ -1191,7 +1279,8 @@ async function createSignFormSection(registerForm, retrieveImageFromURL, getFire
                     password,
                     username,
                     referral: referral || null,
-                    userIpAddress: userIpAddress || null,
+                    userInternetProtocolAddress: userInternetProtocol.publicAdress || null,
+                    userUniqueInternetProtocolId: userInternetProtocol.UID || null,
                     uniqueId,
                 };
 
@@ -1614,7 +1703,7 @@ export function incognitoModeHandler() {
     checkOverlay();
 }
 
-export async function setAuthentication(retrieveImageFromURL, getUserIpAddress, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot) {
+export async function setAuthentication(retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot) {
     const signOutButtons = document.querySelectorAll('.signOut');
     signOutButtons.forEach(signOut => {
         signOut.addEventListener('click', async function () {
@@ -1635,8 +1724,8 @@ export async function setAuthentication(retrieveImageFromURL, getUserIpAddress, 
 
     incognitoModeHandler();
 
-    const userData = getCachedStaticUserData();
-    if (userData) handleUserLoggedIn(userData, getUserIpAddress, ensureUniqueId, fetchServerAddress, getDocSnapshot, getFirebaseModules);
+    const userData = getUserData();
+    if (userData) handleUserLoggedIn(userData, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getDocSnapshot, getFirebaseModules);
     else handleLoggedOutState(retrieveImageFromURL, getFirebaseModules);
 }
 
@@ -1646,8 +1735,8 @@ export const ScreenMode = Object.freeze({
 });
 
 export function createUserData(sidebar, screenMode) {
-    const userData = getCachedStaticUserData();
-    const userDoc = getCachedDynamicUserDoc();
+    const userData = getUserData();
+    const userDoc = getUserDoc();
     const hasUserData = userData && userDoc;
 
     const profileLine = document.getElementById("profileLine");
@@ -1776,7 +1865,7 @@ function createSideBarData(sidebar) {
     }
 }
 
-export function loadPageContent(setUser, retrieveImageFromURL, getUserIpAddress, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, setAuthentication, updateMainContent, savePageState = null) {
+export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, setAuthentication, updateMainContent, savePageState = null) {
     let previousScreenMode = null, cleanupEvents = null, cleanPages = null, reconstructMainStyles = null;
     let screenMode = getScreenMode();
 
@@ -1996,7 +2085,7 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserIpAddress,
         hamburgerMenu = document.querySelector('.hamburger-menu');
 
         createUserData(sidebar, screenMode);
-        setAuthentication(retrieveImageFromURL, getUserIpAddress, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
+        setAuthentication(retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
 
         setNavbar(navbar, mainQuery, sidebar);
         setSidebar(sidebar);

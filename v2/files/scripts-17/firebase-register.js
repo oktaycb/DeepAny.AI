@@ -112,7 +112,7 @@ submit.addEventListener('click', async (event) => {
     //const visitorId = fingerprintData.visitorId;
 
     // Obtain the user's IP address
-    const userIpAddress = await fetch('https://api64.ipify.org?format=json')
+    const userInternetProtocolAddress = await fetch('https://api64.ipify.org?format=json')
       .then((response) => response.json())
       .then((data) => data.ip)
       .catch((error) => {
@@ -127,13 +127,13 @@ submit.addEventListener('click', async (event) => {
 		localStorage.setItem('uniqueUserBrowserRegisterId', newUniqueId);
 	  }
 	  
-      // Create the registration request with visitorId, userIpAddress, and UniqueID
+      // Create the registration request with visitorId, userInternetProtocolAddress, and UniqueID
       const requestData = {
         email,
         password,
         username,
         referral,
-        userIpAddress,
+        userInternetProtocolAddress,
         uniqueId: localStorage.getItem('uniqueUserBrowserRegisterId'),
       };
 	

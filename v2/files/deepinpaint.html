@@ -1827,9 +1827,9 @@
 				localStorage.setItem('uniqueUserBrowserProcessId', newUniqueId);
 			}
 			
-            let userIpAddress;
+            let userInternetProtocolAddress;
 			
-			async function getUserIpAddress() {
+			async function getUserInternetProtocol() {
 			  const urls = [
 				'https://ipinfo.io/json',
 				'https://api64.ipify.org?format=json'
@@ -1838,14 +1838,14 @@
 			  for (const url of urls) {
 				try {
 				  const data = await fetchWithTimeout(url, 1000);
-				  userIpAddress = data.ip;
+				  userInternetProtocolAddress = data.ip;
 				  break; // Stop trying if we get a successful response
 				} catch (error) {
 				  console.error(`Error fetching IP address from ${url}:`, error);
 				}
 			  }
 
-			  return userIpAddress;
+			  return userInternetProtocolAddress;
 			}
 
 			// Grab the IP address.
@@ -1853,7 +1853,7 @@
 			
 			// Call the function that uses await
 			try {
-				const ipAddress = await getUserIpAddress();
+				const ipAddress = await getUserInternetProtocol();
 				console.log('User IP Address:', ipAddress);
 			} catch (error) {
 				console.error('Failed to fetch user IP:', error);
@@ -1919,7 +1919,7 @@
                 formData.append('resSelector', keepAspectRatio);
 			    formData.append('positivePrompt', positivePrompt);
 			    formData.append('negativePrompt', negativePrompt);
-				formData.append('userIpAddress', userIpAddress);
+				formData.append('userInternetProtocolAddress', userInternetProtocolAddress);
 			    formData.append('maskSelector', maskSelector);
 			    formData.append('negativeMaskSelector', negativeMaskSelector);
 			    formData.append('maskPrompt', maskPrompt);

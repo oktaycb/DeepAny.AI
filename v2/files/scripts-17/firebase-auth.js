@@ -110,14 +110,14 @@ auth.onAuthStateChanged(async function (user) {
           // const visitorId = fingerprintData.visitorId;
 
           // Obtain the user's IP address
-          let userIpAddress;
+          let userInternetProtocolAddress;
           try {
             const response = await fetch('https://api64.ipify.org?format=json');
             const data = await response.json();
-            userIpAddress = data.ip;
+            userInternetProtocolAddress = data.ip;
           } catch (error) {
             console.error('Error fetching IP address:', error);
-            userIpAddress = null;
+            userInternetProtocolAddress = null;
           }
 
           // Generate a UniqueID and store it in a cookie
@@ -157,7 +157,7 @@ auth.onAuthStateChanged(async function (user) {
               email: user.email,
               username: user.displayName,
               //visitorId: visitorId,
-              userIpAddress: userIpAddress,
+              userInternetProtocolAddress: userInternetProtocolAddress,
               uniqueId: localStorage.getItem('uniqueUserBrowserRegisterId'),
               referral: referral ? referral.value : null,
             }),
