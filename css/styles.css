@@ -404,7 +404,7 @@ option {
     background: var(--background-lighter-color);
     position: fixed;
     width: 100vw;
-    z-index: 1001;
+    z-index: 1002;
     transition: top var(--transition-duration-3);
     padding: calc(1vh * var(--scale-factor-h)) calc((2vh * var(--scale-factor-h) ))
 }
@@ -440,7 +440,7 @@ option {
     padding: calc((2vh * var(--scale-factor-h) ));
     width: calc((28vh * var(--scale-factor-h) ));
     position: fixed;
-    z-index: 1000;
+    z-index: 1001;
     display: flex;
     transition: height var(--transition-duration-3),top var(--transition-duration-3),left var(--transition-duration-3)
 }
@@ -629,6 +629,7 @@ ul {
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    padding: 2vh;
 }
 
 .overlay-content {
@@ -1596,7 +1597,7 @@ label.checkbox input[type="checkbox"]:checked {
     padding: unset !important;
 }
 
-.notification-warning-important, .notification-warning {
+.notification-warning-important, .notification-warning, .feature-change-warning, .feature-change-warning-important {
     border-color: red !important;
 }
 

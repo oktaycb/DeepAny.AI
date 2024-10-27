@@ -47,7 +47,7 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="css/styles.css?v=1.3.3.5">
+    <link rel="stylesheet" href="css/styles.css?v=1.3.4.0">
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             const cssRules = Array.from(document.styleSheets).flatMap(sheet => Array.from(sheet.cssRules));
@@ -76,7 +76,7 @@
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = '1.3.3.5';
+        const version = '1.3.4.0';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -84,7 +84,7 @@
 
         document.addEventListener('DOMContentLoaded', async function () {
             const functions = await loadModule('./scripts/functions.js');
-            const { showNotification, fetchProcessState, openDB, addToDB, countInDB, getFromDB, updateActiveState, initDB, updateInDB, updateChunksInDB, deleteFromDB, setUser, setCurrentUserDoc, getUserData, getUserDoc, setAuthentication, getFirebaseModules, getDocSnapshot, getDocsSnapshot, getScreenMode, getCurrentMain, updateContent, ScreenMode, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol, fetchServerAddresses, getPageName } = functions;
+            const { checkServerQueue, showNotification, fetchProcessState, openDB, addToDB, countInDB, getFromDB, updateActiveState, initDB, updateInDB, updateChunksInDB, deleteFromDB, setUser, setCurrentUserDoc, getUserData, getUserDoc, setAuthentication, getFirebaseModules, getDocSnapshot, getDocsSnapshot, getScreenMode, getCurrentMain, updateContent, ScreenMode, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol, fetchServerAddresses, getPageName } = functions;
 
             if (!window.indexedDB) {
                 alert('Your browser does not support IndexedDB.');
@@ -143,8 +143,8 @@
                 localStorage.setItem(pageName, JSON.stringify(state));
             }
 
-            let userData = getUserData();
-            let userDoc = getUserDoc();
+            let userData = await getUserData();
+            let userDoc = await getUserDoc();
 
             function updateMainContent(screenMode, pageContent) {
                 pageContent.length = 0;
@@ -736,6 +736,7 @@
                 const activeDataContainer = document.querySelector(".outputs .data-container.active");
                 const dataContainerActive = activeDataContainer ? activeDataContainer : null;
                 const downloadOutput = document.getElementById('downloadOutput');
+
                 if (downloadOutput) {
                     downloadOutput.textContent = "Pause";
                     downloadOutput.disabled = !dataContainerActive;
@@ -1024,6 +1025,7 @@
                     for (const { id, timestamp, blob, isVideo } of newMedia) {
                         const input = document.createElement('div');
                         input.className = 'data-container';
+                        input.setAttribute('tooltip', '');
 
                         const blobUrl = URL.createObjectURL(blob);
                         if (isVideo) {
@@ -1064,10 +1066,14 @@
                 { buttonId: 'circular-button-input-upload', inputId: 'input-upload', dataBaseIndexName: `inputDB-${pageName}`, dataBaseObjectStoreName: 'inputs' }
             ];
 
+            // TODO: Use id instead of first child!
             async function setClientStatus(message) {
                 const outputs = document.querySelector('.outputs');
-                if (outputs) {
-                    outputs.firstChild.querySelector('.process-text').textContent = message;
+                if (outputs && outputs.firstChild) {
+                    const processTextElement = outputs.firstChild.querySelector('.process-text');
+                    if (processTextElement) {
+                        processTextElement.textContent = message;
+                    }
                 }
             }
 
@@ -1076,7 +1082,6 @@
                 if (processTextElement)
                     processTextElement.textContent = message;
             };
-
 
             function findServerWithUserRequest(results, userId) {
                 return results.find(serverData => serverData.requestQueue?.includes(userId));
@@ -1550,11 +1555,14 @@
                     startProcessBtn.disabled = true;
 
                     try {
+                        showNotification(`Starting the process...`, 'Process - Information', 'information');
+
                         if (!userData || !userData.uid) {
                             const openSignInContainer = document.getElementById('openSignInContainer');
                             if (openSignInContainer)
                                 openSignInContainer.click();
                             startProcessBtn.disabled = false;
+                            showNotification(`Please sign in or create an account to use our AI services with free (daily) trial.`, 'Warning - No User Found', 'information');
                             return;
                         }
 
@@ -1571,11 +1579,12 @@
 
                         if (!userData.emailVerified) {
                             setClientStatus('Verify Your Email');
+                            showNotification(`Please verify you.`, 'Warning - No Input Selected', 'warning');
                             startProcessBtn.disabled = false;
                             return;
                         }
 
-                        userDoc = getUserDoc();
+                        userDoc = await getUserDoc();
 
                         const activeVideoInput = document.querySelector(".inputs .data-container.active video");
                         const activePhotoInput = document.querySelector(".inputs .data-container.active img");
@@ -1583,12 +1592,14 @@
 
                         if (!activeVideoInput && !activePhotoInput) {
                             setClientStatus(`Click Your Uploaded Input Above`);
+                            showNotification(`Click your uploaded input above to select it.`, 'Warning - No Input Selected', 'warning');
                             startProcessBtn.disabled = false;
                             return;
                         }
 
                         if (!activePhoto) {
                             setClientStatus(`Click Your Uploaded Face Above`);
+                            showNotification(`Click your uploaded face above to select it.`, 'Warning - No Face Selected', 'warning');
                             startProcessBtn.disabled = false;
                             return;
                         }
@@ -1600,6 +1611,7 @@
                             videoDurationTotalFrames = Math.floor(activeVideoInput.duration * assumedFrameRate);
                             if (videoDurationTotalFrames <= 0) {
                                 setClientStatus(`No Frame Detected`);
+                                showNotification(`Your video has incorrect metadata. Try using a online MP4 converter for you video or contact us.`, 'Warning - No Frame Detected', 'warning');
                                 startProcessBtn.disabled = false;
                                 return;
                             }
@@ -1631,6 +1643,7 @@
 
                         neededCredits = Math.max(1, neededCredits);
                         setClientStatus('Creating ID...');
+                        showNotification(`Creating unique identifiers...`, 'Process - Information', 'information');
 
                         const pixelBoosters = [
                             document.getElementById('pixelBoost256x256'),
@@ -1646,7 +1659,15 @@
                             enabledPixelBoost = '128x128';
 
                         async function getServerAddresses() {
-                            return await fetchServerAddresses(getDocsSnapshot('servers'), enabledPixelBoost === '128x128' && (activePhotoInput || neededCredits < 1) || !document.getElementById('skipSlowServers').checked);
+                            try {
+                                const snapshotPromise = getDocsSnapshot('servers');
+                                const shouldSkipSlowServers = enabledPixelBoost === '128x128' && (activePhotoInput || neededCredits < 1) || !document.getElementById('skipSlowServers').checked;
+
+                                return await fetchServerAddresses(snapshotPromise, shouldSkipSlowServers);
+                            } catch (error) {
+                                alert('Failed to get server addresses.');
+                                return null;
+                            }
                         }
 
                         let [userInternetProtocol, userUniqueBrowserId, serverAddresses] = await Promise.all([
@@ -1663,20 +1684,6 @@
 
                         else if (userInternetProtocol.isProxy)
                             showNotification(`Using a proxy might cause errors, slow down processes, and affect downloads. Please consider disabling your proxy for better performance.`, 'Warning - Proxy', 'warning-important');
-
-                        async function checkServerQueue(server) {
-                            try {
-                                const response = await fetch(`${server}/get-online`);
-                                if (response.ok && response.status === STATUS_OK) {
-                                    const data = await response.json();
-                                    return data.server;
-                                } 
-
-                                return Infinity;
-                            } catch (error) {
-                                return Infinity;
-                            }
-                        }
 
                         const serverForSmallProcesses = "https://4090-1-DF.bodyswap.me";
                         const serverPromises = serverAddresses.map(server => checkServerQueue(server));
@@ -1719,7 +1726,7 @@
 
                         const serverAddress = fetchableServerAddresses[0];
                         setClientStatus(`Connecting`);
-                        showNotification(`Connecting...`, 'Process Information', 'information');
+                        showNotification(`Connecting to ${serverAddress}...`, 'Process - Information', 'information');
 
                         const processBlobToFile = async (blobUrl, fileName, fileType) => {
                             try {
@@ -1753,14 +1760,14 @@
                         if (!faceFile || !faceFile) {
                             startProcessBtn.disabled = false;
                             setClientStatus(`Blob to file failed`);
-                            showNotification(`Blob to file failed. Please contact an administrator`, 'Process Information', 'warning');
+                            showNotification(`Blob to file failed. Please contact an administrator`, 'Process - Information', 'warning');
                             return;
                         }
 
                         if ((faceFile.size + inputFile.size) / 1048576 > FILE_SIZE_LIMIT_MB) {
                             startProcessBtn.disabled = false;
                             setClientStatus(`Size exceeds ${FILE_SIZE_LIMIT_MB}MB limit`);
-                            showNotification(`Size exceeds ${FILE_SIZE_LIMIT_MB}MB limit`, 'Process Information', 'warning');
+                            showNotification(`Size exceeds ${FILE_SIZE_LIMIT_MB}MB limit`, 'Process - Information', 'warning');
                             return;
                         }
 
@@ -1833,28 +1840,11 @@
                         const userName = userDoc.username;
                         const userEmail = userDoc.email;
                         const processCount = userDoc.processCount || 0;
+                        console.log(userDoc);
 
                         const fileOutputId = `${userName}_${userEmail}_${processCount}_${neededCredits}_${activeVideoInput ? 0 : 1}`
                             .replace(/[^a-zA-Z0-9_-]/g, '_')
                             .replace(/\s/g, '');
-
-                        showNotification(`Creating output database using IndexedDB...`, 'Database - IndexedDB', 'information');
-
-                        const db = await openDB(`outputDB-${pageName}`, 'outputs');
-                        const url = serverAddress + '/download-output/' + fileOutputId;
-                        const firstChild = outputs.firstChild;
-
-                        if (firstChild && !firstChild.dataset.created) {
-                            firstChild.dataset.created = true;
-                            firstChild.innerHTML = `<div class="process-text">Indexing</div>`;
-
-                            await addToDB(db, [null, url], saveCountIndex);
-
-                            const data = await getFromDB(db);
-                            const entry = data.find(item => item.url === url);
-
-                            firstChild.innerHTML = `<initial url="${entry.url}" id="${entry.id}" timestamp="${entry.timestamp}"/></initial><div class="process-text">Indexing</div>`;
-                        }
 
                         function fetchToServer(url, options, onProgress) {
                             if (typeof onProgress !== 'function') {
@@ -1987,6 +1977,10 @@
                         formData.append('imageSize', 'none');
                         formData.append('imageModel', 'none');
 
+                        //for (const [key, value] of formData.entries()) {
+                            //console.log(`${key}: ${value}`);
+                        //}
+
                         showNotification(`Sending your configuration to the server...`, 'Upload', 'information');
                         setClientStatus('Configurating...');
 
@@ -2001,6 +1995,23 @@
                         }
 
                         const result = await response.json();
+                        showNotification(`Creating output database using IndexedDB...`, 'Database - IndexedDB', 'information');
+
+                        const db = await openDB(`outputDB-${pageName}`, 'outputs');
+                        const url = serverAddress + '/download-output/' + fileOutputId;
+                        const firstChild = outputs.firstChild;
+
+                        if (firstChild && !firstChild.dataset.created) {
+                            firstChild.dataset.created = true;
+                            firstChild.innerHTML = `<div class="process-text">Indexing</div>`;
+
+                            await addToDB(db, [null, url], saveCountIndex);
+
+                            const data = await getFromDB(db);
+                            const entry = data.find(item => item.url === url);
+                            firstChild.innerHTML = `<initial url="${entry.url}" id="${entry.id}" timestamp="${entry.timestamp}" processing></initial><div class="process-text">Indexing</div><div class="delete-icon"></div>`;
+                        }
+
                         showNotification(`Starting the process...`, 'Upload', 'information');
                         setClientStatus('Starting...');
                         updateDownloadFile(true);
@@ -2016,59 +2027,47 @@
                     await startProcess();
                 });
 
-                function cancelProcess(showAlertion) {
-                    return new Promise(async (resolve) => {
-                        try {
-                            await setCurrentUserDoc(getDocSnapshot); userDoc = getUserDoc();
+                async function cancelProcess(showAlertion) {
+                    try {
+                        const userDoc = await getUserDoc(() => setCurrentUserDoc(getDocSnapshot));
+                        const serverAddresses = await fetchServerAddresses(getDocsSnapshot('servers'));
 
-                            const userIsProcessing = userDoc.isProcessing;
-                            const serverAddresses = await fetchServerAddresses(getDocsSnapshot('servers'));
-                            const serverPromises = serverAddresses.map(server => {
-                                return fetch(`${server}/get-online`).then(response => {
-                                    if (response.status === STATUS_NOTFOUND)
-                                        return { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Unkown" };
+                        const results = await Promise.all(serverAddresses.map(async (server) => {
+                            const queueAmount = await checkServerQueue(server);
+                            return {
+                                queueAmount,
+                                serverAddress: server
+                            };
+                        }));
 
-                                    else if (response.status === STATUS_OK)
-                                        return response.json();
+                        const userIsProcessing = userDoc.isProcessing;
+                        const serverWithUserRequest = results.find(server => server.queueAmount !== Infinity && server.queueAmount.requestQueue?.includes(userData.uid));
 
-                                    else return { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Unkown" };
-                                }).then(data => ({ queueAmount: data.server, faceDetectionError: data.faceDetectionError, videoUnsupportedTooLongError: data.videoUnsupportedTooLongError, remainingTime: data.remainingTime, elapsedTime: data.elapsedTime, frameCount: data.frameCount, totalFrames: data.totalFrames, requestQueue: data.requestQueue, fileOutputId: data.fileOutputId, processingAmount: data.processingAmount, SERVER_1: data.SERVER_1 })).catch(error => {
-                                    return { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Unkown" };
-                                });
-                            });
+                        if (userIsProcessing || serverWithUserRequest) {
+                            await Promise.all(serverAddresses.map(async (server) => {
+                                try {
+                                    const response = await fetch(`${server}/cancel-process`, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ userId: userData.uid })
+                                    });
 
-                            const results = await Promise.all(serverPromises);
-                            const serverWithUserRequest = results.find(serverData => serverData.requestQueue && serverData.requestQueue.includes(userData.uid));
-
-                            if (userIsProcessing || serverWithUserRequest) {
-                                const cancelRequests = serverAddresses.map(async (serverAddress) => {
-                                    try {
-                                        const response = await fetch(`${serverAddress}/cancel-process`, {
-                                            method: 'POST',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({ userId: userData.uid }),
-                                        });
-
-                                        if (showAlertion) {
-                                            if (response.ok) {
-                                                startProcessBtn.disabled = false;
-                                                setClientStatus(`Request got cancelled`);
-                                            }
-                                        }
-                                    } catch (error) {
-                                        console.error(`Error on server ${serverAddress}:`, error);
+                                    if (showAlertion && response.ok) {
+                                        await response.json();
+                                        startProcessBtn.disabled = false;
+                                        setClientStatus('Request got cancelled');
+                                        updateDownloadFile(false);
                                     }
-                                });
-
-                                await Promise.all(cancelRequests);
-                            } else if (showAlertion)
-                                alert('User is not processing. No cancellation request sent.');
-                        } catch (error) {
-                            console.error('Error checking processes:', error);
-                        } finally {
-                            resolve();
+                                } catch (error) {
+                                    console.error(`Error on server ${server}:`, error);
+                                }
+                            }));
+                        } else if (showAlertion) {
+                            showNotification(`User is not processing. No cancellation request sent.`, 'Warning - Process Cancellation', 'warning');
                         }
-                    });
+                    } catch (error) {
+                        console.error('Error checking processes:', error);
+                    }
                 }
 
                 cancellProcessBtn.addEventListener('click', async () => {

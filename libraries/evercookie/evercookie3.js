@@ -29,7 +29,7 @@
  *  OTHER SITES WILL BE ABLE TO READ SOME OF THESE COOKIES !!!
  *
  * USAGE:
-
+ * 
 	var ec = new evercookie();	
 	
 	// set a cookie "id" to "12345"

@@ -178,17 +178,23 @@ export async function getUserInternetProtocol() {
 }
 
 export async function createStaticIdentifier(jsonData) {
-    if (!Array.isArray(jsonData)) {
-        throw new Error('Input must be an array');
-    }
+    try {
+        if (!Array.isArray(jsonData)) {
+            throw new Error('Input must be an array');
+        }
 
-    const combinedData = jsonData.map(item => JSON.stringify(item)).join('');
-    const encoder = new TextEncoder();
-    const data = encoder.encode(combinedData);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => ('00' + b.toString(16)).slice(-2)).join('');
-    return hashHex;
+        const combinedData = jsonData.map(item => JSON.stringify(item)).join('');
+        const encoder = new TextEncoder();
+        const data = encoder.encode(combinedData);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => ('00' + b.toString(16)).slice(-2)).join('');
+
+        return hashHex;
+    } catch (error) {
+        alert('Failed to create static identifier.');
+        return null;
+    }
 }
 
 export function getPageName() {
@@ -290,7 +296,7 @@ async function loadEvercookieUserUniqueBrowserId() {
             if (storedUniqueId) {
                 resolve(storedUniqueId);
             } else {
-                const userDoc = getUserDoc();
+                const userDoc = await getUserDoc();
                 const existingUID = userDoc.uniqueId || null;
                 const newUniqueId = existingUID ? existingUID : await generateUID();
                 ec.set('userUniqueBrowserId', newUniqueId);
@@ -303,7 +309,7 @@ async function loadEvercookieUserUniqueBrowserId() {
 function loadEvercookieScript() {
     return new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = "/libraries/evercookie/evercookie3.js?v=1.3.3.5";
+        script.src = "/libraries/evercookie/evercookie3.js?v=1.3.4.0";
         script.onload = resolve;
         script.onerror = reject;
         document.head.appendChild(script);
@@ -313,13 +319,13 @@ function loadEvercookieScript() {
 function loadJQueryAndEvercookie() {
     return new Promise((resolve, reject) => {
         const jqueryScript = document.createElement('script');
-        jqueryScript.src = "/libraries/evercookie/jquery-1.4.2.min.js?v=1.3.3.5";
+        jqueryScript.src = "/libraries/evercookie/jquery-1.4.2.min.js?v=1.3.4.0";
         jqueryScript.onload = () => {
             const swfScript = document.createElement('script');
-            swfScript.src = "/libraries/evercookie/swfobject-2.2.min.js?v=1.3.3.5";
+            swfScript.src = "/libraries/evercookie/swfobject-2.2.min.js?v=1.3.4.0";
             swfScript.onload = () => {
                 const dtjavaScript = document.createElement('script');
-                dtjavaScript.src = "/libraries/evercookie/dtjava.js?v=1.3.3.5";
+                dtjavaScript.src = "/libraries/evercookie/dtjava.js?v=1.3.4.0";
                 dtjavaScript.onload = () => {
                     loadEvercookieScript().then(resolve).catch(reject);
                 };
@@ -536,8 +542,30 @@ export const updateActiveState = async (db, id, active) => {
 };
 
 export async function fetchProcessState(url) {
-    const response = await fetch(url.replace('download-output', 'get-process-state'));
-    return await response.json();
+    try {
+        const response = await fetch(url.replace('download-output', 'get-process-state'));
+        return await response.json();
+    } catch (error) {
+        alert('Failed to fetch process state.');
+        return null;
+    }
+}
+
+const STATUS_OK = 200;
+const STATUS_NOTFOUND = 404;
+
+export async function checkServerQueue(server) {
+    try {
+        const response = await fetch(`${server}/get-online`);
+        if (response.status === STATUS_OK) {
+            const data = await response.json();
+            return data.server;
+        }
+
+        return Infinity;
+    } catch (error) {
+        return Infinity;
+    }
 }
 
 export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleDownload) => {
@@ -560,6 +588,7 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
             for (let i = 0; i < mediaCount; i++) {
                 const div = document.createElement('div');
                 div.className = 'data-container';
+                div.setAttribute('tooltip', '');
                 div.innerHTML = `<div class="process-text">Loading...</div><div class="delete-icon"></div>`;
                 fragment.appendChild(div);
             }
@@ -580,14 +609,80 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
 
                 if (blob && (blob.type.startsWith('video') || blob.type.startsWith('image'))) {
                     const blobUrl = URL.createObjectURL(blob);
-                    content = blob.type.startsWith('video')
-                        ? `<video url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" playsinline preload="auto" disablePictureInPicture loop muted autoplay><source src="${blobUrl}">Your browser does not support the video tag.</video></div><div class="delete-icon">` // type = "${blob.type}"
-                        : `<img url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" src="${blobUrl}" alt="Uploaded Photo"/></div><div class="delete-icon">`;
+                    let content;
 
-                    element.innerHTML = `${content}`;
+                    if (blob.type.startsWith('video')) {
+                        content = `<video url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" playsinline preload="auto" disablePictureInPicture loop muted autoplay><source src="${blobUrl}">Your browser does not support the video tag.</video>`;
 
-                    if (active)
-                        element.classList.add('active');
+                        const videoElement = document.createElement('video');
+                        videoElement.src = blobUrl;
+                        videoElement.muted = true;
+                        videoElement.autoplay = true;
+                        console.log(videoElement);
+
+                        let lastMediaTime = 0;
+                        let lastFrameNum = 0;
+                        let fps = 0;
+                        const fpsBuffer = [];
+                        let frameNotSeeked = true;
+                        let lastFps = 0;
+
+                        function ticker(useless, metadata) {
+                            const mediaTimeDiff = Math.abs(metadata.mediaTime - lastMediaTime);
+                            const frameNumDiff = metadata.presentedFrames - lastFrameNum;
+
+                            if (frameNumDiff > 0 && mediaTimeDiff > 0) {
+                                const diff = mediaTimeDiff / frameNumDiff;
+                                if (videoElement.playbackRate === 1 && document.hasFocus() && frameNotSeeked) {
+                                    fpsBuffer.push(diff);
+                                    fps = Math.round(1 / getFpsAverage());
+                                    if (fps === lastFps) {
+                                        fpsBuffer.pop();
+                                        element.innerHTML = `<div class="tooltip">${fps}</div>` + element.innerHTML;
+                                        return;
+                                    }
+
+                                    lastFps = fps;
+                                }
+                            }
+
+                            lastMediaTime = metadata.mediaTime;
+                            lastFrameNum = metadata.presentedFrames;
+                            frameNotSeeked = true;
+                            videoElement.requestVideoFrameCallback(ticker);
+                        }
+
+                        function getFpsAverage() {
+                            if (fpsBuffer.length === 0) return 1;
+                            return fpsBuffer.reduce((a, b) => a + b, 0) / fpsBuffer.length;
+                        }
+
+                        videoElement.addEventListener('seeked', function () {
+                            fpsBuffer.pop();
+                            frameNotSeeked = false;
+                        });
+
+                        videoElement.onloadedmetadata = function () {
+                            videoElement.requestVideoFrameCallback(ticker);
+                        };
+
+                        videoElement.play().catch(error => {
+                            alert('Playback failed:', error);
+                        });
+                    }
+                    else if (blob.type.startsWith('image')) {
+                        content = `<img url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" src="${blobUrl}" alt="Uploaded Photo"/>`;
+
+                        const imgElement = document.createElement('img');
+                        imgElement.src = blobUrl;
+                        imgElement.onload = function () {
+                            const resolution = { width: imgElement.width, height: imgElement.height };
+                            console.log({ resolution });
+                        };
+                    }
+
+                    element.innerHTML = `${content}<div class="delete-icon"></div>`;
+                    if (active) element.classList.add('active');
                 } else if (url) {
                     const data = await fetchProcessState(url);
                     if (data.status === 'completed') 
@@ -645,6 +740,7 @@ export const updateInDB = (db, url, blob) => {
         request.onsuccess = async (event) => {
             const cursor = event.target.result;
             if (cursor) {
+                console.log(cursor.value.url === url);
                 if (cursor.value.url === url) {
                     cursor.value.blob = blob;
                     cursor.value.chunks = [];
@@ -670,7 +766,6 @@ export const updateInDB = (db, url, blob) => {
         };
     });
 };
-
 
 export const deleteFromDB = async (db, id, saveCountIndex) => {
     return new Promise((resolve, reject) => {
@@ -770,19 +865,26 @@ export async function getDocsSnapshot(collectionId) {
     return await getDocs(collection(db, collectionId));
 }
 
-export const getUserData = () => {
+export const getUserData = async (setCurrentUserDataPromise) => {
+    if (setCurrentUserDataPromise) await setCurrentUserDataPromise();
+
     const cachedUserData = localStorage.getItem('cachedUserData');
     return cachedUserData ? JSON.parse(cachedUserData) : null;
 };
 
-export const getUserDoc = () => {
+export const getUserDoc = async (setCurrentUserDocPromise = null) => {
+    if (setCurrentUserDocPromise) await setCurrentUserDocPromise();
+
     const cachedUserDocument = localStorage.getItem('cachedUserDocument');
-    if (!cachedUserDocument) {
+    if (!cachedUserDocument) return null;
+
+    try {
+        const parsedData = JSON.parse(cachedUserDocument);
+        return parsedData.data || null;
+    } catch (error) {
+        alert("Error parsing cached user document: " + error.message);
         return null;
     }
-
-    const parsedData = JSON.parse(cachedUserDocument);
-    return parsedData.data || null;
 };
 
 export async function setCurrentUserData(getFirebaseModules) {
@@ -807,7 +909,7 @@ export async function setCurrentUserDoc(getDocSnapshot, useCache = false) {
         }
     }
 
-    const userData = getUserData();
+    const userData = await getUserData();
     const userDocSnap = await getDocSnapshot('users', userData.uid);
     if (!userDocSnap || !userDocSnap.exists()) {
         return false;
@@ -824,7 +926,7 @@ export async function setCurrentUserDoc(getDocSnapshot, useCache = false) {
     return true;
 }
 
-export function setUser(userDoc = getUserDoc()) {
+export function setUser(userDoc) {
     if (!userDoc) return false;
 
     function setCachedImageForElements(className, storageKey) {
@@ -898,6 +1000,8 @@ export function setUser(userDoc = getUserDoc()) {
 async function handleUserLoggedIn(userData, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getDocSnapshot, getFirebaseModules) {
     if (!userData) return;
 
+    let userDoc = await getUserDoc();
+
     const openSignInContainer = document.getElementById("openSignInContainer");
     const openSignUpContainer = document.getElementById("openSignUpContainer");
 
@@ -947,9 +1051,7 @@ async function handleUserLoggedIn(userData, getUserInternetProtocol, ensureUniqu
             const validateVerification = document.getElementById("validateVerification");
             validateVerification.addEventListener('click', async () => {
                 try {
-                    await setCurrentUserData(getFirebaseModules);
-
-                    const userData = getUserData();
+                    const userData = await getUserData(() => setCurrentUserData(getFirebaseModules));
                     if (!userData.emailVerified)
                         throw new Error('Your email is still not verified.');
                     else {
@@ -972,7 +1074,7 @@ async function handleUserLoggedIn(userData, getUserInternetProtocol, ensureUniqu
         createForm(createFormSection);
     }
 
-    const canSetUserData = setUser();
+    const canSetUserData = setUser(userDoc);
     if (!canSetUserData) {
         const setUserDataSuccess = await setCurrentUserDoc(getDocSnapshot);
         if (!setUserDataSuccess) {
@@ -1029,9 +1131,21 @@ async function handleUserLoggedIn(userData, getUserInternetProtocol, ensureUniqu
 
     await setCurrentUserDoc(getDocSnapshot, true);
 
-    const userDoc = getUserDoc();
-    if (!userData.emailVerified || userDoc.isBanned || (!userDoc.paid && userDoc.invitedHowManyPeople <= 200) && !userDoc.admin)
-        incognitoModeHandler();
+    userDoc = await getUserDoc();
+    if (
+        !userData.emailVerified ||
+        userDoc?.isBanned ||
+        (!userDoc?.paid && userDoc?.invitedHowManyPeople <= 200 && !userDoc?.admin)
+    ) {
+        userDoc = await getUserDoc(() => setCurrentUserDoc(getDocSnapshot));
+        if (
+            !userData.emailVerified ||
+            userDoc?.isBanned ||
+            (!userDoc?.paid && userDoc?.invitedHowManyPeople <= 200 && !userDoc?.admin)
+        ) {
+            incognitoModeHandler();
+        }
+    }
 }
 
 async function createSignFormSection(registerForm, retrieveImageFromURL, getFirebaseModules) {
@@ -1431,28 +1545,12 @@ function removeOverlay() {
     }
 }
 
-function showIncognitoModeForm() {
-    const overlay = createOverlay();
-    if (!overlay) return;
-
-    const stopPropagation = (e) => e.stopPropagation();
-
-    overlay.addEventListener('click', stopPropagation);
-    overlay.addEventListener('touchstart', stopPropagation);
-    overlay.addEventListener('contextmenu', (e) => e.preventDefault());
-    overlay.addEventListener('keydown', (e) => {
-        if (e.ctrlKey || e.metaKey || ['F12', 'I', 'J', 'C', 'U'].includes(e.key)) {
-            e.preventDefault();
-        }
-    });
-}
-
 let overlayCheckInterval;
 
 function handleIncognito() {
     detectIncognito().then((isIncognito) => {
         if (isIncognito.isPrivate) {
-            showIncognitoModeForm();
+            createOverlay();
         } else {
             clearInterval(overlayCheckInterval);
             removeOverlay();
@@ -1463,18 +1561,6 @@ function handleIncognito() {
 }
 
 export function incognitoModeHandler() {
-    const preventShortcuts = (e) => {
-        if (!document.querySelector('.incognito-overlay'))
-            return;
-
-        if (e.ctrlKey || e.metaKey || ['F12', 'I', 'J', 'C', 'U'].includes(e.key)) {
-            e.preventDefault();
-        }
-    };
-
-    document.addEventListener('contextmenu', (e) => e.preventDefault());
-    document.addEventListener('keydown', preventShortcuts);
-
     function checkOverlay() {
         if (!document.querySelector('.incognito-overlay'))
             handleIncognito();
@@ -1489,28 +1575,33 @@ export function incognitoModeHandler() {
     checkOverlay();
 }
 
-export async function setAuthentication(retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot) {
+async function setupSignOutButtons(getFirebaseModules) {
     const signOutButtons = document.querySelectorAll('.signOut');
-    signOutButtons.forEach(signOut => {
-        signOut.addEventListener('click', async function () {
-            const { auth, signOut } = await getFirebaseModules();
+    signOutButtons.forEach(signOutElement => {
+        signOutElement.addEventListener('click', async function (event) {
+            event.preventDefault();
 
             localStorage.removeItem('cachedUserData');
             localStorage.removeItem('cachedUserDocument');
             localStorage.removeItem('profileImageBase64');
 
+            const { auth, signOut } = await getFirebaseModules();
+
             try {
                 await signOut(auth);
                 location.reload();
             } catch (error) {
-                alert('Error during sign out:', error);
+                alert('Error during sign out: ' + error.message);
             }
         });
     });
+}
 
-    const userData = getUserData();
+export async function setAuthentication(retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot) {
+    const userData = await getUserData();
     if (userData) handleUserLoggedIn(userData, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getDocSnapshot, getFirebaseModules);
     else handleLoggedOutState(retrieveImageFromURL, getFirebaseModules);
+    setupSignOutButtons(getFirebaseModules);
 }
 
 export const ScreenMode = Object.freeze({
@@ -1518,9 +1609,9 @@ export const ScreenMode = Object.freeze({
     PC: 1,
 });
 
-export function createUserData(sidebar, screenMode) {
-    const userData = getUserData();
-    const userDoc = getUserDoc();
+export async function createUserData(sidebar, screenMode) {
+    const userData = await getUserData();
+    const userDoc = await getUserDoc();
     const hasUserData = userData && userDoc;
 
     const profileLine = document.getElementById("profileLine");
@@ -1601,7 +1692,7 @@ function createSideBarData(sidebar) {
                             </svg>
                             Profile
                         </a>
-                        <a class="button important disabled" id="premiumButton" href="pricing">
+                        <a class="button important" id="premiumButton" href="pricing">
                             <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path id="Vector" d="M15.8533 5.76333L12.1773 2.08733C12.0843 1.99433 11.9588 1.94183 11.8278 1.94083L4.23825 1.88283C4.10425 1.88183 3.97575 1.93433 3.88075 2.02933L0.14625 5.76383C-0.04875 5.95933 -0.04875 6.27533 0.14625 6.47083L7.64625 13.9708C7.84175 14.1663 8.15825 14.1663 8.35325 13.9708L15.8533 6.47083C16.0488 6.27533 16.0488 5.95883 15.8533 5.76333ZM12.9533 6.47433L9.37725 10.0858C9.18275 10.2823 8.86625 10.2838 8.66975 10.0893C8.47325 9.89483 8.47175 9.57833 8.66625 9.38183L11.9038 6.11333L10.8098 4.94733C10.6183 4.74883 10.6243 4.43183 10.8233 4.24033C10.9203 4.14633 11.0513 4.09683 11.1858 4.10083C11.3208 4.10483 11.4483 4.16333 11.5393 4.26283L12.9633 5.78133C13.1463 5.97733 13.1423 6.28333 12.9533 6.47433Z" fill="white"/>
                             </svg>
@@ -1813,7 +1904,7 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
 								<li><a class="text" href="https://www.reddit.com/r/bodyswapai/" target="_blank" translate="no">Reddit</a></li>
 							</ul>
 						</li>
-						<li class="disabled"><a class="text disabled" href="pricing">Pricing</a></li>
+						<li><a class="text" href="pricing">Pricing</a></li>
 					</ul>
 					<div class="nav-links" style="display: flex;justify-content: center;gap: calc(1vh * var(--scale-factor-h));">
 						<button id="openSignUpContainer">Sign Up</button>
@@ -1868,9 +1959,7 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
         navbar = document.querySelector('.navbar');
         hamburgerMenu = document.querySelector('.hamburger-menu');
 
-        createUserData(sidebar, screenMode);
-        setAuthentication(retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
-
+        await createUserData(sidebar, screenMode);
         setNavbar(navbar, mainQuery, sidebar);
         setSidebar(sidebar);
         setupMainSize(mainQuery);
@@ -1880,6 +1969,7 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
             cleanupEvents();
 
         cleanupEvents = loadScrollingAndMain(navbar, mainQuery, sidebar, hamburgerMenu, setUser);
+        setAuthentication(retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
     }
 
     const sidebarState = localStorage.getItem('sidebarState');
