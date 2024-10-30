@@ -293,12 +293,12 @@ async function loadEvercookieUserUniqueBrowserId() {
                 console.log(item + ' mechanism: ' + mechanism);
             }*/
 
-            if (storedUniqueId) {
+            if (storedUniqueId && storedUniqueId.length <= 24) {
                 resolve(storedUniqueId);
             } else {
                 const userDoc = await getUserDoc();
-                const existingUID = userDoc.uniqueId || null;
-                const newUniqueId = existingUID ? existingUID : await generateUID();
+                const existingUID = userDoc && (!userDoc.uniqueId || userDoc.uniqueId !== null || userDoc.uniqueId !== undefined) ? userDoc.uniqueId : null;
+                const newUniqueId = existingUID !== null ? existingUID : await generateUID();
                 ec.set('userUniqueBrowserId', newUniqueId);
                 resolve(newUniqueId);
             }
@@ -309,7 +309,7 @@ async function loadEvercookieUserUniqueBrowserId() {
 function loadEvercookieScript() {
     return new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = "/libraries/evercookie/evercookie3.js?v=1.3.4.0";
+        script.src = "/libraries/evercookie/evercookie3.js?v=1.3.4.9";
         script.onload = resolve;
         script.onerror = reject;
         document.head.appendChild(script);
@@ -319,13 +319,13 @@ function loadEvercookieScript() {
 function loadJQueryAndEvercookie() {
     return new Promise((resolve, reject) => {
         const jqueryScript = document.createElement('script');
-        jqueryScript.src = "/libraries/evercookie/jquery-1.4.2.min.js?v=1.3.4.0";
+        jqueryScript.src = "/libraries/evercookie/jquery-1.4.2.min.js?v=1.3.4.9";
         jqueryScript.onload = () => {
             const swfScript = document.createElement('script');
-            swfScript.src = "/libraries/evercookie/swfobject-2.2.min.js?v=1.3.4.0";
+            swfScript.src = "/libraries/evercookie/swfobject-2.2.min.js?v=1.3.4.9";
             swfScript.onload = () => {
                 const dtjavaScript = document.createElement('script');
-                dtjavaScript.src = "/libraries/evercookie/dtjava.js?v=1.3.4.0";
+                dtjavaScript.src = "/libraries/evercookie/dtjava.js?v=1.3.4.9";
                 dtjavaScript.onload = () => {
                     loadEvercookieScript().then(resolve).catch(reject);
                 };
@@ -568,6 +568,135 @@ export async function checkServerQueue(server) {
     }
 }
 
+export function calculateMetadata(element, callback) {
+    if (element instanceof HTMLVideoElement) {
+        let lastMediaTime = 0;
+        let lastFrameNum = 0;
+        let fps = 0;
+        const fpsBuffer = [];
+        let frameNotSeeked = true;
+        let lastFps = 0;
+
+        function ticker(useless, metadata) {
+            const mediaTimeDiff = Math.abs(metadata.mediaTime - lastMediaTime);
+            const frameNumDiff = metadata.presentedFrames - lastFrameNum;
+
+            if (frameNumDiff > 0 && mediaTimeDiff > 0) {
+                const diff = mediaTimeDiff / frameNumDiff;
+
+                if (element.playbackRate === 1 && frameNotSeeked) {
+                    fpsBuffer.push(diff);
+                    fps = Math.round(1 / getFpsAverage());
+                    if (fps === lastFps) {
+                        fpsBuffer.pop();
+                        return callback({
+                            fps,
+                            resolution: {
+                                width: element.videoWidth,
+                                height: element.videoHeight
+                            },
+                            duration: element.duration,
+                            currentTime: element.currentTime,
+                            playbackRate: element.playbackRate,
+                            volume: element.volume,
+                            muted: element.muted,
+                            paused: element.paused,
+                            ended: element.ended,
+                            buffered: element.buffered,
+                            seekable: element.seekable,
+                            networkState: element.networkState,
+                            readyState: element.readyState,
+                            src: element.src,
+                            mediaTime: metadata.mediaTime,
+                            presentedFrames: metadata.presentedFrames
+                        });
+                    }
+
+                    lastFps = fps;
+                }
+            }
+
+            lastMediaTime = metadata.mediaTime;
+            lastFrameNum = metadata.presentedFrames;
+            frameNotSeeked = true;
+            element.requestVideoFrameCallback(ticker);
+        }
+
+        function getFpsAverage() {
+            if (fpsBuffer.length === 0) return 1;
+            return fpsBuffer.reduce((a, b) => a + b, 0) / fpsBuffer.length;
+        }
+
+        element.addEventListener('seeked', function () {
+            fpsBuffer.pop();
+            frameNotSeeked = false;
+        });
+
+        element.onloadedmetadata = function () {
+            element.requestVideoFrameCallback(ticker);
+            element.play().catch(error => {
+                alert('Playback failed: ' + error.message);
+            });
+        };
+
+        element.onerror = function () {
+            alert('An error occurred during video playback.');
+        };
+    } else if (element instanceof HTMLImageElement) {
+        element.onload = function () {
+            callback({
+                resolution: {
+                    width: element.naturalWidth,
+                    height: element.naturalHeight
+                },
+                src: element.src,
+            });
+        };
+
+        element.onerror = function () {
+            alert('An error occurred while loading the image.');
+        };
+    } else {
+        alert('Element is not a video or image.');
+    }
+}
+
+export async function customFetch(url, options, onProgress) {
+    if (typeof onProgress !== 'function') return fetch(url, options);
+
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open(options.method || 'GET', url);
+
+        xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+                const progress = (event.loaded / event.total) * 100;
+                onProgress(progress);
+            }
+        };
+
+        xhr.onload = () => {
+            if (xhr.status >= STATUS_OK && xhr.status < STATUS_NOTFOUND) {
+                resolve(new Response(xhr.responseText, { status: xhr.status }));
+            } else {
+                reject(new Error(`Request failed with status ${xhr.status}`));
+                showNotification(`Request failed with status ${xhr.status}. Try Again.`, 'Warning - Fetching Failed', 'warning');
+            }
+        };
+
+        xhr.onerror = () => {
+            reject(new Error('Request failed'));
+            showNotification(`Request failed. Try Again.`, 'Warning - Fetching Failed', 'warning');
+        };
+
+        Object.entries(options.headers || {}).forEach(([key, value]) => {
+            xhr.setRequestHeader(key, value);
+        });
+
+        xhr.send(options.body);
+    });
+}
+
 export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleDownload) => {
     try {
         let db = openDB(dataBaseIndexName, dataBaseObjectStoreName);
@@ -603,97 +732,108 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
             const inputElements = mediaContainer.querySelectorAll('.data-container');
 
             for (const [indexInBatch, { blob, url, id, timestamp, active }] of mediaItems.entries()) {
-                let content = `<initial url="${url}" id="${id}" timestamp="${timestamp}" active="${active}"/></initial><div class="process-text">Initializing</div><div class="delete-icon"></div>`;
                 let element = inputElements[indexInBatch];
-                element.innerHTML = `${content}`;
+                element.innerHTML = `<initial url="${url}" id="${id}" timestamp="${timestamp}" active="${active}"/></initial><div class="process-text">Initializing</div><div class="delete-icon"></div>`;
 
                 if (blob && (blob.type.startsWith('video') || blob.type.startsWith('image'))) {
                     const blobUrl = URL.createObjectURL(blob);
-                    let content;
-
                     if (blob.type.startsWith('video')) {
-                        content = `<video url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" playsinline preload="auto" disablePictureInPicture loop muted autoplay><source src="${blobUrl}">Your browser does not support the video tag.</video>`;
+                        element.innerHTML = `<video url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" playsinline preload="auto" disablePictureInPicture loop muted autoplay><source src="${blobUrl}">Your browser does not support the video tag.</video><div class="delete-icon"></div>`;
 
-                        const videoElement = document.createElement('video');
-                        videoElement.src = blobUrl;
-                        videoElement.muted = true;
-                        videoElement.autoplay = true;
-                        console.log(videoElement);
+                        if (dataBaseObjectStoreName === 'inputs') {
+                            element.innerHTML = `<div class="tooltip cursor">Loading...</div>` + element.innerHTML;
 
-                        let lastMediaTime = 0;
-                        let lastFrameNum = 0;
-                        let fps = 0;
-                        const fpsBuffer = [];
-                        let frameNotSeeked = true;
-                        let lastFps = 0;
+                            const tooltip = element.querySelector('.tooltip');
+                            if (tooltip && tooltip.classList.contains('cursor')) {
+                                function updateTooltipPosition(event) {
+                                    tooltip.style.position = 'fixed';
+                                    tooltip.style.left = `${event.clientX}px`;
+                                    tooltip.style.top = `${event.clientY - 15}px`;
+                                }
 
-                        function ticker(useless, metadata) {
-                            const mediaTimeDiff = Math.abs(metadata.mediaTime - lastMediaTime);
-                            const frameNumDiff = metadata.presentedFrames - lastFrameNum;
+                                element.addEventListener('mouseenter', () => {
+                                    document.addEventListener('mousemove', updateTooltipPosition);
+                                });
 
-                            if (frameNumDiff > 0 && mediaTimeDiff > 0) {
-                                const diff = mediaTimeDiff / frameNumDiff;
-                                if (videoElement.playbackRate === 1 && document.hasFocus() && frameNotSeeked) {
-                                    fpsBuffer.push(diff);
-                                    fps = Math.round(1 / getFpsAverage());
-                                    if (fps === lastFps) {
-                                        fpsBuffer.pop();
-                                        element.innerHTML = `<div class="tooltip">${fps}</div>` + element.innerHTML;
-                                        return;
-                                    }
+                                element.addEventListener('mouseleave', () => {
+                                    document.removeEventListener('mousemove', updateTooltipPosition);
+                                });
+                            }
 
-                                    lastFps = fps;
+                            const keepFPS = document.getElementById('keepFPS');
+                            const fpsSlider = document.getElementById("fps-slider");
+                            const removeBanner = document.getElementById("removeBanner");
+
+                            let lastMetadata = null;
+
+                            function handleMetadataUpdate(metadata) {
+                                lastMetadata = metadata;
+                                const tooltip = element.querySelector('.tooltip');
+                                if (tooltip && metadata.fps) {
+                                    const fpsSliderValue = !keepFPS.checked ? fpsSlider.value : 60;
+                                    const fps = Math.min(fpsSliderValue, metadata.fps);
+                                    const videoDurationTotalFrames = Math.floor(metadata.duration * fps);
+                                    const singleCreditForTotalFrameAmount = 120;
+                                    const removeBannerStateMultiplier = removeBanner && removeBanner.checked ? 2 : 1;
+                                    const neededCredits = Math.floor(Math.max(1, videoDurationTotalFrames / singleCreditForTotalFrameAmount) * removeBannerStateMultiplier);
+
+                                    tooltip.textContent = `${neededCredits} Credits`;
                                 }
                             }
 
-                            lastMediaTime = metadata.mediaTime;
-                            lastFrameNum = metadata.presentedFrames;
-                            frameNotSeeked = true;
-                            videoElement.requestVideoFrameCallback(ticker);
+                            [keepFPS, fpsSlider, removeBanner].forEach(element => {
+                                element.addEventListener('change', () => {
+                                    if (lastMetadata) handleMetadataUpdate(lastMetadata);
+                                });
+                            });
+
+                            calculateMetadata(element.querySelector('video'), handleMetadataUpdate);
                         }
-
-                        function getFpsAverage() {
-                            if (fpsBuffer.length === 0) return 1;
-                            return fpsBuffer.reduce((a, b) => a + b, 0) / fpsBuffer.length;
-                        }
-
-                        videoElement.addEventListener('seeked', function () {
-                            fpsBuffer.pop();
-                            frameNotSeeked = false;
-                        });
-
-                        videoElement.onloadedmetadata = function () {
-                            videoElement.requestVideoFrameCallback(ticker);
-                        };
-
-                        videoElement.play().catch(error => {
-                            alert('Playback failed:', error);
-                        });
                     }
                     else if (blob.type.startsWith('image')) {
-                        content = `<img url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" src="${blobUrl}" alt="Uploaded Photo"/>`;
+                        element.innerHTML = `<img url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" src="${blobUrl}" alt="Uploaded Photo"/><div class="delete-icon"></div>`;
 
-                        const imgElement = document.createElement('img');
-                        imgElement.src = blobUrl;
-                        imgElement.onload = function () {
-                            const resolution = { width: imgElement.width, height: imgElement.height };
-                            console.log({ resolution });
-                        };
+                        if (dataBaseObjectStoreName === 'inputs') {
+                            element.innerHTML = `<div class="tooltip cursor">Loading...</div>` + element.innerHTML;
+
+                            const tooltip = element.querySelector('.tooltip');
+                            if (tooltip && tooltip.classList.contains('cursor')) {
+                                document.addEventListener('mousemove', (event) => {
+                                    tooltip.style.position = 'fixed';
+                                    tooltip.style.left = `${event.clientX}px`;
+                                    tooltip.style.top = `${event.clientY - 15}px`;
+                                });
+                            }
+
+                            const removeBanner = document.getElementById("removeBanner");
+                            let lastMetadata = null;
+
+                            function handleMetadataUpdate(metadata) {
+                                lastMetadata = metadata;
+                                const tooltip = element.querySelector('.tooltip');
+                                if (tooltip) {
+                                    const neededCredits = removeBanner.checked ? 2 : 1;
+                                    tooltip.textContent = `${neededCredits} Credits`;
+                                }
+                            }
+
+                            removeBanner.addEventListener('change', () => {
+                                if (lastMetadata) handleMetadataUpdate(lastMetadata);
+                            });
+
+                            calculateMetadata(element.querySelector('img'), handleMetadataUpdate);
+                        }
                     }
 
-                    element.innerHTML = `${content}<div class="delete-icon"></div>`;
                     if (active) element.classList.add('active');
                 } else if (url) {
+                    element.innerHTML = `<initial url="${url}" id="${id}" timestamp="${timestamp}" active="${active}"/></initial><div class="process-text">Fetching...</div><div class="delete-icon"></div>`;
                     const data = await fetchProcessState(url);
                     if (data.status === 'completed') 
                         await handleDownload({ db, url, element, id, timestamp, active });                   
-                    else {
-                        const serverMessage = data.server ? data.server : 'Not Indexed';
-                        let content = `<initial url="${url}" id="${id}" timestamp="${timestamp}" active="${active}"/></initial><div class="process-text">${serverMessage}</div><div class="delete-icon"></div>`;
-                        element.innerHTML = `${content}`;
-                    }
+                    else element.innerHTML = `<initial url="${url}" id="${id}" timestamp="${timestamp}" active="${active}"/></initial><div class="process-text">${data.server}</div><div class="delete-icon"></div>`;
                 }
-                else element.innerHTML = `${content}`;
+                else element.innerHTML = `<video url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" playsinline preload="auto" disablePictureInPicture loop muted autoplay><source src="${blobUrl}">Your browser does not support the video tag.</video><div class="process-text">Not Indexed...</div><div class="delete-icon"></div>`;
             }
 
             mediaContainer.style.display = mediaCount > 0 ? 'flex' : 'none';
@@ -1110,6 +1250,7 @@ async function handleUserLoggedIn(userData, getUserInternetProtocol, ensureUniqu
                 });
 
                 if (!response.ok) {
+                    alert('HTTP error! Google sign failed, please use email registration.');
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
 
@@ -1117,6 +1258,9 @@ async function handleUserLoggedIn(userData, getUserInternetProtocol, ensureUniqu
                 const responseText = JSON.stringify(jsonResponse);
                 if (responseText.includes("success")) {
                     location.reload();
+                }
+                else {
+                    alert('HTTP error! Google sign failed, please use email registration.');
                 }
             } catch (error) {
                 console.error('Error during user registration:', error);
@@ -1156,8 +1300,11 @@ async function createSignFormSection(registerForm, retrieveImageFromURL, getFire
     if (!registerForm) {
         innerContainer.innerHTML = `
                 <h2>Sign in</h2>
-                <p>Don't have an account? <span id="openSignUpForm" style="cursor: pointer; color: blue;">Sign up</span></p>
-                <button class="wide" id="googleSignInButton" type="button">Sign in with Google</button>
+                <p>Don't have an account? <span id="openSignUpForm" class="text-gradient" style="cursor: pointer;">Sign up</span></p>
+                <button class="wide" id="googleSignInButton" type="button">
+                    <svg style="width: 2.8vh;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48px" height="48px"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
+                    Google
+                </button>
 
                 <div style="display: flex; justify-content: center; width: 100%; align-items: center;">
                     <div class="line"></div>
@@ -1167,9 +1314,10 @@ async function createSignFormSection(registerForm, retrieveImageFromURL, getFire
 
                 <div id="infoMessage" style="color: red; display: none;"></div>
 
-                <div>
+                <div style="position: relative;">
                     <label for="email">Email address</label>
                     <input type="email" id="email" name="email" placeholder="Enter your email address..." required>
+                    <ul class="list-items" id="suggestions"></ul>
                 </div>
 
                 <div>
@@ -1188,7 +1336,13 @@ async function createSignFormSection(registerForm, retrieveImageFromURL, getFire
 
                 <button class="wide" id="signInButton">Sign in</button>
                 <p id="forgotPassword" style="cursor: pointer;">Forgot your password?</p>
-                <span class="close-button" style="position: absolute; font-size: 2vh; top: 1vh; right: 1vh; cursor: pointer;">X</span>
+
+                <button class="close-button" style="position: absolute;top: 1vh;right: 1vh;cursor: pointer;width: 4vh;height: 4vh;padding: 0;">
+                    <svg style="margin: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x">
+                        <path d="M18 6 6 18"></path>
+                        <path d="m6 6 12 12"></path>
+                    </svg>
+                </button>
             `;
 
         document.getElementById('openSignUpForm').addEventListener('click', () => {
@@ -1197,7 +1351,7 @@ async function createSignFormSection(registerForm, retrieveImageFromURL, getFire
     } else {
         innerContainer.innerHTML = `
                 <h2>Sign up</h2>
-                <p>Already have an account? <span id="openSignInForm" style="cursor: pointer; color: blue;">Sign in</span></p>
+                <p>Already have an account? <span id="openSignInForm" class="text-gradient" style="cursor: pointer;">Sign in</span></p>
                 <div id="infoMessage" style="color: red; display: none;"></div>
 
                 <div>
@@ -1205,9 +1359,10 @@ async function createSignFormSection(registerForm, retrieveImageFromURL, getFire
                     <input type="text" id="username" name="username" placeholder="Enter your username..." required>
                 </div>
 
-                <div>
+                <div style="position: relative;">
                     <label for="email">Email address</label>
                     <input type="email" id="email" name="email" placeholder="Enter your email address..." required>
+                    <ul class="list-items" id="suggestions"></ul>
                 </div>
 
                 <div>
@@ -1225,8 +1380,8 @@ async function createSignFormSection(registerForm, retrieveImageFromURL, getFire
                 </div>
                 <button class="wide" id="signUpButton">Sign Up</button>
 
-                <button class="close-button" style="position: absolute;top: 1vh;right: 1vh;cursor: pointer;width: fit-content;">
-                    <svg style="margin: 0;" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x">
+                <button class="close-button" style="position: absolute;top: 1vh;right: 1vh;cursor: pointer;width: 4vh;height: 4vh;padding: 0;">
+                    <svg style="margin: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x">
                         <path d="M18 6 6 18"></path>
                         <path d="m6 6 12 12"></path>
                     </svg>
@@ -1250,23 +1405,114 @@ async function createSignFormSection(registerForm, retrieveImageFromURL, getFire
     });
 
     let messageContainer = document.getElementById('infoMessage');
+    let forgotPassword = document.getElementById('forgotPassword');
     let googleSignInButton = document.getElementById('googleSignInButton');
     let signInButton = document.getElementById('signInButton');
-    let forgotPassword = document.getElementById('forgotPassword');
-
     let signUpButton = document.getElementById('signUpButton');
+
+    const emailInput = document.getElementById('email');
+    const suggestionsBox = document.getElementById('suggestions');
+    const emailProviders = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'icloud.com'];
+
+    let selectedIndex = -1;
+
+    emailInput.addEventListener('input', (event) => {
+        const inputValue = event.target.value;
+        const atIndex = inputValue.indexOf('@');
+        selectedIndex = -1;
+
+        if (atIndex !== -1) {
+            const enteredDomain = inputValue.slice(atIndex + 1);
+            const matchingProviders = emailProviders.filter(provider =>
+                provider.startsWith(enteredDomain)
+            );
+
+            showSuggestions(matchingProviders, inputValue.slice(0, atIndex + 1));
+        } else {
+            clearSuggestions();
+        }
+    });
+
+    emailInput.addEventListener('keydown', (event) => {
+        const suggestions = suggestionsBox.querySelectorAll('.item');
+
+        if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            selectedIndex = (selectedIndex + 1) % suggestions.length;
+            updateHighlight(suggestions);
+        } else if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            selectedIndex = (selectedIndex - 1 + suggestions.length) % suggestions.length;
+            updateHighlight(suggestions);
+        } else if (event.key === 'Enter' && selectedIndex > -1) {
+            event.preventDefault();
+            emailInput.value = suggestions[selectedIndex].textContent;
+            clearSuggestions();
+        }
+    });
+
+    emailInput.addEventListener('blur', clearSuggestions);
+
+    function showSuggestions(providers, baseText) {
+        clearSuggestions();
+        if (providers.length === 0) return;
+
+        providers.forEach(provider => {
+            const suggestionItem = document.createElement('li');
+            suggestionItem.classList.add('item');
+            suggestionItem.textContent = `${baseText}${provider}`;
+            suggestionItem.addEventListener('mousedown', () => {
+                emailInput.value = suggestionItem.textContent;
+                clearSuggestions();
+            });
+            suggestionsBox.appendChild(suggestionItem);
+        });
+
+        suggestionsBox.style.display = 'block';
+    }
+
+    function clearSuggestions() {
+        suggestionsBox.innerHTML = '';
+        suggestionsBox.style.display = 'none';
+        selectedIndex = -1;
+    }
+
+    function updateHighlight(suggestions) {
+        suggestions.forEach((suggestion, index) => {
+            suggestion.style.backgroundColor = (index === selectedIndex) ? 'rgba(255, 255, 255, 0.1)' : 'transparent';
+        });
+    }
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+
+            const emailField = document.getElementById('email');
+            const passwordField = document.getElementById('password');
+
+            const isFormFilled = emailField.value.trim() !== '' && passwordField.value.trim() !== '';
+
+            if (isFormFilled) {
+                if (!registerForm && signInButton) {
+                    signInButton.click();
+                } else if (registerForm && signUpButton) {
+                    signUpButton.click();
+                }
+            }
+        }
+    });
 
     if (forgotPassword) {
         forgotPassword.style.display = 'none';
         forgotPassword.addEventListener('click', async () => {
-            let email = document.getElementById('email').value;
-            if (!email)
-                email = prompt('Please enter your email address to reset your password:');
+            let emailValue = document.getElementById('email').value;
+            if (!emailValue)
+                emailValue = prompt('Please enter your email address to reset your password:');
 
-            if (email) {
+            if (emailValue) {
                 try {
                     const { auth, sendPasswordResetEmail } = await getFirebaseModules();
-                    await sendPasswordResetEmail(auth, email);
+                    await sendPasswordResetEmail(auth, emailValue);
                     if (messageContainer) {
                         messageContainer.style.display = 'unset';
                         messageContainer.style.color = 'red';
@@ -1597,11 +1843,13 @@ async function setupSignOutButtons(getFirebaseModules) {
     });
 }
 
-export async function setAuthentication(retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot) {
-    const userData = await getUserData();
-    if (userData) handleUserLoggedIn(userData, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getDocSnapshot, getFirebaseModules);
-    else handleLoggedOutState(retrieveImageFromURL, getFirebaseModules);
-    setupSignOutButtons(getFirebaseModules);
+export async function setAuthentication(userData, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot) {
+    if (userData) {
+        handleUserLoggedIn(userData, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getDocSnapshot, getFirebaseModules);
+        return setupSignOutButtons(getFirebaseModules);
+    }
+
+    handleLoggedOutState(retrieveImageFromURL, getFirebaseModules);
 }
 
 export const ScreenMode = Object.freeze({
@@ -1609,7 +1857,7 @@ export const ScreenMode = Object.freeze({
     PC: 1,
 });
 
-export async function createUserData(sidebar, screenMode) {
+export async function createUserData(sidebar, screenMode, setAuthentication, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot) {
     const userData = await getUserData();
     const userDoc = await getUserDoc();
     const hasUserData = userData && userDoc;
@@ -1671,6 +1919,8 @@ export async function createUserData(sidebar, screenMode) {
                 `);
         }
     }
+
+    setAuthentication(userData, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
 }
 
 function createSideBarData(sidebar) {
@@ -1857,7 +2107,7 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
                 const menuContainer = document.getElementById('menu-container');
                 hamburgerMenu = menuContainer.querySelector('.hamburger-menu');
                 hamburgerMenu.addEventListener('click', function () {
-                    getSidebarActive() ? removeSidebar(sidebar, hamburgerMenu) : showSidebar(sidebar, hamburgerMenu, setUser);
+                    getSidebarActive() ? removeSidebar(sidebar, hamburgerMenu) : showSidebar(sidebar, hamburgerMenu, setUser, setAuthentication, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
                 });
 
                 menuContainer.querySelector('.zoom-minus').onclick = () => {
@@ -1959,7 +2209,7 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
         navbar = document.querySelector('.navbar');
         hamburgerMenu = document.querySelector('.hamburger-menu');
 
-        await createUserData(sidebar, screenMode);
+        createUserData(sidebar, screenMode, setAuthentication, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
         setNavbar(navbar, mainQuery, sidebar);
         setSidebar(sidebar);
         setupMainSize(mainQuery);
@@ -1969,7 +2219,6 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
             cleanupEvents();
 
         cleanupEvents = loadScrollingAndMain(navbar, mainQuery, sidebar, hamburgerMenu, setUser);
-        setAuthentication(retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
     }
 
     const sidebarState = localStorage.getItem('sidebarState');
@@ -1981,12 +2230,77 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
             setSidebar(sidebar);
         }
 
-        showSidebar(sidebar, hamburgerMenu, setUser);
+        showSidebar(sidebar, hamburgerMenu, setUser, setAuthentication, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
     }
 
     sizeBasedElements();
 
     window.addEventListener('resize', sizeBasedElements);
+
+    /*let upIndex = 0;
+    let downIndex = 0;
+    let enterIndex = 0;
+    const heldKeys = new Set(); // Track currently held keys
+
+    document.addEventListener('keydown', (event) => {
+        // Check if the key is already held
+        if (heldKeys.has(event.key)) return;
+        heldKeys.add(event.key); // Mark the key as held
+
+        let audio;
+        const volume = 0.5; // Set volume level
+
+        switch (event.key) {
+            case 'Enter':
+                enterIndex = (enterIndex % 2) + 1; // Toggle between enter_down_1 and enter_down_2
+                audio = new Audio(`../sounds/keyboard/enter_down_${enterIndex}.wav`);
+                break;
+
+            case ' ':
+                audio = new Audio(`../sounds/keyboard/spacebar_down_1.wav`);
+                break;
+
+            default:
+                upIndex = (upIndex % 9) + 1;
+                audio = new Audio(`../sounds/keyboard/down_${upIndex}.wav`);
+                break;
+        }
+
+        // Play audio if it's set
+        if (audio) {
+            audio.volume = volume;
+            audio.play();
+        }
+    });
+
+    document.addEventListener('keyup', (event) => {
+        // Remove the key from heldKeys to allow a new press
+        heldKeys.delete(event.key);
+
+        let audio;
+        const volume = 0.5; // Set volume level
+
+        switch (event.key) {
+            case 'Enter':
+                audio = new Audio(`../sounds/keyboard/enter_up_2.wav`);
+                break;
+
+            case ' ':
+                audio = new Audio(`../sounds/keyboard/spacebar_up_1.wav`);
+                break;
+
+            default:
+                downIndex = (downIndex % 9) + 1;
+                audio = new Audio(`../sounds/keyboard/up_${downIndex}.wav`);
+                break;
+        }
+
+        // Play audio if it's set
+        if (audio) {
+            audio.volume = volume;
+            audio.play();
+        }
+    });*/
 
     if (sidebarState === 'removeSidebar') {
         removeSidebar(sidebar, hamburgerMenu);
@@ -2199,7 +2513,7 @@ export function setNavbar(navbar, mains, sidebar) {
 
 let previousScreenMode = 0;
 
-export function showSidebar(sidebar, hamburgerMenu, setUser) {
+export function showSidebar(sidebar, hamburgerMenu, setUser, setAuthentication, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot) {
     setSidebarActive(sidebar);
     setSidebar(sidebar);
 
@@ -2215,7 +2529,7 @@ export function showSidebar(sidebar, hamburgerMenu, setUser) {
         if (!shouldUpdate)
             return;
 
-        createUserData(sidebar, screenMode);
+        createUserData(sidebar, screenMode, setAuthentication, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
         createSideBarData(sidebar);
 
         ['exploreButton', 'profileButton', 'premiumButton', 'faceSwapButton', 'inpaintButton', 'artGeneratorButton', 'userLayout'].forEach(id => {
@@ -2330,7 +2644,7 @@ export function setupMainSize(mainQuery) {
 
 const swipeThreshold = 50;
 
-export function loadScrollingAndMain(navbar, mainQuery, sidebar, hamburgerMenu, setUser) {
+export function loadScrollingAndMain(navbar, mainQuery, sidebar, hamburgerMenu, setUser, setAuthentication, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot) {
     if (!mainQuery || !mainQuery.length) return;
 
     let scrolling = false;
@@ -2431,7 +2745,7 @@ export function loadScrollingAndMain(navbar, mainQuery, sidebar, hamburgerMenu, 
         if (!e) return;
         const { clientY, clientX } = e.type === 'touchstart' ? e.touches[0] : e;
         if (clientY > navbar.offsetHeight) {
-            if (!clientX) return showSidebar(sidebar, hamburgerMenu, setUser);
+            if (!clientX) return showSidebar(sidebar, hamburgerMenu, setUser, setAuthentication, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
             if (e.type === 'click' && clientX > sidebar.offsetWidth && !e.target.closest('a')) removeSidebar(sidebar, hamburgerMenu);
         } else showNavbar(navbar, mainQuery, sidebar);
     };

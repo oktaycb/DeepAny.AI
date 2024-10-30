@@ -32,7 +32,7 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="css/styles.css?v=1.3.4.0">
+    <link rel="stylesheet" href="css/styles.css?v=1.3.4.9">
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             const cssRules = Array.from(document.styleSheets).flatMap(sheet => Array.from(sheet.cssRules));
@@ -194,7 +194,7 @@
 <body lang="en">
     <div id="paymentContainer" style="margin: 0; padding: 0; overflow: hidden; display: none; width: 100%; height: 100vh; position: absolute; z-index: 99999;"></div>
     <script type="module" defer>
-        const version = '1.3.4.0';
+        const version = '1.3.4.9';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -202,87 +202,88 @@
 
         document.addEventListener('DOMContentLoaded', async function () {
             const functions = await loadModule('./scripts/functions.js');
-            const { setCache, getCache, getPageName, setUser, setAuthentication, fetchConversionRates, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol } = functions;
+            const { getUserData, setCache, getCache, getPageName, setUser, setAuthentication, fetchConversionRates, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol } = functions;
 
             const pageName = getPageName();
 
             function updateMainContent(screenMode, pageContent) {
                 pageContent.length = 0;
                 pageContent.push(`<div id="baseContainer" class="centered-container long">
-                                                                                <div style="display: flex;flex-direction: column; gap: calc((2vh* var(--scale-factor-h) + 4vw / 2 * var(--scale-factor-w)));">
-                                                                                                <div class="background-container">
-                                                                                                    <p class="background-dot-container-option selected" id="credits-mode">Credits</p>
-                                                                                                    <p class="background-dot-container-option" id="subscription-mode">Subscription</p>
-                                                                                                    <p class="background-dot-container-option not-available" id="renewal-mode">Renewal</p>
-                                                                                                </div>
-
-
-                                                                                                <div class="background-container">
-                                                                                                    <p class="background-dot-container-option selected" data-currency="USD" translate="no">$USD</p>
-                                                                                                    <p class="background-dot-container-option" data-currency="EUR" translate="no">€EUR</p>
-                                                                                                    <p class="background-dot-container-option" data-currency="GBP" translate="no">£GBP</p>
-                                                                                                    <p class="background-dot-container-option" data-currency="TRY" translate="no">₺TRY</p>
-                                                                                                    <p class="background-dot-container-option important-outline" data-currency="BTC" translate="no">COIN</p>
-                                                                                                </div>
-
-
-                                                                                    <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;height: 100%;">
-                                                                                        <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
-                                                                                            <a class="background-dot-container">
-                                                                                                <div class="background-dot-container-content" style="min-width: calc((50vh* var(--scale-factor-h) + 50vw / 2 * var(--scale-factor-w)));">
-                                                                                                <div class="background-container" style="grid: unset; display: grid;grid-template-columns: 1fr 1fr;">
-                                                                                                    <input type="range" id="slider" min="1" max="9" step="1" value="1"></input>
-                                                                                                    <p class="slider-value">1 day</p>
-                                                                                                </div>
-                                                                                                        <div class="line"></div>
-                                                                                                        <div class="background-dot-container-header">
-                                                                                                          <p class="plans-name text-gradient" id="plan-name">Starter</p>
-                                                                                                          <div class="plans-popular" id="popular-tag" style="display: none;">
-                                                                                                            <p class="plans-name text-gradient">Popular</p>
-                                                                                                          </div>
+                                                                                        <div style="display: flex;flex-direction: column; gap: calc(2vh* var(--scale-factor-h));">
+                                                                                                        <div class="background-container">
+                                                                                                            <p class="background-dot-container-option selected" id="credits-mode">Credits</p>
+                                                                                                            <p class="background-dot-container-option" id="subscription-mode">Subscription</p>
+                                                                                                            <p class="background-dot-container-option not-available" id="renewal-mode">Renewal</p>
                                                                                                         </div>
-                                                                                                    <div class="background-dot-container-price">
-                                                                                                        <h1 id="cost-per-day" translate="no">Loading...</h1>
-                                                                                                        <h4 id="cost-per-day-unit" style="opacity: 0.5;">/day</h4>
-                                                                                                    </div>
-                                                                                                    <div class="background-dot-container-link" id="purchase">Purchase</div>
-                                                                                                    <div>
-                                                                                                        <div class="line"></div>
-                                                                                                        <h4 id="discount-details">Loading...</h4>
-                                                                                                        <p class="discount-details" id="discount">Loading...</p>
-                                                                                                        <div class="line"></div>
-                                                                                                        <div style="display: flex;gap: 0.5vh;align-items: center;">
-                                                                                                            <p class="uppercase text-gradient">Privileges</p>
+
+
+                                                                                                        <div class="background-container">
+                                                                                                            <p class="background-dot-container-option selected" data-currency="USD" translate="no">$USD</p>
+                                                                                                            <p class="background-dot-container-option" data-currency="EUR" translate="no">€EUR</p>
+                                                                                                            <p class="background-dot-container-option" data-currency="GBP" translate="no">£GBP</p>
+                                                                                                            <p class="background-dot-container-option" data-currency="TRY" translate="no">₺TRY</p>
+                                                                                                            <p class="background-dot-container-option important-outline" data-currency="BTC" translate="no">COIN</p>
                                                                                                         </div>
-                                                                                                        <div id="features-list"></div>
-                                                                                                        <div class="line"></div>
-                                                                                                        <div style="display: flex;gap: 0.5vh;align-items: center;">
-                                                                                                            <p class="uppercase text-gradient">Plan Capability</p>
-                                                                                                            <p id="toggle-description" class="text-gradient" style="cursor: pointer;">+</p>
+
+
+                                                                                            <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;height: 100%;">
+                                                                                                <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
+                                                                                                    <a class="background-dot-container">
+                                                                                                        <div class="background-dot-container-content" style="min-width: calc((50vh* var(--scale-factor-h) + 50vw / 2 * var(--scale-factor-w)));">
+                                                                                                        <div class="background-container" style="grid: unset; display: grid;grid-template-columns: 1fr 1fr;">
+                                                                                                            <input type="range" id="slider" min="1" max="9" step="1" value="1"></input>
+                                                                                                            <p class="slider-value">1 day</p>
                                                                                                         </div>
-                                                                                                            <div style="display: grid;grid-template-columns: 1fr auto;align-items: center;gap: 1vh;">
-                                                                                                                <input type="range" id="fps-slider" min="15" max="60" step="1" value="30">
-                                                                                                                <p id="fps-value">30 FPS</p>
+                                                                                                                <div class="line"></div>
+                                                                                                                <div class="background-dot-container-header">
+                                                                                                                  <p class="plans-name text-gradient" id="plan-name">Starter</p>
+                                                                                                                  <div class="plans-popular" id="popular-tag">
+                                                                                                                    <p class="plans-name text-gradient">Popular</p>
+                                                                                                                  </div>
+                                                                                                                </div>
+                                                                                                            <div class="background-dot-container-price">
+                                                                                                                <h2 id="cost-per-day" translate="no">Loading...</h2>
+                                                                                                                <h4 id="cost-per-day-unit" style="opacity: 0.5;">/day</h4>
                                                                                                             </div>
-                                                                                                        <ul id="capability-list" style="display: flow;background: transparent;"></ul>
-                                                                                                    </div>
+                                                                                                            <div class="background-dot-container-link" id="purchase">Purchase</div>
+                                                                                                            <div>
+                                                                                                                <div class="line"></div>
+                                                                                                                <h4 id="discount-details">Loading...</h4>
+                                                                                                                <p class="discount-details" id="discount">Loading...</p>
+                                                                                                                <div class="line"></div>
+                                                                                                                <div style="display: flex;gap: 0.5vh;align-items: center;">
+                                                                                                                    <p class="uppercase text-gradient">Privileges</p>
+                                                                                                                </div>
+                                                                                                                <div id="features-list"></div>
+                                                                                                                <div class="line"></div>
+                                                                                                                <div style="display: flex;gap: 0.5vh;align-items: center;">
+                                                                                                                    <p class="uppercase text-gradient">Plan Capability</p>
+                                                                                                                    <p id="toggle-description" class="text-gradient" style="cursor: pointer;">+</p>
+                                                                                                                </div>
+                                                                                                                    <div style="display: grid;grid-template-columns: 1fr auto;align-items: center;gap: 1vh;">
+                                                                                                                        <input type="range" id="fps-slider" min="15" max="60" step="1" value="30">
+                                                                                                                        <p id="fps-value">30 FPS</p>
+                                                                                                                    </div>
+                                                                                                                <ul id="capability-list" style="display: flow;background: transparent;"></ul>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    </a>
                                                                                                 </div>
-                                                                                            </a>
+                                                                                            </div>
                                                                                         </div>
                                                                                     </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        `);
+                                                                                `);
             }
 
             loadPageContent(setUser, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, setAuthentication, updateMainContent);
-            return;
 
             let credits = [];
             let prices = [];
             let durationsInDays = [];
             let subprices = [];
+            let discountedSubprices = []; // Added for the discounted prices
             let durations = [];
+            let discount = 0;
 
             const snapshotPromise = getDocSnapshot('servers', '3050-1');
             const [serverAddressAPI, serverAddressPAYTR] = await Promise.all([
@@ -295,16 +296,15 @@
                 const cachedData = getCache(cacheKey);
 
                 if (cachedData) {
-                    console.log('Using cached data:', cachedData);
                     setPricingData(cachedData);
                 } else {
                     try {
                         const response = await fetch(`${serverAddressPAYTR}/get-pricing`, {
-                            method: 'POST', // Change to POST
+                            method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                             },
-                            body: JSON.stringify({}) // Send an empty body if no data is required
+                            body: JSON.stringify({})
                         });
 
                         if (!response.ok) {
@@ -316,9 +316,8 @@
 
                         setCache(cacheKey, responseData.data, 1 * 24 * 60 * 60 * 1000);
                         setPricingData(responseData.data);
-
                     } catch (error) {
-                        console.error('Error while calling the pricing endpoint:', error);
+                        alert('Error while calling the pricing endpoint: ' + error.message);
                     }
                 }
 
@@ -328,37 +327,31 @@
             async function fetchPricingDataInBackground() {
                 try {
                     const response = await fetch(`${serverAddressPAYTR}/get-pricing`, {
-                        method: 'GET',
+                        method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                        }
+                        },
+                        body: JSON.stringify({})
                     });
 
                     if (response.ok) {
                         const responseData = await response.json();
                         setCache('pricingData', responseData.data, 5 * 60 * 1000);
                         setPricingData(responseData.data);
-                        createPayment();
-                        console.log('Background fetch updated cache:', responseData.data);
                     }
                 } catch (error) {
-                    console.error('Error while refreshing the pricing data:', error);
+                    alert('Error while refreshing the pricing data: ' + error.message);
                 }
             }
 
-            // Function to set your pricing data
             function setPricingData(data) {
-                credits = data.credits;
-                prices = data.prices;
-                durationsInDays = data.durationsInDays;
-                subprices = data.subprices;
-                durations = data.durations;
-
-                console.log('Credits:', credits);
-                console.log('Prices:', prices);
-                console.log('Durations in Days:', durationsInDays);
-                console.log('Subprices:', subprices);
-                console.log('Durations:', durations);
+                credits = data.credits || [];
+                prices = data.prices || [];
+                durationsInDays = data.durationsInDays || [];
+                subprices = data.subprices || [];
+                discountedSubprices = data.discountedSubprices || []; // Setting discounted prices
+                durations = data.durations || [];
+                discount = data.discount || 0;
             }
 
             await getPricingData();
@@ -474,8 +467,8 @@
 
                 if (isSubscriptionMode) {
                     capabilityListElement.innerHTML = `
-                                <li class="capability">${capabilities.faceSwap.name}: 2 hours per process</li>
-                                ${Object.values(capabilities).map(capability =>
+                                        <li class="capability">${capabilities.faceSwap.name}: 2 hours per process</li>
+                                        ${Object.values(capabilities).map(capability =>
                         capability.name !== capabilities.faceSwap.name
                             ? `<li class="capability">${capability.name}: Unlimited</li>`
                             : ''
@@ -490,15 +483,15 @@
             const features = {
                 subscription: [
                     { text: "Verified account", icon: checkmarkIcon },
-                    { text: "Upload limit to 1 GB", icon: checkmarkIcon },
-                    { text: "API access (SOON)", icon: xIcon },
-                    { text: "Priority queue", icon: checkmarkIcon },
+                    { text: "Upload limit to 500MB", icon: checkmarkIcon },
+                    { text: "Multiple face swap", icon: checkmarkIcon },
+                    { text: "Priority queue", icon: checkmarkIcon }
                 ],
                 credits: [
                     { text: "Verified account", icon: checkmarkIcon },
                     { text: "Upload limit to 500MB", icon: checkmarkIcon },
-                    { text: "API access (SOON)", icon: checkmarkIcon },
-                    { text: "Priority queue", icon: xIcon },
+                    { text: "Multiple face swap", icon: checkmarkIcon },
+                    { text: "Priority queue", icon: xIcon }
                 ]
             };
 
@@ -512,12 +505,13 @@
             }
 
             function calculatePrice(value) { return prices[value - 1]; }
+            function calculateDiscountSubPrice(value) { return discountedSubprices[value - 1]; }
             function calculateSubPrice(value) { return subprices[value - 1]; }
             function calculateCredit(value) { return credits[value - 1]; }
 
             function updatePlan(plan) {
                 document.getElementById('plan-name').textContent = plan.name;
-                document.getElementById('popular-tag').style.display = plan.isPopular ? 'block' : 'none';
+                document.getElementById('popular-tag').style.opacity = plan.isPopular ? '1' : '0';
             }
 
             function formatNumber(value, currency, show99, minimumFractionDigits = 0, maximumFractionDigits = 3) {
@@ -531,31 +525,33 @@
                     default: locale = 'en-US';
                 }
 
-                if (show99 && locale === 'en-US') {
-                    value = Math.floor(value) + 0.99;
-                } else if (locale !== 'en-US') {
-                    if (value >= 1000) {
-                        value = Math.round(value) - 0.01;
-                        minimumFractionDigits = 0;
-                        maximumFractionDigits = 4;
-                    } else if (value >= 750) {
-                        value = Math.round(value / 100) * 100 - 0.01;
-                        minimumFractionDigits = 0;
-                        maximumFractionDigits = 4;
-                    } else if (value >= 100) {
-                        value = Math.floor(value / 10) * 10 - 0.01;
-                        minimumFractionDigits = 0;
-                        maximumFractionDigits = 4;
-                    } else if (value >= 5) {
-                        value = Math.round(value) - 0.01;
-                        minimumFractionDigits = 0;
-                        maximumFractionDigits = 4;
-                    } else if (value >= 0.5) {
-                        const factor = 10;
-                        value = (Math.floor(value * factor) / factor) - 0.01;
-                        minimumFractionDigits = 0;
-                        maximumFractionDigits = 3;
-                    }
+                if (value >= 1000) {
+                    value = Math.round(value) - 0.01;
+                    minimumFractionDigits = 0;
+                    maximumFractionDigits = 4;
+                } else if (value >= 750) {
+                    value = Math.round(value / 100) * 100 - 0.01;
+                    minimumFractionDigits = 0;
+                    maximumFractionDigits = 4;
+                } else if (value >= 100) {
+                    value = Math.floor(value / 10) * 10 - 0.01;
+                    minimumFractionDigits = 0;
+                    maximumFractionDigits = 4;
+                } else if (value >= 5) {
+                    value = Math.round(value) - 0.01;
+                    minimumFractionDigits = 0;
+                    maximumFractionDigits = 4;
+                } else if (value >= 0.1) {
+                    const factor = 10;
+                    value = (Math.floor(value * factor) / factor) - 0.01;
+                    minimumFractionDigits = 0;
+                    maximumFractionDigits = 3;
+                } else if (value >= 0.01) {
+                    minimumFractionDigits = 0;
+                    maximumFractionDigits = 2;
+                } else if (value >= 0.001) {
+                    minimumFractionDigits = 0;
+                    maximumFractionDigits = 3;
                 }
 
                 const options = { style: 'decimal', minimumFractionDigits, maximumFractionDigits, };
@@ -565,7 +561,19 @@
 
             let createdEvent = false;
 
+            const ACTUAL = 0;
+            const DISCOUNT = 1;
+
             async function createPayment() {
+                const ScreenMode = Object.freeze({
+                    PHONE: 3,
+                    PC: 1,
+                });
+
+                const baseContainer = document.getElementById('baseContainer');
+                if (baseContainer)
+                    baseContainer.style.alignItems = getScreenMode() === ScreenMode.PHONE ? 'unset' : 'center';
+
                 const selectedCurrencyElement = document.querySelector('.background-dot-container-option.selected[data-currency]');
                 let selectedCurrency = selectedCurrencyElement ? selectedCurrencyElement.getAttribute('data-currency') : 'USD';
 
@@ -581,6 +589,18 @@
                 const fpsSlider = document.getElementById('fps-slider');
                 const fpsValueDisplay = document.getElementById('fps-value');
 
+                currencyOptions.forEach(option => {
+                    option.addEventListener('click', () => {
+                        const newCurrency = option.getAttribute("data-currency");
+                        if (newCurrency !== selectedCurrency) {
+                            currencyOptions.forEach(opt => opt.classList.remove("selected"));
+                            option.classList.add("selected");
+                            selectedCurrency = newCurrency;
+                            updatePrices();
+                        }
+                    });
+                });
+
                 function updatePrices() {
                     updateSliderRange();
                     const isCreditsMode = creditsMode.classList.contains("selected");
@@ -588,13 +608,13 @@
 
                     updateFeatureList(isCreditsMode);
 
-                    let value, price, dailyPriceAmount, priceInSelectedCurrency;
-                    let discountMessage = '';
+                    let value, price = [0, 0], h1PriceAmount = [0, 0], priceInSelectedCurrency = [0, 0];
+                    let message = '';
                     let isNonUSDOrBTC = selectedCurrency !== 'USD' && selectedCurrency !== 'BTC';
 
                     const convertCurrency = (amount) => isNonUSDOrBTC && conversionRates ? amount * conversionRates[selectedCurrency] : amount;
-                    const updateDisplay = (amount, unit) => {
-                        dailyPriceAmountElement.textContent = `${currencySymbol}${formatNumber(amount, selectedCurrency)}`;
+                    const updateDisplay = (text, unit) => {
+                        dailyPriceAmountElement.innerHTML = text;
                         document.getElementById('cost-per-day-unit').textContent = unit;
                     };
 
@@ -622,16 +642,20 @@
                             value = sliderElement.value;
                             updatePlan(plans[value] || plans['default']);
 
-                            price = calculatePrice(value);
                             const creditAmount = calculateCredit(value);
-                            dailyPriceAmount = creditAmount > 0 ? price / creditAmount : null;
+                            price[ACTUAL] = calculatePrice(value);
+                            priceInSelectedCurrency[ACTUAL] = convertCurrency(price[ACTUAL]);
+                            h1PriceAmount[ACTUAL] = creditAmount > 0 ? price[ACTUAL] / creditAmount : null;
+                            h1PriceAmount[ACTUAL] = h1PriceAmount[ACTUAL] !== null ? convertCurrency(h1PriceAmount[ACTUAL]) : null;
 
-                            priceInSelectedCurrency = convertCurrency(price);
-                            dailyPriceAmount = dailyPriceAmount !== null ? convertCurrency(dailyPriceAmount) : null;
+                            price[DISCOUNT] = calculatePrice(value);
+                            priceInSelectedCurrency[DISCOUNT] = convertCurrency(price[DISCOUNT]);
+                            h1PriceAmount[DISCOUNT] = creditAmount > 0 ? price[DISCOUNT] / creditAmount : null;
+                            h1PriceAmount[DISCOUNT] = h1PriceAmount[DISCOUNT] !== null ? convertCurrency(h1PriceAmount[DISCOUNT]) : null;
 
                             fpsValueDisplay.textContent = `${fpsSlider.value} FPS`;
                             FPS = fpsSlider.value;
-                            updateCapabilityList(formatNumber(dailyPriceAmount, selectedCurrency), currencySymbol, false, creditAmount);
+                            updateCapabilityList(formatNumber(h1PriceAmount[ACTUAL], selectedCurrency), currencySymbol, false, creditAmount);
 
                             fpsSlider.style.display = 'block';
                             fpsValueDisplay.style.display = 'block';
@@ -640,15 +664,46 @@
                                 toggleDescriptionButton.addEventListener('click', function () {
                                     isShortDescription = !isShortDescription;
                                     this.textContent = isShortDescription ? "+" : "-";
-                                    updateCapabilityList(formatNumber(dailyPriceAmount, selectedCurrency), currencySymbol, false, creditAmount);
+                                    updateCapabilityList(formatNumber(h1PriceAmount[ACTUAL], selectedCurrency), currencySymbol, false, creditAmount);
                                 });
 
                                 fpsSlider.addEventListener('input', function () { updateVariables(); });
                                 createdEvent = true;
                             }
-                            discountMessage = 'You can spend your credits anytime.';
-                            discountDetailsElement.textContent = `Total payment is ${currencySymbol}${formatNumber(priceInSelectedCurrency, selectedCurrency)}`;
-                            updateDisplay(dailyPriceAmount, '/credit');
+                            message = 'You can spend your credits anytime.';
+
+                            let discountDisplay = '';
+
+                            if (h1PriceAmount[ACTUAL] !== h1PriceAmount[DISCOUNT]) {
+                                discountDetailsElement.innerHTML = `
+                                            Discounted:
+                                            <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
+                                            <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency, true)}</span>
+
+                                        <div class="plans-popular" id="popular-tag" style="display: flex; float: right;">
+                                            <p class="plans-name text-gradient">OFF -${discount}%</p>
+                                        </div>
+                                    `;
+
+                                discountDisplay = `
+                                        <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency, true)}</span>
+                                        <span >${currencySymbol}${formatNumber(h1PriceAmount[DISCOUNT], selectedCurrency, true)}</span>
+                                    `;
+                            }
+                            else {
+                                discountDetailsElement.style.display = 'unset';
+                                discountDetailsElement.style.gap = 'unset';
+                                discountDetailsElement.innerHTML = `
+                                        Total Price:
+                                        <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
+                                    `;
+
+                                discountDisplay = `
+                                        <span >${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency, true)}</span>
+                                    `;
+                            }
+
+                            updateDisplay(discountDisplay, '/credit');
                         }
 
                         updateVariables();
@@ -669,48 +724,84 @@
                             value = sliderElement.value;
                             updatePlan(plans[value] || plans['default']);
 
-                            price = calculateSubPrice(value);
                             const durationDays = durationsInDays[value - 1];
-                            dailyPriceAmount = durationDays > 0 ? price / durationDays : null;
+                            price[ACTUAL] = calculateSubPrice(value);
+                            priceInSelectedCurrency[ACTUAL] = convertCurrency(price[ACTUAL]);
+                            h1PriceAmount[ACTUAL] = durationDays > 0 ? price[ACTUAL] / durationDays : null;
+                            h1PriceAmount[ACTUAL] = h1PriceAmount[ACTUAL] !== null ? convertCurrency(h1PriceAmount[ACTUAL]) : null;
 
-                            priceInSelectedCurrency = convertCurrency(price);
-                            dailyPriceAmount = dailyPriceAmount !== null ? convertCurrency(dailyPriceAmount) : null;
+                            price[DISCOUNT] = calculateDiscountSubPrice(value);
+                            priceInSelectedCurrency[DISCOUNT] = convertCurrency(price[DISCOUNT]);
+                            h1PriceAmount[DISCOUNT] = durationDays > 0 ? price[DISCOUNT] / durationDays : null;
+                            h1PriceAmount[DISCOUNT] = h1PriceAmount[DISCOUNT] !== null ? convertCurrency(h1PriceAmount[DISCOUNT]) : null;
 
                             fpsSlider.style.display = 'none';
                             fpsValueDisplay.style.display = 'none';
-                            updateCapabilityList(formatNumber(dailyPriceAmount, selectedCurrency), currencySymbol);
+                            updateCapabilityList(formatNumber(h1PriceAmount[ACTUAL], selectedCurrency), currencySymbol);
 
                             isShortDescription = true;
                             toggleDescriptionButton.style.display = "none";
 
+                            message = 'Use our products without credit limitations.';
                             if (durationDays === -1) {
-                                discountMessage = 'Use our products without credit limitations.';
                                 discountDetailsElement.textContent = '';
-                                updateDisplay(priceInSelectedCurrency, '');
+
+                                let discountDisplay = '';
+
+                                if (priceInSelectedCurrency[ACTUAL] !== priceInSelectedCurrency[DISCOUNT]) {
+                                    discountDisplay = `
+                                            <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
+                                            <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency, true)}</span>
+                                        `;
+                                }
+                                else {
+                                    discountDisplay = `
+                                            <span>${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
+                                        `;
+                                }
+
+                                updateDisplay(discountDisplay, '/day');
                             } else {
-                                discountMessage = 'Use our products without credit limitations.';
-                                discountDetailsElement.textContent = `Total payment is ${currencySymbol}${formatNumber(priceInSelectedCurrency, selectedCurrency, true)}`;
-                                updateDisplay(dailyPriceAmount, '/day');
+                                let discountDisplay = '';
+
+                                if (h1PriceAmount[ACTUAL] !== h1PriceAmount[DISCOUNT]) {
+                                    discountDetailsElement.innerHTML = `
+                                                Discounted:
+                                                <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
+                                                <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency, true)}</span>
+
+                                            <div class="plans-popular" id="popular-tag" style="display: flex; float: right;">
+                                                <p class="plans-name text-gradient">OFF -${discount}%</p>
+                                            </div>
+                                        `;
+
+                                    discountDisplay = `
+                                            <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency, true)}</span>
+                                            <span >${currencySymbol}${formatNumber(h1PriceAmount[DISCOUNT], selectedCurrency, true)}</span>
+                                        `;
+                                }
+                                else {
+                                    discountDetailsElement.style.display = 'unset';
+                                    discountDetailsElement.style.gap = 'unset';
+                                    discountDetailsElement.innerHTML = `
+                                            Total Price:
+                                            <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
+                                        `;
+
+                                    discountDisplay = `
+                                            <span >${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency, true)}</span>
+                                        `;
+                                }
+
+                                updateDisplay(discountDisplay, '/day');
                             }
                         }
 
                         updateVariables();
                     }
 
-                    if (discountElement) discountElement.textContent = discountMessage;
+                    if (discountElement) discountElement.textContent = message;
                 }
-
-                currencyOptions.forEach(option => {
-                    option.addEventListener('click', () => {
-                        const newCurrency = option.getAttribute("data-currency");
-                        if (newCurrency !== selectedCurrency) {
-                            currencyOptions.forEach(opt => opt.classList.remove("selected"));
-                            option.classList.add("selected");
-                            selectedCurrency = newCurrency;
-                            updatePrices();
-                        }
-                    });
-                });
 
                 function updateSliderRange() {
                     if (creditsMode.classList.contains("selected"))
@@ -763,108 +854,100 @@
                 purchase.addEventListener('click', async () => { await handleBuyNow(); });
 
                 async function handleBuyNow() {
+                    const userData = await getUserData();
+                    if (!userData || !userData.uid) {
+                        alert('User data not found.');
+                        return;
+                    }
+
                     try {
-                        const user = await new Promise((resolve) => {
-                            const unsubscribe = auth.onAuthStateChanged((user) => {
-                                unsubscribe();
-                                resolve(user);
-                            });
+                        const selectedMode = subscriptionMode.classList.contains("selected") ? 'subscription' : 'credits';
+                        const requestData = {
+                            userId: userData.uid,
+                            userEmail: userData.email,
+                            selectedCurrency,
+                            sliderElement: sliderElement.value,
+                            selectedMode,
+                        };
+
+                        const isBTC = selectedCurrency === 'BTC';
+                        const serverPath = isBTC ? '/create-charge-new-2' : '/create-charge-2';
+                        const response = await fetch(`${isBTC ? serverAddressAPI : serverAddressPAYTR}${serverPath}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(requestData)
                         });
 
-                        let selectedMode = subscriptionMode.classList.contains("selected") ? 'subscription' : 'credits';
-
-                        if (user) {
-                            const { auth } = await getFirebaseModules();
-                            const requestData = {
-                                userId: auth.currentUser.uid,
-                                userEmail: auth.currentUser.email,
-                                selectedCurrency,
-                                sliderElement: sliderElement.value,
-                                selectedMode,
-                            };
-
-                            if (selectedCurrency !== 'BTC') {
-                                const cardResponse = await fetch(serverAddressPAYTR + '/create-charge-2', { // create-charge-2
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify(requestData)
-                                });
-
-                                const cardHtml = await cardResponse.text();
-                                if (cardHtml.error) {
-                                    alert(cardHtml.error);
-                                } else {
-                                    document.getElementById('paymentContainer').style.display = 'block';
-                                    document.getElementById('paymentContainer').innerHTML = cardHtml;
-                                    gtag('event', 'conversion_event_purchase', {
-                                        'value': sliderElement.value,
-                                        'currency': selectedCurrency,
-                                        'transaction_id': 'TRANS_' + Date.now(),
-                                        'selected_mode': selectedMode,
-                                        'user_id': auth.currentUser.uid,
-                                        'user_email': auth.currentUser.email,
-                                        'event_callback': function () {
-                                            window.location = 'https://deepany.ai/pricing';
-                                        },
-                                        'event_timeout': 2000
-                                    });
-                                }
-                            } else {
-                                const coinResponse = await fetch(serverAddressAPI + '/create-charge-new', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify(requestData)
-                                });
-
-                                const coinData = await coinResponse.json();
-                                if (coinData.data && coinData.data.hosted_url) {
-                                    window.open(coinData.data.hosted_url, '_blank');
-                                    gtag('event', 'conversion_event_purchase', {
-                                        'value': sliderElement.value,
-                                        'currency': selectedCurrency,
-                                        'transaction_id': 'TRANS_' + Date.now(),
-                                        'selected_mode': selectedMode,
-                                        'user_id': auth.currentUser.uid,
-                                        'user_email': auth.currentUser.email,
-                                        'event_callback': function () {
-                                            window.location = coinData.data.hosted_url;
-                                        },
-                                        'event_timeout': 2000
-                                    });
-                                } else {
-                                    alert(coinData.error);
-                                }
-                            }
+                        const responseData = isBTC ? await response.json() : await response.text();
+                        if (response.ok && ((isBTC && responseData.data.hosted_url) || (!isBTC && !responseData.error))) {
+                            handleSuccess(responseData, isBTC);
+                        } else {
+                            alert(responseData.error || 'An unexpected error occurred');
                         }
                     } catch (error) {
-                        console.error('Error checking referral:', error);
+                        alert('Error:', error);
                     }
+                }
+
+                function handleSuccess(responseData, isBTC) {
+                    if (isBTC) {
+                        window.open(responseData.data.hosted_url, '_blank');
+                    } else {
+                        document.getElementById('paymentContainer').style.display = 'block';
+                        document.getElementById('paymentContainer').innerHTML = responseData;
+                    }
+                    // triggerGtagEvent(); Uncomment to enable analytics tracking
+                }
+
+                function triggerGtagEvent() {
+                    gtag('event', 'conversion_event_purchase', {
+                        'value': sliderElement.value,
+                        'currency': selectedCurrency,
+                        'transaction_id': 'TRANS_' + Date.now(),
+                        'selected_mode': selectedMode,
+                        'user_id': userData.uid,
+                        'user_email': userData.email,
+                        'event_callback': function () {
+                            window.location = isBTC ? responseData.data.hosted_url : 'https://deepany.ai/pricing';
+                        },
+                        'event_timeout': 2000
+                    });
                 }
             }
 
-            createPayment();
+            let previousScreenMode = null;
 
-            window.addEventListener('resize', createPayment);
+            async function sizeBasedElements() {
+                const screenMode = getScreenMode();
+                const shouldUpdate = previousScreenMode !== screenMode;
+                previousScreenMode = screenMode;
+                if (!shouldUpdate)
+                    return;
+
+                createPayment();
+
+                window.addEventListener('resize', sizeBasedElements);
+            }
+
+            sizeBasedElements();
         });
     </script>
-    <script defer>
+    <script async>
         window.gtag = function () {
             window.dataLayer = window.dataLayer || [];
             window.dataLayer.push(arguments);
         };
 
         document.addEventListener('DOMContentLoaded', function () {
-            setTimeout(function () {
-                const gtagScript = document.createElement('script');
-                gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-BFR70Q5VX1';
-                gtagScript.async = true;
-                document.head.appendChild(gtagScript);
+            const gtagScript = document.createElement('script');
+            gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-BFR70Q5VX1';
+            gtagScript.async = true;
+            document.head.appendChild(gtagScript);
 
-                gtagScript.onload = function () {
-                    gtag('js', new Date());
-                    gtag('config', 'G-BFR70Q5VX1');
-                };
-            }, 500);
+            gtagScript.onload = function () {
+                gtag('js', new Date());
+                gtag('config', 'G-BFR70Q5VX1');
+            };
         });
     </script>
 </body>
