@@ -96,12 +96,12 @@ export function handleImageUpload(imgElementId, storageKey) {
                     img.onload = function () {
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
-                        canvas.width = 96; 
+                        canvas.width = 96;
                         canvas.height = 96;
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                        const resizedBase64Image = canvas.toDataURL(); 
-                        imgElement.src = resizedBase64Image; 
+                        const resizedBase64Image = canvas.toDataURL();
+                        imgElement.src = resizedBase64Image;
                         localStorage.setItem(storageKey, resizedBase64Image);
                     };
                 };
@@ -843,10 +843,10 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
 
                     if (active) element.classList.add('active');
                 } else if (url) {
-                    element.innerHTML = `<initial url="${url}" id="${id}" timestamp="${timestamp}" active="${active}"/></initial><div class="process-text">Fetching...</div><div class="delete-icon"></div>`; 
+                    element.innerHTML = `<initial url="${url}" id="${id}" timestamp="${timestamp}" active="${active}"/></initial><div class="process-text">Fetching...</div><div class="delete-icon"></div>`;
                     const data = await fetchProcessState(url);
-                    if (data.status === 'completed') 
-                        handleDownload({ db, url, element, id, timestamp, active }, databases);                   
+                    if (data.status === 'completed')
+                        handleDownload({ db, url, element, id, timestamp, active }, databases);
                     else element.innerHTML = `<initial url="${url}" id="${id}" timestamp="${timestamp}" active="${active}"/></initial><div class="process-text">${data.server}</div><div class="delete-icon"></div>`;
                 }
                 else element.innerHTML = `<video url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" playsinline preload="auto" disablePictureInPicture loop muted autoplay><source src="${blobUrl}">Your browser does not support the video tag.</video><div class="process-text">Not Indexed...</div><div class="delete-icon"></div>`;
@@ -1081,6 +1081,7 @@ export async function setCurrentUserDoc(getDocSnapshot, useCache = false) {
 }
 
 export function setUser(userDoc) {
+    console.log(userDoc);
     if (!userDoc) return false;
 
     function setCachedImageForElements(className, storageKey) {
@@ -1737,7 +1738,10 @@ async function createForm(createFormSection) {
 
 async function handleLoggedOutState(retrieveImageFromURL, getFirebaseModules) {
     incognitoModeHandler();
-    document.getElementById("userLayoutContainer")?.remove();
+
+    const userLayoutContainer = document.getElementById("userLayoutContainer");
+    if (userLayoutContainer)
+        userLayoutContainer.remove();
 
     const attachClickListener = (elementId, isSignUp) => {
         const container = document.getElementById(elementId);
@@ -1859,6 +1863,7 @@ async function setupSignOutButtons(getFirebaseModules) {
 }
 
 export async function setAuthentication(userData, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot) {
+    console.log(1);
     if (userData) {
         handleUserLoggedIn(userData, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getDocSnapshot, getFirebaseModules);
         return setupSignOutButtons(getFirebaseModules);
@@ -1888,6 +1893,9 @@ export async function createUserData(sidebar, screenMode, setAuthentication, ret
     const signContainer = document.getElementById("signContainer");
     if (signContainer)
         signContainer.style.display = 'none';
+
+    if (setAuthentication)
+        setAuthentication(userData, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
 
     if (screenMode === ScreenMode.PHONE) {
         if (hasUserData) {
@@ -1934,9 +1942,6 @@ export async function createUserData(sidebar, screenMode, setAuthentication, ret
                 `);
         }
     }
-
-    if (setAuthentication)
-        setAuthentication(userData, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
 }
 
 function createSideBarData(sidebar) {
@@ -2707,9 +2712,9 @@ export function loadScrollingAndMain(navbar, mainQuery, sidebar, hamburgerMenu, 
     };
 
     const handleWheel = (event) => {
-        if (event.ctrlKey) 
+        if (event.ctrlKey)
             return;
-        
+
         handleScroll(event.deltaY > 0 ? 'down' : 'up');
     };
 
