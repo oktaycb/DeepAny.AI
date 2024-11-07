@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en" style="background: rgba(24, 24, 24, 1);" class="loading-screen">
+<head>
+    <title>AI Inpainting: Effortless Image Restoration and Editing</title>
+    <link rel="canonical" href="https://deepany.ai/inpaint">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="DeepAny.AI offers a powerful inpainting tool for precision image edits. Easily modify parts of your image with AI-driven tools that make seamless adjustments possible. No experience needed—start your free trial today!">
+    <meta name="keywords" content="AI inpainting, DeepAny, free inpainting tool, online photo editor, image manipulation, AI-powered image editing, seamless image edits, photo restoration, AI-enhanced images, picture editing with AI">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://deepany.ai/inpainting">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:site_name" content="DeepAny.AI">
+    <meta property="og:title" content="DeepAny.AI | AI Inpainting Tool">
+    <meta property="og:description" content="Transform images with AI-powered inpainting! DeepAny.AI offers seamless, precise editing options to modify any image effortlessly.">
+    <meta property="og:image" content="https://deepany.ai/assets/brand.png">
+    <meta property="og:image:alt" content="DeepAny.AI | Brand Logo">
+
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://deepany.ai/inpainting">
+    <meta property="twitter:title" content="DeepAny.AI | AI Inpainting Tool">
+    <meta property="twitter:description" content="Edit parts of your images with AI-driven inpainting. Precision and creativity made easy with DeepAny.AI.">
+    <meta property="twitter:image" content="https://deepany.ai/assets/brand.png">
+
+    <style id="loading-stylesheet">
+        .loading-screen {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #ff7300;
+            border-radius: 50%;
+            width: 50px !important;
+            height: 50px !important;
+            animation: spin 2s linear infinite
+        }
+
+        @keyframes spin {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="css/styles.css?v=1.3.5.9">
+    <style>
+        .faces, .inputs {
+            width: calc(4 * (var(--input-size) + var(--input-margin)))
+        }
+
+            .faces:has(>:nth-child(n+3)), .inputs:has(>:nth-child(n+3)) {
+                width: calc(4 * (var(--input-size) + var(--input-margin)) + var(--scrollbar-width))
+            }
+
+        .ar-4-3 .faces:has(>:nth-child(n+3)), .ar-4-3 .inputs:has(>:nth-child(n+3)) {
+            max-width: calc(4 *var(--input-size) + var(--input-margin) + var(--scrollbar-width))
+        }
+    </style>
+    <script>
+        const cssRules = Array.from(document.styleSheets).flatMap(sheet => Array.from(sheet.cssRules));
+        const logoImgRule = cssRules.find(rule => rule.selectorText === '.logo img');
+
+        if (logoImgRule && logoImgRule.style.content) {
+            const content = logoImgRule.style.content;
+            const base64Match = content.match(/url\("?([^"]+)"?\)/);
+
+            if (base64Match && base64Match[1]) {
+                const icon = document.createElement('link');
+                icon.rel = 'icon';
+                icon.href = base64Match[1];
+                icon.type = 'image/x-icon';
+                icon.title = 'DeepAny.AI Favicon';
+                document.head.appendChild(icon);
+            }
+        }
+
+        const currentScript = document.currentScript;
+        if (currentScript) {
+            currentScript.remove();
+        }
+    </script>
+</head>
+<body lang="en">
+    <script type="module" defer>
+        const version = '1.3.5.9';
+
+        async function loadModule(url) {
+            return import(`${url}?v=${version}`);
+        }
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            const functions = await loadModule('./scripts/functions.js');
+            const { getSelectedInputId, setDownloadCancelled, abortController, pageName, setFetchableServerAdresses, getFetchableServerAdresses, checkServerStatus, setDynamicInterval, updateDownloadFile, cancelProcess, fetchUploadedChunks, processBlobToFile, createSectionAndElements, setMaxWidth, saveCountIndex, handleDownload, handleFileContainerEvents, handleUpload, setupFileUpload, setClientStatus, customFetch, checkServerQueue, showNotification, openDB, addToDB, getFromDB, initDB, setUser, getUserData, getUserDoc, setAuthentication, getFirebaseModules, getDocSnapshot, getDocsSnapshot, getScreenMode, getCurrentMain, updateContent, ScreenMode, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol, fetchServerAddresses } = functions;
+
+            if (!window.indexedDB) {
+                alert('Your browser does not support IndexedDB.');
+            }
+
+            function savePageState() {
+                const requiredIds = [
+                    'removeBanner'
+                ];
+
+                if (!requiredIds.every(id => document.getElementById(id))) {
+                    return;
+                }
+
+                const getCheckboxState = id => document.getElementById(id)?.checked || false;
+                const activeLinks = Array.from(document.querySelectorAll('.nav-links .active')).map(link => link.getAttribute('for') || '');
+
+                const selectedRectangles = Array.from(document.querySelectorAll('.rectangle.selected')).map(rectangle => rectangle.id);
+
+                const state = {
+                    removeBanner: getCheckboxState('removeBanner'),
+                    activeLinks: activeLinks,
+                    selectedRectangles: selectedRectangles,
+                    positivePrompt: document.getElementById('positivePrompt').value,
+                    negativePrompt: document.getElementById('negativePrompt').value,
+                    multiboxes: Array.from(document.querySelectorAll('.multibox')).map(multibox => ({
+                        text: multibox.querySelector('.multibox-text')?.innerText || '',
+                        open: multibox.classList.contains('open'),
+                        items: Array.from(multibox.querySelectorAll('.item')).map(item => ({
+                            checked: item.querySelector('input[type="checkbox"]')?.checked || false,
+                        })),
+                    })),
+                    comboboxes: Array.from(document.querySelectorAll('.combobox')).map(combobox => ({
+                        text: combobox.querySelector('.combobox-text')?.innerText || '',
+                        open: combobox.classList.contains('open'),
+                        items: Array.from(combobox.querySelectorAll('.item')).map(item => ({
+                            checked: item.querySelector('input[type="checkbox"]')?.checked || false,
+                        })),
+                    })),
+                };
+
+                localStorage.setItem(pageName, JSON.stringify(state));
+            }
+
+
+            let userData = await getUserData();
+            let userDoc = await getUserDoc();
+
+            function updateMainContent(screenMode, pageContent) {
+                pageContent.length = 0;
+                pageContent.push(`                      <div id="baseContainer" class="centered-container">
+                                                                                    <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
+                                                                                        <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
+                                                                                            <div class="background-dot-container">
+                                                                                                <div class="background-dot-container-content">
+                                                                                                    <div style="display: flex;justify-content: center;">
+                                                                                                        <div style="display: flex;flex-direction: column;align-items: center;">
+                                                                                                            <div class="circular-button" id="circular-button-input-upload" title="Upload input" tooltip>
+                                                                                                                <div class="tooltip">Add and choose the video or image where the face swap will occur.</div>
+                                                                                                                <input type="file" accept="video/*,image/*" id="input-upload" style="display: none" multiple>
+                                                                                                            </div>
+                                                                                                            <div class="inputs"></div>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                        <div class="line"></div>
+                                                                                                        <div class="rectangle-container" id="mode-selection">
+						                                                                                    <div class="rectangle" id="realistic">
+							                                                                                    <img src="assets/img1.png" alt="Image 1">
+							                                                                                    <h4 class="text non-bold">Realistic</h4>
+						                                                                                    </div>
+						                                                                                    <div class="rectangle" id="anime">
+							                                                                                    <img src="assets/img2.png" alt="Image 2">
+							                                                                                    <h4 class="text non-bold">Anime</h4>
+						                                                                                    </div>
+					                                                                                    </div>
+                                                                                                        <div class="line"></div>
+                                                                                                        <div class="nav-links group1">
+                                                                                                            <li><a class="text" for="Positive">Positive</a></li>
+                                                                                                            <li><a class="text" for="Negative">Negative</a></li>
+                                                                                                            <li><a class="text" for="Other">Other</a></li>
+                                                                                                        </div>
+                                                                                                        <div id="Positive" class="section" style="display: none;gap: calc(1vh* var(--scale-factor-h));">
+   
+                                                                                                            <div>
+                                                                                                                <h4 class="non-bold">Positive Prompt</h4>
+                                                                                                                <div style="font-size: 0px;">
+                                                                                                                    <textarea id="positivePrompt" placeholder="Leave empty or enter a desired positive prompt..." maxlength="2000" style="width: 100%;height: 100%;"></textarea>
+                                                                                                                </div>
+                                                                                                            </div>                                                                                 
+                                                                                                            <div class="line"></div>                                                                                                         <div>
+                                                                                                             <h4 style="font-weight: 400;">Positive Mask</h4>
+                                                                                                             <div id="positive_mask" class="combobox" tooltip style="gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                 <div class="tooltip">Use the Positive Mask to detect specific objects and mask them using SAM (Segment Anything Model). This feature identifies and isolates targeted areas for enhancement or replacement based on your positive prompts.</div>
+                                                                                                                 <span class="combobox-text" title="Change"></span>
+                                                                                                                 <span class="arrow-dwn"></span>
+                                                                                                                 <ul class="list-items">
+                                                                                                                     <li class="item">
+                                                                                                                         <label class="checkbox" tooltip>
+                                                                                                                             <input type="checkbox" id="clothes"><span>Clothes</span>
+                                                                                                                             <div class="tooltip">Segment clothing in the image to apply changes based on your chosen prompt.</div>
+                                                                                                                         </label>
+                                                                                                                     </li>
+                                                                                                                     <li class="item">
+                                                                                                                         <label class="checkbox" tooltip>
+                                                                                                                             <input type="checkbox" id="bikini"><span>Bikini</span>
+                                                                                                                             <div class="tooltip">Segment bikinis in the image to apply changes based on your chosen prompt.</div>
+                                                                                                                         </label>
+                                                                                                                     </li>
+                                                                                                                 </ul>
+                                                                                                             </div>
+                                                                                                         </div>
+                                                                                                         <div class="line"></div>
+                                                                                                            <div class="nav-links group2">
+                                                                                                                <li><a class="text" for="Person">Person</a></li>
+                                                                                                                <li><a class="text" for="Body">Body</a></li>
+                                                                                                                <li><a class="text" for="Breast">Breast</a></li>
+                                                                                                                <li><a class="text" for="Clothing">Clothing</a></li>
+                                                                                                                <li><a class="text" for="Quality">Quality</a></li>
+                                                                                                            </div>
+
+						                                                                                        <div class="small-boxes" id="Person">
+							                                                                                        <div class="small-box" data-value="1girl"><span class="arrow-dwn"></span>Woman</div>
+							                                                                                        <div class="small-box" data-value="1boy"><span class="arrow-dwn"></span>Man</div>
+						                                                                                        </div>
+					
+						                                                                                        <div class="small-boxes" id="Body">
+							                                                                                        <div class="small-box" data-value="skinny"><span class="arrow-dwn"></span>Skinny</div>
+							                                                                                        <div class="small-box" data-value="athletic"><span class="arrow-dwn"></span>Athletic</div>
+							                                                                                        <div class="small-box" data-value="slim-fit"><span class="arrow-dwn"></span>Slim Fit</div>
+							                                                                                        <div class="small-box" data-value="muscular"><span class="arrow-dwn"></span>Muscular</div>
+							                                                                                        <div class="small-box" data-value="full-figured"><span class="arrow-dwn"></span>Full Figured</div>
+							                                                                                        <div class="small-box" data-value="chubby"><span class="arrow-dwn"></span>Chubby</div>
+						                                                                                        </div>
+					
+						                                                                                        <div class="small-boxes" id="Breast">
+							                                                                                        <div class="small-box" data-value="flat chest"><span class="arrow-dwn"></span>Flat Chest</div>
+							                                                                                        <div class="small-box" data-value="small breast"><span class="arrow-dwn"></span>Small Breast</div>
+							                                                                                        <div class="small-box" data-value="medium breast"><span class="arrow-dwn"></span>Medium Breast</div>
+							                                                                                        <div class="small-box" data-value="big breast"><span class="arrow-dwn"></span>Big Breast</div>
+							                                                                                        <div class="small-box" data-value="massive breast"><span class="arrow-dwn"></span>Massive Breast</div>
+						                                                                                        </div>
+					
+						                                                                                        <div class="small-boxes" id="Clothing">
+							                                                                                        <div class="small-box" data-value="skirt"><span class="arrow-dwn"></span>Skirt</div>
+							                                                                                        <div class="small-box" data-value="miniskirt"><span class="arrow-dwn"></span>Miniskirt</div>
+							                                                                                        <div class="small-box" data-value="pencil skirt"><span class="arrow-dwn"></span>Pencil Skirt</div>
+							                                                                                        <div class="small-box" data-value="underpants"><span class="arrow-dwn"></span>Underpants</div>
+							                                                                                        <div class="small-box" data-value="swimsuit"><span class="arrow-dwn"></span>Swimsuit</div>
+							                                                                                        <div class="small-box" data-value="lingerie"><span class="arrow-dwn"></span>Lingerie</div>
+							                                                                                        <div class="small-box" data-value="bikini"><span class="arrow-dwn"></span><div class "settings-container"></div>Bikini</div>
+							                                                                                        <div class="small-box" data-value="corset"><span class="arrow-dwn"></span>Corset</div>
+							                                                                                        <div class="small-box" data-value="tank tops"><span class="arrow-dwn"></span>Tank Tops</div>
+							                                                                                        <div class="small-box" data-value="swimwear"><span class="arrow-dwn"></span>Swimwear</div>
+							                                                                                        <div class="small-box" data-value="cat costume"><span class="arrow-dwn"></span>Cat Costume</div>
+							                                                                                        <div class="small-box" data-value="bunny costume"><span class="arrow-dwn"></span>Bunny Costume</div>
+							                                                                                        <div class="small-box" data-value="dog costume"><span class="arrow-dwn"></span>Dog Costume</div>
+							                                                                                        <div class="small-box" data-value="witch costume"><span class="arrow-dwn"></span>Witch Costume</div>
+							                                                                                        <div class="small-box" data-value="overalls"><span class="arrow-dwn"></span>Overalls</div>
+							                                                                                        <div class="small-box" data-value="hoodie"><span class="arrow-dwn"></span>Hoodie</div>
+							                                                                                        <div class="small-box" data-value="sweater"><span class="arrow-dwn"></span>Sweater</div>
+							                                                                                        <div class="small-box" data-value="t-shirt"><span class="arrow-dwn"></span>T-shirt</div>
+							                                                                                        <div class="small-box" data-value="blouse"><span class="arrow-dwn"></span>Blouse</div>
+							                                                                                        <div class="small-box" data-value="trousers"><span class="arrow-dwn"></span>Trousers</div>
+							                                                                                        <div class="small-box" data-value="leggings"><span class="arrow-dwn"></span>Leggings</div>
+							                                                                                        <div class="small-box" data-value="jacket"><span class="arrow-dwn"></span>Jacket</div>
+							                                                                                        <div class="small-box" data-value="coat"><span class="arrow-dwn"></span>Coat</div>
+							                                                                                        <div class="small-box" data-value="pajamas"><span class="arrow-dwn"></span>Pajamas</div>
+							                                                                                        <div class="small-box" data-value="shorts"><span class="arrow-dwn"></span>Shorts</div>
+							                                                                                        <div class="small-box" data-value="kimono"><span class="arrow-dwn"></span>Kimono</div>
+							                                                                                        <div class="small-box" data-value="sweatpants"><span class="arrow-dwn"></span>Sweatpants</div>
+							                                                                                        <div class="small-box" data-value="hooded sweatshirt"><span class="arrow-dwn"></span>Hooded Sweatshirt</div>
+							                                                                                        <div class="small-box" data-value="bondage"><span class="arrow-dwn"></span>Bondage</div>
+						                                                                                        </div>
+
+						                                                                                        <div class="small-boxes" id="Quality">
+							                                                                                        <div class="small-box" data-value="masterpiece"><span class="arrow-dwn"></span>Masterpiece</div>
+							                                                                                        <div class="small-box" data-value="best quality"><span class="arrow-dwn"></span>Best Quality</div>
+							                                                                                        <div class="small-box" data-value="extremely detailed"><span class="arrow-dwn"></span>Extremely Detailed</div>
+							                                                                                        <div class="small-box" data-value="detailed body"><span class="arrow-dwn"></span>Detailed Body</div>
+							                                                                                        <div class="small-box" data-value="intricate"><span class="arrow-dwn"></span>Intricate</div>
+							                                                                                        <div class="small-box" data-value="vivid"><span class="arrow-dwn"></span>Vivid</div>
+							                                                                                        <div class="small-box" data-value="raw photo"><span class="arrow-dwn"></span>RAW Photo</div>
+						                                                                                        </div>
+
+                                                                                                        </div>
+                                                                                                        <div id="Negative" class="section" style="display: none;position: relative;flex-direction: column;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                            <div>
+                                                                                                                <h4 class="non-bold">Negative Prompt</h4>
+                                                                                                                <div style="font-size: 0px;">
+                                                                                                                    <textarea id="negativePrompt" placeholder="Leave empty or enter a desired negative prompt..." maxlength="2000" style="width: 100%;height: 100%;"></textarea>
+                                                                                                                </div>
+                                                                                                            </div>                              
+                                                                                                            <div class="line"></div>
+                                                                                                            <div>
+                                                                                                              <h4 style="font-weight: 400;">Negative Mask</h4>
+                                                                                                              <div id="positive_mask" class="combobox" tooltip style="gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                  <div class="tooltip">Use the Negative Mask to exclude specific objects from detection and masking with SAM (Segment Anything Model). This feature prevents enhancement or alteration in unwanted areas, preserving the natural look of excluded regions.</div>
+                                                                                                                  <span class="combobox-text" title="Keep"></span>
+                                                                                                                  <span class="arrow-dwn"></span>
+                                                                                                                  <ul class="list-items">
+                                                                                                                      <li class="item">
+                                                                                                                          <label class="checkbox" tooltip>
+                                                                                                                              <input type="checkbox" id="face"><span>Face</span>
+                                                                                                                              <div class="tooltip">Selecting this option ensures that the face remains unaltered in the image .</div>
+                                                                                                                          </label>
+                                                                                                                      </li>
+                                                                                                                      <li class="item">
+                                                                                                                          <label class="checkbox" tooltip>
+                                                                                                                              <input type="checkbox" id="hair"><span>Hair</span>
+                                                                                                                              <div class="tooltip">Selecting this option ensures that the hair remains unaltered in the image.</div>
+                                                                                                                          </label>
+                                                                                                                      </li>
+                                                                                                                  </ul>
+                                                                                                              </div>
+                                                                                                          </div>                         
+                                                                                                        </div>
+                                                                                                        <div id="Other" class="section" style="display: none;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                            <div>
+                                                                                                                <h4 style="font-weight: 400;">Remove Banner</h4>
+                                                                                                                <label class="checkbox">
+                                                                                                                    <input type="checkbox" id="removeBanner"><span>Remove banner</span>
+                                                                                                                </label>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                        <div class="line"></div>
+                                                                                                    <div style="display: flex;gap: calc(1.5vh* var(--scale-factor-h));">
+                                                                                                        <button class="wide" id="startProcessBtn">Start Process</button>
+                                                                                                        <button class="wide" id="cancellProcessBtn">Cancel Process</button>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
+                                                                                        <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
+                                                                                            <div class="background-dot-container">
+                                                                                                <div class="background-dot-container-content">
+                                                                                                    <div class="outputs"></div>
+                                                                                                    <div style="display: flex;justify-content: space-around;gap: calc(1.5vh* var(--scale-factor-h));">
+                                                                                                        <button class="wide" id="downloadOutput">Download</button>
+                                                                                                        <button class="wide" id="viewOutput">View</button>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                                `);
+            }
+
+            loadPageContent(setUser, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, setAuthentication, updateMainContent, savePageState);
+
+            const mainContainers = document.querySelectorAll('.main-container');
+            mainContainers.forEach((mainContainer) => {
+                mainContainer.style.justifyContent = 'flex-start';
+            });
+
+            window.addEventListener('beforeunload', () => { savePageState(); });
+            window.addEventListener('pagehide', () => { savePageState(); });
+
+            document.addEventListener('click', () => { savePageState(); });
+            document.addEventListener('touchend', () => { savePageState(); });
+
+            const FILE_SIZE_LIMIT_MB = 50;
+            const STATUS_OK = 200;
+
+            function loadPageState() {
+                setMaxWidth();
+
+                const pageData = localStorage.getItem(pageName) || null;
+                if (pageData) {
+                    const state = JSON.parse(pageData || '{}') || {};
+
+                    const removeBanner = document.getElementById('removeBanner');
+                    if (removeBanner) removeBanner.checked = state.removeBanner || false;
+
+                    const positivePrompt = document.getElementById('positivePrompt');
+                    if (positivePrompt) positivePrompt.value = state.positivePrompt || '';
+
+                    const negativePrompt = document.getElementById('negativePrompt');
+                    if (negativePrompt) negativePrompt.value = state.negativePrompt || '';
+
+                    document.querySelectorAll('.nav-links .text').forEach(link => {
+                        if (state.activeLinks.includes(link.getAttribute('for'))) {
+                            link.classList.add('active');
+
+                            const targetSection = document.getElementById(link.getAttribute('for'));
+                            if (targetSection) {
+                                targetSection.style.display = 'flex';
+                            }
+                        }
+                    });
+
+                    // Restore selected rectangles
+                    if (state.selectedRectangles) {
+                        state.selectedRectangles.forEach(selectedId => {
+                            const rectangle = document.getElementById(selectedId);
+                            if (rectangle) {
+                                rectangle.classList.add('selected');
+                            }
+                        });
+                    }
+
+                    const multiboxQuery = document.querySelectorAll('.multibox');
+                    multiboxQuery.forEach((multibox, id) => {
+                        const btnText = multibox.querySelector('.multibox-text');
+                        const items = multibox.querySelectorAll('.item');
+
+                        if (state.multiboxes && state.multiboxes[id]) {
+                            if (btnText) btnText.innerText = state.multiboxes[id].text || '';
+
+                            if (state.multiboxes[id].open) {
+                                multibox.classList.add('open');
+                                const listItems = multibox.querySelector('.list-items');
+                                if (listItems) listItems.style.display = 'flex';
+                            } else {
+                                multibox.classList.remove('open');
+                                const listItems = multibox.querySelector('.list-items');
+                                if (listItems) listItems.style.display = 'none';
+                            }
+
+                            state.multiboxes[id].items.forEach((itemState, itemIndex) => {
+                                if (itemIndex < items.length) {
+                                    const checkbox = items[itemIndex].querySelector('input[type="checkbox"]');
+                                    if (checkbox) {
+                                        checkbox.checked = itemState.checked;
+                                        items[itemIndex].classList.toggle('checked', checkbox.checked);
+                                    }
+                                }
+                            });
+                        }
+                    });
+
+                    const comboboxQuery = document.querySelectorAll('.combobox');
+                    comboboxQuery.forEach((combobox, id) => {
+                        const btnText = combobox.querySelector('.combobox-text');
+                        const items = combobox.querySelectorAll('.item');
+
+                        if (state.comboboxes && state.comboboxes[id]) {
+                            if (btnText) btnText.innerText = state.comboboxes[id].text || '';
+
+                            if (state.comboboxes[id].open) {
+                                combobox.classList.add('open');
+                                const listItems = combobox.querySelector('.list-items');
+                                if (listItems) listItems.style.display = 'flex';
+                            } else {
+                                combobox.classList.remove('open');
+                                const listItems = combobox.querySelector('.list-items');
+                                if (listItems) listItems.style.display = 'none';
+                            }
+
+                            state.comboboxes[id].items.forEach((itemState, itemIndex) => {
+                                if (itemIndex < items.length) {
+                                    const checkbox = items[itemIndex].querySelector('input[type="checkbox"]');
+                                    if (checkbox) {
+                                        checkbox.checked = itemState.checked;
+                                        items[itemIndex].classList.toggle('checked', checkbox.checked);
+                                    }
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    const checkboxIds = [];
+                    checkboxIds.forEach(id => {
+                        if (id) {
+                            const checkbox = document.getElementById(id);
+                            if (checkbox) {
+                                checkbox.checked = true;
+                                setTimeout(() => { checkbox.dispatchEvent(new Event('change')); }, 0);
+                            }
+                        }
+                    });
+                }
+            }
+
+            const databases = [
+                { indexName: `outputDB-${pageName}`, objectStore: 'outputs' },
+                { indexName: `inputDB-${pageName}`, objectStore: 'inputs' }
+            ];
+
+            window.addEventListener('beforeunload', async () => { await saveCountIndex(databases); });
+            window.addEventListener('pagehide', async () => { await saveCountIndex(databases); });
+
+            document.addEventListener('click', async () => { await saveCountIndex(databases); });
+            document.addEventListener('touchend', async () => { await saveCountIndex(databases); });
+
+            const fileUploads = [
+                { buttonId: 'circular-button-input-upload', inputId: 'input-upload', dataBaseIndexName: `inputDB-${pageName}`, dataBaseObjectStoreName: 'inputs', databases }
+            ];
+
+            function handleDataValue(dataValue, qualityValue) {
+                const positivePrompt = document.getElementById("positivePrompt");
+                const currentPrompt = positivePrompt.value;
+
+                if (qualityValue === "1.0") {
+                    if (currentPrompt.indexOf(dataValue) === -1) {
+                        if (currentPrompt.trim() === "") {
+                            positivePrompt.value = dataValue;
+                        } else {
+                            positivePrompt.value = currentPrompt + ", " + dataValue;
+                        }
+                    }
+                } else {
+                    const formattedValue = `(${dataValue}:${qualityValue})`;
+                    if (currentPrompt.indexOf(formattedValue) === -1) {
+                        if (currentPrompt.trim() === "") {
+                            positivePrompt.value = formattedValue;
+                        } else {
+                            positivePrompt.value = currentPrompt + ", " + formattedValue;
+                        }
+                    }
+                }
+            }
+
+            function saveDataValue(dataValue, qualityValue, isFavorite) {
+                const savedData = JSON.parse(localStorage.getItem(`${pageName}-savedData`)) || {};
+                savedData[dataValue] = { quality: qualityValue, favorite: isFavorite };
+                localStorage.setItem(`${pageName}-savedData`, JSON.stringify(savedData));
+            }
+
+            function loadSavedData(dataValue, qualityValue, box) {
+                const savedData = JSON.parse(localStorage.getItem(`${pageName}-savedData`)) || {};
+                if (dataValue in savedData) {
+                    qualityValue.textContent = savedData[dataValue].quality;
+                    let isFavorite = savedData[dataValue].favorite;
+                    if (isFavorite) {
+                        box.classList.add("favorite");
+                    } else {
+                        box.classList.remove("favorite");
+                    }
+                    const slider = document.getElementById(dataValue.replace(/ /g, '-').toLowerCase() + "-priority");
+                    if (slider) {
+                        slider.value = savedData[dataValue].quality;
+                    }
+                }
+            }
+
+            const smallBoxes = document.querySelectorAll(".small-box");
+
+            smallBoxes.forEach((box) => {
+                const dataValue = box.getAttribute("data-value");
+
+                const listItems = document.createElement("ul");
+                listItems.classList.add("list-items");
+                listItems.classList.add("fixed-position");
+                listItems.style.display = "none";
+
+                const sliderItem = document.createElement("li");
+                sliderItem.classList.add("item");
+
+                const sliderLabel = document.createElement("h3");
+                sliderLabel.textContent = "Priority";
+
+                const slider = document.createElement("input");
+                slider.type = "range";
+                slider.min = 0.1;
+                slider.max = 2.0;
+                slider.step = 0.1;
+                slider.value = 1.0;
+                slider.className = "slider";
+                slider.id = `${dataValue}-priority`;
+
+                const qualityValue = document.createElement("span");
+                qualityValue.id = `${dataValue}-value`;
+                qualityValue.textContent = slider.value;
+
+                sliderItem.appendChild(sliderLabel);
+                sliderItem.appendChild(slider);
+                sliderItem.appendChild(qualityValue);
+
+                const buttonItem = document.createElement("li");
+                buttonItem.classList.add("item");
+
+                const button = document.createElement("button");
+                button.style.width = '100%';
+                button.textContent = "Favorite";
+                buttonItem.appendChild(button);
+
+                listItems.appendChild(sliderItem);
+                listItems.appendChild(buttonItem);
+
+                box.appendChild(listItems);
+                loadSavedData(dataValue, qualityValue, box);
+
+                slider.addEventListener("input", (event) => {
+                    qualityValue.textContent = event.target.value;
+                    saveDataValue(dataValue, event.target.value);
+                });
+
+                button.addEventListener("click", () => {
+                    const isFavorite = box.classList.toggle("favorite");
+                    saveDataValue(dataValue, qualityValue.textContent, isFavorite);
+                });
+
+                const arrow = box.querySelector(".arrow-dwn");
+                if (arrow && listItems) {
+                    const updatePosition = () => {
+                        const computedStyle = window.getComputedStyle(listItems);
+                        const isVisible = computedStyle.display !== "none";
+
+                        if (isVisible) {
+                            const boxRect = box.getBoundingClientRect();
+                            const boxWidth = box.offsetWidth;
+                            const listItemsHeight = listItems.offsetHeight;
+                            listItems.style.top = `calc(${boxRect.top + window.scrollY - listItemsHeight}px - 1vh * var(--scale-factor-h))`;
+                            listItems.style.left = `${boxRect.left + window.scrollX}px`;
+                            listItems.style.width = `${boxWidth}px`;
+
+                            if (parseFloat(listItems.style.top) < 0) {
+                                listItems.style.top = "0px";
+                            }
+                        }
+                    };
+
+                    arrow.addEventListener("click", (event) => {
+                        event.stopPropagation();
+
+                        const computedStyle = window.getComputedStyle(listItems);
+                        const isVisible = computedStyle.display !== "none";
+
+                        if (!isVisible) {
+                            listItems.style.display = "block";
+                            updatePosition();
+                        } else {
+                            listItems.style.display = "none";
+                        }
+                    });
+
+                    const attachScrollListener = (element) => {
+                        element.addEventListener("scroll", () => {
+                            listItems.style.display = "none";
+                            updatePosition();
+                        });
+                    };
+
+                    window.addEventListener("resize", updatePosition);
+
+                    const scrollableElements = document.querySelectorAll('*');
+                    scrollableElements.forEach((el) => {
+                        const overflowY = window.getComputedStyle(el).overflowY;
+                        if (overflowY === 'auto' || overflowY === 'scroll') {
+                            attachScrollListener(el);
+                        }
+                    });
+                }
+
+                box.addEventListener("click", () => {
+                    handleDataValue(dataValue, qualityValue.textContent);
+                });
+            });
+
+            let selectedModeId = null;
+
+            const rectangles = document.querySelectorAll(".rectangle");
+            rectangles.forEach((rectangle) => {
+                if (rectangle.classList.contains('selected')) 
+                    selectedModeId = rectangle.id;
+
+                rectangle.addEventListener("click", () => {
+                    rectangles.forEach((rect) => rect.classList.remove("selected"));
+                    rectangle.classList.add("selected");
+                    selectedModeId = rectangle.id;
+                });
+            });
+
+            checkServerStatus(databases, userData.uid);
+            setDynamicInterval(databases, userData.uid);
+
+            async function loadPage() {
+                databases.forEach(db => initDB(db.indexName, db.objectStore, handleDownload, databases));
+
+                const inputs = document.querySelector('.inputs');
+                if (inputs) {
+                    inputs.addEventListener('click', async function (event) {
+                        await handleFileContainerEvents(event, `inputDB-${pageName}`, 'inputs', inputs, databases);
+                    });
+                }
+
+                const outputs = document.querySelector('.outputs');
+                if (outputs) {
+                    outputs.addEventListener('click', async function (event) {
+                        await handleFileContainerEvents(event, `outputDB-${pageName}`, 'outputs', outputs, databases);
+                    });
+                }
+
+                document.querySelectorAll('.question-mark').forEach(questionMark => {
+                    questionMark.addEventListener('click', (event) => {
+                        event.stopPropagation();
+                    });
+                });
+
+                fileUploads.forEach(config => setupFileUpload({ ...config, changeHandler: handleUpload }));
+                createSectionAndElements();
+
+                const startProcessBtn = document.getElementById('startProcessBtn');
+                startProcessBtn.addEventListener('click', async () => { await startProcess(); });
+
+                const cancellProcessBtn = document.getElementById('cancellProcessBtn');
+                cancellProcessBtn.addEventListener('click', async () => { await cancelProcess(true); });
+
+                async function startProcess() {
+                    startProcessBtn.disabled = true;
+
+                    try {
+                        showNotification(`Starting the process...`, 'Process - Information', 'information');
+
+                        if (!userData || !userData.uid) {
+                            const openSignInContainer = document.getElementById('openSignInContainer');
+                            if (openSignInContainer)
+                                openSignInContainer.click();
+                            startProcessBtn.disabled = false;
+                            showNotification(`Please sign in or create an account to use our AI services with free (daily) trial.`, 'Warning - No User Found', 'warning-important');
+                            return;
+                        }
+
+                        const dataContainer = document.createElement('div');
+                        dataContainer.className = 'data-container';
+
+                        const processText = document.createElement('div');
+                        processText.className = 'process-text';
+                        dataContainer.appendChild(processText);
+
+                        const outputs = document.querySelector('.outputs');
+                        outputs.style.display = 'flex';
+                        outputs.insertBefore(dataContainer, outputs.firstChild);
+
+                        if (!userData.emailVerified) {
+                            setClientStatus('Verify Your Email');
+                            showNotification(`Please verify you.`, 'Warning - No Input Selected', 'warning-important');
+                            startProcessBtn.disabled = false;
+                            return;
+                        }
+
+                        userDoc = await getUserDoc();
+
+                        const activePhotoInput = document.querySelector(".inputs .data-container.active img");
+                        if (!activePhotoInput) {
+                            setClientStatus(`Click Your Uploaded Input Above`);
+                            showNotification(`Click your uploaded input above to select it.`, 'Warning - No Input Selected', 'warning-important');
+                            startProcessBtn.disabled = false;
+                            return;
+                        }
+
+                        const removeBanner = document.getElementById("removeBanner");
+                        const removeBannerStateMultiplier = removeBanner.checked ? 2 : 1;
+
+                        let neededCredits = 0;
+                        neededCredits = removeBannerStateMultiplier;
+                        neededCredits = Math.max(1, neededCredits);
+
+                        async function getServerAddresses() {
+                            try {
+                                const snapshotPromise = getDocsSnapshot('servers');
+                                return await fetchServerAddresses(snapshotPromise, false);
+                            } catch (error) {
+                                showNotification(`Failed to get server addresses.`, 'Warning', 'warning');
+                                return null;
+                            }
+                        }
+
+                        let userInternetProtocol, userUniqueBrowserId, serverAddresses;
+
+                        const timeoutDuration = 15000;
+                        let remainingTime = timeoutDuration / 1000;
+                        let countdownInterval;
+
+                        const startCountdown = () => {
+                            countdownInterval = setInterval(() => {
+                                if (remainingTime > 0) {
+                                    setClientStatus(`Creating ID... ${remainingTime}`);
+                                    remainingTime--;
+                                } else {
+                                    clearInterval(countdownInterval);
+                                    setClientStatus('Timeout reached!');
+                                }
+                            }, 1000);
+                        };
+
+                        const fetchDataWithTimeout = () => {
+                            return new Promise((resolve, reject) => {
+                                const timeout = setTimeout(() => {
+                                    reject(new Error('Process took longer than 15 seconds.'));
+                                }, timeoutDuration);
+
+                                Promise.all([
+                                    getUserInternetProtocol(),
+                                    ensureUniqueId(),
+                                    getServerAddresses()
+                                ])
+                                    .then(([ip, id, addresses]) => {
+                                        clearTimeout(timeout);
+                                        clearInterval(countdownInterval);
+                                        resolve([ip, id, addresses]);
+                                    })
+                                    .catch((error) => {
+                                        clearTimeout(timeout);
+                                        clearInterval(countdownInterval);
+                                        reject(new Error(`Failed to create IDs. ${error.message}`));
+                                    });
+                            });
+                        };
+
+                        // Main function to manage the process
+                        const createUserIds = async () => {
+                            try {
+                                setClientStatus("Fetching ID's...");
+                                startCountdown();
+
+                                [userInternetProtocol, userUniqueBrowserId, serverAddresses] = await fetchDataWithTimeout();
+                            } catch (error) {
+                                showNotification(error.message, 'Warning', 'warning');
+                            }
+                        };
+
+                        await createUserIds();
+
+                        const proxyNotifications = {
+                            isTOR: {
+                                message: "TOR users may soon be restricted due to multi-accounting concerns. Disable TOR to avoid issues.",
+                                title: 'Warning - Proxy',
+                                type: 'warning-important'
+                            },
+                            isVPN: {
+                                message: "Using a VPN may cause errors, slow processes, and affect downloads. Consider disabling your VPN for improved performance.",
+                                title: 'Warning - VPN',
+                                type: 'warning-important'
+                            },
+                            isProxy: {
+                                message: "Using a proxy may cause errors, slow processes, and affect downloads. Consider disabling your proxy for better performance.",
+                                title: 'Warning - Proxy',
+                                type: 'warning-important'
+                            }
+                        };
+
+                        for (const [key, { message, title, type }] of Object.entries(proxyNotifications)) {
+                            if (userInternetProtocol[key]) {
+                                showNotification(message, title, type);
+                            }
+                        }
+
+                        const serverPromises = serverAddresses.map(server => checkServerQueue(server));
+                        const results = await Promise.all(serverPromises);
+                        const minQueueIndex = results.reduce((minIndex, queue, id, arr) => {
+                            return (queue < arr[minIndex]) ? id : minIndex;
+                        }, 0);
+
+                        if (results[minQueueIndex] === Infinity) {
+                            startProcessBtn.disabled = false;
+                            setClientStatus('Offline');
+                            showNotification(`Cannot fetch the server. A VPN could cause this or our server is currently offline. Contact an admin for more information.`, 'Warning - Process Failed', 'warning-important');
+                            return;
+                        }
+
+                        setFetchableServerAdresses([serverAddresses[minQueueIndex]]);
+
+                        const serverAddress = getFetchableServerAdresses()[0];
+                        setClientStatus(`Connecting`);
+                        showNotification(`Connecting to ${serverAddress}...`, 'Process - Information', 'information');
+
+                        const extension = 'png';
+                        const timestamp = activePhotoInput.getAttribute('timestamp');
+                        const id = activePhotoInput.getAttribute('id');
+
+                        if (!timestamp || !id) {
+                            setClientStatus(`Timestamp or id is missing.`);
+                            showNotification(`Timestamp or id is missing. Cannot create input file name. Please contact an administrator.`, 'Warning - Process Failed', 'warning-important');
+                            return;
+                        }
+
+                        const fileOutputId = `${Math.random().toString(36).substring(2, 15)}_${1}`;
+                        const userName = userDoc.username.replace(/[^a-zA-Z0-9_]/g, '');
+                        const inputFileName = `${userName}_${timestamp}_${id}_${1}.${extension}`;
+                        const imageFile = await processBlobToFile(activePhotoInput.src, inputFileName, 'image/png');
+
+                        if (!imageFile) {
+                            startProcessBtn.disabled = false;
+                            setClientStatus(`Blob to file failed`);
+                            showNotification(`Failed to create files.`, 'Warning - Process Failed', 'warning-important');
+                            return;
+                        }
+
+                        if (imageFile.size / 1048576 > FILE_SIZE_LIMIT_MB) {
+                            startProcessBtn.disabled = false;
+                            setClientStatus(`Size exceeds ${FILE_SIZE_LIMIT_MB}MB limit`);
+                            showNotification(`Size exceeds ${FILE_SIZE_LIMIT_MB}MB limit`, 'Process - Information', 'warning-important');
+                            return;
+                        }
+
+                        const positivePrompt = document.getElementById("positivePrompt").value;
+                        const negativePrompt = document.getElementById("negativePrompt").value;
+
+                        const maskSelectorIds = [
+                            document.getElementById('clothes'),
+                            document.getElementById('bikini')
+                        ];
+
+                        const maskSelector = getSelectedInputId(maskSelectorIds);
+
+                        const negativeMaskSelectorIds = [
+                            document.getElementById('face'),
+                            document.getElementById('hair')
+                        ];
+
+                        const negativeMaskSelector = getSelectedInputId(negativeMaskSelectorIds);
+
+                        const formData = new FormData();
+                        formData.append('userId', userData.uid);
+                        formData.append('imageFile', imageFile);
+                        formData.append('imageMask', imageFile);
+                        formData.append('modeSelector', selectedModeId);
+                        formData.append('removeBanner', removeBanner);
+                        formData.append('poseRecognition', false);
+                        formData.append('depthRecognition', false);
+                        formData.append('edgeRecognition', false);
+                        formData.append('resSelector', true);
+                        formData.append('positivePrompt', positivePrompt);
+                        formData.append('negativePrompt', negativePrompt);
+                        formData.append('maskSelector', maskSelector);
+                        formData.append('negativeMaskSelector', negativeMaskSelector);
+                        formData.append('maskPrompt', '');
+                        formData.append('negativeMaskPrompt', '');
+                        formData.append('dilateAmount', 15);
+                        formData.append('restoreBodySelector', "False");
+                        formData.append('tilingSelector', "False");
+                        formData.append('samplerSelector', "2M");
+                        formData.append('modelSelector', "Default");
+                        formData.append('clotheDetectionSelector', "automatic");
+                        formData.append('breastSelector', "automatic");
+                        formData.append('genitaliaSelector', "Vagina");
+                        formData.append('textPrompt', "");
+                        formData.append('pixelReference', 128);
+                        formData.append('inpaintReferenceMode', "True");
+                        formData.append('keepMode', 0);
+                        formData.append('configScale', 7);
+                        formData.append('denoisingStrenght', 100);
+                        formData.append('userInternetProtocolAddress', userInternetProtocol.publicAdress);
+                        formData.append('userUniqueInternetProtocolId', userInternetProtocol.UID);
+                        formData.append('fileOutputId', fileOutputId);
+                        formData.append('userUniqueBrowserId', userUniqueBrowserId);
+
+                        const response = await customFetch(`${serverAddress}/start-process`, {
+                            method: 'POST',
+                            body: formData
+                        }, (progress) => {
+                            setClientStatus(`Upload: ${progress.toFixed(0)}%`);
+                        });
+
+                        if (response.status !== STATUS_OK) {
+                            const data = await response.json();
+                            throw new Error(data.server);
+                        }
+
+                        const db = await openDB(`outputDB-${pageName}`, 'outputs');
+                        const url = `${serverAddress}/download-output/${fileOutputId}`;
+                        const firstChild = outputs.firstChild;
+
+                        if (firstChild && !firstChild.dataset.created) {
+                            firstChild.dataset.created = true;
+                            firstChild.innerHTML = `<div class="process-text">Indexing</div>`;
+
+                            await addToDB(db, [null, url]);
+                            await saveCountIndex(databases);
+
+                            const data = await getFromDB(db);
+                            const entry = data.find(item => item.url === url);
+                            firstChild.innerHTML = `<initial url="${entry.url}" id="${entry.id}" timestamp="${entry.timestamp}" processing></initial><div class="process-text">Indexing</div><div class="delete-icon"></div>`;
+                        }
+
+                        setClientStatus('Starting...');
+                        updateDownloadFile(true, databases, userData.uid);
+                    } catch (error) {
+                        startProcessBtn.disabled = false;
+                        setClientStatus(error.message);
+                        cancelProcess(false);
+                    }
+                }
+
+                const downloadOutput = document.getElementById('downloadOutput');
+                if (downloadOutput) {
+                    const activeDataContainer = document.querySelector(".outputs .data-container.active");
+                    if (!activeDataContainer)
+                        downloadOutput.disabled = true;
+
+                    downloadOutput.addEventListener('click', async () => {
+                        const activeDataContainer = document.querySelector(".outputs .data-container.active");
+                        const activeInput = activeDataContainer.querySelector('img, video, initial');
+
+                        if (activeInput) {
+                            if (downloadOutput.textContent === "Pause") {
+                                if (abortController) {
+                                    abortController.abort();
+                                    setDownloadCancelled(true);
+                                }
+
+                                downloadOutput.textContent = "Resume";
+                                downloadOutput.classList.add("important");
+                                return;
+                            }
+
+                            if (downloadOutput.textContent === "Resume") {
+                                const selectedOutputInfo = {
+                                    db: await openDB(`outputDB-${pageName}`, 'outputs'),
+                                    url: activeInput.getAttribute('url'),
+                                    timestamp: parseInt(activeInput.getAttribute('timestamp')),
+                                    element: activeInput.parentElement,
+                                    id: parseInt(activeInput.getAttribute('id')),
+                                    active: activeInput.getAttribute('active'),
+                                };
+
+                                return await handleDownload(selectedOutputInfo);
+                            }
+
+                            if (activeInput) {
+                                const blobUrl = activeInput.tagName === 'VIDEO'
+                                    ? activeInput.querySelector('source').src
+                                    : activeInput.src;
+
+                                const id = activeInput.getAttribute('id');
+                                const fileName = 'output_' + `${id}.${activeInput.tagName === 'VIDEO' ? 'mp4' : 'png'}`;
+
+                                if (blobUrl) {
+                                    if (window.showSaveFilePicker) {
+                                        const fileHandle = await window.showSaveFilePicker({
+                                            suggestedName: fileName,
+                                            types: [{
+                                                description: 'Video Files',
+                                                accept: { 'video/mp4': ['.mp4'] }
+                                            }, {
+                                                description: 'Image Files',
+                                                accept: { 'image/png': ['.png'] }
+                                            }]
+                                        });
+
+                                        const writableStream = await fileHandle.createWritable();
+                                        const response = await fetch(blobUrl);
+                                        const blob = await response.blob();
+                                        await writableStream.write(blob);
+                                        await writableStream.close();
+                                    }
+                                    else if (navigator.share) {
+                                        const response = await fetch(blobUrl);
+                                        const blob = await response.blob();
+                                        const fileToShare = new File([blob], fileName, { type: activeVideoInput ? 'video/mp4' : 'image/png' });
+                                        await navigator.share({ title: fileName, files: [fileToShare] });
+                                    }
+                                    else {
+                                        const a = document.createElement('a');
+                                        a.href = blobUrl;
+                                        a.download = fileName;
+                                        document.body.appendChild(a);
+                                        a.click();
+                                        document.body.removeChild(a);
+                                    }
+                                }
+                                else {
+                                    const a = document.createElement('a');
+                                    a.href = activeInput.getAttribute('url');
+                                    a.download = fileName;
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    document.body.removeChild(a);
+                                }
+                            }
+                            else {
+                                showNotification(`No output is selected.`, 'Warning - Download', 'warning');
+                            }
+                        }
+                    });
+                }
+
+                const viewOutput = document.getElementById('viewOutput');
+                if (viewOutput) {
+                    const activeDataContainer = document.querySelector(".outputs .data-container.active");
+                    if (!activeDataContainer)
+                        viewOutput.disabled = true;
+
+                    viewOutput.addEventListener('click', async () => {
+                        const activeDataContainer = document.querySelector(".outputs .data-container.active");
+                        const activeInput = activeDataContainer.querySelector('img, video, initial');
+
+                        if (activeInput) {
+                            if (viewOutput.textContent === 'Fetch') {
+                                if (abortController) {
+                                    abortController.abort();
+                                    abortController = null;
+                                    downloadOutput.textContent = "Resume";
+                                    setDownloadCancelled(true);
+                                }
+
+                                return window.open(activeInput.getAttribute('url'), '_blank');
+                            }
+
+                            return window.open(activeInput.tagName === 'VIDEO' ? activeInput.querySelector('source').src : activeInput.src, '_blank');
+                        }
+                    });
+                }
+            }
+
+            let previousScreenMode = null;
+
+            async function sizeBasedElements() {
+                setMaxWidth();
+                const screenMode = getScreenMode();
+                const shouldUpdate = previousScreenMode !== screenMode;
+                previousScreenMode = screenMode;
+                if (!shouldUpdate)
+                    return;
+
+                loadPageState();
+                loadPage();
+            }
+
+            sizeBasedElements();
+
+            window.addEventListener('resize', sizeBasedElements);
+        });
+    </script>
+    <script async>
+        window.gtag = function () {
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push(arguments);
+        };
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const gtagScript = document.createElement('script');
+            gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-BFR70Q5VX1';
+            gtagScript.async = true;
+            document.head.appendChild(gtagScript);
+
+            gtagScript.onload = function () {
+                gtag('js', new Date());
+                gtag('config', 'G-BFR70Q5VX1');
+            };
+        });
+    </script>
+</body>
+</html>

@@ -47,36 +47,34 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="css/styles.css?v=1.3.4.9">
+    <link rel="stylesheet" href="css/styles.css?v=1.3.5.9">
     <script>
-        window.addEventListener('DOMContentLoaded', () => {
-            const cssRules = Array.from(document.styleSheets).flatMap(sheet => Array.from(sheet.cssRules));
-            const logoImgRule = cssRules.find(rule => rule.selectorText === '.logo img');
+        const cssRules = Array.from(document.styleSheets).flatMap(sheet => Array.from(sheet.cssRules));
+        const logoImgRule = cssRules.find(rule => rule.selectorText === '.logo img');
 
-            if (logoImgRule && logoImgRule.style.content) {
-                const content = logoImgRule.style.content;
-                const base64Match = content.match(/url\("?([^"]+)"?\)/);
+        if (logoImgRule && logoImgRule.style.content) {
+            const content = logoImgRule.style.content;
+            const base64Match = content.match(/url\("?([^"]+)"?\)/);
 
-                if (base64Match && base64Match[1]) {
-                    const icon = document.createElement('link');
-                    icon.rel = 'icon';
-                    icon.href = base64Match[1];
-                    icon.type = 'image/x-icon';
-                    icon.title = 'DeepAny.AI Favicon';
-                    document.head.appendChild(icon);
-                }
+            if (base64Match && base64Match[1]) {
+                const icon = document.createElement('link');
+                icon.rel = 'icon';
+                icon.href = base64Match[1];
+                icon.type = 'image/x-icon';
+                icon.title = 'DeepAny.AI Favicon';
+                document.head.appendChild(icon);
             }
+        }
 
-            const currentScript = document.currentScript;
-            if (currentScript) {
-                currentScript.remove();
-            }
-        });
+        const currentScript = document.currentScript;
+        if (currentScript) {
+            currentScript.remove();
+        }
     </script>
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = '1.3.4.9';
+        const version = '1.3.5.9';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -84,13 +82,11 @@
 
         document.addEventListener('DOMContentLoaded', async function () {
             const functions = await loadModule('./scripts/functions.js');
-            const { customFetch, checkServerQueue, showNotification, fetchProcessState, openDB, addToDB, countInDB, getFromDB, updateActiveState, initDB, updateInDB, updateChunksInDB, deleteFromDB, setUser, setCurrentUserDoc, getUserData, getUserDoc, setAuthentication, getFirebaseModules, getDocSnapshot, getDocsSnapshot, getScreenMode, getCurrentMain, updateContent, ScreenMode, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol, fetchServerAddresses, getPageName } = functions;
+            const { getSelectedInputId, setDownloadCancelled, getAbortController, resetAbortController, pageName, setFetchableServerAdresses, getFetchableServerAdresses, checkServerStatus, setDynamicInterval, updateDownloadFile, cancelProcess, fetchUploadedChunks, processBlobToFile, createSectionAndElements, setMaxWidth, saveCountIndex, handleDownload, handleFileContainerEvents, handleUpload, setupFileUpload, setClientStatus, customFetch, checkServerQueue, showNotification, openDB, addToDB, getFromDB, initDB, setUser, getUserData, getUserDoc, setAuthentication, getFirebaseModules, getDocSnapshot, getDocsSnapshot, getScreenMode, getCurrentMain, updateContent, ScreenMode, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol, fetchServerAddresses } = functions;
 
             if (!window.indexedDB) {
                 alert('Your browser does not support IndexedDB.');
             }
-
-            const pageName = getPageName();
 
             function savePageState() {
                 const requiredIds = [
@@ -109,8 +105,8 @@
                     return;
                 }
 
-                const getCheckboxState = id => document.getElementById(id)?.checked || false;
-                const activeLink = document.querySelector('.nav-links .active');
+                const getCheckboxState = id => document.getElementById(id)?.checked || false; const activeLinks = Array.from(document.querySelectorAll('.nav-links .active')).map(link => link.getAttribute('for') || '');
+
                 const state = {
                     enableOccluder: getCheckboxState('enableOccluder'),
                     enableEnhancedAnalyzer: getCheckboxState('enableEnhancedAnalyzer'),
@@ -123,7 +119,7 @@
                     ageModifier: getCheckboxState('ageModifier'),
                     ageModifierValue: document.getElementById('age-modifier').value,
                     enhancerBlendValue: document.getElementById('enhancerBlendValue').value,
-                    activeLink: activeLink?.getAttribute('for') || '',
+                    activeLinks: activeLinks,
                     multiboxes: Array.from(document.querySelectorAll('.multibox')).map(multibox => ({
                         text: multibox.querySelector('.multibox-text')?.innerText || '',
                         open: multibox.classList.contains('open'),
@@ -360,6 +356,28 @@
                                                                                                                 </div>
                                                                                                             </div>
                                                                                                             <div>
+                                                                                                                <h4 style="font-weight: 400;">Specify gender</h4>
+                                                                                                                <div id="gender" class="combobox" tooltip style="gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                    <div class="tooltip">Specify the gender that we will face swap in the input. By default (Disabled) it will face swap everyone in the input.</div>
+                                                                                                                    <span class="combobox-text" title="Gender Analyzer"></span>
+                                                                                                                    <span class="arrow-dwn"></span>
+                                                                                                                    <ul class="list-items">
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                                <input type="checkbox" id="female"><span>Female</span>
+                                                                                                                                <div class="tooltip">Face swaps every female in the input with the selected face.</div>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                                <input type="checkbox" id="male"><span>Male</span>
+                                                                                                                                <div class="tooltip">Face swaps every male in the input with the selected face.</div>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                    </ul>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            <div>
                                                                                                                 <h4 style="font-weight: 400;">Enhanced Analyzer</h4>
                                                                                                                 <label class="checkbox" tooltip>
                                                                                                                     <input type="checkbox" id="enableEnhancedAnalyzer"><span>Multiple Face Detectors</span>
@@ -437,37 +455,6 @@
             document.addEventListener('click', () => { savePageState(); });
             document.addEventListener('touchend', () => { savePageState(); });
 
-            function setMaxWidth() {
-                const backgroundDotContainer = document.querySelector('.background-dot-container-content');
-                const multibox = document.querySelector('.multibox');
-                const multiboxText = document.querySelectorAll('.multibox-text');
-                const arrowDwn = document.querySelector('.arrow-dwn');
-
-                if (backgroundDotContainer && multibox && multiboxText && arrowDwn) {
-                    const containerWidth = backgroundDotContainer.offsetWidth;
-                    const containerStyle = getComputedStyle(backgroundDotContainer);
-                    const multiboxStyle = getComputedStyle(multibox);
-                    const arrowDwnStyle = getComputedStyle(arrowDwn);
-
-                    const paddingLeft = parseFloat(multiboxStyle.paddingLeft) + parseFloat(containerStyle.paddingLeft) * 2;
-                    const paddingRight = parseFloat(multiboxStyle.paddingRight) + parseFloat(containerStyle.paddingRight);
-                    const arrowWidth = parseFloat(arrowDwnStyle.width);
-                    const maxWidth = containerWidth - paddingLeft - paddingRight - arrowWidth;
-                    multiboxText.forEach(text => { text.style.maxWidth = `${maxWidth - 2}px`; });
-                }
-            }
-
-            function getSelectedInputId(checkboxes) {
-                for (let checkbox of checkboxes) {
-                    if (checkbox.checked) {
-                        return checkbox.id;
-                    }
-                }
-
-                return null;
-            }
-
-            let downloadFile = false;
             let maximumAllowedFrames = 36000;
             let oldMaximumAllowedFrames = null;
 
@@ -547,7 +534,6 @@
             }
 
             const creditPerTotalFrames = 120;
-
             const FILE_SIZE_LIMIT_MB = 500;
             const MAX_TASK_LIMIT = 10;
             const STATUS_OK = 200;
@@ -559,24 +545,48 @@
                 const pageData = localStorage.getItem(pageName) || null;
                 if (pageData) {
                     const state = JSON.parse(pageData || '{}') || {};
-                    document.getElementById('enableOccluder').checked = state.enableOccluder || false;
-                    document.getElementById('enableEnhancedAnalyzer').checked = state.enableEnhancedAnalyzer || false;
-                    document.getElementById('enableEnhancedLandmarks').checked = state.enableEnhancedLandmarks || false;
-                    document.getElementById('removeBanner').checked = state.removeBanner || false;
-                    document.getElementById('showServers').checked = state.showServers || false;
-                    document.getElementById('skipSlowServers').checked = state.skipSlowServers || false;
-                    document.getElementById('keepFPS').checked = state.keepFPS || false;
-                    document.getElementById('fps-slider').value = state.fpsValue || 30;
-                    document.getElementById('ageModifier').checked = state.ageModifier || false;
-                    document.getElementById('age-modifier').value = state.ageModifierValue || 30;
-                    document.getElementById('enhancerBlendValue').value = state.enhancerBlendValue || 30;
-                    document.getElementById('fps-value').textContent = (state.fpsValue || 30) + ' FPS';
 
-                    const navLinks = document.querySelectorAll('.nav-links .text');
-                    navLinks.forEach(link => {
-                        if (link.getAttribute('for') === state.activeLink) {
+                    const enableOccluder = document.getElementById('enableOccluder');
+                    if (enableOccluder) enableOccluder.checked = state.enableOccluder || false;
+
+                    const enableEnhancedAnalyzer = document.getElementById('enableEnhancedAnalyzer');
+                    if (enableEnhancedAnalyzer) enableEnhancedAnalyzer.checked = state.enableEnhancedAnalyzer || false;
+
+                    const enableEnhancedLandmarks = document.getElementById('enableEnhancedLandmarks');
+                    if (enableEnhancedLandmarks) enableEnhancedLandmarks.checked = state.enableEnhancedLandmarks || false;
+
+                    const removeBanner = document.getElementById('removeBanner');
+                    if (removeBanner) removeBanner.checked = state.removeBanner || false;
+
+                    const showServers = document.getElementById('showServers');
+                    if (showServers) showServers.checked = state.showServers || false;
+
+                    const skipSlowServers = document.getElementById('skipSlowServers');
+                    if (skipSlowServers) skipSlowServers.checked = state.skipSlowServers || false;
+
+                    const keepFPS = document.getElementById('keepFPS');
+                    if (keepFPS) keepFPS.checked = state.keepFPS || false;
+
+                    const fpsSlider = document.getElementById('fps-slider');
+                    if (fpsSlider) fpsSlider.value = state.fpsValue || 30;
+
+                    const ageModifier = document.getElementById('ageModifier');
+                    if (ageModifier) ageModifier.checked = state.ageModifier || false;
+
+                    const ageModifierSlider = document.getElementById('age-modifier');
+                    if (ageModifierSlider) ageModifierSlider.value = state.ageModifierValue || 30;
+
+                    const enhancerBlendValue = document.getElementById('enhancerBlendValue');
+                    if (enhancerBlendValue) enhancerBlendValue.value = state.enhancerBlendValue || 30;
+
+                    const fpsValue = document.getElementById('fps-value');
+                    if (fpsValue) fpsValue.textContent = (state.fpsValue || 30) + ' FPS';
+
+                    document.querySelectorAll('.nav-links .text').forEach(link => {
+                        if (state.activeLinks.includes(link.getAttribute('for'))) {
                             link.classList.add('active');
-                            const targetSection = document.getElementById(state.activeLink);
+
+                            const targetSection = document.getElementById(link.getAttribute('for'));
                             if (targetSection) {
                                 targetSection.style.display = 'flex';
                             }
@@ -589,21 +599,25 @@
                         const items = multibox.querySelectorAll('.item');
 
                         if (state.multiboxes && state.multiboxes[id]) {
-                            btnText.innerText = state.multiboxes[id].text || '';
+                            if (btnText) btnText.innerText = state.multiboxes[id].text || '';
 
                             if (state.multiboxes[id].open) {
                                 multibox.classList.add('open');
-                                multibox.querySelector('.list-items').style.display = 'flex';
+                                const listItems = multibox.querySelector('.list-items');
+                                if (listItems) listItems.style.display = 'flex';
                             } else {
                                 multibox.classList.remove('open');
-                                multibox.querySelector('.list-items').style.display = 'none';
+                                const listItems = multibox.querySelector('.list-items');
+                                if (listItems) listItems.style.display = 'none';
                             }
 
                             state.multiboxes[id].items.forEach((itemState, itemIndex) => {
                                 if (itemIndex < items.length) {
                                     const checkbox = items[itemIndex].querySelector('input[type="checkbox"]');
-                                    checkbox.checked = itemState.checked;
-                                    items[itemIndex].classList.toggle('checked', checkbox.checked);
+                                    if (checkbox) {
+                                        checkbox.checked = itemState.checked;
+                                        items[itemIndex].classList.toggle('checked', checkbox.checked);
+                                    }
                                 }
                             });
                         }
@@ -615,27 +629,30 @@
                         const items = combobox.querySelectorAll('.item');
 
                         if (state.comboboxes && state.comboboxes[id]) {
-                            btnText.innerText = state.comboboxes[id].text || '';
+                            if (btnText) btnText.innerText = state.comboboxes[id].text || '';
 
                             if (state.comboboxes[id].open) {
                                 combobox.classList.add('open');
-                                combobox.querySelector('.list-items').style.display = 'flex';
+                                const listItems = combobox.querySelector('.list-items');
+                                if (listItems) listItems.style.display = 'flex';
                             } else {
                                 combobox.classList.remove('open');
-                                combobox.querySelector('.list-items').style.display = 'none';
+                                const listItems = combobox.querySelector('.list-items');
+                                if (listItems) listItems.style.display = 'none';
                             }
 
                             state.comboboxes[id].items.forEach((itemState, itemIndex) => {
                                 if (itemIndex < items.length) {
                                     const checkbox = items[itemIndex].querySelector('input[type="checkbox"]');
-                                    checkbox.checked = itemState.checked;
-                                    items[itemIndex].classList.toggle('checked', checkbox.checked);
+                                    if (checkbox) {
+                                        checkbox.checked = itemState.checked;
+                                        items[itemIndex].classList.toggle('checked', checkbox.checked);
+                                    }
                                 }
                             });
                         }
                     });
-                }
-                else {
+                } else {
                     const checkboxIds = [
                         'skin',
                         'eyebrow',
@@ -655,8 +672,10 @@
 
                     checkboxIds.forEach(id => {
                         const checkbox = document.getElementById(id);
-                        checkbox.checked = true;
-                        setTimeout(() => { checkbox.dispatchEvent(new Event('change')); }, 0);
+                        if (checkbox) {
+                            checkbox.checked = true;
+                            setTimeout(() => { checkbox.dispatchEvent(new Event('change')); }, 0);
+                        }
                     });
                 }
             }
@@ -667,668 +686,19 @@
                 { indexName: `inputDB-${pageName}`, objectStore: 'inputs' }
             ];
 
-            async function saveCountIndex() {
-                for (const dbConfig of databases) {
-                    const db = await openDB(dbConfig.indexName, dbConfig.objectStore);
-                    const photoCount = await countInDB(db, dbConfig.objectStore);
-                    localStorage.setItem(`${dbConfig.objectStore}-count`, photoCount);
-                }
-            }
-
-            let downloadCancelled = false;
-            let abortController = null;
-
-            function deleteDownloadData(id) {
-                localStorage.removeItem(`downloadedBytes_${id}`);
-                localStorage.removeItem(`totalBytes_${id}`);
-
-                const activeDataContainer = document.querySelector(".outputs .data-container.active");
-                const dataContainerActive = activeDataContainer ? activeDataContainer : null;
-                const downloadOutput = document.getElementById('downloadOutput');
-                if (downloadOutput) {
-                    downloadOutput.classList.remove("important");
-                    downloadOutput.textContent = "Download";
-                    downloadOutput.disabled = !dataContainerActive;
-                }
-
-                const viewOutput = document.getElementById('viewOutput');
-                if (viewOutput) {
-                    viewOutput.classList.remove("important");
-                    viewOutput.textContent = "View";
-                    viewOutput.disabled = !dataContainerActive;
-                }
-
-                if (abortController)
-                    abortController.abort();
-            }
-
-            let lastProgress = 0;
-            const progressMap = {};
-
-            const handleDownload = async ({ db, url, element, id, timestamp, active }) => {
-                if (!(db && url && element && id && timestamp)) {
-                    alert('No Output Selected');
-                    return;
-                }
-
-                downloadCancelled = false;
-
-                const processText = msg => setProcessText(element, msg);
-
-                if (active && !element.classList.contains('active'))
-                    element.classList.add('active');
-
-                element.innerHTML = `<initial url="${url}" id="${id}" timestamp="${timestamp}" active="${active}"><div class="process-text">Downloading...</div><div class="delete-icon"></div></initial>`;
-                element.querySelector('.delete-icon').addEventListener('click', async () => {
-                    downloadCancelled = true;
-                    await updateChunksInDB(db, url, []);
-                    deleteDownloadData(id);
-                });
-
-                if (!(id in progressMap)) {
-                    progressMap[id] = 0;
-                }
-
-                lastProgress = progressMap[id];
-
-                let isMobile = null;
-
-                const activeDataContainer = document.querySelector(".outputs .data-container.active");
-                const dataContainerActive = activeDataContainer ? activeDataContainer : null;
-                const downloadOutput = document.getElementById('downloadOutput');
-
-                if (downloadOutput) {
-                    downloadOutput.textContent = "Pause";
-                    downloadOutput.disabled = !dataContainerActive;
-                }
-
-                const viewOutput = document.getElementById('viewOutput');
-                if (viewOutput) {
-                    viewOutput.textContent = "View";
-
-                    isMobile = iosMobileCheck();
-                    if (!isMobile) {
-                        viewOutput.textContent = "Fetch";
-                        viewOutput.classList.add("important");
-                        viewOutput.disabled = !dataContainerActive;
-                    }
-                }
-
-                abortController = new AbortController();
-                const { signal } = abortController;
-
-                let downloadedBytes = parseInt(localStorage.getItem(`downloadedBytes_${id}`)) || 0;
-                let totalBytes = parseInt(localStorage.getItem(`totalBytes_${id}`)) || 0;
-
-                const previousData = await getFromDB(db);
-                const entry = previousData.find(item => parseInt(item.id) === parseInt(id));
-                const chunks = entry ? entry.chunks : [];
-
-                while (!downloadCancelled) {
-                    try {
-                        const headers = downloadedBytes ? { 'Range': `bytes=${downloadedBytes}-` } : {};
-                        const res = await fetch(url, { headers, signal });
-
-                        if (![200, 206, 416].includes(res.status)) {
-                            await updateChunksInDB(db, url, []);
-                            deleteDownloadData(id);
-                            throw new Error('Server does not support resumable downloads.');
-                        }
-
-                        const contentLength = res.headers.get('Content-Range')?.split('/')[1] || res.headers.get('Content-Length');
-                        totalBytes ||= parseInt(contentLength);
-                        localStorage.setItem(`totalBytes_${id}`, totalBytes);
-
-                        const reader = res.body.getReader();
-                        const contentType = res.headers.get('Content-Type');
-                        let lastSavedProgress = 0;
-
-                        while (!downloadCancelled) {
-                            const { done, value } = await reader.read();
-                            if (done) break;
-
-                            downloadedBytes += value.length;
-                            chunks.push(value);
-
-                            if (viewOutput && isMobile) {
-                                if (viewOutput.textContent !== "View")
-                                    viewOutput.textContent = "View";
-
-                                if (!viewOutput.disabled)
-                                    viewOutput.disabled = true;
-                            }
-
-                            lastProgress = (downloadedBytes / totalBytes) * 100;
-                            if (Math.floor(lastProgress) % 1 === 0 && Math.floor(lastProgress) > lastSavedProgress) {
-                                await updateChunksInDB(db, url, chunks);
-                                localStorage.setItem(`downloadedBytes_${id}`, downloadedBytes);
-                                lastSavedProgress = Math.floor(lastProgress);
-                                progressMap[id] = lastProgress; // Store progress for this ID
-                            }
-                            processText(`Downloaded: ${lastProgress.toFixed(0)}%`);
-                        }
-
-                        if (downloadCancelled) return;
-
-                        const blob = new Blob(chunks.map(chunk => new Uint8Array(chunk)), { type: contentType });
-                        const blobUrl = URL.createObjectURL(blob);
-
-                        if (Math.abs(blob.size - totalBytes) > totalBytes * 0.01) {
-                            alert(`Warning: The downloaded file size (${blob.size} bytes) differs significantly from expected size (${totalBytes} bytes).`);
-                            await updateChunksInDB(db, url, []);
-                            deleteDownloadData(id);
-                            break;
-                        }
-
-                        if (active && !element.classList.contains('active'))
-                            element.classList.add('active');
-
-                        const isVideo = url.slice(-1) === '0';
-                        element.innerHTML = isVideo
-                            ? `<video url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" playsinline preload="auto" disablePictureInPicture loop muted autoplay><source src="${blobUrl}" type="${contentType}">Your browser does not support the video tag.</video><div class="delete-icon"></div>`
-                            : `<img url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" src="${blobUrl}" alt="Uploaded Photo"/><div class="delete-icon"></div>`;
-
-                        const activeContainers = document.querySelectorAll('.outputs .data-container.active');
-                        if (activeContainers.length > 0) {
-                            for (const container of activeContainers) {
-                                container.classList.remove('active');
-                                const element = container.querySelector('img, video, initial');
-                                const id = parseInt(element.getAttribute('id'));
-                                if (id) {
-                                    await updateActiveState(db, id, false).catch(err => {
-                                        alert(`Update failed for id ${id}:`, err);
-                                    });
-                                }
-                            }
-                        }
-
-                        element.classList.add('active');
-                        if (id) {
-                            await updateActiveState(db, id, true).catch(err => {
-                                alert(`Update failed for id ${id}: ${err}`);
-                            });
-                        }
-
-                        if (blob.size === 0) {
-                            alert('Warning: Media not displayable');
-                            await updateChunksInDB(db, url, []);
-                            deleteDownloadData(id);
-                            break;
-                        }
-
-                        downloadCancelled = true;
-
-                        await Promise.all([
-                            updateInDB(db, url, blob),
-                            //updateChunksInDB(db, url, []),
-                            saveCountIndex()
-                        ]);
-
-                        deleteDownloadData(id);
-                        fetchableServerAddresses = (await fetchServerAddresses(getDocsSnapshot('servers'))).reverse();
-                        return;
-                    } catch (error) {
-                        if (error.name === 'AbortError') {
-                            processText(`Paused`);
-                            return;
-                        }
-
-                        processText(`Error: ${error.message}. Retrying...`);
-                    }
-                }
-            };
-
-            window.addEventListener('beforeunload', async () => { await saveCountIndex(); });
-            window.addEventListener('pagehide', async () => { await saveCountIndex(); });
-
-            document.addEventListener('click', async () => { await saveCountIndex(); });
-            document.addEventListener('touchend', async () => { await saveCountIndex(); });
-
-            const handleDelete = async (dbName, storeName, parent) => {
-                try {
-                    const element = parent.querySelector('img, video, initial');
-                    const domIndex = parseInt(element.getAttribute('id'));
-                    const db = await openDB(dbName, storeName);
-                    const items = await getFromDB(db);
-
-                    let itemToDelete = items.find(item => item.id === domIndex);
-
-                    if (!itemToDelete) {
-                        const domTimestamp = parseInt(element.getAttribute('timestamp'));
-                        itemToDelete = items.find(item => item.timestamp === domTimestamp);
-                    }
-
-                    if (itemToDelete) {
-                        await deleteFromDB(db, itemToDelete.id, saveCountIndex);
-                        parent.remove();
-                    } else {
-                        throw new Error('Item to delete not found.');
-                    }
-                } catch (error) {
-                    alert('Error during delete operation: ' + error.message);
-                }
-            };
-
-            const handleFileContainerEvents = async (event, dbName, storeName, container) => {
-                const parent = event.target.closest('.data-container');
-                if (!parent) return;
-
-                if (event.target.classList.contains('delete-icon')) {
-                    return await handleDelete(dbName, storeName, parent);
-                }
-
-                if (storeName === 'outputs') {
-                    const viewOutput = document.getElementById('viewOutput');
-                    if (viewOutput)
-                        viewOutput.disabled = false;
-
-                    const downloadOutput = document.getElementById('downloadOutput');
-                    if (downloadOutput)
-                        downloadOutput.disabled = false;
-                }
-
-                const db = openDB(dbName, storeName);
-
-                for (const activeElement of container.querySelectorAll(".data-container.active")) {
-                    activeElement.classList.remove("active");
-
-                    const element = activeElement.querySelector('img, video, initial');
-                    const domIndex = parseInt(element.getAttribute('id'));
-
-                    if (!isNaN(domIndex)) {
-                        await updateActiveState(await db, domIndex, false);
-                    } else {
-                        alert(`Invalid id for active photo: ${activeElement}`);
-                    }
-                }
-
-                const element = parent.querySelector('img, video, initial');
-                const domIndex = parseInt(element.getAttribute('id'));
-
-                if (!isNaN(domIndex)) {
-                    if (parent.classList.contains("active")) {
-                        parent.classList.remove("active");
-                        await updateActiveState(await db, domIndex, false);
-                    } else {
-                        parent.classList.add("active");
-                        await updateActiveState(await db, domIndex, true);
-                    }
-                } else {
-                    alert(`The provided ID for the parent photo "${parent}" is invalid. Please check the ID and try again.`);
-                }
-            };
-
-            const handleUpload = async (event, dataBaseIndexName, dataBaseObjectStoreName) => {
-                try {
-                    if (!window.indexedDB) {
-                        alert('Your browser does not support IndexedDB.');
-                        return;
-                    }
-
-                    const db = await openDB(dataBaseIndexName, dataBaseObjectStoreName).catch((error) => {
-                        if (error.name === 'QuotaExceededError') {
-                            alert('Storage limit exceeded. Please free up space or clear cache.');
-                        } else if (error.name === 'SecurityError') {
-                            alert('Database access is restricted. Please check browser settings or disable private mode.');
-                        } else {
-                            alert(`Opening media database failed: ${error.message || error}`);
-                        }
-                        return null;
-                    });
-
-                    if (!db) {
-                        return;
-                    }
-
-                    const files = Array.from(event.target.files);
-                    const mediaContainer = document.querySelector(`.${dataBaseObjectStoreName}`);
-                    const fragment = document.createDocumentFragment();
-                    const newMedia = [];
-
-                    const processFile = async (file) => {
-                        return new Promise((resolve, reject) => {
-                            const reader = new FileReader();
-                            reader.onload = async (e) => {
-                                try {
-                                    const blob = new Blob([e.target.result], { type: file.type });
-                                    const { id, timestamp } = await addToDB(db, blob, saveCountIndex);
-                                    newMedia.push({ id, timestamp, blob, isVideo: file.type.startsWith('video') });
-                                    resolve();
-                                } catch (error) {
-                                    alert(`Processing media failed: ${error.message || error}`);
-                                    reject(`Processing media failed: ${error.message}`);
-                                }
-                            };
-                            reader.readAsArrayBuffer(file);
-                        });
-                    };
-
-                    await Promise.all(files.map(processFile));
-
-                    const activeContainers = mediaContainer.querySelectorAll('.data-container.active');
-                    if (activeContainers.length > 0) {
-                        for (const container of activeContainers) {
-                            container.classList.remove('active');
-                            const element = container.querySelector('img, video, initial');
-                            const id = parseInt(element.getAttribute('id'));
-                            if (id) {
-                                await updateActiveState(db, id, false).catch(err => {
-                                    alert(`Update failed for id ${id}: ${err}`);
-                                });
-                            }
-                        }
-                    }
-
-                    newMedia.reverse();
-
-                    for (const { id, timestamp, blob, isVideo } of newMedia) {
-                        const input = document.createElement('div');
-                        input.className = 'data-container';
-                        input.setAttribute('tooltip', '');
-
-                        const blobUrl = URL.createObjectURL(blob);
-                        if (isVideo) {
-                            input.innerHTML = `<video timestamp="${timestamp}" id="${id}" playsinline preload="auto" disablePictureInPicture loop muted autoplay><source src="${blobUrl}">Your browser does not support the video tag.</video><div class="delete-icon"></div>`;
-                            const videoElement = input.querySelector('video');
-
-                            let lastMediaTime = 0;
-                            let lastFrameNum = 0;
-                            let fps = 0;
-                            const fpsBuffer = [];
-                            let frameNotSeeked = true;
-                            let lastFps = 0;
-
-                            const ticker = (useless, metadata) => {
-                                const mediaTimeDiff = Math.abs(metadata.mediaTime - lastMediaTime);
-                                const frameNumDiff = metadata.presentedFrames - lastFrameNum;
-
-                                if (frameNumDiff > 0 && mediaTimeDiff > 0) {
-                                    const diff = mediaTimeDiff / frameNumDiff;
-                                    if (videoElement.playbackRate === 1 && document.hasFocus() && frameNotSeeked) {
-                                        fpsBuffer.push(diff);
-                                        fps = Math.round(1 / getFpsAverage());
-                                        if (fps === lastFps) {
-                                            fpsBuffer.pop();
-                                            input.innerHTML = `<div class="tooltip">${fps}</div>` + input.innerHTML;
-                                            return;
-                                        }
-                                        lastFps = fps;
-                                    }
-                                }
-
-                                lastMediaTime = metadata.mediaTime;
-                                lastFrameNum = metadata.presentedFrames;
-                                frameNotSeeked = true;
-                                videoElement.requestVideoFrameCallback(ticker);
-                            };
-
-                            const getFpsAverage = () => {
-                                if (fpsBuffer.length === 0) return 1;
-                                return fpsBuffer.reduce((a, b) => a + b, 0) / fpsBuffer.length;
-                            };
-
-                            videoElement.addEventListener('seeked', function () {
-                                fpsBuffer.pop();
-                                frameNotSeeked = false;
-                            });
-
-                            videoElement.onloadedmetadata = function () {
-                                videoElement.requestVideoFrameCallback(ticker);
-                                videoElement.play().catch(error => {
-                                    alert('Playback failed: ' + error.message);
-                                });
-                            };
-
-                            videoElement.onerror = function () {
-                                alert('An error occurred during video playback.');
-                            };
-                        } else {
-                            input.innerHTML = `<img timestamp="${timestamp}" id="${id}" src="${blobUrl}" alt="Uploaded Photo"/><div class="delete-icon"></div>`;
-                        }
-
-                        fragment.appendChild(input);
-
-                        if (id === newMedia[newMedia.length - 1].id) {
-                            input.classList.add('active');
-                            if (id) {
-                                await updateActiveState(db, id, true).catch(err => {
-                                    alert(`Update failed for id ${id}: ${err}`);
-                                });
-                            }
-                        }
-                    }
-
-                    mediaContainer.insertBefore(fragment, mediaContainer.firstChild);
-                    localStorage.setItem(`${dataBaseObjectStoreName}-count`, await countInDB(db));
-                } catch (error) {
-                    alert(`Opening media database failed: ${error.message || error}`);
-                }
-            };
-
-            const setupFileUpload = ({ buttonId, inputId, dataBaseIndexName, dataBaseObjectStoreName, changeHandler }) => {
-                const input = document.getElementById(inputId);
-                document.getElementById(buttonId).addEventListener('click', () => input.click());
-                input.addEventListener('change', async (event) => {
-                    await changeHandler(event, dataBaseIndexName, dataBaseObjectStoreName);
-                });
-            };
+            window.addEventListener('beforeunload', async () => { await saveCountIndex(databases); });
+            window.addEventListener('pagehide', async () => { await saveCountIndex(databases); });
+
+            document.addEventListener('click', async () => { await saveCountIndex(databases); });
+            document.addEventListener('touchend', async () => { await saveCountIndex(databases); });
 
             const fileUploads = [
-                { buttonId: 'circular-button-face-upload', inputId: 'face-upload', dataBaseIndexName: `faceDB-${pageName}`, dataBaseObjectStoreName: 'faces' },
-                { buttonId: 'circular-button-input-upload', inputId: 'input-upload', dataBaseIndexName: `inputDB-${pageName}`, dataBaseObjectStoreName: 'inputs' }
+                { buttonId: 'circular-button-face-upload', inputId: 'face-upload', dataBaseIndexName: `faceDB-${pageName}`, dataBaseObjectStoreName: 'faces', databases },
+                { buttonId: 'circular-button-input-upload', inputId: 'input-upload', dataBaseIndexName: `inputDB-${pageName}`, dataBaseObjectStoreName: 'inputs', databases }
             ];
 
-            // TODO: Use id instead of first child!
-            async function setClientStatus(message) {
-                const outputs = document.querySelector('.outputs');
-                if (outputs && outputs.firstChild) {
-                    const processTextElement = outputs.firstChild.querySelector('.process-text');
-                    if (processTextElement) {
-                        processTextElement.textContent = message;
-                    }
-                }
-            }
-
-            const setProcessText = (element, message) => {
-                const processTextElement = element.querySelector('.process-text');
-                if (processTextElement)
-                    processTextElement.textContent = message;
-            };
-
-            function findServerWithUserRequest(results, userId) {
-                return results.find(serverData => serverData.requestQueue?.includes(userId));
-            }
-
-            function handleUserRequest(serverData, userId) {
-                const { processingAmount, remainingTime, elapsedTime, requestQueue } = serverData;
-                const userQueueIndex = requestQueue.indexOf(userId);
-
-                if (userQueueIndex === 0) {
-                    updateClientStatus(processingAmount, remainingTime, elapsedTime);
-                } else {
-                    setClientStatus(`Queue ${userQueueIndex}...`);
-                }
-
-                if (downloadFile)
-                    return;
-
-                updateDownloadFile(true);
-            }
-
-            function updateClientStatus(processingAmount, remainingTime, elapsedTime) {
-                const statusMessage = processingAmount > 0
-                    ? `%${processingAmount} | Remaining/Elapsed: ${remainingTime}/${elapsedTime}`
-                    : 'Processing...';
-                setClientStatus(statusMessage);
-            }
-
-            async function handleDownloadFileIfNeeded() {
-                if (!downloadFile) return;
-                updateDownloadFile(false);
-
-                const db = await openDB(`outputDB-${pageName}`, 'outputs');
-                const outputs = (await getFromDB(db)).reverse();
-                const lastOutput = outputs[outputs.length - 1];
-                const data = await fetchProcessState(lastOutput.url);
-
-                setClientStatus(data.server);
-                showNotification(`Request ${data.status} With Status ${data.server}.`, 'Fetch Information', 'default');
-
-                if (data.status === 'completed') {
-                    setCurrentUserDoc(getDocSnapshot);
-                    await handleLastOutputDownload(lastOutput);
-                }
-            }
-
-            async function handleLastOutputDownload(lastOutput) {
-                const blobIsEmpty = !lastOutput.blob || Object.entries(lastOutput.blob).length === 0;
-                if (blobIsEmpty) {
-                    const selectedOutputInfo = {
-                        db: await openDB(`outputDB-${pageName}`, 'outputs'),
-                        url: lastOutput.url,
-                        timestamp: lastOutput.timestamp,
-                        element: document.querySelector('.outputs').firstChild,
-                        id: lastOutput.id,
-                        active: lastOutput.active,
-                    };
-
-                    await handleDownload(selectedOutputInfo);
-                }
-            }
-
-            let serverListContainer = document.getElementById('serverList');
-            let fetchableServerAddresses = null;
-
-            const loadCachedServerData = () => {
-                serverListContainer = document.getElementById('serverList');
-                serverListContainer.innerHTML = '';
-
-                const cachedData = localStorage.getItem('serverData');
-                if (cachedData) {
-                    const results = JSON.parse(cachedData);
-                    results.forEach((serverData, serverIndex) => {
-                        const newTime = calculateNewTime(serverData.remainingTime, serverData.queueAmount);
-                        const listItem = document.createElement('div');
-                        listItem.innerHTML = `<p>Server ${serverIndex + 1} (${serverData.SERVER_1}) - Queue: ${serverData.queueAmount !== null ? serverData.queueAmount : Infinity} - ${serverData.frameCount || 0}/${serverData.totalFrames || 0} (%${serverData.processingAmount || 0}) - ${newTime}</p>`;
-                        serverListContainer.appendChild(listItem);
-                    });
-                }
-            };
-
-            async function checkServerStatus() {
-                loadCachedServerData();
-
-                if (!fetchableServerAddresses) {
-                    try {
-                        fetchableServerAddresses = (await fetchServerAddresses(getDocsSnapshot('servers'))).reverse();
-                    } catch (error) {
-                        alert(`Error fetching server addresses: ${error.message}`);
-                        return;
-                    }
-                }
-
-                if (!fetchableServerAddresses) return;
-
-                const serverPromises = fetchableServerAddresses.map(async (server) => {
-                    try {
-                        const response = await fetch(`${server}/get-online`);
-                        if (response.status === STATUS_OK) {
-                            const data = await response.json();
-                            return {
-                                queueAmount: data.server,
-                                remainingTime: data.remainingTime,
-                                elapsedTime: data.elapsedTime,
-                                frameCount: data.frameCount,
-                                totalFrames: data.totalFrames,
-                                requestQueue: data.requestQueue,
-                                uniqueId: data.uniqueId,
-                                processingAmount: data.processingAmount,
-                                SERVER_1: data.SERVER_1,
-                            };
-                        } else {
-                            return { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Unknown" };
-                        }
-                    } catch (error) {
-                        return { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Offline" };
-                    }
-                });
-
-                const results = await Promise.all(serverPromises);
-                serverListContainer.innerHTML = '';
-
-                results.forEach((serverData, serverIndex) => {
-                    const newTime = calculateNewTime(serverData.remainingTime, serverData.queueAmount);
-                    const listItem = document.createElement('div');
-                    listItem.innerHTML = `<p>Server ${serverIndex + 1} (${serverData.SERVER_1}) - Queue: ${serverData.queueAmount} - ${serverData.frameCount || 0}/${serverData.totalFrames || 0} (%${serverData.processingAmount || 0}) - ${newTime}</p>`;
-                    serverListContainer.appendChild(listItem);
-                });
-
-                localStorage.setItem('serverData', JSON.stringify(results));
-
-                if (!userData?.uid) {
-                    return;
-                }
-
-                const serverWithUserRequest = findServerWithUserRequest(results, userData.uid);
-                if (serverWithUserRequest) {
-                    handleUserRequest(serverWithUserRequest, userData.uid);
-                } else {
-                    startProcessBtn.disabled = false;
-                    await handleDownloadFileIfNeeded();
-                }
-            }
-
-            let intervalId;
-
-            const setDynamicInterval = () => {
-                if (intervalId) {
-                    clearInterval(intervalId);
-                }
-
-                intervalId = setInterval(checkServerStatus, downloadFile ? 1000 : 5000);
-            };
-
-            checkServerStatus();
-            setDynamicInterval();
-
-            function updateDownloadFile(newValue) {
-                downloadFile = newValue; 
-                setDynamicInterval();
-            }
-
-            function calculateNewTime(remainingTime, queueAmount) {
-                if (!remainingTime) {
-                    return '00:00';
-                }
-                const timeAdd = Math.max(0, (queueAmount - 1) * 10);
-                const [hours, minutes] = remainingTime.split(':').map(Number);
-                const currentDate = new Date();
-                currentDate.setHours(hours);
-                currentDate.setMinutes(minutes + timeAdd);
-                const newHours = ('0' + currentDate.getHours()).slice(-2);
-                const newMinutes = ('0' + currentDate.getMinutes()).slice(-2);
-                const newTime = `${newHours}:${newMinutes}`;
-                return newTime;
-            }
-
-            const cleanSiteData = async (automatic = false) => {
-                try {
-                    const confirmationMessage = !automatic
-                        ? "Are you sure you want to delete local data, caches, and cookies?"
-                        : "We need to clean cookies, caches, and local data for the new update. You don't need to confirm if you have data to download. After accepting, the data will be deleted, but the site will continue to function normally.";
-
-                    const confirmed = confirm(confirmationMessage);
-                    if (!confirmed) {
-                        return;
-                    }
-
-                    location.reload(false);
-                    const cacheBuster = new Date().getTime();
-                    window.location.href = window.location.pathname + `?cb=${cacheBuster}`;
-                } catch (error) {
-                    alert("Error cleaning site data:", error);
-                }
-            };
+            checkServerStatus(databases, userData?.uid);
+            setDynamicInterval(databases, userData?.uid);
 
             async function loadPage() {
                 const removeDataButton = document.getElementById('removeData');
@@ -1340,25 +710,25 @@
                     facialCheckboxes.style.flexDirection = getScreenMode() === ScreenMode.PC ? 'row' : 'column';
 
                 const showServers = document.getElementById('showServers');
-                serverListContainer = document.getElementById('serverList');
+                const serverListContainer = document.getElementById('serverList');
                 serverListContainer.style.display = showServers.checked ? 'block' : 'none';
 
                 showServers.addEventListener('click', async () => {
                     serverListContainer.style.display = showServers.checked ? 'block' : 'none';
                 });
 
-                databases.forEach(db => initDB(db.indexName, db.objectStore, handleDownload));
+                databases.forEach(db => initDB(db.indexName, db.objectStore, handleDownload, databases));
 
                 document.querySelector('.inputs').addEventListener('click', async function (event) {
-                    await handleFileContainerEvents(event, `inputDB-${pageName}`, 'inputs', document.querySelector('.inputs'));
+                    await handleFileContainerEvents(event, `inputDB-${pageName}`, 'inputs', document.querySelector('.inputs'), databases);
                 });
 
                 document.querySelector('.faces').addEventListener('click', async function (event) {
-                    await handleFileContainerEvents(event, `faceDB-${pageName}`, 'faces', document.querySelector('.faces'));
+                    await handleFileContainerEvents(event, `faceDB-${pageName}`, 'faces', document.querySelector('.faces'), databases);
                 });
 
                 document.querySelector('.outputs').addEventListener('click', async function (event) {
-                    await handleFileContainerEvents(event, `outputDB-${pageName}`, 'outputs', document.querySelector('.outputs'));
+                    await handleFileContainerEvents(event, `outputDB-${pageName}`, 'outputs', document.querySelector('.outputs'), databases);
                 });
 
                 document.querySelectorAll('.question-mark').forEach(questionMark => {
@@ -1368,188 +738,7 @@
                 });
 
                 fileUploads.forEach(config => setupFileUpload({ ...config, changeHandler: handleUpload }));
-
-                const navLinks = document.querySelectorAll('.nav-links .text');
-                const sections = document.querySelectorAll('.section');
-
-                navLinks.forEach(link => {
-                    link.addEventListener('click', function () {
-                        const active = this.classList.contains('active');
-
-                        navLinks.forEach(link => link.classList.remove('active'));
-                        sections.forEach(section => section.style.display = 'none');
-
-                        if (!active) {
-                            this.classList.add('active');
-
-                            const targetId = this.getAttribute('for');
-                            const targetSection = document.getElementById(targetId);
-                            if (targetSection) {
-                                targetSection.style.display = 'flex';
-                            }
-                        }
-                    });
-                });
-
-                const multiboxes = document.querySelectorAll(".multibox");
-                multiboxes.forEach(multibox => {
-                    const selectBtn = multibox;
-                    const items = multibox.querySelectorAll(".item");
-                    const tooltip = multibox.querySelector(".tooltip");
-                    const btnText = multibox.querySelector(".multibox-text");
-                    const listItems = multibox.querySelector(".list-items");
-
-                    selectBtn.addEventListener("click", (event) => {
-                        event.stopPropagation();
-                        multiboxes.forEach(box => {
-                            if (box !== selectBtn) {
-                                box.classList.remove("open");
-                                box.querySelector(".list-items").style.display = "none";
-                            }
-                        });
-
-                        selectBtn.classList.toggle("open");
-                        listItems.style.display = selectBtn.classList.contains("open") ? "flex" : "none";
-                    });
-
-                    items.forEach(item => {
-                        const checkbox = item.querySelector('input[type="checkbox"]');
-                        const checkedItems = multibox.querySelectorAll(".item.checked input[type='checkbox']");
-                        const selectedNames = Array.from(checkedItems).map(checkbox => {
-                            const label = checkbox.parentElement.querySelector('span');
-                            return label ? label.textContent.trim() : '';
-                        }).filter(name => name !== '');
-
-                        btnText.innerText = selectedNames.length > 0 ? selectedNames.join(', ') : btnText.getAttribute("title");
-
-                        checkbox.addEventListener("change", () => {
-                            item.classList.toggle("checked", checkbox.checked);
-
-                            const checkedItems = multibox.querySelectorAll(".item.checked input[type='checkbox']");
-                            const selectedNames = Array.from(checkedItems).map(checkbox => {
-                                const label = checkbox.parentElement.querySelector('span');
-                                return label ? label.textContent.trim() : '';
-                            }).filter(name => name !== '');
-
-                            btnText.innerText = selectedNames.length > 0 ? selectedNames.join(', ') : btnText.getAttribute("title");
-                        });
-                    });
-
-                    listItems.addEventListener("mouseenter", () => {
-                        tooltip.style.display = "none";
-                    });
-
-                    listItems.addEventListener("mouseleave", () => {
-                        tooltip.style.display = "flex";
-                    });
-                });
-
-                document.addEventListener("click", () => {
-                    multiboxes.forEach(box => {
-                        box.classList.remove("open");
-                        box.querySelector(".list-items").style.display = "none";
-                    });
-                });
-
-                const comboboxes = document.querySelectorAll(".combobox");
-
-                comboboxes.forEach(combobox => {
-                    const btnText = combobox.querySelector(".combobox-text");
-                    const tooltip = combobox.querySelector(".tooltip");
-                    const defaultTitle = btnText.getAttribute("title");
-                    btnText.innerText = defaultTitle;
-
-                    const listItems = combobox.querySelector(".list-items");
-                    const selectBtn = combobox;
-
-                    const sliderInput = combobox.querySelector('input[type="range"]');
-                    if (sliderInput) {
-                        sliderInput.addEventListener("click", (event) => {
-                            event.stopPropagation();
-                        });
-                    }
-
-                    selectBtn.addEventListener("click", (event) => {
-                        event.stopPropagation();
-
-                        comboboxes.forEach(cbx => {
-                            if (cbx !== combobox) {
-                                const otherListItems = cbx.querySelector(".list-items");
-                                otherListItems.style.display = "none";
-                                cbx.classList.remove("open");
-                            }
-                        });
-
-                        selectBtn.classList.toggle("open");
-                        listItems.style.display = selectBtn.classList.contains("open") ? "flex" : "none";
-                    });
-
-                    const items = combobox.querySelectorAll(".item");
-                    items.forEach(item => {
-                        const checkbox = item.querySelector('input[type="checkbox"]');
-                        if (checkbox.checked) {
-                            items.forEach(i => {
-                                const cb = i.querySelector('input[type="checkbox"]');
-                                cb.checked = false;
-                                i.classList.remove("checked");
-                            });
-
-                            if (sliderInput)
-                                sliderInput.parentElement.style.display = 'flex';
-                            checkbox.checked = true;
-                            item.classList.add("checked");
-                            btnText.innerText = defaultTitle + ": " + checkbox.parentElement.querySelector('span').textContent.trim();
-                        } else {
-                            const anyChecked = [...items].some(i => i.querySelector('input[type="checkbox"]').checked);
-                            if (!anyChecked) {
-                                btnText.innerText = defaultTitle + ": " + "Disabled";
-                                if (sliderInput)
-                                    sliderInput.parentElement.style.display = 'none';
-                            }
-                            item.classList.remove("checked");
-                        }
-
-                        checkbox.addEventListener("change", () => {
-                            if (checkbox.checked) {
-                                items.forEach(i => {
-                                    const cb = i.querySelector('input[type="checkbox"]');
-                                    cb.checked = false;
-                                    i.classList.remove("checked");
-                                });
-
-                                if (sliderInput)
-                                    sliderInput.parentElement.style.display = 'flex';
-                                checkbox.checked = true;
-                                item.classList.add("checked");
-                                btnText.innerText = defaultTitle + ": " + checkbox.parentElement.querySelector('span').textContent.trim();
-                            } else {
-                                const anyChecked = [...items].some(i => i.querySelector('input[type="checkbox"]').checked);
-                                if (!anyChecked) {
-                                    btnText.innerText = defaultTitle + ": " + "Disabled";
-                                    if (sliderInput)
-                                        sliderInput.parentElement.style.display = 'none';
-                                }
-                                item.classList.remove("checked");
-                            }
-                        });
-                    });
-
-                    listItems.addEventListener("mouseenter", () => {
-                        tooltip.style.display = "none";
-                    });
-
-                    listItems.addEventListener("mouseleave", () => {
-                        tooltip.style.display = "flex";
-                    });
-                });
-
-                document.addEventListener("click", () => {
-                    comboboxes.forEach(combobox => {
-                        const listItems = combobox.querySelector(".list-items");
-                        listItems.style.display = "none";
-                        combobox.classList.remove("open");
-                    });
-                });
+                createSectionAndElements();
 
                 const keepFPS = document.getElementById('keepFPS');
                 const keepFPSContainer = document.getElementById('keepFPSContainer');
@@ -1561,7 +750,6 @@
                 });
 
                 fpsValue.innerText = fpsSlider.value + " FPS";
-
                 fpsSlider.addEventListener('input', () => {
                     fpsValue.innerText = fpsSlider.value + " FPS";
                 });
@@ -1601,7 +789,6 @@
                 }
 
                 const startProcessBtn = document.getElementById('startProcessBtn');
-                const cancellProcessBtn = document.getElementById('cancellProcessBtn');
 
                 async function startProcess() {
                     startProcessBtn.disabled = true;
@@ -1609,7 +796,7 @@
                     try {
                         showNotification(`Starting the process...`, 'Process - Information', 'information');
 
-                        if (!userData || !userData.uid) {
+                        if (typeof userData !== 'object' || !userData?.uid) {
                             const openSignInContainer = document.getElementById('openSignInContainer');
                             if (openSignInContainer)
                                 openSignInContainer.click();
@@ -1694,8 +881,6 @@
                         }
 
                         neededCredits = Math.max(1, neededCredits);
-                        setClientStatus('Creating ID...');
-                        showNotification(`Creating unique identifiers...`, 'Process - Information', 'information');
 
                         const pixelBoosters = [
                             document.getElementById('pixelBoost256x256'),
@@ -1717,27 +902,73 @@
 
                                 return await fetchServerAddresses(snapshotPromise, keepSlowServers);
                             } catch (error) {
-                                alert('Failed to get server addresses.');
+                                showNotification(`Failed to get server addresses.`, 'Warning', 'warning');
                                 return null;
                             }
                         }
 
-                        let [userInternetProtocol, userUniqueBrowserId, serverAddresses] = await Promise.all([
-                            getUserInternetProtocol(),
-                            ensureUniqueId(),
-                            getServerAddresses()
-                        ]);
+                        let userInternetProtocol, userUniqueBrowserId, serverAddresses;
 
-                        if (userInternetProtocol.isTOR) 
-                            showNotification(`TOR users will soon not be allowed on this website due to multi-accounting concerns. Please disable your proxy to avoid potential issues with your account.`, 'Warning - Proxy', 'warning-important');
-                        
-                        if (userInternetProtocol.isVPN)
-                            showNotification(`Using a VPN might cause errors, slow down processes, and affect downloads. Please consider disabling your VPN for better performance.`, 'Warning - VPN', 'warning-important');
+                        const timeoutDuration = 15000;
+                        let remainingTime = timeoutDuration / 1000;
 
-                        else if (userInternetProtocol.isProxy)
-                            showNotification(`Using a proxy might cause errors, slow down processes, and affect downloads. Please consider disabling your proxy for better performance.`, 'Warning - Proxy', 'warning-important');
+                        const countdownInterval = setInterval(() => {
+                            setClientStatus(`Creating ID... ${remainingTime}`);
+                            remainingTime--;
+                        }, 1000);
 
-                        const serverForSmallProcesses = "https://4090-1-DF.bodyswap.me";
+                        const timeout = new Promise((_, reject) =>
+                            setTimeout(() => reject(new Error('Process took longer than 15 seconds.')), timeoutDuration)
+                        );
+
+                        try {
+                            setClientStatus('Creating ID...');
+                            showNotification("Creating ID's...", 'Process - Information', 'information');
+
+                            [userInternetProtocol, userUniqueBrowserId, serverAddresses] = await Promise.race([
+                                Promise.all([
+                                    getUserInternetProtocol(),
+                                    ensureUniqueId(),
+                                    getServerAddresses()
+                                ]),
+                                timeout
+                            ]);
+                        } catch (error) {
+                            showNotification(
+                                `Failed to create IDs. Consider disabling extensions or Adblockers. ${error.message}`,
+                                'Warning',
+                                'warning'
+                            );
+                            return;
+                        } finally {
+                            clearInterval(countdownInterval);
+                        }
+
+                        const proxyNotifications = {
+                            isTOR: {
+                                message: "TOR users restricted due to multi-accounting concerns. Disable TOR to avoid issues.",
+                                title: 'Warning - Proxy',
+                                type: 'warning-important'
+                            },
+                            isVPN: {
+                                message: "Using a VPN may cause errors, slow processes, and affect downloads. Consider disabling your VPN for improved performance.",
+                                title: 'Warning - VPN',
+                                type: 'warning-important'
+                            },
+                            isProxy: {
+                                message: "Using a proxy may cause errors, slow processes, and affect downloads. Consider disabling your proxy for better performance.",
+                                title: 'Warning - Proxy',
+                                type: 'warning-important'
+                            }
+                        };
+
+                        for (const [key, { message, title, type }] of Object.entries(proxyNotifications)) {
+                            if (userInternetProtocol[key]) {
+                                showNotification(message, title, type);
+                            }
+                        }
+
+                        const serverForSmallProcesses = "https://4090-1-DF.bodyswap.me"; // "https://4090-1-DF.bodyswap.me" "https://3090-1-DF.deepany.ai"
                         const serverPromises = serverAddresses.map(server => checkServerQueue(server));
                         const results = await Promise.all(serverPromises);
 
@@ -1755,14 +986,14 @@
                                     showNotification(`Cannot fetch the server. A VPN could cause this or our server is currently offline. Contact an admin for more information.`, 'Warning - Process Failed', 'warning-important');
                                     return;
                                 }
-                                fetchableServerAddresses = [serverAddresses[minQueueIndex]];
+                                setFetchableServerAdresses([serverAddresses[minQueueIndex]]);
                             } else {
-                                fetchableServerAddresses = [serverForSmallProcesses];
+                                setFetchableServerAdresses([serverForSmallProcesses]);
                             }
                         } else {
-                            const id = fetchableServerAddresses.indexOf(serverForSmallProcesses);
+                            const id = getFetchableServerAdresses().indexOf(serverForSmallProcesses);
                             if (id !== -1) {
-                                fetchableServerAddresses.splice(id, 1);
+                                getFetchableServerAdresses().splice(id, 1);
                             }
                             const minQueueIndex = results.reduce((minIndex, queue, id, arr) => {
                                 return (queue < arr[minIndex]) ? id : minIndex;
@@ -1773,28 +1004,13 @@
                                 showNotification(`Cannot fetch the server. A VPN could cause this or our server is currently offline. Contact an admin for more information.`, 'Warning - Process Failed', 'warning-important');
                                 return;
                             }
-                            fetchableServerAddresses = [serverAddresses[minQueueIndex]];
+                            setFetchableServerAdresses([serverAddresses[minQueueIndex]]);
                         }
 
-                        const serverAddress = fetchableServerAddresses[0];
+                        const serverAddress = getFetchableServerAdresses()[0]; // getFetchableServerAdresses()[0]
+                        setFetchableServerAdresses([serverAddress]);
                         setClientStatus(`Connecting`);
                         showNotification(`Connecting to ${serverAddress}...`, 'Process - Information', 'information');
-
-                        const processBlobToFile = async (blobUrl, fileName) => {
-                            try {
-                                const response = await fetch(blobUrl);
-                                if (!response.ok) {
-                                    throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
-                                }
-
-                                const blob = await response.blob();
-                                const actualType = blob.type || 'application/octet-stream';
-                                return new File([blob], fileName, { type: actualType });
-                            } catch (error) {
-                                console.error(`Error processing blob to file: ${error.message}`);
-                                return null; 
-                            }
-                        };
 
                         const extension = activeVideoInput ? 'mp4' : 'png';
                         const timestamp = activeVideoInput?.getAttribute('timestamp') || activePhotoInput?.getAttribute('timestamp');
@@ -1805,14 +1021,9 @@
                             showNotification(`Timestamp or id is missing. Cannot create input file name. Please contact an administrator.`, 'Warning - Process Failed', 'warning-important');
                             return;
                         }
-
+                        
+                        const fileOutputId = `${Math.random().toString(36).substring(2, 15)}_${activeVideoInput ? 0 : 1}`;
                         const userName = userDoc.username.replace(/[^a-zA-Z0-9_]/g, '');
-                        const processCount = userDoc.processCount || 0;
-
-                        const fileOutputId = `${userName}_${processCount}_${activeVideoInput ? 0 : 1}`
-                            .replace(/[^a-zA-Z0-9_-]/g, '_')
-                            .replace(/\s/g, '');
-
                         const fileType = activeVideoInput ? 'video/mp4' : 'image/png';
                         const inputFileName = `${userName}_${timestamp}_${id}_${activeVideoInput ? 0 : 1}.${extension}`;
                         const videoSource = activeVideoInput ? activeVideoInput.querySelector('source')?.src : activePhotoInput?.src;
@@ -1891,8 +1102,8 @@
                         if (enhancerBlendValue > 100 / 4) {
                             const enhancerOptions = ['smooth_face_enhancer', 'natural_face_enhancer_512', 'natural_face_enhancer_1024', 'natural_face_enhancer_2048'];
                             enabledEnhancer = enhancerOptions.find(id => {
-                                const enhancer = document.getElementById(id);
-                                return enhancer && enhancer.checked;
+                                const element = document.getElementById(id);
+                                return element && element.checked;
                             });
 
                             enableEnhancer = enabledEnhancer ? document.getElementById(enabledEnhancer).checked : false;
@@ -1903,29 +1114,21 @@
 
                         enhancerBlendValue = clamp(enhancerBlendValue, 0, 100);
 
+                        const genderOptions = ['female', 'male'];
+                        const faceAnalyserGender = genderOptions.find(id => {
+                            const element = document.getElementById(id);
+                            return element && element.checked ? id : null;
+                        });
+
                         const MB = 1024 * 1024;
-                        const chunkSize = 25 * MB;
+                        const chunkSize = 50 * MB;
                         const totalSize = inputFile.size;
                         const maxChunkNumber = Math.ceil(totalSize / chunkSize);
                         const uploadedSizes = new Array(maxChunkNumber).fill(0);
 
-                        async function fetchUploadedChunks(fileName) {
-                            try {
-                                const response = await fetch(`${serverAddress}/uploaded-chunks?fileName=${fileName}`);
-                                if (!response.ok) {
-                                    showNotification(`Failed to fetch uploaded chunks: ${response.status} ${response.statusText}.`, 'Warning - Fetching Failed', 'warning');
-                                    throw new Error(`Failed to fetch uploaded chunks: ${response.status} ${response.statusText}`);
-                                }
-                                return await response.json();
-                            } catch (error) {
-                                showNotification(`Error fetching uploaded chunks for ${fileName}: ${error.message}.`, 'Warning - Fetching Failed', 'warning');
-                                return [];
-                            }
-                        }
-
                         showNotification(`Uploading chunks...`, 'Upload', 'information');
 
-                        const uploadedChunks = new Set(await fetchUploadedChunks(inputFile.name));
+                        let uploadedChunks = new Set(await fetchUploadedChunks(serverAddress, inputFile.name));
 
                         for (let chunkNumber = 0; chunkNumber < maxChunkNumber; chunkNumber++) {
                             if (uploadedChunks.has(chunkNumber.toString())) {
@@ -1951,6 +1154,58 @@
                                 setClientStatus(`Upload (${chunkNumber + 1}/${maxChunkNumber}): ${overallProgress.toFixed(0)}%`);
                             });
                         }
+
+                        //uploadedChunks = new Set(await fetchUploadedChunks(serverAddress, inputFile.name));
+                        //if (Math.abs(uploadedChunks.size - maxChunkNumber) <= 1)
+                        {
+                            setClientStatus("All chunks uploaded successfully.");
+                            showNotification(`All chunks uploaded successfully.`, 'Upload Completed', 'information');
+
+                            async function checkFileExistsWithRetries(serverAddress, inputFile, maxRetries = 3, delay = 1000) {
+                                for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                                    try {
+                                        const response = await fetch(`${serverAddress}/check-file-exists`, {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ fileName: inputFile.name, expectedSize: inputFile.size })
+                                        });
+
+                                        const result = await response.json();
+                                        if (result.exists && !result.isCorrupt) {
+                                            return { exists: true, isCorrupt: false };
+                                        } else if (result.isCorrupt) {
+                                            setClientStatus("File corruption. Resuming...");
+                                            showNotification("File verification: File could be corrupt. Resuming...", 'Warning - Upload Failed', 'warning-important');
+                                            return { exists: true, isCorrupt: true };
+                                        } else {
+                                            setClientStatus("File Not Found");
+                                            showNotification("File verification: File does not exist. Please try re-uploading.", 'Warning - Upload Failed', 'warning-important');
+                                            return { exists: false };
+                                        }
+                                    } catch (error) {
+                                        console.warn(`Attempt ${attempt} failed. Retrying...`, error);
+                                        if (attempt < maxRetries) {
+                                            await new Promise(resolve => setTimeout(resolve, delay)); // Delay before retrying
+                                        } else {
+                                            setClientStatus("Failed");
+                                            showNotification("File verification failed after multiple attempts. Please try again.", 'Error', 'error');
+                                            return { exists: false };
+                                        }
+                                    }
+                                }
+                            }
+
+                            const result = await checkFileExistsWithRetries(serverAddress, inputFile);
+                            if (!result.exists /*|| result.isCorrupt*/) {
+                                setClientStatus("Upload Not Found");
+                                showNotification(`Uploaded file not found in the server database.`, 'Upload Not Found', 'warning');
+                                return;
+                            }
+                        } /*else {
+                            setClientStatus("Upload failed");
+                            showNotification(`File verification: Failed, please try again. Uploaded Chunks: ${uploadedChunks.size}, Needed Chunks: ${maxChunkNumber}`, 'Warning - Upload Failed', 'warning-important');
+                            return;
+                        }*/
 
                         const formData = new FormData();
                         formData.append('face', faceFile);
@@ -1983,7 +1238,7 @@
                         formData.append('invertedRotation', document.getElementById("invertedRotation").checked);
                         formData.append('leftRotation', document.getElementById("leftRotation").checked);
                         formData.append('faceAnalyserAge', 'none');
-                        formData.append('faceAnalyserGender', 'none');
+                        formData.append('faceAnalyserGender', faceAnalyserGender);
                         formData.append('faceAnalyserOrder', 'none');
                         formData.append('enableEnhancedLandmarks', document.getElementById("enableEnhancedLandmarks").checked);
                         formData.append('enableEnhancedAnalyzer', document.getElementById("enableEnhancedAnalyzer").checked);
@@ -2018,7 +1273,8 @@
                             firstChild.dataset.created = true;
                             firstChild.innerHTML = `<div class="process-text">Indexing</div>`;
 
-                            await addToDB(db, [null, url], saveCountIndex);
+                            await addToDB(db, [null, url]);
+                            await saveCountIndex(databases);
 
                             const data = await getFromDB(db);
                             const entry = data.find(item => item.url === url);
@@ -2027,7 +1283,7 @@
 
                         showNotification(`Starting the process...`, 'Upload', 'information');
                         setClientStatus('Starting...');
-                        updateDownloadFile(true);
+                        updateDownloadFile(true, databases, userData.uid);
                         return result;
                     } catch (error) {
                         startProcessBtn.disabled = false;
@@ -2040,49 +1296,7 @@
                     await startProcess();
                 });
 
-                async function cancelProcess(showAlertion) {
-                    try {
-                        const userDoc = await getUserDoc(() => setCurrentUserDoc(getDocSnapshot));
-                        const serverAddresses = await fetchServerAddresses(getDocsSnapshot('servers'));
-
-                        const results = await Promise.all(serverAddresses.map(async (server) => {
-                            const queueAmount = await checkServerQueue(server);
-                            return {
-                                queueAmount,
-                                serverAddress: server
-                            };
-                        }));
-
-                        const userIsProcessing = userDoc.isProcessing;
-                        const serverWithUserRequest = results.find(server => server.queueAmount !== Infinity && server.queueAmount.requestQueue?.includes(userData.uid));
-
-                        if (userIsProcessing || serverWithUserRequest) {
-                            await Promise.all(serverAddresses.map(async (server) => {
-                                try {
-                                    const response = await fetch(`${server}/cancel-process`, {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ userId: userData.uid })
-                                    });
-
-                                    if (showAlertion && response.ok) {
-                                        await response.json();
-                                        startProcessBtn.disabled = false;
-                                        setClientStatus('Request got cancelled');
-                                        updateDownloadFile(false);
-                                    }
-                                } catch (error) {
-                                    console.error(`Error on server ${server}:`, error);
-                                }
-                            }));
-                        } else if (showAlertion) {
-                            showNotification(`User is not processing. No cancellation request sent.`, 'Warning - Process Cancellation', 'warning');
-                        }
-                    } catch (error) {
-                        console.error('Error checking processes:', error);
-                    }
-                }
-
+                const cancellProcessBtn = document.getElementById('cancellProcessBtn');
                 cancellProcessBtn.addEventListener('click', async () => {
                     await cancelProcess(true);
                 });
@@ -2099,9 +1313,11 @@
 
                         if (activeInput) {
                             if (downloadOutput.textContent === "Pause") {
+                                const abortController = getAbortController();
                                 if (abortController) {
                                     abortController.abort();
-                                    downloadCancelled = true;
+                                    resetAbortController();
+                                    setDownloadCancelled(true);
                                 }
 
                                 downloadOutput.textContent = "Resume";
@@ -2192,11 +1408,12 @@
 
                         if (activeInput) {
                             if (viewOutput.textContent === 'Fetch') {
+                                const abortController = getAbortController();
                                 if (abortController) {
                                     abortController.abort();
-                                    abortController = null;
+                                    resetAbortController();
                                     downloadOutput.textContent = "Resume";
-                                    downloadCancelled = true;
+                                    setDownloadCancelled(true);
                                 }
 
                                 return window.open(activeInput.getAttribute('url'), '_blank');

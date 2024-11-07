@@ -7,18 +7,21 @@ export function setCache(key, value, ttl) {
     localStorage.setItem(key, JSON.stringify(item));
 }
 
-export function getCache(key) {
+export function getCache(key, ttl) {
     const itemStr = localStorage.getItem(key);
     if (!itemStr) {
         return null;
     }
 
     const item = JSON.parse(itemStr);
-    const now = new Date();
-    if (now.getTime() > item.expiry) {
+    const now = Date.now();
+
+    // Check if the expiry time deviates significantly from the provided ttl
+    if (now > item.expiry || item.expiry > now + ttl) {
         localStorage.removeItem(key);
         return null;
     }
+
     return item.value;
 }
 
@@ -166,7 +169,7 @@ export async function getUserInternetProtocol() {
                     };
                 }
             } catch (error) {
-                console.log(`Error fetching from ${urls[i]}: ${error.message}`);
+                console.error(`Error fetching from ${urls[i]}: ${error.message}`);
             }
         }
 
@@ -203,30 +206,45 @@ export function getPageName() {
     return pathArray[pathArray.length - 1] || 'default';
 }
 
+export const pageName = getPageName();
+
+function documentID() {
+    switch (pageName) {
+        case 'face-swap':
+            return 'serverAdress-DF';
+        case 'inpaint':
+            return 'serverAdress-DN';
+        case 'art-generator':
+            return 'serverAdress-DA';
+        default:
+            return null;
+    }
+}
+
 export async function fetchServerAddresses(snapshotPromise, keepSlowServers = true) {
-    const cacheKey = getPageName() + '-serverAddresses';
-    let cachedAddresses = getCache(cacheKey);
-    if (!keepSlowServers)
-        cachedAddresses = cachedAddresses.filter(address => !address.includes("3050"));
+    const ttl = 1 * 60 * 60 * 1000;
+    const cacheKey = pageName + '-serverAddresses';
+    let cachedAddresses = getCache(cacheKey, ttl);
+    if (!keepSlowServers) cachedAddresses = cachedAddresses.filter(address => !address.includes("3050"));
     if (cachedAddresses) return cachedAddresses;
 
     const snapshot = await snapshotPromise;
-    let serverAddresses = snapshot.docs.map((doc) => doc.data()['serverAdress-DF']).filter(Boolean);
-    setCache(cacheKey, serverAddresses, 30 * 24 * 60 * 60 * 1000);
-    if (!keepSlowServers)
-        serverAddresses = serverAddresses.filter(address => !address.includes("3050"));
+    let serverAddresses = snapshot.docs.map((doc) => doc.data()[documentID()]).filter(Boolean);
+    setCache(cacheKey, serverAddresses, ttl);
+    if (!keepSlowServers) serverAddresses = serverAddresses.filter(address => !address.includes("3050"));
     return serverAddresses;
 }
 
 export async function fetchServerAddress(snapshotPromise, fieldId) {
+    const ttl = 1 * 60 * 60 * 1000;
     const cacheKey = `serverAddress-${fieldId}`;
-    const cachedAddress = getCache(cacheKey);
+    const cachedAddress = getCache(cacheKey, ttl);
     if (cachedAddress) return cachedAddress;
 
     const snapshot = await snapshotPromise;
     if (snapshot && snapshot.exists()) {
         const serverAddress = snapshot.data()[`serverAdress-${fieldId}`];
-        setCache(cacheKey, serverAddress || null, 30 * 24 * 60 * 60 * 1000);
+        setCache(cacheKey, serverAddress || null, ttl);
         return serverAddress || null;
     }
 
@@ -235,7 +253,8 @@ export async function fetchServerAddress(snapshotPromise, fieldId) {
 
 export async function fetchConversionRates() {
     const cacheKey = 'conversionRates';
-    const cachedRates = getCache(cacheKey);
+    const ttl = 1 * 24 * 60 * 60 * 1000;
+    const cachedRates = getCache(cacheKey, ttl);
     if (cachedRates) return cachedRates;
 
     try {
@@ -244,7 +263,7 @@ export async function fetchConversionRates() {
             throw new Error('API request failed');
         }
         const data = await response.json();
-        setCache(cacheKey, data.rates, 1 * 24 * 60 * 60 * 1000);
+        setCache(cacheKey, data.rates, ttl);
         return data.rates;
     } catch (error) {
         console.error("Error fetching conversion rates:", error);
@@ -265,14 +284,6 @@ export function generateUID() {
 }
 
 export async function ensureUniqueId() {
-    const oldStoredUniqueId = localStorage.getItem('UserUniqueBrowserId');
-    if (oldStoredUniqueId) {
-        if (typeof uniqueUserBrowserRegisterId !== 'undefined') {
-            localStorage.setItem('userUniqueBrowserId', uniqueUserBrowserRegisterId);
-            localStorage.removeItem(oldStoredUniqueId);
-        }
-    }
-
     const storedUniqueId = localStorage.getItem('userUniqueBrowserId');
     if (!storedUniqueId) {
         const newUniqueId = await loadEvercookieUserUniqueBrowserId();
@@ -309,7 +320,7 @@ async function loadEvercookieUserUniqueBrowserId() {
 function loadEvercookieScript() {
     return new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = "/libraries/evercookie/evercookie3.js?v=1.3.4.9";
+        script.src = "/libraries/evercookie/evercookie3.js?v=1.3.5.9";
         script.onload = resolve;
         script.onerror = reject;
         document.head.appendChild(script);
@@ -319,13 +330,13 @@ function loadEvercookieScript() {
 function loadJQueryAndEvercookie() {
     return new Promise((resolve, reject) => {
         const jqueryScript = document.createElement('script');
-        jqueryScript.src = "/libraries/evercookie/jquery-1.4.2.min.js?v=1.3.4.9";
+        jqueryScript.src = "/libraries/evercookie/jquery-1.4.2.min.js?v=1.3.5.9";
         jqueryScript.onload = () => {
             const swfScript = document.createElement('script');
-            swfScript.src = "/libraries/evercookie/swfobject-2.2.min.js?v=1.3.4.9";
+            swfScript.src = "/libraries/evercookie/swfobject-2.2.min.js?v=1.3.5.9";
             swfScript.onload = () => {
                 const dtjavaScript = document.createElement('script');
-                dtjavaScript.src = "/libraries/evercookie/dtjava.js?v=1.3.4.9";
+                dtjavaScript.src = "/libraries/evercookie/dtjava.js?v=1.3.5.9";
                 dtjavaScript.onload = () => {
                     loadEvercookieScript().then(resolve).catch(reject);
                 };
@@ -445,7 +456,7 @@ export const countInDB = (db) => {
     });
 };
 
-export const addToDB = (db, data, saveCountIndex = null, active = false) => {
+export const addToDB = (db, data, active = false) => {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
         const objectStore = transaction.objectStore(db.objectStoreNames[0]);
@@ -469,9 +480,6 @@ export const addToDB = (db, data, saveCountIndex = null, active = false) => {
         const request = objectStore.add(entry);
         request.onsuccess = async () => {
             resolve({ id: request.result, timestamp });
-
-            if (saveCountIndex)
-                await saveCountIndex();
         };
 
         request.onerror = (event) => {
@@ -543,10 +551,12 @@ export const updateActiveState = async (db, id, active) => {
 
 export async function fetchProcessState(url) {
     try {
-        const response = await fetch(url.replace('download-output', 'get-process-state'));
-        return await response.json();
+        const processURL = url.replace('download-output', 'get-process-state');
+        const response = await fetch(processURL);
+        const res = await response.json();
+        return res;
     } catch (error) {
-        alert('Failed to fetch process state.');
+        alert(error.message);
         return null;
     }
 }
@@ -697,7 +707,7 @@ export async function customFetch(url, options, onProgress) {
     });
 }
 
-export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleDownload) => {
+export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleDownload, databases) => {
     try {
         let db = openDB(dataBaseIndexName, dataBaseObjectStoreName);
         let mediaCount = localStorage.getItem(`${dataBaseObjectStoreName}-count`);
@@ -705,9 +715,7 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
         if (!mediaCount) {
             mediaCount = await countInDB(await db);
             localStorage.setItem(`${dataBaseObjectStoreName}-count`, mediaCount);
-        } else {
-            mediaCount = parseInt(mediaCount, 10);
-        }
+        } else mediaCount = parseInt(mediaCount, 10);
 
         const mediaContainer = document.querySelector(`.${dataBaseObjectStoreName}`);
         const fragment = document.createDocumentFragment();
@@ -798,10 +806,18 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
 
                             const tooltip = element.querySelector('.tooltip');
                             if (tooltip && tooltip.classList.contains('cursor')) {
-                                document.addEventListener('mousemove', (event) => {
+                                function updateTooltipPosition(event) {
                                     tooltip.style.position = 'fixed';
                                     tooltip.style.left = `${event.clientX}px`;
                                     tooltip.style.top = `${event.clientY - 15}px`;
+                                }
+
+                                element.addEventListener('mouseenter', () => {
+                                    document.addEventListener('mousemove', updateTooltipPosition);
+                                });
+
+                                element.addEventListener('mouseleave', () => {
+                                    document.removeEventListener('mousemove', updateTooltipPosition);
                                 });
                             }
 
@@ -827,10 +843,10 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
 
                     if (active) element.classList.add('active');
                 } else if (url) {
-                    element.innerHTML = `<initial url="${url}" id="${id}" timestamp="${timestamp}" active="${active}"/></initial><div class="process-text">Fetching...</div><div class="delete-icon"></div>`;
+                    element.innerHTML = `<initial url="${url}" id="${id}" timestamp="${timestamp}" active="${active}"/></initial><div class="process-text">Fetching...</div><div class="delete-icon"></div>`; 
                     const data = await fetchProcessState(url);
                     if (data.status === 'completed') 
-                        await handleDownload({ db, url, element, id, timestamp, active });                   
+                        handleDownload({ db, url, element, id, timestamp, active }, databases);                   
                     else element.innerHTML = `<initial url="${url}" id="${id}" timestamp="${timestamp}" active="${active}"/></initial><div class="process-text">${data.server}</div><div class="delete-icon"></div>`;
                 }
                 else element.innerHTML = `<video url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" playsinline preload="auto" disablePictureInPicture loop muted autoplay><source src="${blobUrl}">Your browser does not support the video tag.</video><div class="process-text">Not Indexed...</div><div class="delete-icon"></div>`;
@@ -880,7 +896,6 @@ export const updateInDB = (db, url, blob) => {
         request.onsuccess = async (event) => {
             const cursor = event.target.result;
             if (cursor) {
-                console.log(cursor.value.url === url);
                 if (cursor.value.url === url) {
                     cursor.value.blob = blob;
                     cursor.value.chunks = [];
@@ -907,7 +922,7 @@ export const updateInDB = (db, url, blob) => {
     });
 };
 
-export const deleteFromDB = async (db, id, saveCountIndex) => {
+export const deleteFromDB = async (db, id) => {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
         const photosObjectStore = transaction.objectStore(db.objectStoreNames[0]);
@@ -915,7 +930,6 @@ export const deleteFromDB = async (db, id, saveCountIndex) => {
 
         deleteRequest.onsuccess = async () => {
             resolve();
-            await saveCountIndex();
         };
 
         deleteRequest.onerror = (event) => {
@@ -1655,10 +1669,6 @@ async function createSignFormSection(registerForm, retrieveImageFromURL, getFire
                     body: JSON.stringify(requestData),
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-
                 const data = await response.json();
                 if (data.message && data.message.includes("User registered successfully")) {
                     createSignFormSection(false, retrieveImageFromURL, getFirebaseModules);
@@ -1669,10 +1679,15 @@ async function createSignFormSection(registerForm, retrieveImageFromURL, getFire
                         messageContainer.style.color = 'unset';
                         messageContainer.textContent = 'Sign in with your credentials.';
                     }
-                } else throw new Error(data);
+                } else {
+                    const errorMessage = data.error?.message || 'An error occurred.';
+                    throw new Error(errorMessage);
+                }
             } catch (error) {
-                messageContainer.style.display = 'block';
-                messageContainer.textContent = error.message;
+                if (messageContainer) {
+                    messageContainer.style.display = 'block';
+                    messageContainer.textContent = error.message;
+                }
             }
         });
     }
@@ -1920,7 +1935,8 @@ export async function createUserData(sidebar, screenMode, setAuthentication, ret
         }
     }
 
-    setAuthentication(userData, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
+    if (setAuthentication)
+        setAuthentication(userData, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
 }
 
 function createSideBarData(sidebar) {
@@ -1955,7 +1971,7 @@ function createSideBarData(sidebar) {
                             <svg style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M848 64h-84c-7.2 0-14.3 2.7-19.8 8.2-5.5 5.5-8.2 12.6-8.2 19.8 0 7.2 2.7 14.3 8.2 19.8 5.5 5.5 12.6 8.2 19.8 8.2h84v84c0 7.2 2.7 14.3 8.2 19.8 5.5 5.5 12.6 8.2 19.8 8.2s14.3-2.7 19.8-8.2c5.5-5.5 8.2-12.6 8.2-19.8v-84c0-30.9-25.1-56-56-56zM876 512c-7.2 0-14.3 2.7-19.8 8.2-5.5 5.5-8.2 12.6-8.2 19.8v84h-84c-7.2 0-14.3 2.7-19.8 8.2-1.5 1.5-2.3 3.4-3.4 5.2-31.6-30.4-67.1-55.4-106.4-72C714.2 517.7 764.7 426 749.2 323c-14.6-96.7-89.6-177.5-185.3-197.5-17.6-3.7-35-5.4-51.9-5.4-132.6 0-240 107.4-240 240 0 87.6 47.5 163.5 117.6 205.4-39.2 16.6-74.8 41.6-106.4 72-1.1-1.8-1.9-3.7-3.4-5.2-5.5-5.5-12.6-8.2-19.8-8.2h-84v-84c0-7.2-2.7-14.3-8.2-19.8-5.5-5.5-12.6-8.2-19.8-8.2s-14.3 2.7-19.8 8.2c-5.5 5.5-8.2 12.6-8.2 19.8v84c0 30.9 25.1 56 56 56h69c-46.8 60.6-79.3 136.5-89.5 221.3-3.8 31.2 21.1 58.7 52.5 58.7h608c31.4 0 56.2-27.6 52.5-58.7-10.2-84.9-42.7-160.8-89.5-221.4h69c30.9 0 56-25.1 56-56v-84c0-7.2-2.7-14.3-8.2-19.8-5.5-5.5-12.6-8.2-19.8-8.2zM211.5 905c16.9-132.8 93.3-242.9 199.9-288 19.4-8.2 32.6-26.7 34.1-47.7 1.5-21.1-9-41.1-27.2-52C361.8 483.6 328 424.7 328 360c0-101.5 82.5-184 184-184 13.4 0 27 1.4 40.4 4.3 72.1 15.1 130.3 77.2 141.4 151.1 11.4 75.5-22.4 146.8-88.2 186-18.1 10.8-28.6 30.9-27.2 52 1.5 21.1 14.6 39.5 34.1 47.7C719 661.9 795.3 771.7 812.4 904l-600.9 1zM148 232c7.2 0 14.3-2.7 19.8-8.2 5.5-5.5 8.2-12.6 8.2-19.8v-84h84c7.2 0 14.3-2.7 19.8-8.2 5.5-5.5 8.2-12.6 8.2-19.8 0-7.2-2.7-14.3-8.2-19.8-5.5-5.5-12.6-8.2-19.8-8.2h-84c-30.9 0-56 25.1-56 56v84c0 7.2 2.7 14.3 8.2 19.8 5.5 5.5 12.6 8.2 19.8 8.2z" fill="white"/></svg>
                             Face Swap
                         </a>
-                        <a class="button disabled" id="inpaintButton" href="inpaint">
+                        <a class="button" id="inpaintButton" href="inpaint">
                             <svg style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M991.776 535.2c0-25.632-9.984-49.76-28.064-67.872L588.992 92.128c-36.256-36.288-99.488-36.288-135.744-0.032L317.408 227.808c-37.408 37.408-37.44 98.336-0.032 135.776l374.656 375.136c18.144 18.144 42.24 28.128 67.936 28.128 25.632 0 49.728-9.984 67.84-28.096l35.328-35.296 26.112 26.144c12.512 12.512 12.512 32.768 1.856 43.584l-95.904 82.048c-12.448 12.544-32.736 12.48-45.248 0l-245.536-245.824 0 0-3.2-3.2c-37.44-37.408-98.336-37.472-135.744-0.096l-9.632 9.632L294.4 554.336c-6.24-6.24-14.432-9.376-22.624-9.376-8.192 0-16.384 3.136-22.656 9.376 0 0 0 0.032-0.032 0.032l-22.56 22.56c0 0 0 0 0 0l-135.872 135.712c-37.408 37.408-37.44 98.304-0.032 135.776l113.12 113.184c18.688 18.688 43.296 28.064 67.872 28.064 24.576 0 49.152-9.344 67.904-28.032l135.808-135.712c0.032-0.032 0.032-0.096 0.064-0.128l22.528-22.496c6.016-6.016 9.376-14.112 9.376-22.624 0-8.48-3.36-16.64-9.344-22.624l-96.896-96.96 9.6-9.6c12.48-12.544 32.768-12.48 45.248 0.032l0-0.032 3.2 3.2 0 0.032 245.568 245.856c18.944 18.912 43.872 28.256 68.544 28.256 24.032 0 47.808-8.896 65.376-26.56l95.904-82.048c37.44-37.408 37.472-98.336 0.032-135.808l-26.112-26.112 55.232-55.168C981.76 584.928 991.776 560.832 991.776 535.2zM362.144 848.544c-0.032 0.032-0.032 0.096-0.064 0.128l-67.776 67.712c-12.48 12.416-32.864 12.448-45.312 0L135.904 803.2c-12.48-12.48-12.48-32.768 0-45.28l67.904-67.84 0 0 67.936-67.84 158.336 158.432L362.144 848.544zM918.368 557.824l-135.808 135.68c-12.064 12.096-33.152 12.096-45.216-0.032L362.656 318.368c-12.48-12.512-12.48-32.8 0-45.28l135.84-135.712C504.544 131.328 512.576 128 521.12 128s16.608 3.328 22.624 9.344l374.688 375.2c6.016 6.016 9.344 14.048 9.344 22.592C927.776 543.712 924.448 551.744 918.368 557.824z" fill="white"/><path d="M544.448 186.72c-12.352-12.672-32.64-12.832-45.248-0.48-12.64 12.384-12.832 32.64-0.48 45.248l322.592 329.216c6.24 6.368 14.528 9.6 22.848 9.6 8.096 0 16.16-3.04 22.4-9.152 12.64-12.352 12.8-32.608 0.448-45.248L544.448 186.72z" fill="white"/></svg>
                             Inpaint
                         </a>
@@ -2230,7 +2246,7 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
             setSidebar(sidebar);
         }
 
-        showSidebar(sidebar, hamburgerMenu, setUser, setAuthentication, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
+        showSidebar(sidebar, hamburgerMenu, setUser);
     }
 
     sizeBasedElements();
@@ -2513,7 +2529,7 @@ export function setNavbar(navbar, mains, sidebar) {
 
 let previousScreenMode = 0;
 
-export function showSidebar(sidebar, hamburgerMenu, setUser, setAuthentication, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot) {
+export function showSidebar(sidebar, hamburgerMenu, setUser = null, setAuthentication = null, retrieveImageFromURL = null, getUserInternetProtocol = null, ensureUniqueId = null, fetchServerAddress = null, getFirebaseModules = null, getDocSnapshot = null) {
     setSidebarActive(sidebar);
     setSidebar(sidebar);
 
@@ -2539,7 +2555,7 @@ export function showSidebar(sidebar, hamburgerMenu, setUser, setAuthentication, 
             }
         });
 
-        if (screenMode === ScreenMode.PHONE)
+        if (setUser && screenMode === ScreenMode.PHONE)
             setUser();
     }
 
@@ -2956,6 +2972,1021 @@ export function showZoomIndicator(event, scaleFactorHeight, scaleFactorWidth) {
     });
 
     messageElement.innerText = `${Math.round(scaleFactorHeight * 100)}%`;
+}
+
+export function setMaxWidth() {
+    const backgroundDotContainer = document.querySelector('.background-dot-container-content');
+    const multibox = document.querySelector('.multibox');
+    const multiboxText = document.querySelectorAll('.multibox-text');
+    const arrowDwn = document.querySelector('.arrow-dwn');
+
+    if (backgroundDotContainer && multibox && multiboxText && arrowDwn) {
+        const containerWidth = backgroundDotContainer.offsetWidth;
+        const containerStyle = getComputedStyle(backgroundDotContainer);
+        const multiboxStyle = getComputedStyle(multibox);
+        const arrowDwnStyle = getComputedStyle(arrowDwn);
+
+        const paddingLeft = parseFloat(multiboxStyle.paddingLeft) + parseFloat(containerStyle.paddingLeft) * 2;
+        const paddingRight = parseFloat(multiboxStyle.paddingRight) + parseFloat(containerStyle.paddingRight);
+        const arrowWidth = parseFloat(arrowDwnStyle.width);
+        const maxWidth = containerWidth - paddingLeft - paddingRight - arrowWidth;
+        multiboxText.forEach(text => { text.style.maxWidth = `${maxWidth - 2}px`; });
+    }
+}
+
+export async function saveCountIndex(databases) {
+    for (const dbConfig of databases) {
+        const db = await openDB(dbConfig.indexName, dbConfig.objectStore);
+        const photoCount = await countInDB(db, dbConfig.objectStore);
+        localStorage.setItem(`${dbConfig.objectStore}-count`, photoCount);
+    }
+}
+
+let downloadCancelled = false;
+
+export function getDownloadCancelled() {
+    return downloadCancelled;
+}
+
+export function setDownloadCancelled(newValue) {
+    downloadCancelled = newValue;
+}
+
+let abortController = null;
+
+export const getAbortController = () => {
+    if (!abortController) {
+        abortController = new AbortController();
+    }
+    return abortController;
+};
+
+export const resetAbortController = () => {
+    abortController = null;
+};
+
+export function deleteDownloadData(id) {
+    localStorage.removeItem(`${pageName}_downloadedBytes_${id}`);
+    localStorage.removeItem(`${pageName}_totalBytes_${id}`);
+
+    const activeDataContainer = document.querySelector(".outputs .data-container.active");
+    const dataContainerActive = activeDataContainer ? activeDataContainer : null;
+    const downloadOutput = document.getElementById('downloadOutput');
+    if (downloadOutput) {
+        downloadOutput.classList.remove("important");
+        downloadOutput.textContent = "Download";
+        downloadOutput.disabled = !dataContainerActive;
+    }
+
+    const viewOutput = document.getElementById('viewOutput');
+    if (viewOutput) {
+        viewOutput.classList.remove("important");
+        viewOutput.textContent = "View";
+        viewOutput.disabled = !dataContainerActive;
+    }
+
+    const abortController = getAbortController();
+    if (abortController) {
+        abortController.abort();
+        resetAbortController();
+    }
+}
+
+let lastProgress = 0;
+const progressMap = {};
+
+export const handleDownload = async ({ db, url, element, id, timestamp, active }, databases) => {
+    if (!(db && url && element && id && timestamp)) {
+        alert('No Output Selected');
+        return;
+    }
+
+    setDownloadCancelled(false);
+
+    const processText = msg => setProcessText(element, msg);
+
+    if (active && !element.classList.contains('active'))
+        element.classList.add('active');
+
+    element.innerHTML = `<initial url="${url}" id="${id}" timestamp="${timestamp}" active="${active}"><div class="process-text">Downloading...</div><div class="delete-icon"></div></initial>`;
+    element.querySelector('.delete-icon').addEventListener('click', async () => {
+        setDownloadCancelled(true);
+        await updateChunksInDB(db, url, []);
+        deleteDownloadData(id);
+    });
+
+    if (!(id in progressMap)) {
+        progressMap[id] = 0;
+    }
+
+    lastProgress = progressMap[id];
+
+    let isMobile = null;
+
+    const activeDataContainer = document.querySelector(".outputs .data-container.active");
+    const dataContainerActive = activeDataContainer ? activeDataContainer : null;
+    const downloadOutput = document.getElementById('downloadOutput');
+
+    if (downloadOutput) {
+        downloadOutput.textContent = "Pause";
+        downloadOutput.disabled = !dataContainerActive;
+    }
+
+    const viewOutput = document.getElementById('viewOutput');
+    if (viewOutput) {
+        viewOutput.textContent = "View";
+
+        isMobile = iosMobileCheck();
+        if (!isMobile) {
+            viewOutput.textContent = "Fetch";
+            viewOutput.classList.add("important");
+            viewOutput.disabled = !dataContainerActive;
+        }
+    }
+
+    const abortController = getAbortController();
+    const { signal } = abortController;
+
+    let downloadedBytes = parseInt(localStorage.getItem(`${pageName}_downloadedBytes_${id}`)) || 0;
+    let totalBytes = parseInt(localStorage.getItem(`${pageName}_totalBytes_${id}`)) || 0;
+
+    const previousData = await getFromDB(db);
+    const entry = previousData.find(item => parseInt(item.id) === parseInt(id));
+    const chunks = entry ? entry.chunks : [];
+
+    while (!downloadCancelled) {
+        try {
+            const headers = downloadedBytes ? { 'Range': `bytes=${downloadedBytes}-` } : {};
+            const res = await fetch(url, { headers, signal });
+
+            if (![200, 206, 416].includes(res.status)) {
+                await updateChunksInDB(db, url, []);
+                deleteDownloadData(id);
+                throw new Error('Server does not support resumable downloads.');
+            }
+
+            const contentLength = res.headers.get('Content-Range')?.split('/')[1] || res.headers.get('Content-Length');
+            totalBytes ||= parseInt(contentLength);
+            localStorage.setItem(`${pageName}_totalBytes_${id}`, totalBytes);
+
+            const reader = res.body.getReader();
+            const contentType = res.headers.get('Content-Type');
+            let lastSavedProgress = 0;
+
+            while (!downloadCancelled) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                downloadedBytes += value.length;
+                chunks.push(value);
+
+                if (viewOutput && isMobile) {
+                    if (viewOutput.textContent !== "View")
+                        viewOutput.textContent = "View";
+
+                    if (!viewOutput.disabled)
+                        viewOutput.disabled = true;
+                }
+
+                lastProgress = (downloadedBytes / totalBytes) * 100;
+                if (Math.floor(lastProgress) % 1 === 0 && Math.floor(lastProgress) > lastSavedProgress) {
+                    await updateChunksInDB(db, url, chunks);
+                    localStorage.setItem(`${pageName}_downloadedBytes_${id}`, downloadedBytes);
+                    lastSavedProgress = Math.floor(lastProgress);
+                    progressMap[id] = lastProgress; // Store progress for this ID
+                }
+                processText(`Downloaded: ${lastProgress.toFixed(0)}%`);
+            }
+
+            if (downloadCancelled) return;
+
+            const blob = new Blob(chunks.map(chunk => new Uint8Array(chunk)), { type: contentType });
+            const blobUrl = URL.createObjectURL(blob);
+
+            if (Math.abs(blob.size - totalBytes) > totalBytes * 0.01) {
+                alert(`Warning: The downloaded file size (${blob.size} bytes) differs significantly from expected size (${totalBytes} bytes).`);
+                await updateChunksInDB(db, url, []);
+                deleteDownloadData(id);
+                break;
+            }
+
+            if (active && !element.classList.contains('active'))
+                element.classList.add('active');
+
+            const isVideo = url.slice(-1) === '0';
+            element.innerHTML = isVideo
+                ? `<video url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" playsinline preload="auto" disablePictureInPicture loop muted autoplay><source src="${blobUrl}" type="${contentType}">Your browser does not support the video tag.</video><div class="delete-icon"></div>`
+                : `<img url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" src="${blobUrl}" alt="Uploaded Photo"/><div class="delete-icon"></div>`;
+
+            const activeContainers = document.querySelectorAll('.outputs .data-container.active');
+            if (activeContainers.length > 0) {
+                for (const container of activeContainers) {
+                    container.classList.remove('active');
+                    const element = container.querySelector('img, video, initial');
+                    const id = parseInt(element.getAttribute('id'));
+                    if (id) {
+                        await updateActiveState(db, id, false).catch(err => {
+                            alert(`Update failed for id ${id}:`, err);
+                        });
+                    }
+                }
+            }
+
+            element.classList.add('active');
+            if (id) {
+                await updateActiveState(db, id, true).catch(err => {
+                    alert(`Update failed for id ${id}: ${err}`);
+                });
+            }
+
+            if (blob.size === 0) {
+                alert('Warning: Media not displayable');
+                await updateChunksInDB(db, url, []);
+                deleteDownloadData(id);
+                break;
+            }
+
+            setDownloadCancelled(true);
+
+            await Promise.all([
+                updateInDB(db, url, blob),
+                //updateChunksInDB(db, url, []),
+                saveCountIndex(databases)
+            ]);
+
+            deleteDownloadData(id);
+            setFetchableServerAdresses((await fetchServerAddresses(getDocsSnapshot('servers'))).reverse());
+            return;
+        } catch (error) {
+            if (error.name === 'AbortError') {
+                processText(`Paused`);
+                return;
+            }
+
+            processText(`Error: ${error.message}. Retrying...`);
+        }
+    }
+};
+
+export const handleDelete = async (dbName, storeName, parent, databases) => {
+    try {
+        const element = parent.querySelector('img, video, initial');
+        const domIndex = parseInt(element.getAttribute('id'));
+        const db = await openDB(dbName, storeName);
+        const items = await getFromDB(db);
+
+        let itemToDelete = items.find(item => item.id === domIndex);
+
+        if (!itemToDelete) {
+            const domTimestamp = parseInt(element.getAttribute('timestamp'));
+            itemToDelete = items.find(item => item.timestamp === domTimestamp);
+        }
+
+        if (itemToDelete) {
+            await deleteFromDB(db, itemToDelete.id);
+            await saveCountIndex(databases);
+            parent.remove();
+        } else {
+            throw new Error('Item to delete not found.');
+        }
+    } catch (error) {
+        alert('Error during delete operation: ' + error.message);
+    }
+};
+
+export const handleFileContainerEvents = async (event, dbName, storeName, container, databases) => {
+    const parent = event.target.closest('.data-container');
+    if (!parent) return;
+
+    if (event.target.classList.contains('delete-icon')) {
+        return await handleDelete(dbName, storeName, parent, databases);
+    }
+
+    if (storeName === 'outputs') {
+        const viewOutput = document.getElementById('viewOutput');
+        if (viewOutput)
+            viewOutput.disabled = false;
+
+        const downloadOutput = document.getElementById('downloadOutput');
+        if (downloadOutput)
+            downloadOutput.disabled = false;
+    }
+
+    const db = openDB(dbName, storeName);
+
+    for (const activeElement of container.querySelectorAll(".data-container.active")) {
+        activeElement.classList.remove("active");
+
+        const element = activeElement.querySelector('img, video, initial');
+        const domIndex = parseInt(element.getAttribute('id'));
+
+        if (!isNaN(domIndex)) {
+            await updateActiveState(await db, domIndex, false);
+        } else {
+            alert(`Invalid id for active photo: ${activeElement}`);
+        }
+    }
+
+    const element = parent.querySelector('img, video, initial');
+    const domIndex = parseInt(element.getAttribute('id'));
+
+    if (!isNaN(domIndex)) {
+        if (parent.classList.contains("active")) {
+            parent.classList.remove("active");
+            await updateActiveState(await db, domIndex, false);
+        } else {
+            parent.classList.add("active");
+            await updateActiveState(await db, domIndex, true);
+        }
+    } else {
+        alert(`The provided ID for the parent photo "${parent}" is invalid. Please check the ID and try again.`);
+    }
+};
+
+export const handleUpload = async (event, dataBaseIndexName, dataBaseObjectStoreName, databases) => {
+    try {
+        if (!window.indexedDB) {
+            alert('Your browser does not support IndexedDB.');
+            return;
+        }
+
+        const db = await openDB(dataBaseIndexName, dataBaseObjectStoreName).catch((error) => {
+            if (error.name === 'QuotaExceededError') {
+                alert('Storage limit exceeded. Please free up space or clear cache.');
+            } else if (error.name === 'SecurityError') {
+                alert('Database access is restricted. Please check browser settings or disable private mode.');
+            } else {
+                alert(`Opening media database failed: ${error.message || error}`);
+            }
+            return null;
+        });
+
+        if (!db) {
+            return;
+        }
+
+        const files = Array.from(event.target.files);
+        const mediaContainer = document.querySelector(`.${dataBaseObjectStoreName}`);
+        const fragment = document.createDocumentFragment();
+        const newMedia = [];
+
+        const processFile = async (file) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const blob = new Blob([e.target.result], { type: file.type });
+                        const { id, timestamp } = await addToDB(db, blob);
+                        saveCountIndex(databases);
+                        newMedia.push({ id, timestamp, blob, isVideo: file.type.startsWith('video') });
+                        resolve();
+                    } catch (error) {
+                        alert(`Processing media failed: ${error.message || error}`);
+                        reject(`Processing media failed: ${error.message}`);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        };
+
+        await Promise.all(files.map(processFile));
+
+        const activeContainers = mediaContainer.querySelectorAll('.data-container.active');
+        if (activeContainers.length > 0) {
+            for (const container of activeContainers) {
+                container.classList.remove('active');
+                const element = container.querySelector('img, video, initial');
+                const id = parseInt(element.getAttribute('id'));
+                if (id) {
+                    await updateActiveState(db, id, false).catch(err => {
+                        alert(`Update failed for id ${id}: ${err}`);
+                    });
+                }
+            }
+        }
+
+        newMedia.reverse();
+
+        for (const { id, timestamp, blob, isVideo } of newMedia) {
+            const element = document.createElement('div');
+            element.className = 'data-container';
+            element.setAttribute('tooltip', '');
+
+            const blobUrl = URL.createObjectURL(blob);
+            if (isVideo) {
+                element.innerHTML = `<video timestamp="${timestamp}" id="${id}" playsinline preload="auto" disablePictureInPicture loop muted autoplay><source src="${blobUrl}">Your browser does not support the video tag.</video><div class="delete-icon"></div>`;
+
+                if (dataBaseObjectStoreName === 'inputs') {
+                    element.innerHTML = `<div class="tooltip cursor">Loading...</div>` + element.innerHTML;
+
+                    const tooltip = element.querySelector('.tooltip');
+                    if (tooltip && tooltip.classList.contains('cursor')) {
+                        function updateTooltipPosition(event) {
+                            tooltip.style.position = 'fixed';
+                            tooltip.style.left = `${event.clientX}px`;
+                            tooltip.style.top = `${event.clientY - 15}px`;
+                        }
+
+                        element.addEventListener('mouseenter', () => {
+                            document.addEventListener('mousemove', updateTooltipPosition);
+                        });
+
+                        element.addEventListener('mouseleave', () => {
+                            document.removeEventListener('mousemove', updateTooltipPosition);
+                        });
+                    }
+
+                    const keepFPS = document.getElementById('keepFPS');
+                    const fpsSlider = document.getElementById("fps-slider");
+                    const removeBanner = document.getElementById("removeBanner");
+
+                    let lastMetadata = null;
+
+                    function handleMetadataUpdate(metadata) {
+                        lastMetadata = metadata;
+                        const tooltip = element.querySelector('.tooltip');
+                        if (tooltip && metadata.fps) {
+                            const fpsSliderValue = !keepFPS.checked ? fpsSlider.value : 60;
+                            const fps = Math.min(fpsSliderValue, metadata.fps);
+                            const videoDurationTotalFrames = Math.floor(metadata.duration * fps);
+                            const singleCreditForTotalFrameAmount = 120;
+                            const removeBannerStateMultiplier = removeBanner && removeBanner.checked ? 2 : 1;
+                            const neededCredits = Math.floor(Math.max(1, videoDurationTotalFrames / singleCreditForTotalFrameAmount) * removeBannerStateMultiplier);
+
+                            tooltip.textContent = `${neededCredits} Credits`;
+                        }
+                    }
+
+                    [keepFPS, fpsSlider, removeBanner].forEach(element => {
+                        element.addEventListener('change', () => {
+                            if (lastMetadata) handleMetadataUpdate(lastMetadata);
+                        });
+                    });
+
+                    calculateMetadata(element.querySelector('video'), handleMetadataUpdate);
+                }
+            } else {
+                element.innerHTML = `<img timestamp="${timestamp}" id="${id}" src="${blobUrl}" alt="Uploaded Photo"/><div class="delete-icon"></div>`;
+
+                if (dataBaseObjectStoreName === 'inputs') {
+                    element.innerHTML = `<div class="tooltip cursor">Loading...</div>` + element.innerHTML;
+
+                    const tooltip = element.querySelector('.tooltip');
+                    if (tooltip && tooltip.classList.contains('cursor')) {
+                        function updateTooltipPosition(event) {
+                            tooltip.style.position = 'fixed';
+                            tooltip.style.left = `${event.clientX}px`;
+                            tooltip.style.top = `${event.clientY - 15}px`;
+                        }
+
+                        element.addEventListener('mouseenter', () => { document.addEventListener('mousemove', updateTooltipPosition); });
+                        element.addEventListener('mouseleave', () => { document.removeEventListener('mousemove', updateTooltipPosition); });
+                    }
+
+                    const removeBanner = document.getElementById("removeBanner");
+                    let lastMetadata = null;
+
+                    function handleMetadataUpdate(metadata) {
+                        lastMetadata = metadata;
+                        const tooltip = element.querySelector('.tooltip');
+                        if (tooltip) {
+                            const neededCredits = removeBanner.checked ? 2 : 1;
+                            tooltip.textContent = `${neededCredits} Credits`;
+                        }
+                    }
+
+                    removeBanner.addEventListener('change', () => {
+                        if (lastMetadata) handleMetadataUpdate(lastMetadata);
+                    });
+
+                    calculateMetadata(element.querySelector('img'), handleMetadataUpdate);
+                }
+            }
+
+            fragment.appendChild(element);
+
+            if (id === newMedia[newMedia.length - 1].id) {
+                element.classList.add('active');
+                if (id) {
+                    await updateActiveState(db, id, true).catch(err => {
+                        alert(`Update failed for id ${id}: ${err}`);
+                    });
+                }
+            }
+        }
+
+        mediaContainer.insertBefore(fragment, mediaContainer.firstChild);
+        localStorage.setItem(`${dataBaseObjectStoreName}-count`, await countInDB(db));
+    } catch (error) {
+        alert(`Opening media database failed: ${error.message || error}`);
+    }
+};
+
+export const setupFileUpload = ({ buttonId, inputId, dataBaseIndexName, dataBaseObjectStoreName, databases, changeHandler }) => {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    document.getElementById(buttonId).addEventListener('click', () => input.click());
+    input.addEventListener('change', async (event) => {
+        await changeHandler(event, dataBaseIndexName, dataBaseObjectStoreName, databases);
+    });
+};
+
+export async function setClientStatus(message) {
+    const outputs = document.querySelector('.outputs');
+    if (outputs && outputs.firstChild) {
+        const processTextElement = outputs.firstChild.querySelector('.process-text');
+        if (processTextElement) {
+            processTextElement.textContent = message;
+        }
+    }
+}
+
+export const setProcessText = (element, message) => {
+    const processTextElement = element.querySelector('.process-text');
+    if (processTextElement)
+        processTextElement.textContent = message;
+};
+
+let fetchableServerAddresses = [];
+let downloadFile = false;
+
+export function getFetchableServerAdresses() {
+    return [...fetchableServerAddresses];
+}
+
+export function setFetchableServerAdresses(newValue) {
+    fetchableServerAddresses.length = 0;
+    fetchableServerAddresses.push(...newValue);
+}
+
+export async function checkServerStatus(databases, userId) {
+    const cacheKey = `${pageName}-serverData`;
+    const ttl = 1 * 60 * 60 * 1000;
+
+    const serverListContainer = document.getElementById('serverList');
+    if (serverListContainer) {
+        serverListContainer.innerHTML = '';
+
+        const cachedData = getCache(cacheKey, ttl);
+        if (cachedData) {
+            cachedData.forEach((serverData, serverIndex) => {
+                const newTime = calculateNewTime(serverData.remainingTime, serverData.queueAmount);
+                const listItem = document.createElement('div');
+                listItem.innerHTML = `<p>Server ${serverIndex + 1} (${serverData.SERVER_1}) - Queue: ${serverData.queueAmount !== null ? serverData.queueAmount : Infinity} - ${serverData.frameCount || 0}/${serverData.totalFrames || 0} (%${serverData.processingAmount || 0}) - ${newTime}</p>`;
+                serverListContainer.appendChild(listItem);
+            });
+        }
+    }
+
+    if (!getFetchableServerAdresses() || !getFetchableServerAdresses().length) {
+        try {
+            setFetchableServerAdresses((await fetchServerAddresses(getDocsSnapshot('servers'))).reverse());
+        } catch (error) {
+            alert(`Error fetching server addresses: ${error.message}`);
+            return;
+        }
+    }
+
+    if (!getFetchableServerAdresses()) return;
+
+    const serverPromises = getFetchableServerAdresses().map(async (server) => {
+        try {
+            const response = await fetch(`${server}/get-online`);
+            if (response.status === STATUS_OK) {
+                const data = await response.json();
+                return {
+                    queueAmount: data.server,
+                    remainingTime: data.remainingTime,
+                    elapsedTime: data.elapsedTime,
+                    frameCount: data.frameCount,
+                    totalFrames: data.totalFrames,
+                    requestQueue: data.requestQueue,
+                    uniqueId: data.uniqueId,
+                    processingAmount: data.processingAmount,
+                    SERVER_1: data.SERVER_1,
+                };
+            } else {
+                return { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Unknown" };
+            }
+        } catch (error) {
+            return { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Offline" };
+        }
+    });
+
+    const results = await Promise.all(serverPromises);
+    if (serverListContainer) {
+        serverListContainer.innerHTML = '';
+
+        results.forEach((serverData, serverIndex) => {
+            const newTime = calculateNewTime(serverData.remainingTime, serverData.queueAmount);
+            const listItem = document.createElement('div');
+            listItem.innerHTML = `<p>Server ${serverIndex + 1} (${serverData.SERVER_1}) - Queue: ${serverData.queueAmount} - ${serverData.frameCount || 0}/${serverData.totalFrames || 0} (%${serverData.processingAmount || 0}) - ${newTime}</p>`;
+            serverListContainer.appendChild(listItem);
+        });
+
+        setCache(cacheKey, results, ttl);
+    }
+
+    if (!userId) {
+        return;
+    }
+
+    const serverWithUserRequest = findServerWithUserRequest(results, userId);
+    if (serverWithUserRequest) {
+        handleUserRequest(serverWithUserRequest, databases, userId);
+    } else {
+        startProcessBtn.disabled = false;
+        if (!downloadFile) return;
+
+        const db = await openDB(`outputDB-${pageName}`, 'outputs');
+        const outputs = (await getFromDB(db)).reverse();
+        const lastOutput = outputs[outputs.length - 1];
+        const data = await fetchProcessState(lastOutput.url);
+
+        setClientStatus(data.server);
+        showNotification(`Request ${data.status} With Status ${data.server}.`, 'Fetch Information', 'default');
+
+        if (data.status === 'completed') {
+            updateDownloadFile(false, databases, userId);
+            setCurrentUserDoc(getDocSnapshot);
+            await handleLastOutputDownload(lastOutput, databases);
+        }
+    }
+}
+
+let intervalId;
+
+export const setDynamicInterval = (databases, userId) => {
+    if (intervalId) {
+        clearInterval(intervalId);
+    }
+
+    intervalId = setInterval(() => checkServerStatus(databases, userId), downloadFile ? 1000 : 5000);
+};
+
+export function updateDownloadFile(newValue, databases, userId) {
+    downloadFile = newValue;
+    setDynamicInterval(databases, userId);
+}
+
+function calculateNewTime(remainingTime, queueAmount) {
+    if (!remainingTime) {
+        return '00:00';
+    }
+    const timeAdd = Math.max(0, (queueAmount - 1) * 10);
+    const [hours, minutes] = remainingTime.split(':').map(Number);
+    const currentDate = new Date();
+    currentDate.setHours(hours);
+    currentDate.setMinutes(minutes + timeAdd);
+    const newHours = ('0' + currentDate.getHours()).slice(-2);
+    const newMinutes = ('0' + currentDate.getMinutes()).slice(-2);
+    const newTime = `${newHours}:${newMinutes}`;
+    return newTime;
+}
+
+export function findServerWithUserRequest(results, userId) {
+    return results.find(serverData => serverData.requestQueue?.includes(userId));
+}
+
+export function handleUserRequest(serverData, databases, userId) {
+    if (!serverData)
+        return;
+
+    const { processingAmount, remainingTime, elapsedTime, requestQueue } = serverData;
+    const userQueueIndex = requestQueue.indexOf(userId);
+
+    if (userQueueIndex === 0) {
+        updateClientStatus(processingAmount, remainingTime, elapsedTime);
+    } else {
+        setClientStatus(`Queue ${userQueueIndex}...`);
+    }
+
+    if (downloadFile)
+        return;
+
+    updateDownloadFile(true, databases, userId);
+}
+
+export function getSelectedInputId(checkboxes) {
+    for (let checkbox of checkboxes) {
+        if (checkbox.checked) {
+            return checkbox.id;
+        }
+    }
+
+    return null;
+}
+
+export async function handleLastOutputDownload(lastOutput, databases) {
+    const blobIsEmpty = !lastOutput.blob || Object.entries(lastOutput.blob).length === 0;
+    if (blobIsEmpty) {
+        await handleDownload({
+            db: await openDB(`outputDB-${pageName}`, 'outputs'),
+            url: lastOutput.url,
+            timestamp: lastOutput.timestamp,
+            element: document.querySelector('.outputs').firstChild,
+            id: lastOutput.id,
+            active: lastOutput.active,
+        }, databases);
+    }
+}
+
+/*export const cleanSiteData = async (automatic = false) => {
+    try {
+        const confirmationMessage = !automatic
+            ? "Are you sure you want to delete local data, caches, and cookies?"
+            : "We need to clean cookies, caches, and local data for the new update. You don't need to confirm if you have data to download. After accepting, the data will be deleted, but the site will continue to function normally.";
+
+        const confirmed = confirm(confirmationMessage);
+        if (!confirmed) {
+            return;
+        }
+
+        location.reload(false);
+        const cacheBuster = new Date().getTime();
+        window.location.href = window.location.pathname + `?cb=${cacheBuster}`;
+    } catch (error) {
+        alert("Error cleaning site data:", error);
+    }
+};*/
+
+export function updateClientStatus(processingAmount, remainingTime, elapsedTime) {
+    const statusMessage = processingAmount > 0
+        ? `%${processingAmount} | Remaining/Elapsed: ${remainingTime}/${elapsedTime}`
+        : 'Processing...';
+    setClientStatus(statusMessage);
+}
+
+export function createSectionAndElements() {
+    document.querySelectorAll('.nav-links').forEach(group => {
+        const groupLinks = group.querySelectorAll('.text');
+
+        groupLinks.forEach(link => {
+            link.addEventListener('click', function () {
+                const isActive = this.classList.contains('active');
+                groupLinks.forEach(link => link.classList.remove('active'));
+                groupLinks.forEach(link => {
+                    const targetSection = document.getElementById(link.getAttribute('for'));
+                    if (targetSection) targetSection.style.display = 'none';
+                });
+
+                if (!isActive) {
+                    this.classList.add('active');
+
+                    const targetSection = document.getElementById(this.getAttribute('for'));
+                    if (targetSection) {
+                        targetSection.style.display = 'flex';
+                    }
+                }
+            });
+        });
+    });
+
+    const multiboxes = document.querySelectorAll(".multibox");
+    multiboxes.forEach(multibox => {
+        const selectBtn = multibox;
+        const items = multibox.querySelectorAll(".item");
+        const tooltip = multibox.querySelector(".tooltip");
+        const btnText = multibox.querySelector(".multibox-text");
+        const listItems = multibox.querySelector(".list-items");
+
+        selectBtn.addEventListener("click", (event) => {
+            event.stopPropagation();
+            multiboxes.forEach(box => {
+                if (box !== selectBtn) {
+                    box.classList.remove("open");
+                    box.querySelector(".list-items").style.display = "none";
+                }
+            });
+
+            selectBtn.classList.toggle("open");
+            listItems.style.display = selectBtn.classList.contains("open") ? "flex" : "none";
+        });
+
+        items.forEach(item => {
+            const checkbox = item.querySelector('input[type="checkbox"]');
+            const checkedItems = multibox.querySelectorAll(".item.checked input[type='checkbox']");
+            const selectedNames = Array.from(checkedItems).map(checkbox => {
+                const label = checkbox.parentElement.querySelector('span');
+                return label ? label.textContent.trim() : '';
+            }).filter(name => name !== '');
+
+            btnText.innerText = selectedNames.length > 0 ? selectedNames.join(', ') : btnText.getAttribute("title");
+
+            checkbox.addEventListener("change", () => {
+                item.classList.toggle("checked", checkbox.checked);
+
+                const checkedItems = multibox.querySelectorAll(".item.checked input[type='checkbox']");
+                const selectedNames = Array.from(checkedItems).map(checkbox => {
+                    const label = checkbox.parentElement.querySelector('span');
+                    return label ? label.textContent.trim() : '';
+                }).filter(name => name !== '');
+
+                btnText.innerText = selectedNames.length > 0 ? selectedNames.join(', ') : btnText.getAttribute("title");
+            });
+        });
+
+        listItems.addEventListener("mouseenter", () => {
+            tooltip.style.display = "none";
+        });
+
+        listItems.addEventListener("mouseleave", () => {
+            tooltip.style.display = "flex";
+        });
+    });
+
+    document.addEventListener("click", () => {
+        multiboxes.forEach(box => {
+            box.classList.remove("open");
+            box.querySelector(".list-items").style.display = "none";
+        });
+    });
+
+    const comboboxes = document.querySelectorAll(".combobox");
+
+    comboboxes.forEach(combobox => {
+        const btnText = combobox.querySelector(".combobox-text");
+        const tooltip = combobox.querySelector(".tooltip");
+        const defaultTitle = btnText.getAttribute("title");
+        btnText.innerText = defaultTitle;
+
+        const listItems = combobox.querySelector(".list-items");
+        const selectBtn = combobox;
+
+        const sliderInput = combobox.querySelector('input[type="range"]');
+        if (sliderInput) {
+            sliderInput.addEventListener("click", (event) => {
+                event.stopPropagation();
+            });
+        }
+
+        selectBtn.addEventListener("click", (event) => {
+            event.stopPropagation();
+
+            comboboxes.forEach(cbx => {
+                if (cbx !== combobox) {
+                    const otherListItems = cbx.querySelector(".list-items");
+                    otherListItems.style.display = "none";
+                    cbx.classList.remove("open");
+                }
+            });
+
+            selectBtn.classList.toggle("open");
+            listItems.style.display = selectBtn.classList.contains("open") ? "flex" : "none";
+        });
+
+        const items = combobox.querySelectorAll(".item");
+        items.forEach(item => {
+            const checkbox = item.querySelector('input[type="checkbox"]');
+            if (checkbox.checked) {
+                items.forEach(i => {
+                    const cb = i.querySelector('input[type="checkbox"]');
+                    cb.checked = false;
+                    i.classList.remove("checked");
+                });
+
+                if (sliderInput)
+                    sliderInput.parentElement.style.display = 'flex';
+                checkbox.checked = true;
+                item.classList.add("checked");
+                btnText.innerText = defaultTitle + ": " + checkbox.parentElement.querySelector('span').textContent.trim();
+            } else {
+                const anyChecked = [...items].some(i => i.querySelector('input[type="checkbox"]').checked);
+                if (!anyChecked) {
+                    btnText.innerText = defaultTitle + ": " + "Disabled";
+                    if (sliderInput)
+                        sliderInput.parentElement.style.display = 'none';
+                }
+                item.classList.remove("checked");
+            }
+
+            checkbox.addEventListener("change", () => {
+                if (checkbox.checked) {
+                    items.forEach(i => {
+                        const cb = i.querySelector('input[type="checkbox"]');
+                        cb.checked = false;
+                        i.classList.remove("checked");
+                    });
+
+                    if (sliderInput)
+                        sliderInput.parentElement.style.display = 'flex';
+                    checkbox.checked = true;
+                    item.classList.add("checked");
+                    btnText.innerText = defaultTitle + ": " + checkbox.parentElement.querySelector('span').textContent.trim();
+                } else {
+                    const anyChecked = [...items].some(i => i.querySelector('input[type="checkbox"]').checked);
+                    if (!anyChecked) {
+                        btnText.innerText = defaultTitle + ": " + "Not specified";
+                        if (sliderInput)
+                            sliderInput.parentElement.style.display = 'none';
+                    }
+                    item.classList.remove("checked");
+                }
+            });
+        });
+
+        listItems.addEventListener("mouseenter", () => {
+            tooltip.style.display = "none";
+        });
+
+        listItems.addEventListener("mouseleave", () => {
+            tooltip.style.display = "flex";
+        });
+    });
+
+    document.addEventListener("click", () => {
+        comboboxes.forEach(combobox => {
+            const listItems = combobox.querySelector(".list-items");
+            listItems.style.display = "none";
+            combobox.classList.remove("open");
+        });
+    });
+}
+
+export const processBlobToFile = async (blobUrl, fileName, type = null) => {
+    try {
+        const response = await fetch(blobUrl);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
+        }
+
+        let blob = await response.blob();
+        if (blob.type !== 'image/png' && type === 'image/png') {
+            const imageBitmap = await createImageBitmap(blob);
+            const canvas = document.createElement('canvas');
+            canvas.width = imageBitmap.width;
+            canvas.height = imageBitmap.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(imageBitmap, 0, 0);
+            blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        } else if (blob.type !== 'video/mp4' && type === 'video/mp4') {
+            // Additional video processing logic would go here if necessary,
+            // but generally for video files, you don't need to re-encode.
+            blob = new Blob([blob], { type: 'video/mp4' });
+        }
+
+        return new File([blob], fileName, { type: blob.type || 'application/octet-stream' });
+    } catch (error) {
+        alert(`Error processing blob to file: ${error.message}`);
+        return null;
+    }
+};
+
+export async function fetchUploadedChunks(serverAddress, fileName) {
+    try {
+        const response = await fetch(`${serverAddress}/uploaded-chunks?fileName=${fileName}`);
+        if (!response.ok) {
+            showNotification(`Failed to fetch uploaded chunks: ${response.status} ${response.statusText}.`, 'Warning - Fetching Failed', 'warning');
+            throw new Error(`Failed to fetch uploaded chunks: ${response.status} ${response.statusText}`);
+        }
+        return await response.json();
+    } catch (error) {
+        showNotification(`Error fetching uploaded chunks for ${fileName}: ${error.message}.`, 'Warning - Fetching Failed', 'warning');
+        return [];
+    }
+}
+
+export async function cancelProcess(showAlertion) {
+    try {
+        const userData = await getUserData();
+        const userDoc = await getUserDoc(() => setCurrentUserDoc(getDocSnapshot));
+        const serverAddresses = await fetchServerAddresses(getDocsSnapshot('servers'));
+
+        const results = await Promise.all(serverAddresses.map(async (server) => {
+            const queueAmount = await checkServerQueue(server);
+            return {
+                queueAmount,
+                serverAddress: server
+            };
+        }));
+
+        const userIsProcessing = userDoc.isProcessing;
+        const serverWithUserRequest = results.find(server => server.queueAmount !== Infinity && server.queueAmount.requestQueue?.includes(userData.uid));
+
+        if (userIsProcessing || serverWithUserRequest) {
+            await Promise.all(serverAddresses.map(async (server) => {
+                try {
+                    const response = await fetch(`${server}/cancel-process`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId: userData.uid })
+                    });
+
+                    if (showAlertion && response.ok) {
+                        await response.json();
+                        startProcessBtn.disabled = false;
+                        setClientStatus('Request got cancelled');
+                    }
+                } catch (error) {
+                    console.error(`Error on server ${server}:`, error);
+                }
+            }));
+        } else if (showAlertion) {
+            showNotification(`User is not processing. No cancellation request sent.`, 'Warning - Process Cancellation', 'warning');
+        }
+    } catch (error) {
+        console.error('Error checking processes:', error);
+    }
 }
 
 window.iosMobileCheck = function () {

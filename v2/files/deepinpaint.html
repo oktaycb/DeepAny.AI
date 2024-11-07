@@ -1947,22 +1947,17 @@
 				  },
 				  (progress) => {
 					if (!startTime && progress > 0) {
-					  // Record the start time when the first progress event is received
 					  startTime = Date.now();
 					}
 
 					if (startTime) {
-					  // Calculate upload speed in kilobytes per second
 					  const currentTime = Date.now();
 					  const elapsedTimeInSeconds = (currentTime - startTime) / 1000;
 					  const uploadSpeedKBps = progress / elapsedTimeInSeconds / 1024;
-
-					  // Round the upload speed to two decimal places for display
 					  const formattedUploadSpeed = uploadSpeedKBps >= 1024
 						? `${(uploadSpeedKBps / 1024).toFixed(2)} MB/s`
-						: `${uploadSpeedKBps.toFixed(2)} KB/s`;
+							: `${uploadSpeedKBps.toFixed(2)} KB/s`;
 
-					  // Log the upload speed and progress percentage with dynamic formatting
 					  console.log(`Upload progress: ${progress.toFixed(2)}%`);
 					  console.log(`Upload speed: ${formattedUploadSpeed}`);
 
