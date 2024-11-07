@@ -320,7 +320,7 @@ async function loadEvercookieUserUniqueBrowserId() {
 function loadEvercookieScript() {
     return new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = "/libraries/evercookie/evercookie3.js?v=1.3.5.9";
+        script.src = "/libraries/evercookie/evercookie3.js?v=1.3.6.2";
         script.onload = resolve;
         script.onerror = reject;
         document.head.appendChild(script);
@@ -330,13 +330,13 @@ function loadEvercookieScript() {
 function loadJQueryAndEvercookie() {
     return new Promise((resolve, reject) => {
         const jqueryScript = document.createElement('script');
-        jqueryScript.src = "/libraries/evercookie/jquery-1.4.2.min.js?v=1.3.5.9";
+        jqueryScript.src = "/libraries/evercookie/jquery-1.4.2.min.js?v=1.3.6.2";
         jqueryScript.onload = () => {
             const swfScript = document.createElement('script');
-            swfScript.src = "/libraries/evercookie/swfobject-2.2.min.js?v=1.3.5.9";
+            swfScript.src = "/libraries/evercookie/swfobject-2.2.min.js?v=1.3.6.2";
             swfScript.onload = () => {
                 const dtjavaScript = document.createElement('script');
-                dtjavaScript.src = "/libraries/evercookie/dtjava.js?v=1.3.5.9";
+                dtjavaScript.src = "/libraries/evercookie/dtjava.js?v=1.3.6.2";
                 dtjavaScript.onload = () => {
                     loadEvercookieScript().then(resolve).catch(reject);
                 };
@@ -710,11 +710,11 @@ export async function customFetch(url, options, onProgress) {
 export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleDownload, databases) => {
     try {
         let db = openDB(dataBaseIndexName, dataBaseObjectStoreName);
-        let mediaCount = localStorage.getItem(`${dataBaseObjectStoreName}-count`);
+        let mediaCount = localStorage.getItem(`${pageName}_${dataBaseObjectStoreName}-count`);
 
         if (!mediaCount) {
             mediaCount = await countInDB(await db);
-            localStorage.setItem(`${dataBaseObjectStoreName}-count`, mediaCount);
+            localStorage.setItem(`${pageName}_${dataBaseObjectStoreName}-count`, mediaCount);
         } else mediaCount = parseInt(mediaCount, 10);
 
         const mediaContainer = document.querySelector(`.${dataBaseObjectStoreName}`);
@@ -733,7 +733,7 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
         mediaContainer.appendChild(fragment);
         db = await db;
         mediaCount = await countInDB(db);
-        localStorage.setItem(`${dataBaseObjectStoreName}-count`, mediaCount);
+        localStorage.setItem(`${pageName}_${dataBaseObjectStoreName}-count`, mediaCount);
 
         if (mediaCount > 0) {
             const mediaItems = await getFromDB(db);
@@ -2025,7 +2025,7 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
 				<nav class="navbar">
 					<div class="container">
 						<div class="logo">
-							<img onclick="location.href='.'" style="cursor: pointer;" alt="DeepAny.AI Logo" width="6.5vh" height="auto" loading="eager">
+							<img loading="eager" src="/favicon.ico" onclick="location.href='.'" style="cursor: pointer;" alt="DeepAny.AI Logo" width="6.5vh" height="auto">
 							<h2 onclick="location.href='.'" style="cursor: pointer;" translate="no">DeepAny.<span class="text-gradient" translate="no">AI</span></h2>
 						</div>
 					</div>
@@ -2998,7 +2998,7 @@ export async function saveCountIndex(databases) {
     for (const dbConfig of databases) {
         const db = await openDB(dbConfig.indexName, dbConfig.objectStore);
         const photoCount = await countInDB(db, dbConfig.objectStore);
-        localStorage.setItem(`${dbConfig.objectStore}-count`, photoCount);
+        localStorage.setItem(`${pageName}_${dbConfig.objectStore}-count`, photoCount);
     }
 }
 
@@ -3026,8 +3026,8 @@ export const resetAbortController = () => {
 };
 
 export function deleteDownloadData(id) {
-    localStorage.removeItem(`${pageName}_downloadedBytes_${id}`);
-    localStorage.removeItem(`${pageName}_totalBytes_${id}`);
+    localStorage.removeItem(`${pageName}_${pageName}_downloadedBytes_${id}`);
+    localStorage.removeItem(`${pageName}_${pageName}_totalBytes_${id}`);
 
     const activeDataContainer = document.querySelector(".outputs .data-container.active");
     const dataContainerActive = activeDataContainer ? activeDataContainer : null;
@@ -3107,8 +3107,8 @@ export const handleDownload = async ({ db, url, element, id, timestamp, active }
     const abortController = getAbortController();
     const { signal } = abortController;
 
-    let downloadedBytes = parseInt(localStorage.getItem(`${pageName}_downloadedBytes_${id}`)) || 0;
-    let totalBytes = parseInt(localStorage.getItem(`${pageName}_totalBytes_${id}`)) || 0;
+    let downloadedBytes = parseInt(localStorage.getItem(`${pageName}_${pageName}_downloadedBytes_${id}`)) || 0;
+    let totalBytes = parseInt(localStorage.getItem(`${pageName}_${pageName}_totalBytes_${id}`)) || 0;
 
     const previousData = await getFromDB(db);
     const entry = previousData.find(item => parseInt(item.id) === parseInt(id));
@@ -3127,7 +3127,7 @@ export const handleDownload = async ({ db, url, element, id, timestamp, active }
 
             const contentLength = res.headers.get('Content-Range')?.split('/')[1] || res.headers.get('Content-Length');
             totalBytes ||= parseInt(contentLength);
-            localStorage.setItem(`${pageName}_totalBytes_${id}`, totalBytes);
+            localStorage.setItem(`${pageName}_${pageName}_totalBytes_${id}`, totalBytes);
 
             const reader = res.body.getReader();
             const contentType = res.headers.get('Content-Type');
@@ -3151,7 +3151,7 @@ export const handleDownload = async ({ db, url, element, id, timestamp, active }
                 lastProgress = (downloadedBytes / totalBytes) * 100;
                 if (Math.floor(lastProgress) % 1 === 0 && Math.floor(lastProgress) > lastSavedProgress) {
                     await updateChunksInDB(db, url, chunks);
-                    localStorage.setItem(`${pageName}_downloadedBytes_${id}`, downloadedBytes);
+                    localStorage.setItem(`${pageName}_${pageName}_downloadedBytes_${id}`, downloadedBytes);
                     lastSavedProgress = Math.floor(lastProgress);
                     progressMap[id] = lastProgress; // Store progress for this ID
                 }
@@ -3476,7 +3476,7 @@ export const handleUpload = async (event, dataBaseIndexName, dataBaseObjectStore
         }
 
         mediaContainer.insertBefore(fragment, mediaContainer.firstChild);
-        localStorage.setItem(`${dataBaseObjectStoreName}-count`, await countInDB(db));
+        localStorage.setItem(`${pageName}_${dataBaseObjectStoreName}-count`, await countInDB(db));
     } catch (error) {
         alert(`Opening media database failed: ${error.message || error}`);
     }
@@ -3853,7 +3853,7 @@ export function createSectionAndElements() {
             } else {
                 const anyChecked = [...items].some(i => i.querySelector('input[type="checkbox"]').checked);
                 if (!anyChecked) {
-                    btnText.innerText = defaultTitle + ": " + "Disabled";
+                    btnText.innerText = defaultTitle + ": " + "Not Specified";
                     if (sliderInput)
                         sliderInput.parentElement.style.display = 'none';
                 }

@@ -8,6 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="DeepAny.AI offers a free trial for creating realistic deepfake face swaps with cutting-edge AI technology. Easily swap faces in inputs and images with our user-friendly online ai tools. No technical skills required, start your free trial today!">
     <meta name="keywords" content="ai, deepany, face swap, free bodyswap, online photo editing, video face swap, gif swap, deepfake, AI face changer, image manipulation, AI-powered tools">
+    <meta name="apple-mobile-web-app-title" content="AI Face Swap" />
 
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://deepany.ai">
@@ -47,34 +48,18 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="css/styles.css?v=1.3.5.9">
-    <script>
-        const cssRules = Array.from(document.styleSheets).flatMap(sheet => Array.from(sheet.cssRules));
-        const logoImgRule = cssRules.find(rule => rule.selectorText === '.logo img');
+    <link rel="preload" href="/favicon.ico" as="image" type="image/ico">
+    <link rel="stylesheet" href="css/styles.css?v=1.3.6.2">
 
-        if (logoImgRule && logoImgRule.style.content) {
-            const content = logoImgRule.style.content;
-            const base64Match = content.match(/url\("?([^"]+)"?\)/);
+    <link rel="icon" href="/favicon.ico" type="image/ico">
+    <link rel="icon" href="/favicon-96x96.png" type="image/png" sizes="96x96">
 
-            if (base64Match && base64Match[1]) {
-                const icon = document.createElement('link');
-                icon.rel = 'icon';
-                icon.href = base64Match[1];
-                icon.type = 'image/x-icon';
-                icon.title = 'DeepAny.AI Favicon';
-                document.head.appendChild(icon);
-            }
-        }
-
-        const currentScript = document.currentScript;
-        if (currentScript) {
-            currentScript.remove();
-        }
-    </script>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = '1.3.5.9';
+        const version = '1.3.6.2';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
