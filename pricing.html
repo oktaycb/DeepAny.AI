@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" style="background: rgba(24, 24, 24, 1);" class="loading-screen">
 <head>
-    <title>DeepAny.AI: Pricing</title>
+    <title>Pricing: Variety Of Options Tailored To Your Needs</title>
     <link rel="canonical" href="https://deepany.ai/pricing">
 
     <meta charset="UTF-8">
@@ -165,19 +165,17 @@
             ]
         }
     </script>
-    <link rel="preload" href="/favicon.ico" as="image" type="image/x-icon">
-    <link rel="stylesheet" href="css/styles.css?v=1.3.6.4">
-
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
-    <link rel="icon" href="/favicon-96x96.png" type="image/png" sizes="96x96">
-
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="manifest" href="/site.webmanifest">
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="stylesheet" href="css/styles.css?v=1.3.6.8">
 </head>
 <body lang="en">
     <div id="paymentContainer" style="margin: 0; padding: 0; overflow: hidden; display: none; width: 100%; height: 100vh; position: absolute; z-index: 99999;"></div>
     <script type="module" defer>
-        const version = '1.3.6.4';
+        const version = '1.3.6.8';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -192,70 +190,70 @@
             function updateMainContent(screenMode, pageContent) {
                 pageContent.length = 0;
                 pageContent.push(`<div id="baseContainer" class="centered-container long">
-                                                                                        <div style="display: flex;flex-direction: column; gap: calc(2vh* var(--scale-factor-h));">
-                                                                                                        <div class="background-container">
-                                                                                                            <p class="background-dot-container-option selected" id="credits-mode">Credits</p>
-                                                                                                            <p class="background-dot-container-option" id="subscription-mode">Subscription</p>
-                                                                                                            <p class="background-dot-container-option not-available" id="renewal-mode">Renewal</p>
-                                                                                                        </div>
-
-
-                                                                                                        <div class="background-container">
-                                                                                                            <p class="background-dot-container-option selected" data-currency="USD" translate="no">$USD</p>
-                                                                                                            <p class="background-dot-container-option" data-currency="EUR" translate="no">€EUR</p>
-                                                                                                            <p class="background-dot-container-option" data-currency="GBP" translate="no">£GBP</p>
-                                                                                                            <p class="background-dot-container-option" data-currency="TRY" translate="no">₺TRY</p>
-                                                                                                            <p class="background-dot-container-option important-outline" data-currency="BTC" translate="no">COIN</p>
-                                                                                                        </div>
-
-
-                                                                                            <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;height: 100%;">
-                                                                                                <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
-                                                                                                    <a class="background-dot-container">
-                                                                                                        <div class="background-dot-container-content" style="min-width: calc((50vh* var(--scale-factor-h) + 50vw / 2 * var(--scale-factor-w)));">
-                                                                                                        <div class="background-container" style="grid: unset; display: grid;grid-template-columns: 1fr 1fr;">
-                                                                                                            <input type="range" id="slider" min="1" max="9" step="1" value="1"></input>
-                                                                                                            <p class="slider-value">1 day</p>
-                                                                                                        </div>
-                                                                                                                <div class="line"></div>
-                                                                                                                <div class="background-dot-container-header">
-                                                                                                                  <p class="plans-name text-gradient" id="plan-name">Starter</p>
-                                                                                                                  <div class="plans-popular" id="popular-tag">
-                                                                                                                    <p class="plans-name text-gradient">Popular</p>
-                                                                                                                  </div>
-                                                                                                                </div>
-                                                                                                            <div class="background-dot-container-price">
-                                                                                                                <h2 id="cost-per-day" translate="no">Loading...</h2>
-                                                                                                                <h4 id="cost-per-day-unit" style="opacity: 0.5;">/day</h4>
+                                                                                            <div style="display: flex;flex-direction: column; gap: calc(2vh* var(--scale-factor-h));">
+                                                                                                            <div class="background-container">
+                                                                                                                <p class="background-dot-container-option selected" id="credits-mode">Credits</p>
+                                                                                                                <p class="background-dot-container-option" id="subscription-mode">Subscription</p>
+                                                                                                                <p class="background-dot-container-option not-available" id="renewal-mode">Renewal</p>
                                                                                                             </div>
-                                                                                                            <div class="background-dot-container-link" id="purchase">Purchase</div>
-                                                                                                            <div>
-                                                                                                                <div class="line"></div>
-                                                                                                                <h4 id="discount-details">Loading...</h4>
-                                                                                                                <p class="discount-details" id="discount">Loading...</p>
-                                                                                                                <div class="line"></div>
-                                                                                                                <div style="display: flex;gap: 0.5vh;align-items: center;">
-                                                                                                                    <p class="uppercase text-gradient">Privileges</p>
-                                                                                                                </div>
-                                                                                                                <div id="features-list"></div>
-                                                                                                                <div class="line"></div>
-                                                                                                                <div style="display: flex;gap: 0.5vh;align-items: center;">
-                                                                                                                    <p class="uppercase text-gradient">Plan Capability</p>
-                                                                                                                    <p id="toggle-description" class="text-gradient" style="cursor: pointer;">+</p>
-                                                                                                                </div>
-                                                                                                                    <div style="display: grid;grid-template-columns: 1fr auto;align-items: center;gap: 1vh;">
-                                                                                                                        <input type="range" id="fps-slider" min="15" max="60" step="1" value="30">
-                                                                                                                        <p id="fps-value">30 FPS</p>
+
+
+                                                                                                            <div class="background-container">
+                                                                                                                <p class="background-dot-container-option selected" data-currency="USD" translate="no">$USD</p>
+                                                                                                                <p class="background-dot-container-option" data-currency="EUR" translate="no">€EUR</p>
+                                                                                                                <p class="background-dot-container-option" data-currency="GBP" translate="no">£GBP</p>
+                                                                                                                <p class="background-dot-container-option" data-currency="TRY" translate="no">₺TRY</p>
+                                                                                                                <p class="background-dot-container-option important-outline" data-currency="BTC" translate="no">COIN</p>
+                                                                                                            </div>
+
+
+                                                                                                <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;height: 100%;">
+                                                                                                    <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
+                                                                                                        <a class="background-dot-container">
+                                                                                                            <div class="background-dot-container-content" style="min-width: calc((50vh* var(--scale-factor-h) + 50vw / 2 * var(--scale-factor-w)));">
+                                                                                                            <div class="background-container" style="grid: unset; display: grid;grid-template-columns: 1fr 1fr;">
+                                                                                                                <input type="range" id="slider" min="1" max="9" step="1" value="1"></input>
+                                                                                                                <p class="slider-value">1 day</p>
+                                                                                                            </div>
+                                                                                                                    <div class="line"></div>
+                                                                                                                    <div class="background-dot-container-header">
+                                                                                                                      <p class="plans-name text-gradient" id="plan-name">Starter</p>
+                                                                                                                      <div class="plans-popular" id="popular-tag">
+                                                                                                                        <p class="plans-name text-gradient">Popular</p>
+                                                                                                                      </div>
                                                                                                                     </div>
-                                                                                                                <ul id="capability-list" style="display: flow;background: transparent;"></ul>
+                                                                                                                <div class="background-dot-container-price">
+                                                                                                                    <h2 id="cost-per-day" translate="no">Loading...</h2>
+                                                                                                                    <h4 id="cost-per-day-unit" style="opacity: 0.5;">/day</h4>
+                                                                                                                </div>
+                                                                                                                <div class="background-dot-container-link" id="purchase">Purchase</div>
+                                                                                                                <div>
+                                                                                                                    <div class="line"></div>
+                                                                                                                    <h4 id="discount-details">Loading...</h4>
+                                                                                                                    <p class="discount-details" id="discount">Loading...</p>
+                                                                                                                    <div class="line"></div>
+                                                                                                                    <div style="display: flex;gap: 0.5vh;align-items: center;">
+                                                                                                                        <p class="uppercase text-gradient">Privileges</p>
+                                                                                                                    </div>
+                                                                                                                    <div id="features-list"></div>
+                                                                                                                    <div class="line"></div>
+                                                                                                                    <div style="display: flex;gap: 0.5vh;align-items: center;">
+                                                                                                                        <p class="uppercase text-gradient">Plan Capability</p>
+                                                                                                                        <p id="toggle-description" class="text-gradient" style="cursor: pointer;">+</p>
+                                                                                                                    </div>
+                                                                                                                        <div style="display: grid;grid-template-columns: 1fr auto;align-items: center;gap: 1vh;">
+                                                                                                                            <input type="range" id="fps-slider" min="15" max="60" step="1" value="30">
+                                                                                                                            <p id="fps-value">30 FPS</p>
+                                                                                                                        </div>
+                                                                                                                    <ul id="capability-list" style="display: flow;background: transparent;"></ul>
+                                                                                                                </div>
                                                                                                             </div>
-                                                                                                        </div>
-                                                                                                    </a>
+                                                                                                        </a>
+                                                                                                    </div>
                                                                                                 </div>
                                                                                             </div>
                                                                                         </div>
-                                                                                    </div>
-                                                                                `);
+                                                                                    `);
             }
 
             loadPageContent(setUser, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, setAuthentication, updateMainContent);
@@ -450,8 +448,8 @@
 
                 if (isSubscriptionMode) {
                     capabilityListElement.innerHTML = `
-                                        <li class="capability">${capabilities.faceSwap.name}: 2 hours per process</li>
-                                        ${Object.values(capabilities).map(capability =>
+                                            <li class="capability">${capabilities.faceSwap.name}: 2 hours per process</li>
+                                            ${Object.values(capabilities).map(capability =>
                         capability.name !== capabilities.faceSwap.name
                             ? `<li class="capability">${capability.name}: Unlimited</li>`
                             : ''
@@ -659,31 +657,31 @@
 
                             if (h1PriceAmount[ACTUAL] !== h1PriceAmount[DISCOUNT]) {
                                 discountDetailsElement.innerHTML = `
-                                            Discounted:
-                                            <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
-                                            <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency, true)}</span>
+                                                Discounted:
+                                                <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
+                                                <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency, true)}</span>
 
-                                        <div class="plans-popular" id="popular-tag" style="display: flex; float: right;">
-                                            <p class="plans-name text-gradient">OFF -${discount}%</p>
-                                        </div>
-                                    `;
+                                            <div class="plans-popular" id="popular-tag" style="display: flex; float: right;">
+                                                <p class="plans-name text-gradient">OFF -${discount}%</p>
+                                            </div>
+                                        `;
 
                                 discountDisplay = `
-                                        <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency, true)}</span>
-                                        <span >${currencySymbol}${formatNumber(h1PriceAmount[DISCOUNT], selectedCurrency, true)}</span>
-                                    `;
+                                            <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency, true)}</span>
+                                            <span >${currencySymbol}${formatNumber(h1PriceAmount[DISCOUNT], selectedCurrency, true)}</span>
+                                        `;
                             }
                             else {
                                 discountDetailsElement.style.display = 'unset';
                                 discountDetailsElement.style.gap = 'unset';
                                 discountDetailsElement.innerHTML = `
-                                        Total Price:
-                                        <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
-                                    `;
+                                            Total Price:
+                                            <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
+                                        `;
 
                                 discountDisplay = `
-                                        <span >${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency, true)}</span>
-                                    `;
+                                            <span >${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency, true)}</span>
+                                        `;
                             }
 
                             updateDisplay(discountDisplay, '/credit');
@@ -733,14 +731,14 @@
 
                                 if (priceInSelectedCurrency[ACTUAL] !== priceInSelectedCurrency[DISCOUNT]) {
                                     discountDisplay = `
-                                            <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
-                                            <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency, true)}</span>
-                                        `;
+                                                <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
+                                                <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency, true)}</span>
+                                            `;
                                 }
                                 else {
                                     discountDisplay = `
-                                            <span>${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
-                                        `;
+                                                <span>${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
+                                            `;
                                 }
 
                                 updateDisplay(discountDisplay, '/day');
@@ -749,31 +747,31 @@
 
                                 if (h1PriceAmount[ACTUAL] !== h1PriceAmount[DISCOUNT]) {
                                     discountDetailsElement.innerHTML = `
-                                                Discounted:
-                                                <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
-                                                <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency, true)}</span>
+                                                    Discounted:
+                                                    <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
+                                                    <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency, true)}</span>
 
-                                            <div class="plans-popular" id="popular-tag" style="display: flex; float: right;">
-                                                <p class="plans-name text-gradient">OFF -${discount}%</p>
-                                            </div>
-                                        `;
+                                                <div class="plans-popular" id="popular-tag" style="display: flex; float: right;">
+                                                    <p class="plans-name text-gradient">OFF -${discount}%</p>
+                                                </div>
+                                            `;
 
                                     discountDisplay = `
-                                            <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency, true)}</span>
-                                            <span >${currencySymbol}${formatNumber(h1PriceAmount[DISCOUNT], selectedCurrency, true)}</span>
-                                        `;
+                                                <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency, true)}</span>
+                                                <span >${currencySymbol}${formatNumber(h1PriceAmount[DISCOUNT], selectedCurrency, true)}</span>
+                                            `;
                                 }
                                 else {
                                     discountDetailsElement.style.display = 'unset';
                                     discountDetailsElement.style.gap = 'unset';
                                     discountDetailsElement.innerHTML = `
-                                            Total Price:
-                                            <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
-                                        `;
+                                                Total Price:
+                                                <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
+                                            `;
 
                                     discountDisplay = `
-                                            <span >${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency, true)}</span>
-                                        `;
+                                                <span >${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency, true)}</span>
+                                            `;
                                 }
 
                                 updateDisplay(discountDisplay, '/day');
@@ -849,26 +847,28 @@
                             userId: userData.uid,
                             userEmail: userData.email,
                             selectedCurrency,
-                            sliderElement: sliderElement.value,
+                            sliderValue: sliderElement.value,
                             selectedMode,
                         };
 
                         const isBTC = selectedCurrency === 'BTC';
                         const serverPath = isBTC ? '/create-charge-new-2' : '/create-charge-2';
-                        const response = await fetch(`${isBTC ? serverAddressAPI : serverAddressPAYTR}${serverPath}`, {
+                        const serverURL = `${isBTC ? serverAddressAPI : serverAddressPAYTR}${serverPath}`;
+
+                        const response = await fetch(serverURL, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(requestData)
+                            body: JSON.stringify(requestData),
                         });
 
                         const responseData = isBTC ? await response.json() : await response.text();
                         if (response.ok && ((isBTC && responseData.data.hosted_url) || (!isBTC && !responseData.error))) {
                             handleSuccess(responseData, isBTC);
                         } else {
-                            alert(responseData.error || 'An unexpected error occurred');
+                            alert(responseData.error || 'An unexpected error occurred. Please try again later.');
                         }
                     } catch (error) {
-                        alert('Error:', error);
+                        alert('An error occurred: ' + error.message);
                     }
                 }
 
@@ -876,13 +876,20 @@
                     if (isBTC) {
                         window.open(responseData.data.hosted_url, '_blank');
                     } else {
-                        document.getElementById('paymentContainer').style.display = 'block';
-                        document.getElementById('paymentContainer').innerHTML = responseData;
+                        const paymentContainer = document.getElementById('paymentContainer');
+                        paymentContainer.style.display = 'block';
+                        paymentContainer.innerHTML = responseData;
                     }
-                    // triggerGtagEvent(); Uncomment to enable analytics tracking
+
+                    triggerGtagEvent(selectedMode, userData, responseData, isBTC);
                 }
 
-                function triggerGtagEvent() {
+                function triggerGtagEvent(selectedMode, userData) {
+                    if (typeof gtag !== 'function') {
+                        console.warn('gtag is not defined.');
+                        return;
+                    }
+
                     gtag('event', 'conversion_event_purchase', {
                         'value': sliderElement.value,
                         'currency': selectedCurrency,
@@ -890,12 +897,9 @@
                         'selected_mode': selectedMode,
                         'user_id': userData.uid,
                         'user_email': userData.email,
-                        'event_callback': function () {
-                            window.location = isBTC ? responseData.data.hosted_url : 'https://deepany.ai/pricing';
-                        },
-                        'event_timeout': 2000
                     });
                 }
+
             }
 
             let previousScreenMode = null;
@@ -931,6 +935,10 @@
                 gtag('js', new Date());
                 gtag('config', 'G-BFR70Q5VX1');
             };
+
+            if (typeof navigator.serviceWorker !== 'undefined') {
+                navigator.serviceWorker.register('./scripts/service-worker.js')
+            }
         });
     </script>
 </body>

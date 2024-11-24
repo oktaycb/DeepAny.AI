@@ -48,18 +48,16 @@
             }
         }
     </style>
-    <link rel="preload" href="/favicon.ico" as="image" type="image/x-icon">
-    <link rel="stylesheet" href="css/styles.css?v=1.3.6.4">
-
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
-    <link rel="icon" href="/favicon-96x96.png" type="image/png" sizes="96x96">
-
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="manifest" href="/site.webmanifest">
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="stylesheet" href="css/styles.css?v=1.3.6.8">
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = '1.3.6.4';
+        const version = '1.3.6.8';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -953,8 +951,10 @@
                             }
                         }
 
-                        const serverForSmallProcesses = "https://4090-1-DF.bodyswap.me"; // "https://4090-1-DF.bodyswap.me" "https://3090-1-DF.deepany.ai"
-                        const serverPromises = serverAddresses.map(server => checkServerQueue(server));
+                        const serverForSmallProcesses = "https://4090-1-DF.deepany.ai"; // "https://4090-1-DF.deepany.ai" "https://3090-1-DF.deepany.ai"
+                        const reversedServerAdresses = serverAddresses.slice().reverse();
+                        const serverPromises = reversedServerAdresses.map(server => checkServerQueue(server));
+
                         const results = await Promise.all(serverPromises);
 
                         if (neededCredits > 0 && neededCredits < 25 || videoDurationTotalFrames < 500) {
@@ -971,7 +971,7 @@
                                     showNotification(`Cannot fetch the server. A VPN could cause this or our server is currently offline. Contact an admin for more information.`, 'Warning - Process Failed', 'warning-important');
                                     return;
                                 }
-                                setFetchableServerAdresses([serverAddresses[minQueueIndex]]);
+                                setFetchableServerAdresses([reversedServerAdresses[minQueueIndex]]);
                             } else {
                                 setFetchableServerAdresses([serverForSmallProcesses]);
                             }
@@ -989,7 +989,7 @@
                                 showNotification(`Cannot fetch the server. A VPN could cause this or our server is currently offline. Contact an admin for more information.`, 'Warning - Process Failed', 'warning-important');
                                 return;
                             }
-                            setFetchableServerAdresses([serverAddresses[minQueueIndex]]);
+                            setFetchableServerAdresses([reversedServerAdresses[minQueueIndex]]);
                         }
 
                         const serverAddress = getFetchableServerAdresses()[0]; // getFetchableServerAdresses()[0]
@@ -1453,6 +1453,10 @@
                 gtag('js', new Date());
                 gtag('config', 'G-BFR70Q5VX1');
             };
+
+            if (typeof navigator.serviceWorker !== 'undefined') {
+                navigator.serviceWorker.register('./scripts/service-worker.js')
+            }
         });
     </script>
 </body>

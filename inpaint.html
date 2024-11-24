@@ -48,14 +48,12 @@
             }
         }
     </style>
-    <link rel="preload" href="/favicon.ico" as="image" type="image/x-icon">
-    <link rel="stylesheet" href="css/styles.css?v=1.3.6.4">
-
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
-    <link rel="icon" href="/favicon-96x96.png" type="image/png" sizes="96x96">
-
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="manifest" href="/site.webmanifest">
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="stylesheet" href="css/styles.css?v=1.3.6.8">
     <style>
         .faces, .inputs {
             width: calc(4 * (var(--input-size) + var(--input-margin)))
@@ -72,7 +70,7 @@
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = '1.3.6.4';
+        const version = '1.3.6.8';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -163,36 +161,37 @@
                                                                                                             <li><a class="text" for="Other">Other</a></li>
                                                                                                         </div>
                                                                                                         <div id="Positive" class="section" style="display: none;gap: calc(1vh* var(--scale-factor-h));">
-   
                                                                                                             <div>
                                                                                                                 <h4 class="non-bold">Positive Prompt</h4>
-                                                                                                                <div style="font-size: 0px;">
+                                                                                                                <div style="font-size: 0px; font-weight: 400;" tooltip>
+                                                                                                                    <div class="tooltip">Enter a positive prompt to specify elements you want to enhance, add or remove from the image..</div>
                                                                                                                     <textarea id="positivePrompt" placeholder="Leave empty or enter a desired positive prompt..." maxlength="2000" style="width: 100%;height: 100%;"></textarea>
                                                                                                                 </div>
                                                                                                             </div>                                                                                 
-                                                                                                            <div class="line"></div>                                                                                                         <div>
-                                                                                                             <h4 style="font-weight: 400;">Positive Mask</h4>
-                                                                                                             <div id="positive_mask" class="combobox" tooltip style="gap: calc(1vh* var(--scale-factor-h));">
-                                                                                                                 <div class="tooltip">Use the Positive Mask to detect specific objects and mask them using SAM (Segment Anything Model). This feature identifies and isolates targeted areas for enhancement or replacement based on your positive prompts.</div>
-                                                                                                                 <span class="combobox-text" title="Change"></span>
-                                                                                                                 <span class="arrow-dwn"></span>
-                                                                                                                 <ul class="list-items">
-                                                                                                                     <li class="item">
-                                                                                                                         <label class="checkbox" tooltip>
-                                                                                                                             <input type="checkbox" id="clothes"><span>Clothes</span>
+                                                                                                            <div class="line"></div>                                                                                                         
+                                                                                                            <div>
+                                                                                                                <h4 style="font-weight: 400;">Positive Mask</h4>
+                                                                                                                <div id="positive_mask" class="combobox" tooltip style="gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                    <div class="tooltip">Use the Positive Mask to detect specific objects and mask them using SAM (Segment Anything Model). This feature identifies and isolates targeted areas for enhancement or replacement based on your positive prompts.</div>
+                                                                                                                    <span class="combobox-text" title="Change"></span>
+                                                                                                                    <span class="arrow-dwn"></span>
+                                                                                                                    <ul class="list-items">
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                                <input type="checkbox" id="clothes"><span>Clothes</span>
                                                                                                                              <div class="tooltip">Segment clothing in the image to apply changes based on your chosen prompt.</div>
                                                                                                                          </label>
-                                                                                                                     </li>
-                                                                                                                     <li class="item">
-                                                                                                                         <label class="checkbox" tooltip>
-                                                                                                                             <input type="checkbox" id="bikini"><span>Bikini</span>
-                                                                                                                             <div class="tooltip">Segment bikinis in the image to apply changes based on your chosen prompt.</div>
-                                                                                                                         </label>
-                                                                                                                     </li>
-                                                                                                                 </ul>
-                                                                                                             </div>
-                                                                                                         </div>
-                                                                                                         <div class="line"></div>
+                                                                                                                        </li>
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                                <input type="checkbox" id="bikini"><span>Bikini</span>
+                                                                                                                                <div class="tooltip">Segment bikinis in the image to apply changes based on your chosen prompt.</div>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                    </ul>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            <div class="line"></div>
                                                                                                             <div class="nav-links group2">
                                                                                                                 <li><a class="text" for="Person">Person</a></li>
                                                                                                                 <li><a class="text" for="Body">Body</a></li>
@@ -202,67 +201,67 @@
                                                                                                             </div>
 
 						                                                                                        <div class="small-boxes" id="Person">
-							                                                                                        <div class="small-box" data-value="1girl"><span class="arrow-dwn"></span>Woman</div>
-							                                                                                        <div class="small-box" data-value="1boy"><span class="arrow-dwn"></span>Man</div>
+							                                                                                        <div class="small-box" tooltip data-value="1girl"><span class="arrow-dwn"></span>Woman</div>
+							                                                                                        <div class="small-box" tooltip data-value="1boy"><span class="arrow-dwn"></span>Man</div>
 						                                                                                        </div>
 					
 						                                                                                        <div class="small-boxes" id="Body">
-							                                                                                        <div class="small-box" data-value="skinny"><span class="arrow-dwn"></span>Skinny</div>
-							                                                                                        <div class="small-box" data-value="athletic"><span class="arrow-dwn"></span>Athletic</div>
-							                                                                                        <div class="small-box" data-value="slim-fit"><span class="arrow-dwn"></span>Slim Fit</div>
-							                                                                                        <div class="small-box" data-value="muscular"><span class="arrow-dwn"></span>Muscular</div>
-							                                                                                        <div class="small-box" data-value="full-figured"><span class="arrow-dwn"></span>Full Figured</div>
-							                                                                                        <div class="small-box" data-value="chubby"><span class="arrow-dwn"></span>Chubby</div>
+							                                                                                        <div class="small-box" tooltip data-value="skinny"><span class="arrow-dwn"></span>Skinny</div>
+							                                                                                        <div class="small-box" tooltip data-value="athletic"><span class="arrow-dwn"></span>Athletic</div>
+							                                                                                        <div class="small-box" tooltip data-value="slim-fit"><span class="arrow-dwn"></span>Slim Fit</div>
+							                                                                                        <div class="small-box" tooltip data-value="muscular"><span class="arrow-dwn"></span>Muscular</div>
+							                                                                                        <div class="small-box" tooltip data-value="full-figured"><span class="arrow-dwn"></span>Full Figured</div>
+							                                                                                        <div class="small-box" tooltip data-value="chubby"><span class="arrow-dwn"></span>Chubby</div>
 						                                                                                        </div>
 					
 						                                                                                        <div class="small-boxes" id="Breast">
-							                                                                                        <div class="small-box" data-value="flat chest"><span class="arrow-dwn"></span>Flat Chest</div>
-							                                                                                        <div class="small-box" data-value="small breast"><span class="arrow-dwn"></span>Small Breast</div>
-							                                                                                        <div class="small-box" data-value="medium breast"><span class="arrow-dwn"></span>Medium Breast</div>
-							                                                                                        <div class="small-box" data-value="big breast"><span class="arrow-dwn"></span>Big Breast</div>
-							                                                                                        <div class="small-box" data-value="massive breast"><span class="arrow-dwn"></span>Massive Breast</div>
+							                                                                                        <div class="small-box" tooltip data-value="flat chest"><span class="arrow-dwn"></span>Flat Chest</div>
+							                                                                                        <div class="small-box" tooltip data-value="small breast"><span class="arrow-dwn"></span>Small Breast</div>
+							                                                                                        <div class="small-box" tooltip data-value="medium breast"><span class="arrow-dwn"></span>Medium Breast</div>
+							                                                                                        <div class="small-box" tooltip data-value="big breast"><span class="arrow-dwn"></span>Big Breast</div>
+							                                                                                        <div class="small-box" tooltip data-value="massive breast"><span class="arrow-dwn"></span>Massive Breast</div>
 						                                                                                        </div>
 					
 						                                                                                        <div class="small-boxes" id="Clothing">
-							                                                                                        <div class="small-box" data-value="skirt"><span class="arrow-dwn"></span>Skirt</div>
-							                                                                                        <div class="small-box" data-value="miniskirt"><span class="arrow-dwn"></span>Miniskirt</div>
-							                                                                                        <div class="small-box" data-value="pencil skirt"><span class="arrow-dwn"></span>Pencil Skirt</div>
-							                                                                                        <div class="small-box" data-value="underpants"><span class="arrow-dwn"></span>Underpants</div>
-							                                                                                        <div class="small-box" data-value="swimsuit"><span class="arrow-dwn"></span>Swimsuit</div>
-							                                                                                        <div class="small-box" data-value="lingerie"><span class="arrow-dwn"></span>Lingerie</div>
-							                                                                                        <div class="small-box" data-value="bikini"><span class="arrow-dwn"></span><div class "settings-container"></div>Bikini</div>
-							                                                                                        <div class="small-box" data-value="corset"><span class="arrow-dwn"></span>Corset</div>
-							                                                                                        <div class="small-box" data-value="tank tops"><span class="arrow-dwn"></span>Tank Tops</div>
-							                                                                                        <div class="small-box" data-value="swimwear"><span class="arrow-dwn"></span>Swimwear</div>
-							                                                                                        <div class="small-box" data-value="cat costume"><span class="arrow-dwn"></span>Cat Costume</div>
-							                                                                                        <div class="small-box" data-value="bunny costume"><span class="arrow-dwn"></span>Bunny Costume</div>
-							                                                                                        <div class="small-box" data-value="dog costume"><span class="arrow-dwn"></span>Dog Costume</div>
-							                                                                                        <div class="small-box" data-value="witch costume"><span class="arrow-dwn"></span>Witch Costume</div>
-							                                                                                        <div class="small-box" data-value="overalls"><span class="arrow-dwn"></span>Overalls</div>
-							                                                                                        <div class="small-box" data-value="hoodie"><span class="arrow-dwn"></span>Hoodie</div>
-							                                                                                        <div class="small-box" data-value="sweater"><span class="arrow-dwn"></span>Sweater</div>
-							                                                                                        <div class="small-box" data-value="t-shirt"><span class="arrow-dwn"></span>T-shirt</div>
-							                                                                                        <div class="small-box" data-value="blouse"><span class="arrow-dwn"></span>Blouse</div>
-							                                                                                        <div class="small-box" data-value="trousers"><span class="arrow-dwn"></span>Trousers</div>
-							                                                                                        <div class="small-box" data-value="leggings"><span class="arrow-dwn"></span>Leggings</div>
-							                                                                                        <div class="small-box" data-value="jacket"><span class="arrow-dwn"></span>Jacket</div>
-							                                                                                        <div class="small-box" data-value="coat"><span class="arrow-dwn"></span>Coat</div>
-							                                                                                        <div class="small-box" data-value="pajamas"><span class="arrow-dwn"></span>Pajamas</div>
-							                                                                                        <div class="small-box" data-value="shorts"><span class="arrow-dwn"></span>Shorts</div>
-							                                                                                        <div class="small-box" data-value="kimono"><span class="arrow-dwn"></span>Kimono</div>
-							                                                                                        <div class="small-box" data-value="sweatpants"><span class="arrow-dwn"></span>Sweatpants</div>
-							                                                                                        <div class="small-box" data-value="hooded sweatshirt"><span class="arrow-dwn"></span>Hooded Sweatshirt</div>
-							                                                                                        <div class="small-box" data-value="bondage"><span class="arrow-dwn"></span>Bondage</div>
+							                                                                                        <div class="small-box" tooltip data-value="skirt"><span class="arrow-dwn"></span>Skirt</div>
+							                                                                                        <div class="small-box" tooltip data-value="miniskirt"><span class="arrow-dwn"></span>Miniskirt</div>
+							                                                                                        <div class="small-box" tooltip data-value="pencil skirt"><span class="arrow-dwn"></span>Pencil Skirt</div>
+							                                                                                        <div class="small-box" tooltip data-value="underpants"><span class="arrow-dwn"></span>Underpants</div>
+							                                                                                        <div class="small-box" tooltip data-value="swimsuit"><span class="arrow-dwn"></span>Swimsuit</div>
+							                                                                                        <div class="small-box" tooltip data-value="lingerie"><span class="arrow-dwn"></span>Lingerie</div>
+							                                                                                        <div class="small-box" tooltip data-value="bikini"><span class="arrow-dwn"></span><div class "settings-container"></div>Bikini</div>
+							                                                                                        <div class="small-box" tooltip data-value="corset"><span class="arrow-dwn"></span>Corset</div>
+							                                                                                        <div class="small-box" tooltip data-value="tank tops"><span class="arrow-dwn"></span>Tank Tops</div>
+							                                                                                        <div class="small-box" tooltip data-value="swimwear"><span class="arrow-dwn"></span>Swimwear</div>
+							                                                                                        <div class="small-box" tooltip data-value="cat costume"><span class="arrow-dwn"></span>Cat Costume</div>
+							                                                                                        <div class="small-box" tooltip data-value="bunny costume"><span class="arrow-dwn"></span>Bunny Costume</div>
+							                                                                                        <div class="small-box" tooltip data-value="dog costume"><span class="arrow-dwn"></span>Dog Costume</div>
+							                                                                                        <div class="small-box" tooltip data-value="witch costume"><span class="arrow-dwn"></span>Witch Costume</div>
+							                                                                                        <div class="small-box" tooltip data-value="overalls"><span class="arrow-dwn"></span>Overalls</div>
+							                                                                                        <div class="small-box" tooltip data-value="hoodie"><span class="arrow-dwn"></span>Hoodie</div>
+							                                                                                        <div class="small-box" tooltip data-value="sweater"><span class="arrow-dwn"></span>Sweater</div>
+							                                                                                        <div class="small-box" tooltip data-value="t-shirt"><span class="arrow-dwn"></span>T-shirt</div>
+							                                                                                        <div class="small-box" tooltip data-value="blouse"><span class="arrow-dwn"></span>Blouse</div>
+							                                                                                        <div class="small-box" tooltip data-value="trousers"><span class="arrow-dwn"></span>Trousers</div>
+							                                                                                        <div class="small-box" tooltip data-value="leggings"><span class="arrow-dwn"></span>Leggings</div>
+							                                                                                        <div class="small-box" tooltip data-value="jacket"><span class="arrow-dwn"></span>Jacket</div>
+							                                                                                        <div class="small-box" tooltip data-value="coat"><span class="arrow-dwn"></span>Coat</div>
+							                                                                                        <div class="small-box" tooltip data-value="pajamas"><span class="arrow-dwn"></span>Pajamas</div>
+							                                                                                        <div class="small-box" tooltip data-value="shorts"><span class="arrow-dwn"></span>Shorts</div>
+							                                                                                        <div class="small-box" tooltip data-value="kimono"><span class="arrow-dwn"></span>Kimono</div>
+							                                                                                        <div class="small-box" tooltip data-value="sweatpants"><span class="arrow-dwn"></span>Sweatpants</div>
+							                                                                                        <div class="small-box" tooltip data-value="hooded sweatshirt"><span class="arrow-dwn"></span>Hooded Sweatshirt</div>
+							                                                                                        <div class="small-box" tooltip data-value="bondage"><span class="arrow-dwn"></span>Bondage</div>
 						                                                                                        </div>
 
 						                                                                                        <div class="small-boxes" id="Quality">
-							                                                                                        <div class="small-box" data-value="masterpiece"><span class="arrow-dwn"></span>Masterpiece</div>
-							                                                                                        <div class="small-box" data-value="best quality"><span class="arrow-dwn"></span>Best Quality</div>
-							                                                                                        <div class="small-box" data-value="extremely detailed"><span class="arrow-dwn"></span>Extremely Detailed</div>
-							                                                                                        <div class="small-box" data-value="detailed body"><span class="arrow-dwn"></span>Detailed Body</div>
-							                                                                                        <div class="small-box" data-value="intricate"><span class="arrow-dwn"></span>Intricate</div>
-							                                                                                        <div class="small-box" data-value="vivid"><span class="arrow-dwn"></span>Vivid</div>
-							                                                                                        <div class="small-box" data-value="raw photo"><span class="arrow-dwn"></span>RAW Photo</div>
+							                                                                                        <div class="small-box" tooltip data-value="masterpiece"><span class="arrow-dwn"></span>Masterpiece</div>
+							                                                                                        <div class="small-box" tooltip data-value="best quality"><span class="arrow-dwn"></span>Best Quality</div>
+							                                                                                        <div class="small-box" tooltip data-value="extremely detailed"><span class="arrow-dwn"></span>Extremely Detailed</div>
+							                                                                                        <div class="small-box" tooltip data-value="detailed body"><span class="arrow-dwn"></span>Detailed Body</div>
+							                                                                                        <div class="small-box" tooltip data-value="intricate"><span class="arrow-dwn"></span>Intricate</div>
+							                                                                                        <div class="small-box" tooltip data-value="vivid"><span class="arrow-dwn"></span>Vivid</div>
+							                                                                                        <div class="small-box" tooltip data-value="raw photo"><span class="arrow-dwn"></span>RAW Photo</div>
 						                                                                                        </div>
 
                                                                                                         </div>
@@ -892,7 +891,7 @@
                         formData.append('imageFile', imageFile);
                         formData.append('imageMask', imageFile);
                         formData.append('modeSelector', selectedModeId);
-                        formData.append('removeBanner', removeBanner);
+                        formData.append('removeBanner', removeBanner.checked);
                         formData.append('poseRecognition', false);
                         formData.append('depthRecognition', false);
                         formData.append('edgeRecognition', false);
@@ -1115,6 +1114,10 @@
                 gtag('js', new Date());
                 gtag('config', 'G-BFR70Q5VX1');
             };
+
+            if (typeof navigator.serviceWorker !== 'undefined') {
+                navigator.serviceWorker.register('./scripts/service-worker.js')
+            }
         });
     </script>
 </body>
