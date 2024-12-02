@@ -1,0 +1,51 @@
+/* Hero Section Styles (for phones and other devices) */
+.hero {
+  width: 100%;
+  overflow: hidden; /* Hide any overflow content from the hero section */
+}
+
+/* Background Image Styles */
+.hero .background {
+  width: 100%;
+  height: 100%;
+  position: fixed; /* Fixed positioning for a scrolling effect */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* Center the element */
+  z-index: -1; /* Place the background behind other content */
+  pointer-events: none; /* Ensure that this element doesn't block interactions */
+}
+
+.hero .background #hero-canvas {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* Loading Screen Styles (for phones and other devices) */
+.loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--background-color); /* Use the background color variable */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+}
+
+.loading-spinner {
+  border: 4px solid #f3f3f3; /* Customize the border style */
+  border-top: 4px solid rgb(154, 25, 172); /* Customize the top border color */
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 2s linear infinite; /* Apply a spinning animation */
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

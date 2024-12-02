@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open 5 Links Simultaneously</title>
+    <script>
+        let isLooping = true;  // Flag to control the loop state
+        const openedWindowsMap = {}; // Store opened windows for each URL
+
+        // Function to open and close links for a given URL
+        function openAndCloseLinks(url, count) {
+            // Initialize the opened windows for this URL if it doesn't exist
+            if (!openedWindowsMap[url]) {
+                openedWindowsMap[url] = [];
+            }
+
+            // Open the link 'count' times
+            for (let i = 0; i < count; i++) {
+                const newWindow = window.open(url, '_blank', 'width=1,height=1');
+                if (newWindow) {
+                    newWindow.blur(); // Remove focus from the new window
+                    openedWindowsMap[url].push(newWindow);
+                }
+            }
+
+            // After 500ms, close all the opened windows for this URL
+            setTimeout(() => {
+                let failedToClose = false;
+                openedWindowsMap[url].forEach((win) => {
+                    if (win && !win.closed) {
+                        try {
+                            win.close();  // Attempt to close the window
+                            if (!win.closed) {
+                                failedToClose = true;  // Mark as failed if not closed
+                            }
+                        } catch (e) {
+                            console.error("Error closing window:", e);
+                            failedToClose = true;  // If there's an error, mark as failed
+                        }
+                    }
+                });
+
+                if (failedToClose) {
+                    alert(`Failed to close one or more windows for ${url}. Stopping the loop.`);
+                    isLooping = false;  // Stop the loop if we failed to close the windows
+                    return; // Exit the loop if closing windows failed
+                }
+
+                // After closing, reopen the links again after another delay, if the loop is still active
+                if (isLooping) {
+                    setTimeout(() => openAndCloseLinks(url, count), 0);
+                }
+            }, 10000); // Close after 500ms
+        }
+
+        function startProcess() {
+            const urls = [
+                "https://mrdeepfakes.com/video/240178/not-zendaya-1"
+            ];
+            const count = 40; // Open 5 times for each link
+
+            // Open and close links for all URLs in the array
+            urls.forEach(url => openAndCloseLinks(url, count));
+        }
+
+        // Toggle loop on "u" key press
+        window.addEventListener("keydown", (event) => {
+            if (event.key === "u" || event.key === "U") {
+                isLooping = !isLooping;  // Toggle the loop flag
+                alert(`Loop is now ${isLooping ? "running" : "stopped"}`);  // Show alert with current loop status
+            }
+        });
+
+        window.onload = startProcess;
+    </script>
+</head>
+<body>
+    <h1>Open and Close 5 Links Simultaneously for Two URLs</h1>
+    <p>This page opens two links:</p>
+    <ul>
+        <li><a href="https://mrdeepfakes.com/video/240178/not-zendaya-1" target="_blank">https://mrdeepfakes.com/video/240178/not-zendaya-1</a></li>
+        <li><a href="https://mrdeepfakes.com/video/239428/watch--full-version-140a7a3" target="_blank">https://mrdeepfakes.com/video/239428/watch--full-version-140a7a3</a></li>
+    </ul>
+    <p>The page will open 5 windows for each of the links, close them after 500ms, and reopen them in a continuous loop. Press "u" to toggle the loop on and off.</p>
+</body>
+</html>

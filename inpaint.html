@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" style="background: rgba(24, 24, 24, 1);" class="loading-screen">
 <head>
-    <title>AI Inpainting: Effortless Image Restoration and Editing</title>
+    <title>AI Inpainting: Clothing Restoration and Editing</title>
     <link rel="canonical" href="https://deepany.ai/inpaint">
 
     <meta charset="UTF-8">
@@ -53,7 +53,17 @@
     <link rel="shortcut icon" href="/.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="stylesheet" href="css/styles.css?v=1.3.6.8">
+    <link rel="stylesheet" href="css/styles.css?v=1.3.8.0">
+    <link rel="preload" href="https://www.googletagmanager.com/gtag/js?id=G-BFR70Q5VX1" as="script">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-BFR70Q5VX1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () {
+            window.dataLayer.push(arguments);
+        };
+        gtag('js', new Date());
+        gtag('config', 'G-BFR70Q5VX1');
+    </script>
     <style>
         .faces, .inputs {
             width: calc(4 * (var(--input-size) + var(--input-margin)))
@@ -70,7 +80,7 @@
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = '1.3.6.8';
+        const version = '1.3.8.0';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -104,6 +114,13 @@
                     selectedRectangles: selectedRectangles,
                     positivePrompt: document.getElementById('positivePrompt').value,
                     negativePrompt: document.getElementById('negativePrompt').value,
+                    rectangles: Array.from(document.querySelectorAll('.rectangle')).map(rectangle => ({
+                        text: rectangle.querySelector('h4')?.innerText || '',
+                        open: rectangle.classList.contains('open'),
+                        items: Array.from(rectangle.querySelectorAll('.item')).map(item => ({
+                            checked: item.querySelector('input[type="checkbox"]')?.checked || false,
+                        })),
+                    })),
                     multiboxes: Array.from(document.querySelectorAll('.multibox')).map(multibox => ({
                         text: multibox.querySelector('.multibox-text')?.innerText || '',
                         open: multibox.classList.contains('open'),
@@ -122,7 +139,6 @@
 
                 localStorage.setItem(pageName, JSON.stringify(state));
             }
-
 
             let userData = await getUserData();
             let userDoc = await getUserDoc();
@@ -147,11 +163,72 @@
                                                                                                         <div class="rectangle-container" id="mode-selection">
 						                                                                                    <div class="rectangle" id="realistic">
 							                                                                                    <img src="assets/img1.png" alt="Image 1">
-							                                                                                    <h4 class="text non-bold">Realistic</h4>
+							                                                                                    <h4 class="text non-bold" title="Realistic"></h4>
+                                                                                                                <span class="arrow-dwn"></span>
+                                                                                                                   <ul class="list-items">
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox">
+                                                                                                                                <input type="checkbox" id="[57d032205d]"><span>Test 1</span>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                    </ul>
 						                                                                                    </div>
 						                                                                                    <div class="rectangle" id="anime">
 							                                                                                    <img src="assets/img2.png" alt="Image 2">
-							                                                                                    <h4 class="text non-bold">Anime</h4>
+							                                                                                    <h4 class="text non-bold" title="Anime"></h4>
+                                                                                                                <span class="arrow-dwn"></span>
+                                                                                                                    <ul class="list-items">
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox">
+                                                                                                                                <input type="checkbox" id="[57d032205d]"><span>Test 1</span>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox">
+                                                                                                                                <input type="checkbox" id="[30da7df8c2]"><span>Test 2</span>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox">
+                                                                                                                                <input type="checkbox" id="[e1d224fca3]"><span>Test 3</span>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox">
+                                                                                                                                <input type="checkbox" id="[c30aef16a7]"><span>Test 4</span>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox">
+                                                                                                                                <input type="checkbox" id="[196f1332fe]"><span>Test 5</span>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox">
+                                                                                                                                <input type="checkbox" id="[8836c40038]"><span>Test 6</span>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox">
+                                                                                                                                <input type="checkbox" id="[8f3d0bbb83]"><span>Test 7</span>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox">
+                                                                                                                                <input type="checkbox" id="[152524a14d]"><span>Test 8</span>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox">
+                                                                                                                                <input type="checkbox" id="[ac84e05d50]"><span>Test 9</span>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                        <li class="item">
+                                                                                                                            <label class="checkbox">
+                                                                                                                                <input type="checkbox" id="[1ce479f37f]"><span>Test 10</span>
+                                                                                                                            </label>
+                                                                                                                        </li>
+                                                                                                                    </ul>
 						                                                                                    </div>
 					                                                                                    </div>
                                                                                                         <div class="line"></div>
@@ -373,7 +450,6 @@
                         }
                     });
 
-                    // Restore selected rectangles
                     if (state.selectedRectangles) {
                         state.selectedRectangles.forEach(selectedId => {
                             const rectangle = document.getElementById(selectedId);
@@ -412,6 +488,37 @@
                             });
                         }
                     });
+
+                    const rectangleQuery = document.querySelectorAll('.rectangle');
+                    rectangleQuery.forEach((rectangle, id) => {
+                        const btnText = rectangle.querySelector('h4');
+                        const items = rectangle.querySelectorAll('.item');
+
+                        if (state.rectangles && state.rectangles[id]) {
+                            if (btnText) btnText.innerText = state.rectangles[id].text || '';
+
+                            if (state.rectangles[id].open) {
+                                rectangle.classList.add('open');
+                                const listItems = rectangle.querySelector('.list-items');
+                                if (listItems) listItems.style.display = 'flex';
+                            } else {
+                                rectangle.classList.remove('open');
+                                const listItems = rectangle.querySelector('.list-items');
+                                if (listItems) listItems.style.display = 'none';
+                            }
+
+                            state.rectangles[id].items.forEach((itemState, itemIndex) => {
+                                if (itemIndex < items.length) {
+                                    const checkbox = items[itemIndex].querySelector('input[type="checkbox"]');
+                                    if (checkbox) {
+                                        checkbox.checked = itemState.checked;
+                                        items[itemIndex].classList.toggle('checked', checkbox.checked);
+                                    }
+                                }
+                            });
+                        }
+                    });
+
 
                     const comboboxQuery = document.querySelectorAll('.combobox');
                     comboboxQuery.forEach((combobox, id) => {
@@ -961,92 +1068,112 @@
                 const downloadOutput = document.getElementById('downloadOutput');
                 if (downloadOutput) {
                     const activeDataContainer = document.querySelector(".outputs .data-container.active");
-                    if (!activeDataContainer)
+                    if (!activeDataContainer) {
                         downloadOutput.disabled = true;
+                        //showNotification(`Maintaince for IOS downloads (Not important if you are not IOS).`, 'Warning - Download', 'warning');
+                    }
 
                     downloadOutput.addEventListener('click', async () => {
                         const activeDataContainer = document.querySelector(".outputs .data-container.active");
+                        if (!activeDataContainer) {
+                            showNotification(`No active output container selected.`, 'Warning - Download', 'warning');
+                            return;
+                        }
+
                         const activeInput = activeDataContainer.querySelector('img, video, initial');
+                        if (!activeInput) {
+                            showNotification(`No active input element found.`, 'Warning - Download', 'warning');
+                            return;
+                        }
+
+                        if (downloadOutput.textContent === "Pause") {
+                            const abortController = getAbortController();
+                            if (abortController) {
+                                abortController.abort();
+                                resetAbortController();
+                                setDownloadCancelled(true);
+                                showNotification(`Download paused successfully.`, 'Download - Paused', 'info');
+                            } else {
+                                showNotification(`No active download to pause.`, 'Warning - Pause', 'warning');
+                            }
+
+                            downloadOutput.textContent = "Resume";
+                            downloadOutput.classList.add("important");
+                            return;
+                        }
+
+                        if (downloadOutput.textContent === "Resume") {
+                            const selectedOutputInfo = {
+                                db: await openDB(`outputDB-${pageName}`, 'outputs'),
+                                url: activeInput.getAttribute('url'),
+                                timestamp: parseInt(activeInput.getAttribute('timestamp')),
+                                element: activeInput.parentElement,
+                                id: parseInt(activeInput.getAttribute('id')),
+                                active: activeInput.getAttribute('active'),
+                            };
+
+                            showNotification(`Resuming download for output ID: ${selectedOutputInfo.id}.`, 'Download - Resuming', 'info');
+                            return await handleDownload(selectedOutputInfo);
+                        }
 
                         if (activeInput) {
-                            if (downloadOutput.textContent === "Pause") {
-                                if (abortController) {
-                                    abortController.abort();
-                                    setDownloadCancelled(true);
+                            const id = activeInput.getAttribute('id');
+                            const fileName = 'output_' + `${id}.${activeInput.tagName === 'VIDEO' ? 'mp4' : 'png'}`;
+
+                            let methodUsed = 0;
+                            try {
+                                const domIndex = parseInt(activeInput.getAttribute('id'));
+                                const db = await openDB(`outputDB-${pageName}`, 'outputs');
+                                const items = await getFromDB(db);
+                                const item = items.find(item => item.id === domIndex);
+                                if (!item || !item.blob) {
+                                    throw new Error(`No blob found for ID: ${domIndex}`);
                                 }
 
-                                downloadOutput.textContent = "Resume";
-                                downloadOutput.classList.add("important");
-                                return;
-                            }
+                                const blob = item.blob;
 
-                            if (downloadOutput.textContent === "Resume") {
-                                const selectedOutputInfo = {
-                                    db: await openDB(`outputDB-${pageName}`, 'outputs'),
-                                    url: activeInput.getAttribute('url'),
-                                    timestamp: parseInt(activeInput.getAttribute('timestamp')),
-                                    element: activeInput.parentElement,
-                                    id: parseInt(activeInput.getAttribute('id')),
-                                    active: activeInput.getAttribute('active'),
-                                };
+                                if (window.showSaveFilePicker) {
+                                    methodUsed = 1;
+                                    showNotification('Attempting to use showSaveFilePicker...', 'Download - Info', 'info');
 
-                                return await handleDownload(selectedOutputInfo);
-                            }
+                                    const fileHandle = await window.showSaveFilePicker({
+                                        suggestedName: fileName,
+                                        types: [
+                                            { description: 'Video Files', accept: { 'video/mp4': ['.mp4'], 'video/webm': ['.webm'] } },
+                                            { description: 'Image Files', accept: { 'image/png': ['.png'], 'image/jpeg': ['.jpg'] } },
+                                        ],
+                                    });
 
-                            if (activeInput) {
-                                const blobUrl = activeInput.tagName === 'VIDEO'
-                                    ? activeInput.querySelector('source').src
-                                    : activeInput.src;
+                                    const writableStream = await fileHandle.createWritable();
+                                    await writableStream.write(blob);
+                                    await writableStream.close();
+                                    showNotification(`File saved successfully: ${fileName}`, 'Download - Success', 'success');
+                                } else if (navigator.share) {
+                                    methodUsed = 2;
+                                    showNotification('Attempting to use navigator.share...', 'Download - Info', 'info');
 
-                                const id = activeInput.getAttribute('id');
-                                const fileName = 'output_' + `${id}.${activeInput.tagName === 'VIDEO' ? 'mp4' : 'png'}`;
+                                    const fileToShare = new File([blob], fileName, { type: blob.type });
+                                    await navigator.share({ title: fileName, files: [fileToShare] });
+                                    showNotification(`File shared successfully: ${fileName}`, 'Download - Shared', 'success');
+                                } else {
+                                    methodUsed = 3;
+                                    showNotification('Attempting to use <a> tag for download...', 'Download - Info', 'info');
 
-                                if (blobUrl) {
-                                    if (window.showSaveFilePicker) {
-                                        const fileHandle = await window.showSaveFilePicker({
-                                            suggestedName: fileName,
-                                            types: [{
-                                                description: 'Video Files',
-                                                accept: { 'video/mp4': ['.mp4'] }
-                                            }, {
-                                                description: 'Image Files',
-                                                accept: { 'image/png': ['.png'] }
-                                            }]
-                                        });
-
-                                        const writableStream = await fileHandle.createWritable();
-                                        const response = await fetch(blobUrl);
-                                        const blob = await response.blob();
-                                        await writableStream.write(blob);
-                                        await writableStream.close();
-                                    }
-                                    else if (navigator.share) {
-                                        const response = await fetch(blobUrl);
-                                        const blob = await response.blob();
-                                        const fileToShare = new File([blob], fileName, { type: activeVideoInput ? 'video/mp4' : 'image/png' });
-                                        await navigator.share({ title: fileName, files: [fileToShare] });
-                                    }
-                                    else {
-                                        const a = document.createElement('a');
-                                        a.href = blobUrl;
-                                        a.download = fileName;
-                                        document.body.appendChild(a);
-                                        a.click();
-                                        document.body.removeChild(a);
-                                    }
-                                }
-                                else {
+                                    const objectURL = URL.createObjectURL(blob);
                                     const a = document.createElement('a');
-                                    a.href = activeInput.getAttribute('url');
+                                    a.href = objectURL;
                                     a.download = fileName;
                                     document.body.appendChild(a);
                                     a.click();
                                     document.body.removeChild(a);
+                                    URL.revokeObjectURL(objectURL);
+                                    showNotification(`File downloaded successfully: ${fileName}`, 'Download - Success', 'success');
                                 }
+                            } catch (error) {
+                                showNotification(`Failed to save or share the file: ${fileName} - Error: ${error.message} - Method: ${methodUsed}`, 'Error - Download', 'error');
                             }
-                            else {
-                                showNotification(`No output is selected.`, 'Warning - Download', 'warning');
-                            }
+                        } else {
+                            showNotification(`No output is selected.`, 'Warning - Download', 'warning');
                         }
                     });
                 }
@@ -1063,9 +1190,10 @@
 
                         if (activeInput) {
                             if (viewOutput.textContent === 'Fetch') {
+                                const abortController = getAbortController();
                                 if (abortController) {
                                     abortController.abort();
-                                    abortController = null;
+                                    resetAbortController();
                                     downloadOutput.textContent = "Resume";
                                     setDownloadCancelled(true);
                                 }
@@ -1073,7 +1201,91 @@
                                 return window.open(activeInput.getAttribute('url'), '_blank');
                             }
 
-                            return window.open(activeInput.tagName === 'VIDEO' ? activeInput.querySelector('source').src : activeInput.src, '_blank');
+                            const domIndex = parseInt(activeInput.getAttribute('id')); // Get the ID from the DOM element
+                            const db = await openDB(`outputDB-${pageName}`, 'outputs'); // Open the IndexedDB
+                            const items = await getFromDB(db); // Retrieve items from IndexedDB
+                            const item = items.find(item => item.id === domIndex); // Find the matching item by ID
+
+                            if (!item || !item.blob) {
+                                throw new Error(`No blob found for ID: ${domIndex}`);
+                            }
+
+                            const blob = item.blob;
+                            const blobUrl = URL.createObjectURL(blob);
+
+                            const existingWrapper = document.getElementById('wrapper');
+                            if (existingWrapper) return;
+
+                            const wrapper = document.createElement('div');
+                            wrapper.id = 'wrapper';
+
+                            const backgroundContainer = document.createElement('div');
+                            backgroundContainer.className = 'background-container';
+
+                            const backgroundDotContainer = document.createElement('a');
+                            backgroundDotContainer.className = 'background-dot-container';
+
+                            const backgroundDotContent = document.createElement('div');
+                            backgroundDotContent.className = 'background-dot-container-content';
+                            backgroundDotContent.style.padding = '0';
+
+                            const innerContainer = document.createElement('div');
+                            innerContainer.className = 'background-container';
+                            innerContainer.style.display = 'contents';
+                            innerContainer.id = 'innerContainer';
+
+                            const img = document.createElement('img');
+                            img.src = blobUrl;
+
+                            img.style.maxWidth = '100vw';
+                            img.style.maxHeight = '80vh';
+                            img.style.borderRadius = 'var(--border-radius)'; // This will round the edges with 15px radius
+                            img.style.objectFit = 'contain'; // Optional: keep the image's aspect ratio
+
+                            const closeButton = document.createElement('button');
+                            closeButton.className = 'close-button';
+                            closeButton.style.position = 'absolute';
+                            closeButton.style.top = '1vh';
+                            closeButton.style.right = '1vh';
+                            closeButton.style.cursor = 'pointer';
+                            closeButton.style.width = '4vh';
+                            closeButton.style.height = '4vh';
+                            closeButton.style.padding = '0';
+                            closeButton.style.margin = '0';
+
+                            const closeButtonIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                            closeButtonIcon.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                            closeButtonIcon.setAttribute('viewBox', '0 0 24 24');
+                            closeButtonIcon.setAttribute('fill', 'none');
+                            closeButtonIcon.setAttribute('stroke', 'currentColor');
+                            closeButtonIcon.setAttribute('stroke-width', '2');
+                            closeButtonIcon.setAttribute('stroke-linecap', 'round');
+                            closeButtonIcon.setAttribute('stroke-linejoin', 'round');
+                            closeButtonIcon.style.margin = '0';
+                            closeButtonIcon.style.width = 'calc((3.5vh * var(--scale-factor-h)))';
+                            closeButtonIcon.classList.add('lucide', 'lucide-x');
+
+                            const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                            path1.setAttribute('d', 'M18 6 6 18');
+                            const path2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                            path2.setAttribute('d', 'm6 6 12 12');
+
+                            closeButtonIcon.appendChild(path1);
+                            closeButtonIcon.appendChild(path2);
+
+                            closeButton.appendChild(closeButtonIcon);
+                            closeButton.addEventListener('click', () => {
+                                wrapper.remove();
+                            });
+
+                            innerContainer.appendChild(img);
+                            innerContainer.appendChild(closeButton);
+
+                            backgroundDotContent.appendChild(innerContainer);
+                            backgroundDotContainer.appendChild(backgroundDotContent);
+                            backgroundContainer.appendChild(backgroundDotContainer);
+                            wrapper.appendChild(backgroundContainer);
+                            document.body.appendChild(wrapper);
                         }
                     });
                 }
@@ -1099,22 +1311,7 @@
         });
     </script>
     <script async>
-        window.gtag = function () {
-            window.dataLayer = window.dataLayer || [];
-            window.dataLayer.push(arguments);
-        };
-
         document.addEventListener('DOMContentLoaded', function () {
-            const gtagScript = document.createElement('script');
-            gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-BFR70Q5VX1';
-            gtagScript.async = true;
-            document.head.appendChild(gtagScript);
-
-            gtagScript.onload = function () {
-                gtag('js', new Date());
-                gtag('config', 'G-BFR70Q5VX1');
-            };
-
             if (typeof navigator.serviceWorker !== 'undefined') {
                 navigator.serviceWorker.register('./scripts/service-worker.js')
             }
