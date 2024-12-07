@@ -414,7 +414,7 @@ async function loadEvercookieUserUniqueBrowserId() {
 function loadEvercookieScript() {
     return new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = '/libraries/evercookie/evercookie3.js?v=1.3.8.6';
+        script.src = '/libraries/evercookie/evercookie3.js?v=1.3.8.7';
         script.onload = () => {
             //console.log('[loadEvercookieScript] Evercookie script loaded successfully.');
             resolve();
@@ -450,9 +450,9 @@ function loadJQueryAndEvercookie() {
             });
         };
 
-        loadScript('/libraries/evercookie/jquery-1.4.2.min.js?v=1.3.8.6', 'jQuery')
-            .then(() => loadScript('/libraries/evercookie/swfobject-2.2.min.js?v=1.3.8.6', 'swfobject'))
-            .then(() => loadScript('/libraries/evercookie/dtjava.js?v=1.3.8.6', 'dtjava'))
+        loadScript('/libraries/evercookie/jquery-1.4.2.min.js?v=1.3.8.7', 'jQuery')
+            .then(() => loadScript('/libraries/evercookie/swfobject-2.2.min.js?v=1.3.8.7', 'swfobject'))
+            .then(() => loadScript('/libraries/evercookie/dtjava.js?v=1.3.8.7', 'dtjava'))
             .then(() => loadEvercookieScript())
             .then(resolve)
             .catch(reject);
@@ -3838,14 +3838,14 @@ async function showDailyCredits() {
             const { message } = await response.json();
             infoMessage.style.display = 'unset';
             infoMessage.textContent = message;
-            infoMessage.style.color = 'white';
+            infoMessage.style.color = response.status !== STATUS_OK ? 'red' : 'white';
             setCurrentUserDoc(getDocSnapshot);
             showNotification(message, 'Daily Credits', 'normal');
             await setCurrentUserDoc(getDocSnapshot, !0);
         } catch ({ message }) {
             infoMessage.style.display = 'unset';
             infoMessage.textContent = message;
-            infoMessage.style.color = 'red';
+            infoMessage.style.color = response.status !== STATUS_OK ? 'red' : 'white';
             showNotification(message, 'Daily Credits', 'warning');
         } finally {
             dailyCredits.disabled = false;
