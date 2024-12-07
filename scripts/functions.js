@@ -414,7 +414,7 @@ async function loadEvercookieUserUniqueBrowserId() {
 function loadEvercookieScript() {
     return new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = '/libraries/evercookie/evercookie3.js?v=1.3.8.7';
+        script.src = '/libraries/evercookie/evercookie3.js?v=1.3.9.1';
         script.onload = () => {
             //console.log('[loadEvercookieScript] Evercookie script loaded successfully.');
             resolve();
@@ -450,9 +450,9 @@ function loadJQueryAndEvercookie() {
             });
         };
 
-        loadScript('/libraries/evercookie/jquery-1.4.2.min.js?v=1.3.8.7', 'jQuery')
-            .then(() => loadScript('/libraries/evercookie/swfobject-2.2.min.js?v=1.3.8.7', 'swfobject'))
-            .then(() => loadScript('/libraries/evercookie/dtjava.js?v=1.3.8.7', 'dtjava'))
+        loadScript('/libraries/evercookie/jquery-1.4.2.min.js?v=1.3.9.1', 'jQuery')
+            .then(() => loadScript('/libraries/evercookie/swfobject-2.2.min.js?v=1.3.9.1', 'swfobject'))
+            .then(() => loadScript('/libraries/evercookie/dtjava.js?v=1.3.9.1', 'dtjava'))
             .then(() => loadEvercookieScript())
             .then(resolve)
             .catch(reject);
@@ -3652,7 +3652,18 @@ async function showDailyCredits() {
     const userDoc = await getUserDoc();
     if (document.getElementById('wrapper') || !userDoc) return;
 
+    if (userDoc.deadline) {
+        const deadline = new Date(userDoc.deadline.seconds * 1000 + (userDoc.deadline.nanoseconds || 0) / 1000000);
+        const now = new Date();
+        const timeDiff = deadline.getTime() - now.getTime();
+        if (timeDiff > 0) {
+            return;
+        }
+    }
+
     const serverAddressAPI = await fetchServerAddress(getDocSnapshot('servers', '3050-1'), 'API');
+    let lastCancellationTime = localStorage.getItem('lastCancellation') || 0;
+    let currentTime = null;
     let timePassed = false;
 
     try {
@@ -3662,7 +3673,10 @@ async function showDailyCredits() {
         });
 
         const timeData = await response.json();
-        timePassed = has24HoursPassed(userDoc.lastCreditEarned || 0, timeData.currentTime);
+        currentTime = timeData.currentTime;
+        timePassed =
+            has24HoursPassed(userDoc.lastCreditEarned || 0, currentTime) ||
+            has24HoursPassed(lastCancellationTime || 0, currentTime);
     } catch (error) {
         showNotification(message, 'Daily Credits', 'warning');
         return;
@@ -3718,7 +3732,9 @@ async function showDailyCredits() {
                             </button>
                         </div>
 
-                        <p id="contactSupport" style="cursor: pointer;">Contact support?</p>
+                            <p id="contactSupport" style="cursor: pointer;" onclick="window.location.href='mailto:durieun02@gmail.com';">
+                              Contact support? Email: durieun02@gmail.com
+                            </p>
 
                         <button class="close-button" style="position: absolute;top: 1vh;right: 1vh;cursor: pointer;width: 4vh;height: 4vh;padding: 0;">
                             <svg style="margin: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x">
@@ -3747,11 +3763,13 @@ async function showDailyCredits() {
 
     const closeButton = wrapper.querySelector('.close-button');
     closeButton.addEventListener('click', () => {
+        localStorage.setItem('lastCancellation', currentTime);
         wrapper.remove();
     });
 
     wrapper.addEventListener('mousedown', (event) => {
         if (event.target === wrapper) {
+            localStorage.setItem('lastCancellation', currentTime);
             document.body.removeChild(wrapper);
         }
     });
