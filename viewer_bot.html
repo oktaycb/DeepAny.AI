@@ -51,14 +51,14 @@
                 if (isLooping) {
                     setTimeout(() => openAndCloseLinks(url, count), 0);
                 }
-            }, 10000); // Close after 500ms
+            }, 25000); // Close after 500ms
         }
 
         function startProcess() {
             const urls = [
-                "https://mrdeepfakes.com/video/240178/not-zendaya-1"
+                "https://mrdeepfakes.com/video/242624/not-scarlett-johansson-1-pov-full-version-averageguy",
             ];
-            const count = 40; // Open 5 times for each link
+            const count = 20; // Open 5 times for each link
 
             // Open and close links for all URLs in the array
             urls.forEach(url => openAndCloseLinks(url, count));

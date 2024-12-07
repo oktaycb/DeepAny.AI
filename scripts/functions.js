@@ -1,4 +1,4 @@
-export function setCache(key, value, ttl) {
+﻿export function setCache(key, value, ttl) {
     const now = new Date();
     const item = {
         value: value,
@@ -178,14 +178,14 @@ function documentID() {
             return null
     }
 }
-export async function fetchServerAddresses(snapshotPromise, keepSlowServers = !0) {
+export async function fetchServerAddresses(snapshotPromise, keepSlowServers = !0, serverType = null) {
     const ttl = 1 * 60 * 60 * 1000;
     const cacheKey = pageName + '-serverAddresses';
     let cachedAddresses = getCache(cacheKey, ttl);
     if (!keepSlowServers) cachedAddresses = cachedAddresses.filter(address => !address.includes("3050"));
     if (cachedAddresses) return cachedAddresses;
     const snapshot = await snapshotPromise;
-    let serverAddresses = snapshot.docs.map((doc) => doc.data()[documentID()]).filter(Boolean);
+    let serverAddresses = snapshot.docs.map((doc) => doc.data()[serverType ? serverType : documentID()]).filter(Boolean);
     setCache(cacheKey, serverAddresses, ttl);
     if (!keepSlowServers) serverAddresses = serverAddresses.filter(address => !address.includes("3050"));
     return serverAddresses
@@ -414,7 +414,7 @@ async function loadEvercookieUserUniqueBrowserId() {
 function loadEvercookieScript() {
     return new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = '/libraries/evercookie/evercookie3.js?v=1.3.8.0';
+        script.src = '/libraries/evercookie/evercookie3.js?v=1.3.8.6';
         script.onload = () => {
             //console.log('[loadEvercookieScript] Evercookie script loaded successfully.');
             resolve();
@@ -450,9 +450,9 @@ function loadJQueryAndEvercookie() {
             });
         };
 
-        loadScript('/libraries/evercookie/jquery-1.4.2.min.js?v=1.3.8.0', 'jQuery')
-            .then(() => loadScript('/libraries/evercookie/swfobject-2.2.min.js?v=1.3.8.0', 'swfobject'))
-            .then(() => loadScript('/libraries/evercookie/dtjava.js?v=1.3.8.0', 'dtjava'))
+        loadScript('/libraries/evercookie/jquery-1.4.2.min.js?v=1.3.8.6', 'jQuery')
+            .then(() => loadScript('/libraries/evercookie/swfobject-2.2.min.js?v=1.3.8.6', 'swfobject'))
+            .then(() => loadScript('/libraries/evercookie/dtjava.js?v=1.3.8.6', 'dtjava'))
             .then(() => loadEvercookieScript())
             .then(resolve)
             .catch(reject);
@@ -1142,7 +1142,6 @@ export async function setCurrentUserDoc(getDocSnapshot, useCache = !1) {
 }
 export function setUser(userDoc) {
     if (!userDoc) return !1;
-
     function setCachedImageForElements(className, storageKey) {
         const imgElements = document.getElementsByClassName(className);
         const cachedImage = localStorage.getItem(storageKey);
@@ -3229,7 +3228,7 @@ export const handleFileContainerEvents = async (event, dbName, storeName, contai
 
             // Show video frame selector if storeName === 'inputs'
             if (storeName === 'inputs' && element.tagName.toLowerCase() === 'video') {
-                //showFrameSelector(element);
+                showFrameSelector(element);
             }
         }
     } else {
@@ -3237,96 +3236,112 @@ export const handleFileContainerEvents = async (event, dbName, storeName, contai
     }
 };
 
-function showFrameSelector(videoElement) {
-    let modal = document.getElementById('video-frame-selector-modal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'video-frame-selector-modal';
-        modal.style.position = 'fixed';
-        modal.style.top = '0';
-        modal.style.left = '0';
-        modal.style.width = '100%';
-        modal.style.height = '100%';
-        modal.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-        modal.style.display = 'flex';
-        modal.style.justifyContent = 'center';
-        modal.style.alignItems = 'center';
-        modal.style.zIndex = '1000';
+async function showFrameSelector(videoElement) {
+    const userDoc = await getUserDoc();
+    if (document.getElementById('wrapper') || (!userDoc.promoter && !userDoc.admin)) return;
 
-        document.body.appendChild(modal);
+    const fps = parseFloat(videoElement.getAttribute('fps')) || 30;
+
+    const wrapper = document.createElement('div');
+    wrapper.id = 'wrapper';
+    wrapper.innerHTML = `
+        <div class="background-container" style="display: flex;flex-direction: column;">
+            <a class="background-dot-container">
+                <div class="background-dot-container-content" style="padding: 0;">
+                    <div id="innerContainer" class="background-container" style="display: contents;">
+                        <div style="position: relative; display: contents; max-width: 100vw; max-height: 60vh;">
+                            <video></video>
+                            <input type="range" min="0" max="0" value="0" style=" position: absolute; bottom: calc(2vh * var(--scale-factor-h)); left: 50%; transform: translateX(-50%); width: 97%; z-index: 2;"/>
+                        </div>
+                        <button class="close-button" style=" position: absolute; top: 1vh; right: 1vh; cursor: pointer; width: 4vh; height: 4vh; padding: 0; margin: 0;">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0; width: calc((3.5vh * var(--scale-factor-h)));" class="lucide lucide-x">
+                                <path d="M18 6 6 18"></path>
+                                <path d="m6 6 12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </a>
+
+            <a class="background-dot-container">
+                <div class="background-dot-container-content">
+                    <div id="innerContainer" class="background-container" style="display: contents;">
+                        <div style="display: flex;justify-content: space-around;gap: calc(1.5vh* var(--scale-factor-h));">
+                            <button class="wide" id="">Detect Multiple Faces [Early Access - Not Working Yet]</button>
+                            <button class="wide" id="">Select Face [Early Access - Not Working Yet]</button>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    `;
+
+    let screenMode = getScreenMode();
+    let firstBackgroundContainer = wrapper.getElementsByClassName('background-container')[0];
+    if (firstBackgroundContainer) {
+        firstBackgroundContainer.style.width = screenMode === 1 ? '75%' : '100%';
     }
 
-    // Clear previous content
-    modal.innerHTML = '';
-
-    // Create a container for modal content
-    const modalContent = document.createElement('div');
-    modalContent.style.backgroundColor = 'white';
-    modalContent.style.padding = '20px';
-    modalContent.style.borderRadius = '10px';
-    modalContent.style.maxWidth = '90%';
-    modalContent.style.maxHeight = '90%';
-    modalContent.style.overflow = 'auto';
-    modalContent.style.display = 'flex';
-    modalContent.style.flexDirection = 'column';
-    modalContent.style.alignItems = 'center';
-
-    // Create a copy of the video element
     const clonedVideo = videoElement.cloneNode(true);
-    clonedVideo.style.maxWidth = '100%';
-    clonedVideo.style.maxHeight = '60%';
+    clonedVideo.style.width = '100%';
+    clonedVideo.style.height = '100%';
+    clonedVideo.style.borderRadius = 'var(--border-radius)';
+    clonedVideo.style.objectFit = 'contain';
     clonedVideo.controls = false;
     clonedVideo.autoplay = false;
     clonedVideo.loop = false;
     clonedVideo.pause();
 
-    // Create a slider
-    const slider = document.createElement('input');
-    slider.type = 'range';
-    slider.min = '0';
-    slider.max = '0'; // Will be updated later
-    slider.value = '0';
-    slider.style.width = '80%';
+    const slider = wrapper.querySelector('input[type="range"]');
+    const closeButton = wrapper.querySelector('.close-button');
 
-    // Create a display for the selected frame time
-    const frameTimeDisplay = document.createElement('p');
-    frameTimeDisplay.style.color = 'black';
-    frameTimeDisplay.style.marginTop = '10px';
-
-    // Update slider and video on video metadata load
-    clonedVideo.addEventListener('loadedmetadata', () => {
-        const fps = parseFloat(videoElement.getAttribute('fps')) || 30; // Get FPS from attribute or default to 30
-        const totalFrames = Math.floor(clonedVideo.duration * fps);
-        slider.max = totalFrames;
-
-        // Update the frame time display
-        frameTimeDisplay.textContent = `Frame: 0 / ${totalFrames}`;
-    });
-
-    // Update the video to the selected frame when the slider is moved
     slider.addEventListener('input', () => {
-        const fps = parseFloat(videoElement.getAttribute('fps')) || 30; // Get FPS from attribute or default to 30
-        const frame = parseInt(slider.value);
-        const time = frame / fps;
-        clonedVideo.currentTime = time;
-        frameTimeDisplay.textContent = `Frame: ${frame} / ${slider.max}`;
+        const frame = parseInt(slider.value, 10);
+        clonedVideo.currentTime = frame / fps;
     });
 
-    modalContent.appendChild(clonedVideo);
-    modalContent.appendChild(slider);
-    modalContent.appendChild(frameTimeDisplay);
-    modal.appendChild(modalContent);
+    clonedVideo.addEventListener('loadedmetadata', () => {
+        slider.max = Math.floor(clonedVideo.duration * fps);
+    });
 
-    // Show the modal
-    modal.style.display = 'flex';
+    closeButton.addEventListener('click', () => {
+        wrapper.remove();
+    });
 
-    // Close the modal when clicking outside the modal content
-    document.addEventListener('click', function handleOutsideClick(event) {
-        if (!modalContent.contains(event.target)) {
-            modal.style.display = 'none';
-            document.removeEventListener('click', handleOutsideClick);
+    wrapper.addEventListener('mousedown', (event) => {
+        if (event.target === wrapper) {
+            document.body.removeChild(wrapper);
         }
     });
+
+    const videoContainer = wrapper.querySelector('video');
+    videoContainer.replaceWith(clonedVideo);
+
+    // Add click event listener to toggle play/pause
+    let isPlaying = false;
+    clonedVideo.addEventListener('click', () => {
+        if (isPlaying) {
+            clonedVideo.pause();
+        } else {
+            clonedVideo.play();
+            updateSlider();
+        }
+        isPlaying = !isPlaying;
+    });
+
+    // Update the slider value as the video plays
+    function updateSlider() {
+        const updateInterval = setInterval(() => {
+            if (clonedVideo.paused || clonedVideo.ended) {
+                clearInterval(updateInterval);
+                return;
+            }
+            const frame = Math.floor(clonedVideo.currentTime * fps);
+            slider.value = frame;
+        }, 1000 / fps); // Update the slider every frame (depending on FPS)
+    }
+
+    document.body.appendChild(wrapper);
 }
 
 
@@ -3608,6 +3623,7 @@ export async function checkServerStatus(databases, userId) {
     if (!userId) {
         return
     }
+    showDailyCredits();
     const serverWithUserRequest = findServerWithUserRequest(results, userId);
     if (serverWithUserRequest) {
         handleUserRequest(serverWithUserRequest, databases, userId)
@@ -3626,6 +3642,215 @@ export async function checkServerStatus(databases, userId) {
             await handleLastOutputDownload(lastOutput, databases)
         }
     }
+}
+
+function has24HoursPassed(lastCreditEarned, currentTime) {
+    return currentTime - lastCreditEarned >= 24 * 60 * 60 * 1000;
+}
+
+async function showDailyCredits() {
+    const userDoc = await getUserDoc();
+    if (document.getElementById('wrapper') || !userDoc) return;
+
+    const serverAddressAPI = await fetchServerAddress(getDocSnapshot('servers', '3050-1'), 'API');
+    let timePassed = false;
+
+    try {
+        const response = await fetch(`${serverAddressAPI}/get-time`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        });
+
+        const timeData = await response.json();
+        timePassed = has24HoursPassed(userDoc.lastCreditEarned || 0, timeData.currentTime);
+    } catch (error) {
+        showNotification(message, 'Daily Credits', 'warning');
+        return;
+    }
+
+    if (!timePassed) {
+        return;
+    }
+
+    const wrapper = document.createElement('div');
+    wrapper.id = 'wrapper';
+    wrapper.innerHTML = `
+        <div class="background-container" style="display: flex;flex-direction: column;">
+            <a class="background-dot-container">
+                <div class="background-dot-container-content">
+                    <div id="innerContainer" class="background-container" style="display: contents;">
+                        <h2 style="margin-right: 6vh;">Redeem Daily Credits!</h2>
+                        <p>You can also redeem daily credits from profile section.</p>
+                        <button class="wide important" id="redeemDailyCredits" type="button">
+                            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path id="Vector" d="M15.8533 5.76333L12.1773 2.08733C12.0843 1.99433 11.9588 1.94183 11.8278 1.94083L4.23825 1.88283C4.10425 1.88183 3.97575 1.93433 3.88075 2.02933L0.14625 5.76383C-0.04875 5.95933 -0.04875 6.27533 0.14625 6.47083L7.64625 13.9708C7.84175 14.1663 8.15825 14.1663 8.35325 13.9708L15.8533 6.47083C16.0488 6.27533 16.0488 5.95883 15.8533 5.76333ZM12.9533 6.47433L9.37725 10.0858C9.18275 10.2823 8.86625 10.2838 8.66975 10.0893C8.47325 9.89483 8.47175 9.57833 8.66625 9.38183L11.9038 6.11333L10.8098 4.94733C10.6183 4.74883 10.6243 4.43183 10.8233 4.24033C10.9203 4.14633 11.0513 4.09683 11.1858 4.10083C11.3208 4.10483 11.4483 4.16333 11.5393 4.26283L12.9633 5.78133C13.1463 5.97733 13.1423 6.28333 12.9533 6.47433Z" fill="white"></path>
+                            </svg>
+                            Redeem Daily Credits
+                        </button>
+
+                        <div style="display: flex; justify-content: center; width: 100%; align-items: center;">
+                            <div class="line"></div>
+                            <p style="padding: 0 calc(1vh * var(--scale-factor-h)); white-space: nowrap;">or referral people</p>
+                            <div class="line"></div>
+                        </div>
+
+                        <div id="infoMessage" style="color: red; display: none;"></div>
+
+                        <div>
+                            <label>Referral link</label>
+                            <input id="referralLink" class="important-outline" readonly>
+                        </div>
+
+                        <div>
+                            <label>Check Referral Data</label>
+                            <button class="wide" id="redeemReferralCredits">
+                                <svg xmlns="http://www.w3.org/2000/svg" version="1.0" viewBox="0 0 512.000000 512.000000" preserveAspectRatio="xMidYMid meet">
+                                    <g transform="translate(0.000000,512.000000) scale(0.100000,-0.100000)" fill="white" stroke="none">
+                                        <path d="M2433 5106 c-251 -58 -433 -270 -450 -528 -12 -171 47 -329 165 -447 231 -230 593 -230 824 0 117 117 176 276 165 442 -16 239 -164 436 -387 513 -91 32 -227 40 -317 20z"/>
+                                        <path d="M2367 3824 c-205 -32 -471 -135 -633 -245 -148 -101 -234 -298 -221 -507 8 -141 73 -235 184 -268 71 -21 1657 -21 1729 1 67 20 117 64 151 133 26 52 28 66 28 167 -1 309 -128 466 -501 618 -258 106 -498 139 -737 101z"/>
+                                        <path d="M2511 2548 c-13 -7 -34 -26 -45 -41 -20 -27 -21 -41 -24 -370 l-4 -342 -270 -215 c-149 -118 -279 -228 -289 -245 -25 -40 -24 -75 4 -116 25 -38 77 -60 120 -52 14 3 144 99 288 214 144 115 265 209 269 209 4 0 125 -94 269 -209 144 -115 273 -211 288 -214 62 -12 124 30 138 92 14 63 -8 86 -298 316 l-276 220 0 328 c-1 346 -4 370 -49 410 -26 24 -90 32 -121 15z"/>
+                                        <path d="M975 2324 c-219 -33 -407 -187 -479 -393 -24 -71 -33 -233 -16 -310 30 -138 131 -283 254 -362 289 -188 675 -83 830 225 114 224 73 488 -103 666 -75 76 -132 112 -229 145 -66 23 -197 38 -257 29z"/>
+                                        <path d="M3973 2320 c-176 -32 -340 -155 -419 -315 -83 -169 -83 -354 2 -521 99 -197 291 -315 514 -317 167 -1 290 50 411 172 83 83 137 178 159 282 18 81 8 240 -18 313 -65 179 -211 317 -391 370 -69 20 -191 28 -258 16z"/>
+                                        <path d="M906 1039 c-168 -18 -362 -81 -561 -182 -190 -97 -281 -202 -325 -373 -24 -93 -26 -229 -5 -301 20 -66 80 -134 144 -162 l51 -21 852 2 853 3 46 27 c97 57 129 130 129 292 0 300 -128 456 -496 607 -125 51 -291 94 -416 108 -108 12 -156 12 -272 0z"/><path d="M3936 1040 c-211 -26 -441 -106 -636 -220 -129 -75 -218 -191 -255 -330 -19 -69 -19 -271 -1 -321 19 -54 64 -107 115 -137 l46 -27 853 -3 852 -2 51 21 c64 28 124 96 144 162 21 72 19 208 -5 301 -27 105 -63 169 -140 247 -53 54 -88 77 -195 131 -152 77 -298 130 -434 158 -113 23 -298 32 -395 20z"/>
+                                    </g>
+                                </svg>
+                                Redeem Referral Credits
+                            </button>
+                        </div>
+
+                        <p id="contactSupport" style="cursor: pointer;">Contact support?</p>
+
+                        <button class="close-button" style="position: absolute;top: 1vh;right: 1vh;cursor: pointer;width: 4vh;height: 4vh;padding: 0;">
+                            <svg style="margin: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x">
+                                <path d="M18 6 6 18"></path>
+                                <path d="m6 6 12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </a>
+        </div>
+    `;
+
+    const userData = await getUserData();
+    if (!userData) {
+        return;
+    }
+
+    const userId = userData.uid;
+
+    let screenMode = getScreenMode();
+    let firstBackgroundContainer = wrapper.getElementsByClassName('background-container')[0];
+    if (firstBackgroundContainer) {
+        firstBackgroundContainer.style.width = screenMode !== 1 ? '100%' : '70vh';
+    }
+
+    const closeButton = wrapper.querySelector('.close-button');
+    closeButton.addEventListener('click', () => {
+        wrapper.remove();
+    });
+
+    wrapper.addEventListener('mousedown', (event) => {
+        if (event.target === wrapper) {
+            document.body.removeChild(wrapper);
+        }
+    });
+
+    document.body.appendChild(wrapper);
+
+    const linkElement = document.getElementById('referralLink');
+    if (linkElement && userDoc.referral) {
+        linkElement.value = `https://deepany.ai/?referral=${encodeURIComponent(userDoc.referral)}`;
+    }
+
+    const infoMessage = document.getElementById('infoMessage');
+    infoMessage.style.display = 'unset';
+    infoMessage.textContent = 'Checking your daily credits qualification...';
+    infoMessage.style.color = 'white';
+
+    try {
+        const response = await fetch(`${serverAddressAPI}/check-daily-credit`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId }),
+        });
+
+        const { message } = await response.json();
+        infoMessage.style.display = 'unset';
+        infoMessage.textContent = message;
+        infoMessage.style.color = response.status !== STATUS_OK ? 'red' : 'white';
+        setCurrentUserDoc(getDocSnapshot);
+        showNotification(message, 'Daily Credits', 'normal');
+    } catch ({ message }) {
+        infoMessage.style.display = 'unset';
+        infoMessage.textContent = message;
+        infoMessage.style.color = response.status !== STATUS_OK ? 'red' : 'white';
+        showNotification(message, 'Daily Credits', 'warning');
+    }
+
+    const referralCredits = document.getElementById('redeemReferralCredits');
+    referralCredits.addEventListener('click', async () => {
+        referralCredits.disabled = true;
+        infoMessage.style.display = 'unset';
+        infoMessage.textContent = 'Checking your daily credits qualification...';
+        infoMessage.style.color = 'white';
+
+        try {
+            showNotification("Waiting for a response...", 'Referral Credits', 'normal');
+            const response = await fetch(`${serverAddressAPI}/get-referral-credits`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId }),
+            });
+
+            const { message } = await response.json();
+            infoMessage.style.display = 'unset';
+            infoMessage.textContent = message;
+            infoMessage.style.color = response.status !== STATUS_OK ? 'red' : 'white';
+            setCurrentUserDoc(getDocSnapshot);
+            showNotification(message, 'Referral Credits', 'normal');
+            await setCurrentUserDoc(getDocSnapshot, !0);
+        } catch ({ message }) {
+            infoMessage.style.display = 'unset';
+            infoMessage.textContent = message;
+            infoMessage.style.color = response.status !== STATUS_OK ? 'red' : 'white';
+            showNotification(message, 'Referral Credits', 'warning');
+        } finally {
+            referralCredits.disabled = false;
+        }
+    });
+
+    const dailyCredits = document.getElementById('redeemDailyCredits');
+    dailyCredits.addEventListener('click', async () => {
+        dailyCredits.disabled = true;
+        infoMessage.style.display = 'unset';
+        infoMessage.textContent = 'Checking your referrals...';
+        infoMessage.style.color = 'white';
+
+        try {
+            showNotification("Waiting for a response...", 'Daily Credits', 'normal');
+            const response = await fetch(`${serverAddressAPI}/earn-daily-credit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId }),
+            });
+
+            const { message } = await response.json();
+            infoMessage.style.display = 'unset';
+            infoMessage.textContent = message;
+            infoMessage.style.color = 'white';
+            setCurrentUserDoc(getDocSnapshot);
+            showNotification(message, 'Daily Credits', 'normal');
+            await setCurrentUserDoc(getDocSnapshot, !0);
+        } catch ({ message }) {
+            infoMessage.style.display = 'unset';
+            infoMessage.textContent = message;
+            infoMessage.style.color = 'red';
+            showNotification(message, 'Daily Credits', 'warning');
+        } finally {
+            dailyCredits.disabled = false;
+        }
+    });
 }
 let intervalId;
 export const setDynamicInterval = (databases, userId) => {
@@ -3807,7 +4032,7 @@ export function createSectionAndElements() {
             } else {
                 const anyChecked = [...items].some(i => i.querySelector('input[type="checkbox"]').checked);
                 if (!anyChecked) {
-                    btnText.innerText = defaultTitle + ": " + "Not Specified";
+                    btnText.innerText = defaultTitle + ": " + "Unspecified";
                     if (sliderInput)
                         sliderInput.parentElement.style.display = 'none'
                 }
@@ -3940,9 +4165,10 @@ export function createSectionAndElements() {
 }
 export const processBlobToFile = async (blobUrl, fileName, type = null) => {
     try {
+        console.log(`Fetching blob from URL: ${blobUrl}`);
         const response = await fetch(blobUrl);
         if (!response.ok) {
-            throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`)
+            throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
         }
         let blob = await response.blob();
         if (blob.type !== 'image/png' && type === 'image/png') {
@@ -3952,18 +4178,15 @@ export const processBlobToFile = async (blobUrl, fileName, type = null) => {
             canvas.height = imageBitmap.height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(imageBitmap, 0, 0);
-            blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'))
+            blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
         } else if (blob.type !== 'video/mp4' && type === 'video/mp4') {
-            blob = new Blob([blob], {
-                type: 'video/mp4'
-            })
+            blob = new Blob([blob], { type: 'video/mp4' });
         }
-        return new File([blob], fileName, {
-            type: blob.type || 'application/octet-stream'
-        })
+        return new File([blob], fileName, { type: blob.type || 'application/octet-stream' });
     } catch (error) {
+        console.error(`Error processing blob to file: ${error.message}`);
         alert(`Error processing blob to file: ${error.message}`);
-        return null
+        return null;
     }
 };
 export async function fetchUploadedChunks(serverAddress, fileName) {

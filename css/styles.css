@@ -173,6 +173,10 @@ body {
     z-index: 1002
 }
 
+#wrapper {
+    overflow: scroll
+}
+
 .ar-4-3 .centered-container, .ar-4-3 .main-container {
     justify-content: unset
 }
