@@ -1,4 +1,10 @@
-﻿export function setCache(key, value, ttl) {
+﻿window.iosMobileCheck = function () {
+    return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+const version = '1.4.4.5.9.9.4';
+
+export function setCache(key, value, ttl) {
     const now = new Date();
     const item = {
         value: value,
@@ -6,14 +12,14 @@
     }
     localStorage.setItem(key, JSON.stringify(item))
 }
-export function getCache(key, ttl) {
+export function getCache(key, ttl = null) {
     const itemStr = localStorage.getItem(key);
     if (!itemStr) {
         return null
     }
     const item = JSON.parse(itemStr);
     const now = Date.now();
-    if (now > item.expiry || item.expiry > now + ttl) {
+    if (now > item.expiry || ttl && item.expiry > now + ttl) {
         localStorage.removeItem(key);
         return null
     }
@@ -108,40 +114,52 @@ async function fetchWithTimeout(url, timeout, controller) {
     return Promise.race([fetchPromise, timeoutPromise])
 }
 export async function getUserInternetProtocol() {
-    const urls = ['https://ipapi.is/json/', 'https://ipinfo.io/json', 'https://api64.ipify.org?format=json', 'https://ifconfig.me/all.json', 'https://ipapi.co/json/',];
+    const urls = [
+        'https://ipapi.is/json/',
+        'https://ipinfo.io/json',
+        'https://api64.ipify.org?format=json',
+        'https://ifconfig.me/all.json',
+        'https://ipapi.co/json/'
+    ];
     const controllers = urls.map(() => new AbortController());
     const rawData = [];
+
     try {
         for (let i = 0; i < urls.length; i++) {
             try {
                 const data = await fetchWithTimeout(urls[i], 1000, controllers[i]);
-                if ('elapsed_ms' in data) {
-                    delete data.elapsed_ms
-                }
-                rawData.push(JSON.stringify(data));
-                if (data.ip || data.ip_addr) {
-                    controllers.slice(i + 1).forEach(controller => controller.abort());
-                    const UID = await createStaticIdentifier(rawData);
-                    return {
-                        publicAdress: data.ip || data.ip_addr,
-                        isVPN: data.is_vpn || !1,
-                        isProxy: data.is_proxy || !1,
-                        isTOR: data.is_tor || !1,
-                        isCrawler: data.is_crawler || !1,
-                        UID,
-                        rawData
+                const sanitizedData = JSON.parse(JSON.stringify(data, (key, value) => {
+                    if (['elapsed_ms', 'local_time', 'local_time_unix'].includes(key)) {
+                        return undefined;
                     }
+                    return value;
+                }));
+
+                rawData.push(JSON.stringify(sanitizedData));
+                if (sanitizedData.ip || sanitizedData.ip_addr) {
+                    controllers.slice(i + 1).forEach(controller => controller.abort());
+                    const userUniqueInternetProtocolId = await createStaticIdentifier(rawData);
+                    return {
+                        userInternetProtocolAddress: sanitizedData.ip || sanitizedData.ip_addr,
+                        isVPN: sanitizedData.is_vpn || false,
+                        isProxy: sanitizedData.is_proxy || false,
+                        isTOR: sanitizedData.is_tor || false,
+                        isCrawler: sanitizedData.is_crawler || false,
+                        userUniqueInternetProtocolId,
+                        rawData
+                    };
                 }
             } catch (error) {
-                console.error(`Error fetching from ${urls[i]}: ${error.message}`)
+                console.error(`Error fetching from ${urls[i]}: ${error.message}`);
             }
         }
-        throw new Error('No IP field in any response')
+        throw new Error('No IP field in any response');
     } catch (error) {
         alert('All attempts to fetch internet protocol data failed: ' + error.message);
-        return null
+        return null;
     }
 }
+
 export async function createStaticIdentifier(jsonData) {
     try {
         if (!Array.isArray(jsonData)) {
@@ -178,30 +196,61 @@ function documentID() {
             return null
     }
 }
-export async function fetchServerAddresses(snapshotPromise, keepSlowServers = !0, serverType = null) {
+export async function fetchServerAddresses(snapshotPromise, keepSlowServers = true, serverType = null) {
     const ttl = 1 * 60 * 60 * 1000;
-    const cacheKey = pageName + '-serverAddresses';
+    const cacheKey = `${pageName}-serverAddresses`;
+
     let cachedAddresses = getCache(cacheKey, ttl);
-    if (!keepSlowServers) cachedAddresses = cachedAddresses.filter(address => !address.includes("3050"));
-    if (cachedAddresses) return cachedAddresses;
+    if (cachedAddresses &&
+        (
+            cachedAddresses.some(address => address === undefined || address === 'undefined') ||
+            cachedAddresses.length < 1 ||
+            !cachedAddresses.some(address => address.includes('4090') || address.includes('3090') || address.includes('3050'))
+        )
+    ) {
+        localStorage.removeItem(cacheKey);
+        cachedAddresses = null;
+    }
+
+    if (cachedAddresses) {
+        if (!keepSlowServers) {
+            cachedAddresses = cachedAddresses.filter(address => !address.includes("3050"));
+        }
+        return cachedAddresses;
+    }
+
     const snapshot = await snapshotPromise;
-    let serverAddresses = snapshot.docs.map((doc) => doc.data()[serverType ? serverType : documentID()]).filter(Boolean);
+    let serverAddresses = snapshot.docs.map(doc => doc.data()[serverType ? serverType : documentID()]).filter(Boolean);
     setCache(cacheKey, serverAddresses, ttl);
-    if (!keepSlowServers) serverAddresses = serverAddresses.filter(address => !address.includes("3050"));
-    return serverAddresses
+
+    if (!keepSlowServers) {
+        serverAddresses = serverAddresses.filter(address => !address.includes("3050"));
+    }
+
+    return serverAddresses;
 }
 export async function fetchServerAddress(snapshotPromise, fieldId) {
     const ttl = 1 * 60 * 60 * 1000;
     const cacheKey = `serverAddress-${fieldId}`;
     const cachedAddress = getCache(cacheKey, ttl);
-    if (cachedAddress) return cachedAddress;
+
+    if (cachedAddress) {
+        if (typeof cachedAddress === 'string' &&
+            (cachedAddress.includes('4090') || cachedAddress.includes('3090') || cachedAddress.includes('3050'))) {
+            return cachedAddress;
+        } else {
+            localStorage.removeItem(cacheKey);
+        }
+    }
+
     const snapshot = await snapshotPromise;
     if (snapshot && snapshot.exists()) {
         const serverAddress = snapshot.data()[`serverAdress-${fieldId}`];
         setCache(cacheKey, serverAddress || null, ttl);
-        return serverAddress || null
+        return serverAddress || null;
     }
-    return null
+
+    return null;
 }
 export async function fetchConversionRates() {
     const cacheKey = 'conversionRates';
@@ -225,7 +274,6 @@ export async function fetchConversionRates() {
         }
     }
 }
-
 export function generateUID() {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789%^&*()_-+=';
     let uniqueId = '';
@@ -233,10 +281,8 @@ export function generateUID() {
         const randomIndex = Math.floor(Math.random() * characters.length);
         uniqueId += characters.charAt(randomIndex);
     }
-    //console.log('[generateUID] Generated UID:', uniqueId);
     return uniqueId;
 }
-
 function checkIfCameFromAd() {
     const urlParams = new URLSearchParams(window.location.search);
     const adParams = [
@@ -259,11 +305,9 @@ function checkIfCameFromAd() {
 
     return adData.join('_');
 }
-
 function isValidString(value) {
     return value && typeof value === 'string' && value.length <= 256 && value !== 'false' && /^[a-zA-Z0-9_\-]+$/.test(value);
 }
-
 export async function ensureCameFromAd() {
     const userDoc = await getUserDoc();
     let cameFromAd = localStorage.getItem('cameFromAd');
@@ -293,9 +337,10 @@ export async function ensureCameFromAd() {
     if (serverResponse.ok) 
         await setCurrentUserDoc(getDocSnapshot);
 }
-
 async function loadEvercookieCameFromAd(userDoc) {
     localStorage.setItem('cameFromAd', checkIfCameFromAd());
+    if (!userDoc)
+        return;
     try {
         await loadJQueryAndEvercookie();
         const ec = new evercookie();
@@ -414,7 +459,7 @@ async function loadEvercookieUserUniqueBrowserId() {
 function loadEvercookieScript() {
     return new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = '/libraries/evercookie/evercookie3.js?v=1.3.9.1';
+        script.src = '/libraries/evercookie/evercookie3.js?v=1.4.4.5.9.9.4';
         script.onload = () => {
             //console.log('[loadEvercookieScript] Evercookie script loaded successfully.');
             resolve();
@@ -425,6 +470,25 @@ function loadEvercookieScript() {
         };
         document.head.appendChild(script);
     });
+}
+
+function createAdblockerOverlay() {
+    if (document.querySelector('.overlay')) return null;
+
+    const overlay = document.createElement('div');
+    overlay.classList.add('overlay');
+    overlay.innerHTML = `
+        <div class="overlay-content">
+            <h2>Adblocker Detected</h2>
+            <p>We don't have ads, but ad blockers or similar extensions are causing our website to not work properly. Please disable ad blockers or any similar extension that blocks cookies or resources.</p>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    return overlay;
+}
+
+function handleAdblockerError() {
+    createAdblockerOverlay();
 }
 
 function loadJQueryAndEvercookie() {
@@ -445,17 +509,20 @@ function loadJQueryAndEvercookie() {
                 script.src = src;
 
                 script.onload = () => resolve();
-                script.onerror = (error) => reject(error);
+                script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
                 document.head.appendChild(script);
             });
         };
 
-        loadScript('/libraries/evercookie/jquery-1.4.2.min.js?v=1.3.9.1', 'jQuery')
-            .then(() => loadScript('/libraries/evercookie/swfobject-2.2.min.js?v=1.3.9.1', 'swfobject'))
-            .then(() => loadScript('/libraries/evercookie/dtjava.js?v=1.3.9.1', 'dtjava'))
+        loadScript('/libraries/evercookie/jquery-1.4.2.min.js?v=1.4.4.5.9.9.4', 'jQuery')
+            .then(() => loadScript('/libraries/evercookie/swfobject-2.2.min.js?v=1.4.4.5.9.9.4', 'swfobject'))
+            .then(() => loadScript('/libraries/evercookie/dtjava.js?v=1.4.4.5.9.9.4', 'dtjava'))
             .then(() => loadEvercookieScript())
             .then(resolve)
-            .catch(reject);
+            .catch((error) => {
+                handleAdblockerError();
+                reject(error);
+            });
     });
 }
 
@@ -479,45 +546,49 @@ function createNotificationsContainer() {
     }
     return container
 }
+
 export function showNotification(message, featureChange, type) {
-    const container = createNotificationsContainer();
-    let waitTime = 5000;
-    const notification = document.createElement('div');
-    notification.className = 'indicator';
-    const featureChangeElement = document.createElement('p');
-    featureChangeElement.innerText = featureChange;
-    featureChangeElement.className = 'feature-change';
-    if (type === 'warning') {
-        notification.classList.add('notification-warning');
-        featureChangeElement.classList.add('feature-change-warning');
-        waitTime = 60000
-    } else if (type === 'warning-important') {
-        notification.classList.add('notification-warning-important');
-        featureChangeElement.classList.add('feature-change-warning-important');
-        waitTime = 60000
-    }
-    const messageElement = document.createElement('p');
-    messageElement.innerText = message;
-    messageElement.className = 'notification-explanation';
-    notification.appendChild(featureChangeElement);
-    notification.appendChild(messageElement);
-    container.appendChild(notification);
-    document.addEventListener('click', (event) => {
-        if (!notification.contains(event.target) && container.contains(notification)) {
+    setTimeout(() => {
+        const container = createNotificationsContainer();
+        let waitTime = 5000;
+        const notification = document.createElement('div');
+        notification.className = 'indicator';
+        const featureChangeElement = document.createElement('p');
+        featureChangeElement.innerText = `${featureChange} - ${version}`;
+        featureChangeElement.className = 'feature-change';
+        if (type === 'warning') {
+            notification.classList.add('notification-warning');
+            featureChangeElement.classList.add('feature-change-warning');
+            waitTime = 60000
+        } else if (type === 'warning-important') {
+            notification.classList.add('notification-warning-important');
+            featureChangeElement.classList.add('feature-change-warning-important');
+            waitTime = 60000
+        }
+        const messageElement = document.createElement('p');
+        messageElement.innerText = message;
+        messageElement.className = 'notification-explanation';
+        notification.appendChild(featureChangeElement);
+        notification.appendChild(messageElement);
+        container.appendChild(notification);
+
+        document.addEventListener('click', (event) => {
+            if (!notification.contains(event.target) && container.contains(notification)) {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    notification.remove()
+                }, 250)
+            }
+        }, {
+            once: !0
+        });
+        setTimeout(() => {
             notification.style.opacity = '0';
             setTimeout(() => {
                 notification.remove()
-            }, 300)
-        }
-    }, {
-        once: !0
-    });
-    setTimeout(() => {
-        notification.style.opacity = '0';
-        setTimeout(() => {
-            notification.remove()
-        }, 300)
-    }, waitTime)
+            }, 250)
+        }, waitTime)
+    }, 250);
 }
 export const openDB = (dataBaseIndexName, dataBaseObjectStoreName) => {
     return new Promise((resolve, reject) => {
@@ -644,12 +715,12 @@ export async function fetchProcessState(url) {
 }
 const STATUS_OK = 200;
 const STATUS_NOTFOUND = 404;
-export async function checkServerQueue(server) {
+export async function checkServerQueue(server, getSecond = false) {
     try {
         const response = await fetch(`${server}/get-online`);
         if (response.status === STATUS_OK) {
             const data = await response.json();
-            return data.server
+            return getSecond ? data.secondServer : data.server;
         }
         return Infinity
     } catch (error) {
@@ -657,6 +728,10 @@ export async function checkServerQueue(server) {
     }
 }
 export function calculateMetadata(element, callback) {
+    if (element.getAttribute('data-fps') > 0) {
+        return;
+    }
+
     if (element instanceof HTMLVideoElement) {
         let lastMediaTime = 0;
         let lastFrameNum = 0;
@@ -763,12 +838,12 @@ export async function customFetch(url, options, onProgress) {
                 }))
             } else {
                 reject(new Error(`Request failed with status ${xhr.status}`));
-                showNotification(`Request failed with status ${xhr.status}. Try Again.`, 'Warning - Fetching Failed', 'warning')
+                showNotification(`Request failed with status ${xhr.status}. Try again.`, 'Warning - Fetching Failed', 'warning')
             }
         };
         xhr.onerror = () => {
             reject(new Error('Request failed'));
-            showNotification(`Request failed. Try Again.`, 'Warning - Fetching Failed', 'warning')
+            showNotification(`Request failed. Try again.`, 'Warning - Fetching Failed', 'warning')
         };
         Object.entries(options.headers || {}).forEach(([key, value]) => {
             xhr.setRequestHeader(key, value)
@@ -815,7 +890,10 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
                 if (blob && (blob.type.startsWith('video') || blob.type.startsWith('image'))) {
                     const blobUrl = URL.createObjectURL(blob);
                     if (blob.type.startsWith('video')) {
-                        element.innerHTML = `<video url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" playsinline preload="auto" disablePictureInPicture loop muted autoplay><source src="${blobUrl}">Your browser does not support the video tag.</video><div class="delete-icon"></div>`;
+                        if (iosMobileCheck())
+                            element.innerHTML = `<video timestamp="${timestamp}" id="${id}" preload="auto" autoplay loop muted playsinline disablePictureInPicture><source src="${blobUrl}">Your browser does not support the video tag.</video><div class="delete-icon"></div>`;
+                        else
+                            element.innerHTML = `<video timestamp="${timestamp}" id="${id}" preload="auto" autoplay loop muted playsinline disablePictureInPicture><source src="${blobUrl}">Your browser does not support the video tag.</video><div class="delete-icon"></div>`;
                         if (dataBaseObjectStoreName === 'inputs') {
                             element.innerHTML = `<div class="tooltip cursor">Loading...</div>` + element.innerHTML;
                             const tooltip = element.querySelector('.tooltip');
@@ -881,7 +959,9 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
                                 lastMetadata = metadata;
                                 const tooltip = element.querySelector('.tooltip');
                                 if (tooltip) {
-                                    const neededCredits = removeBanner.checked ? 2 : 1;
+                                    let neededCredits = removeBanner.checked ? 2 : 1;
+                                    if (pageName === 'inpaint')
+                                        neededCredits += 1;
                                     tooltip.textContent = `${neededCredits} Credits`
                                 }
                             }
@@ -905,7 +985,12 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
                             active
                         }, databases);
                     else element.innerHTML = `<initial url="${url}" id="${id}" timestamp="${timestamp}" active="${active}"/></initial><div class="process-text">${data.server}</div><div class="delete-icon"></div>`
-                } else element.innerHTML = `<video url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" playsinline preload="auto" disablePictureInPicture loop muted autoplay><source src="${blobUrl}">Your browser does not support the video tag.</video><div class="process-text">Not Indexed...</div><div class="delete-icon"></div>`
+                } else {
+                    if (iosMobileCheck())
+                        element.innerHTML = `<video url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" preload="auto" autoplay loop muted playsinline disablePictureInPicture><source src="${blobUrl}">Your browser does not support the video tag.</video><div class="process-text">Not Indexed...</div><div class="delete-icon"></div>`
+                    else
+                        element.innerHTML = `<video url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" preload="auto" autoplay loop muted playsinline disablePictureInPicture><source src="${blobUrl}">Your browser does not support the video tag.</video><div class="process-text">Not Indexed...</div><div class="delete-icon"></div>`
+                }
             }
             mediaContainer.style.display = mediaCount > 0 ? 'flex' : 'none'
         }
@@ -982,8 +1067,8 @@ export const deleteFromDB = async (db, id) => {
     })
 };
 let firebaseModules = null;
-export async function getFirebaseModules() {
-    if (firebaseModules) {
+export async function getFirebaseModules(useCache = false) {
+    if (firebaseModules && useCache) {
         return firebaseModules
     }
     const firebaseAppModule = await import('https://www.gstatic.com/firebasejs/9.17.2/firebase-app.js');
@@ -1041,26 +1126,32 @@ export async function getFirebaseModules() {
     return firebaseModules
 }
 export async function getCurrentUserData(getFirebaseModules) {
-    const {
-        auth
-    } = await getFirebaseModules();
-    return new Promise((resolve, reject) => {
-        const unsubscribe = auth.onAuthStateChanged((user) => {
-            unsubscribe();
-            if (user) {
-                resolve({
-                    uid: user.uid,
-                    email: user.email,
-                    emailVerified: user.emailVerified,
-                    displayName: user.displayName,
-                    photoURL: user.photoURL
-                })
-            } else {
-                reject(new Error('No user is currently logged in.'))
-            }
-        })
-    })
+    try {
+        const { auth } = await getFirebaseModules();
+        return new Promise((resolve, reject) => {
+            const unsubscribe = auth.onAuthStateChanged(async (user) => {
+                unsubscribe();
+                if (user) {
+                    await user.reload();
+                    resolve({
+                        uid: user.uid,
+                        email: user.email,
+                        emailVerified: user.emailVerified,
+                        displayName: user.displayName,
+                        photoURL: user.photoURL
+                    });
+                } else {
+                    console.error('No user is currently logged in.');
+                    reject(new Error('No user is currently logged in.'));
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error getting user data:', error);
+        throw new Error('Failed to fetch user data');
+    }
 }
+
 export async function getDocSnapshot(collectionId, documentId) {
     const {
         db,
@@ -1234,7 +1325,7 @@ async function handleUserLoggedIn(userData, getUserInternetProtocol, ensureUniqu
                     const {
                         auth,
                         sendEmailVerification
-                    } = await getFirebaseModules();
+                    } = await getFirebaseModules(true);
                     const user = auth.currentUser;
                     if (user) {
                         await sendEmailVerification(user);
@@ -1253,6 +1344,10 @@ async function handleUserLoggedIn(userData, getUserInternetProtocol, ensureUniqu
             const validateVerification = document.getElementById("validateVerification");
             validateVerification.addEventListener('click', async () => {
                 try {
+                    const userDoc = await getUserDoc(() => setCurrentUserDoc(getDocSnapshot));
+                    if (userDoc.isBanned)
+                        throw new Error('Your account is banned from our services.');
+
                     const userData = await getUserData(() => setCurrentUserData(getFirebaseModules));
                     if (!userData.emailVerified)
                         throw new Error('Your email is still not verified.');
@@ -1283,7 +1378,9 @@ async function handleUserLoggedIn(userData, getUserInternetProtocol, ensureUniqu
                 }
                 const [userInternetProtocol, uniqueId, serverAddressAPI] = await Promise.all([getUserInternetProtocol(), ensureUniqueId(), getServerAddressAPI()]);
                 const userId = userData.uid;
-                const referral = new URLSearchParams(window.location.search).get('referral');
+                let referral = localStorage.getItem('referral') || new URLSearchParams(window.location.search).get('referral');
+                if (!localStorage.getItem('referral') && referral)
+                    localStorage.setItem('referral', referral);
                 const response = await fetch(`${serverAddressAPI}/create-user`, {
                     method: 'POST',
                     headers: {
@@ -1294,8 +1391,8 @@ async function handleUserLoggedIn(userData, getUserInternetProtocol, ensureUniqu
                         email: userData.email,
                         username: userData.displayName,
                         isAnonymous: userData.isAnonymous,
-                        userInternetProtocolAddress: userInternetProtocol.publicAdress,
-                        userUniqueInternetProtocolId: userInternetProtocol.UID,
+                        userInternetProtocolAddress: userInternetProtocol.userInternetProtocolAddress,
+                        userUniqueInternetProtocolId: userInternetProtocol.userUniqueInternetProtocolId,
                         uniqueId,
                         referral: referral || null,
                     }),
@@ -1329,6 +1426,10 @@ async function handleUserLoggedIn(userData, getUserInternetProtocol, ensureUniqu
     }
 }
 async function createSignFormSection(registerForm, retrieveImageFromURL, getFirebaseModules) {
+    let referral = localStorage.getItem('referral') || new URLSearchParams(window.location.search).get('referral');
+    if (!localStorage.getItem('referral') && referral)
+        localStorage.setItem('referral', referral);
+
     const innerContainer = document.getElementById('innerContainer');
     if (!innerContainer)
         return;
@@ -1390,12 +1491,12 @@ async function createSignFormSection(registerForm, retrieveImageFromURL, getFire
 
                 <div>
                     <label for="username">Username</label>
-                    <input type="text" id="username" name="username" placeholder="Enter your username..." required>
+                    <input type="text" id="username" name="username" placeholder="Enter your username..." autocomplete="username" required>
                 </div>
 
                 <div style="position: relative;">
                     <label for="email">Email address</label>
-                    <input type="email" id="email" name="email" placeholder="Enter your email address..." required>
+                    <input type="email" id="email" name="email" placeholder="Enter your email address..." autocomplete="email" required>
                     <ul class="list-items" id="suggestions"></ul>
                 </div>
 
@@ -1526,7 +1627,7 @@ async function createSignFormSection(registerForm, retrieveImageFromURL, getFire
                     const {
                         auth,
                         sendPasswordResetEmail
-                    } = await getFirebaseModules();
+                    } = await getFirebaseModules(true);
                     await sendPasswordResetEmail(auth, emailValue);
                     if (messageContainer) {
                         messageContainer.style.display = 'unset';
@@ -1548,7 +1649,7 @@ async function createSignFormSection(registerForm, retrieveImageFromURL, getFire
                     auth,
                     GoogleAuthProvider,
                     signInWithPopup
-                } = await getFirebaseModules();
+                } = await getFirebaseModules(true);
                 const provider = new GoogleAuthProvider();
                 const result = await signInWithPopup(auth, provider);
                 let userCopy = {
@@ -1581,13 +1682,15 @@ async function createSignFormSection(registerForm, retrieveImageFromURL, getFire
     if (signInButton) {
         signInButton.addEventListener('click', async (event) => {
             event.preventDefault();
+            signInButton.disabled = true;
+            signInButton.textContent = 'Signing in...';
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             try {
                 const {
                     auth,
                     signInWithEmailAndPassword
-                } = await getFirebaseModules();
+                } = await getFirebaseModules(true);
                 const result = await signInWithEmailAndPassword(auth, email, password);
                 let userCopy = {
                     ...result.user
@@ -1606,6 +1709,8 @@ async function createSignFormSection(registerForm, retrieveImageFromURL, getFire
                 localStorage.setItem('cachedUserData', cachedUserData);
                 location.reload()
             } catch (error) {
+                signInButton.disabled = false;
+                signInButton.textContent = 'Try again?';
                 if (forgotPassword) {
                     forgotPassword.style.display = 'unset'
                 }
@@ -1636,22 +1741,27 @@ async function createSignFormSection(registerForm, retrieveImageFromURL, getFire
     if (signUpButton) {
         signUpButton.addEventListener('click', async (event) => {
             event.preventDefault();
+            signUpButton.disabled = true;
+            signUpButton.textContent = 'Creating account...';
             try {
                 async function getServerAddressAPI() {
                     return await fetchServerAddress(getDocSnapshot('servers', '3050-1'), 'API')
                 }
                 const [userInternetProtocol, uniqueId, serverAddressAPI] = await Promise.all([getUserInternetProtocol(), ensureUniqueId(), getServerAddressAPI()]);
+                if (userInternetProtocol.isVPN || userInternetProtocol.isProxy || userInternetProtocol.isTOR) {
+                    throw new Error("You can't use VPN/Proxy/TOR while signing up. Please disable them and try again.");
+                }
+
                 const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
                 const username = document.getElementById('username').value;
-                const referral = new URLSearchParams(window.location.search).get('referral');
                 const requestData = {
                     email,
                     password,
                     username,
                     referral: referral || null,
-                    userInternetProtocolAddress: userInternetProtocol.publicAdress || null,
-                    userUniqueInternetProtocolId: userInternetProtocol.UID || null,
+                    userInternetProtocolAddress: userInternetProtocol.userInternetProtocolAddress,
+                    userUniqueInternetProtocolId: userInternetProtocol.userUniqueInternetProtocolId,
                     uniqueId,
                 };
                 const response = await fetch(`${serverAddressAPI}/register`, {
@@ -1668,13 +1778,15 @@ async function createSignFormSection(registerForm, retrieveImageFromURL, getFire
                     if (messageContainer) {
                         messageContainer.style.display = 'unset';
                         messageContainer.style.color = 'unset';
-                        messageContainer.textContent = 'Sign in with your credentials.'
+                        messageContainer.textContent = 'Please sign in to access your account.'
                     }
                 } else {
                     const errorMessage = data.error?.message || 'An error occurred.';
                     throw new Error(errorMessage)
                 }
             } catch (error) {
+                signUpButton.disabled = false;
+                signUpButton.textContent = 'Try again?';
                 if (messageContainer) {
                     messageContainer.style.display = 'block';
                     messageContainer.textContent = error.message
@@ -1958,10 +2070,10 @@ function getModeName(userAgent) {
 }
 
 function createOverlay() {
-    if (document.querySelector('.incognito-overlay'))
+    if (document.querySelector('.overlay'))
         return null;
     const overlay = document.createElement('div');
-    overlay.classList.add('incognito-overlay');
+    overlay.classList.add('overlay');
     overlay.innerHTML = `
         <div class="overlay-content">
             <h2>Incognito Mode</h2>
@@ -1973,7 +2085,7 @@ function createOverlay() {
 }
 
 function removeOverlay() {
-    const overlay = document.querySelector('.incognito-overlay');
+    const overlay = document.querySelector('.overlay');
     if (overlay) {
         overlay.remove()
     }
@@ -1994,7 +2106,7 @@ function handleIncognito() {
 }
 export function incognitoModeHandler() {
     function checkOverlay() {
-        if (!document.querySelector('.incognito-overlay'))
+        if (!document.querySelector('.overlay'))
             handleIncognito();
     }
     overlayCheckInterval = setInterval(checkOverlay, 100);
@@ -2004,6 +2116,37 @@ export function incognitoModeHandler() {
     checkOverlay()
 }
 async function setupSignOutButtons(getFirebaseModules) {
+    const updateUserInformation = document.querySelectorAll('.updateUserInformation');
+    updateUserInformation.forEach(signOutElement => {
+        signOutElement.addEventListener('click', async function (event) {
+            event.preventDefault();
+
+            const lastClickTime = localStorage.getItem('lastSignOutTime');
+            const currentTime = Date.now();
+            const fiveMinutes = 1 * 60 * 1000;
+
+            if (lastClickTime) {
+                const timeElapsed = currentTime - lastClickTime;
+                if (timeElapsed < fiveMinutes) {
+                    const remainingTime = Math.ceil((fiveMinutes - timeElapsed) / 1000);
+                    const minutes = Math.floor(remainingTime / 60);
+                    const seconds = remainingTime % 60;
+                    alert(`Please wait ${minutes} minute(s) and ${seconds} second(s) before trying again.`);
+                    return;
+                }
+            }
+
+            try {
+                localStorage.setItem('lastSignOutTime', currentTime);
+                await setCurrentUserData(getFirebaseModules);
+                await setCurrentUserDoc(getDocSnapshot);
+                location.reload();
+            } catch (error) {
+                alert('Error during sign out: ' + error.message);
+            }
+        });
+    });
+
     const signOutButtons = document.querySelectorAll('.signOut');
     signOutButtons.forEach(signOutElement => {
         signOutElement.addEventListener('click', async function (event) {
@@ -2014,10 +2157,10 @@ async function setupSignOutButtons(getFirebaseModules) {
             const {
                 auth,
                 signOut
-            } = await getFirebaseModules();
+            } = await getFirebaseModules(true);
             try {
                 await signOut(auth);
-                location.reload()
+                location.reload();
             } catch (error) {
                 alert('Error during sign out: ' + error.message)
             }
@@ -2067,6 +2210,7 @@ export async function createUserData(sidebar, screenMode, setAuthentication, ret
                             </div>
                         </a>
                         <ul class="dropdown-menu">
+                            <li><a class="text updateUserInformation">Update User Info</a></li>
                             <li><a class="text signOut">Sign Out</a></li>
                         </ul>
                     </li>
@@ -2149,7 +2293,7 @@ function createSideBarData(sidebar) {
 							</svg>
 							X
 						</a>
-						<a class="button" id="redditButton" translate="no" href="https://www.reddit.com/r/bodyswapai/" target="_blank">
+						<a class="button" id="redditButton" translate="no" href="https://www.reddit.com/r/deepanyai/" target="_blank">
 							<svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24"><path d="M14.238 15.348c.085.084.085.221 0 .306-.465.462-1.194.687-2.231.687l-.008-.002-.008.002c-1.036 0-1.766-.225-2.231-.688-.085-.084-.085-.221 0-.305.084-.084.222-.084.307 0 .379.377 1.008.561 1.924.561l.008.002.008-.002c.915 0 1.544-.184 1.924-.561.085-.084.223-.084.307 0zm-3.44-2.418c0-.507-.414-.919-.922-.919-.509 0-.923.412-.923.919 0 .506.414.918.923.918.508.001.922-.411.922-.918zm13.202-.93c0 6.627-5.373 12-12 12s-12-5.373-12-12 5.373-12 12-12 12 5.373 12 12zm-5-.129c0-.851-.695-1.543-1.55-1.543-.417 0-.795.167-1.074.435-1.056-.695-2.485-1.137-4.066-1.194l.865-2.724 2.343.549-.003.034c0 .696.569 1.262 1.268 1.262.699 0 1.267-.566 1.267-1.262s-.568-1.262-1.267-1.262c-.537 0-.994.335-1.179.804l-2.525-.592c-.11-.027-.223.037-.257.145l-.965 3.038c-1.656.02-3.155.466-4.258 1.181-.277-.255-.644-.415-1.05-.415-.854.001-1.549.693-1.549 1.544 0 .566.311 1.056.768 1.325-.03.164-.05.331-.05.5 0 2.281 2.805 4.137 6.253 4.137s6.253-1.856 6.253-4.137c0-.16-.017-.317-.044-.472.486-.261.82-.766.82-1.353zm-4.872.141c-.509 0-.922.412-.922.919 0 .506.414.918.922.918s.922-.412.922-.918c0-.507-.413-.919-.922-.919z" fill="white"/></svg>
 							Reddit
 						</a>
@@ -2158,7 +2302,320 @@ function createSideBarData(sidebar) {
 				`;
         sidebar.insertAdjacentHTML('beforeend', sideBar)
     }
+} function snowEffect() {
+    let isLowEndDevice = false;
+
+    function checkPerformance() {
+        const performanceKey = 'isLowEndDevice';
+        const storedValue = localStorage.getItem(performanceKey);
+        if (storedValue !== null) {
+            isLowEndDevice = storedValue === 'true';
+            return;
+        }
+
+        const iterations = 1000000;
+        const start = performance.now();
+        let result = 0;
+        for (let i = 0; i < iterations; i++) {
+            result += Math.sqrt(i);
+        }
+
+        const duration = performance.now() - start;
+        const opsPerMs = iterations / duration;
+        const lowEndThreshold = 50000;
+        isLowEndDevice = opsPerMs < lowEndThreshold;
+        localStorage.setItem(performanceKey, isLowEndDevice.toString());
+    }
+
+    checkPerformance();
+
+    const currentDate = new Date();
+    const startDate = new Date(currentDate.getFullYear(), 12 - 1, 15);
+    const endDate = new Date(currentDate.getFullYear() + 1, 1 - 1, 15);
+
+    if (currentDate >= startDate && currentDate <= endDate) {
+        const style = document.createElement('style');
+        style.textContent = `
+            canvas {
+                position: absolute;
+                top: 0;
+                left: 0;
+                ${isLowEndDevice ? "" : "filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));"}
+                z-index: -999;
+            }
+        `;
+        document.head.appendChild(style);
+
+        const canvas = document.createElement('canvas');
+        canvas.id = 'snowCanvas';
+        document.body.appendChild(canvas);
+
+        const ctx = canvas.getContext('2d');
+        let snowflakes = [];
+        let snowflakeCount;
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        function calculateSnowflakeCount() {
+            const screenWidth = window.innerWidth;
+            snowflakeCount = isLowEndDevice
+                ? Math.round((screenWidth / 1000) * 15)
+                : Math.round((screenWidth / 1000) * 30);
+        }
+
+        calculateSnowflakeCount();
+
+        function saveSnowflakes() {
+            localStorage.setItem('snowflakes', JSON.stringify(snowflakes.map(s => ({ x: s.x, y: s.y, size: s.size, speed: s.speed, wind: s.wind }))));
+        }
+
+        function loadSnowflakes() {
+            const savedSnowflakes = localStorage.getItem('snowflakes');
+            if (savedSnowflakes) {
+                const data = JSON.parse(savedSnowflakes);
+                snowflakes = data.map(d => new Snowflake(d.x, d.y, d.size, d.speed, d.wind));
+            }
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            calculateSnowflakeCount();
+            if (snowflakes.length < snowflakeCount) {
+                for (let i = snowflakes.length; i < snowflakeCount; i++) {
+                    snowflakes.push(new Snowflake());
+                }
+            } else {
+                snowflakes.length = snowflakeCount;
+            }
+            saveSnowflakes();
+        });
+
+        window.addEventListener('beforeunload', () => {
+            saveSnowflakes();
+        });
+
+        class Snowflake {
+            constructor(x, y, size, speed, wind) {
+                this.x = x || Math.random() * canvas.width;
+                this.y = y || Math.random() * canvas.height;
+                this.size = size || Math.random() * (isLowEndDevice ? 3 : 10) + 2;
+                this.speed = speed || Math.random() * (isLowEndDevice ? 0.5 : 1) + 0.5;
+                this.wind = wind || Math.random() * 0.5 - 0.25;
+            }
+
+            update() {
+                this.y += this.speed;
+                this.x += this.wind;
+
+                if (this.y > canvas.height) {
+                    this.y = -this.size;
+                }
+                if (this.x > canvas.width) {
+                    this.x = -this.size;
+                }
+                if (this.x < -this.size) {
+                    this.x = canvas.width + this.size;
+                }
+            }
+
+            draw() {
+                if (isLowEndDevice) {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size / 2, 0, Math.PI * 2);
+                    ctx.fillStyle = "rgba(216, 216, 216, 0.5)";
+                    ctx.fill();
+                } else {
+                    ctx.save();
+                    ctx.translate(this.x, this.y);
+                    ctx.strokeStyle = "rgba(216, 216, 216, 0.5)";
+                    ctx.lineWidth = 2;
+                    const lineLength = this.size / 2;
+
+                    for (let i = 0; i < 6; i++) {
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(0, -lineLength);
+                        ctx.stroke();
+
+                        ctx.moveTo(0, -lineLength / 2);
+                        ctx.lineTo(-lineLength / 4, -lineLength / 2 - lineLength / 6);
+                        ctx.moveTo(0, -lineLength / 2);
+                        ctx.lineTo(lineLength / 4, -lineLength / 2 - lineLength / 6);
+                        ctx.stroke();
+                        ctx.rotate(Math.PI / 3);
+                    }
+                    ctx.restore();
+                }
+            }
+        }
+
+        function createSnowflakes() {
+            loadSnowflakes();
+            if (snowflakes.length < snowflakeCount) {
+                for (let i = snowflakes.length; i < snowflakeCount; i++) {
+                    snowflakes.push(new Snowflake());
+                }
+            } else {
+                snowflakes.length = snowflakeCount;
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            snowflakes.forEach((snowflake) => {
+                snowflake.update();
+                snowflake.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        createSnowflakes();
+        animate();
+    }
 }
+
+function triggerPurchaseConfirmationEvent(requestData) {
+    if (typeof gtag !== 'function') {
+        alert('gtag is not defined. Ensure gtag.js is loaded.');
+        return;
+    }
+
+    const eventParams = {
+        transaction_id: `TRANS_${requestData.userId}_${Date.now()}`,
+        currency: requestData.selectedCurrency,
+        value: parseFloat(requestData.calculatedTotal) || 0,
+        items: [
+            {
+                item_name: requestData.selectedMode === 'subscription' ? 'Subscription' : 'Credits',
+                price: parseFloat(requestData.calculatedTotal) || 0,
+                quantity: 1,
+            },
+        ],
+        user_id: requestData.userId,
+        user_email: requestData.userEmail,
+    };
+
+    //console.log('Sending purchase confirmation event to gtag:', eventParams);
+    gtag('event', 'purchase', eventParams);
+}
+
+async function checkPurchaseStatus() {
+    try {
+        const userData = await getUserData();
+        if (!userData || !userData.uid) {
+            console.error('User data not found.');
+            return;
+        }
+
+        const snapshotPromise = getDocSnapshot('servers', '3050-1');
+        const [serverAddressAPI, serverAddressPAYTR] = await Promise.all([
+            fetchServerAddress(snapshotPromise, 'API'),
+            fetchServerAddress(snapshotPromise, 'PAYTR')
+        ]);
+
+        const requests = [];
+        if (getCache('purchaseInProgressBTC')) {
+            requests.push(
+                fetch(`${serverAddressAPI}/check-purchase-success`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: userData.uid }),
+                }).then(response => ({ type: 'BTC', response }))
+            );
+        }
+        if (getCache('purchaseInProgressCard')) {
+            requests.push(
+                fetch(`${serverAddressPAYTR}/check-purchase-success`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: userData.uid }),
+                }).then(response => ({ type: 'Card', response }))
+            );
+        }
+
+        if (requests.length === 0) {
+            return;
+        }
+
+        const results = await Promise.all(requests);
+
+        for (const { type, response } of results) {
+            if (response.ok) {
+                const responseData = await response.json();
+                if (type === 'BTC') {
+                    localStorage.removeItem('purchaseInProgressBTC');
+                } else if (type === 'Card') {
+                    localStorage.removeItem('purchaseInProgressCard');
+                }
+
+                triggerPurchaseConfirmationEvent(responseData.purchase);
+                if (!iosMobileCheck())
+                    displayPurchaseConfirmation(responseData.purchase);
+                await setCurrentUserDoc(getDocSnapshot);
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            }
+        }
+    } catch (error) {
+        console.error('Error checking purchase status:', error);
+    }
+}
+
+function displayPurchaseConfirmation(purchaseData) {
+    const confirmationWindow = window.open('', '_blank');
+    confirmationWindow.document.write(`
+                        <!DOCTYPE html>
+                        <html lang="en">
+                        <head>
+                            <meta charset="UTF-8">
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                            <title>Purchase Confirmation Page [BETA]</title>
+                            <style>
+                                body {
+                                    font-family: Arial, sans-serif;
+                                    background-color: #f4f4f4;
+                                    text-align: center;
+                                    padding: 20px;
+                                }
+                                h1 {
+                                    color: #28a745;
+                                }
+                                p {
+                                    margin: 10px 0;
+                                }
+                                .back-button {
+                                    margin-top: 20px;
+                                    padding: 10px 20px;
+                                    background-color: #007bff;
+                                    color: #fff;
+                                    border: none;
+                                    border-radius: 4px;
+                                    cursor: pointer;
+                                }
+                                .back-button:hover {
+                                    background-color: #0056b3;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <h1>Congratulations!</h1>
+                            <p>Thank you for your purchase, <strong>${purchaseData.userId}</strong>!</p>
+                            <p>Purchase Details:</p>
+                            <ul>
+                                <li><strong>Credits:</strong> ${purchaseData.calculatedCredits}</li>
+                                <li><strong>Amount:</strong> ${purchaseData.calculatedTotal}</li>
+                                <li><strong>Currency:</strong> ${purchaseData.selectedCurrency}</li>
+                                <li><strong>Mode:</strong> ${purchaseData.selectedMode}</li>
+                            </ul>
+                            <button class="back-button" onclick="window.close()">Back to Home</button>
+                        </body>
+                        </html>
+                    `);
+}
+
 export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, setAuthentication, updateMainContent, savePageState = null) {
     let previousScreenMode = null,
         cleanupEvents = null,
@@ -2173,11 +2630,12 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
         });
         localStorage.setItem('sidebarStateInitialized', 'true')
     }
+    snowEffect();
     document.body.insertAdjacentHTML('afterbegin', `
 				<nav class="navbar">
 					<div class="container">
 						<div class="logo">
-							<img loading="eager" src="/.ico" onclick="location.href='.'" style="cursor: pointer;" alt="DeepAny.AI Logo" width="6.5vh" height="auto">
+							<img src="/.ico" onclick="location.href='.'" style="cursor: pointer;" alt="DeepAny.AI Logo" width="6.5vh" height="auto">
 							<h2 onclick="location.href='.'" style="cursor: pointer;" translate="no">DeepAny.<span class="text-gradient" translate="no">AI</span></h2>
 						</div>
 					</div>
@@ -2312,7 +2770,7 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
 							<ul class="dropdown-menu">
 								<li><a class="text" href="https://x.com/zeroduri" target="_blank" translate="no">X</a></li>
 								<li><a class="text" href="https://discord.com/invite/Vrmt8UfDK8" target="_blank" translate="no">Discord</a></li>
-								<li><a class="text" href="https://www.reddit.com/r/bodyswapai/" target="_blank" translate="no">Reddit</a></li>
+								<li><a class="text" href="https://www.reddit.com/r/deepanyai/" target="_blank" translate="no">Reddit</a></li>
 							</ul>
 						</li>
 						<li><a class="text" href="pricing">Pricing</a></li>
@@ -2330,6 +2788,7 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
 								</div>
 							</a>
 							<ul class="dropdown-menu">
+                                <li><a class="text updateUserInformation">Update User Info</a></li>
 								<li><a class="text" href="profile">Profile</a></li>
 								<li><a class="text signOut">Sign Out</a></li>
 							</ul>
@@ -2413,10 +2872,47 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
     setTimeout(() => {
         document.body.classList.remove('no-animation')
     }, 0);
-    const link = document.getElementById('loading-stylesheet');
-    if (link)
-        link.parentNode.removeChild(link);
     document.documentElement.classList.remove('loading-screen');
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const link = entry.target;
+                const linkHostname = new URL(link.href).hostname;
+                const currentHostname = window.location.hostname;
+
+                if (linkHostname === currentHostname) {
+                    const alreadyPrefetched = document.querySelector(`link[rel="prefetch"][href="${link.href}"]`);
+                    if (!alreadyPrefetched) {
+                        const prefetch = document.createElement('link');
+                        prefetch.rel = 'prefetch';
+                        prefetch.href = link.href;
+                        document.head.appendChild(prefetch);
+                    }
+                }
+
+                observer.unobserve(link);
+            }
+        });
+    });
+    const links = document.querySelectorAll('a[href]');
+    if (links.length)
+        links.forEach(link => observer.observe(link));
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = "https://www.googletagmanager.com/gtag/js?id=G-5C9P4GHHQ6";
+    document.head.appendChild(script);
+    script.onload = function () {
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () {
+            window.dataLayer.push(arguments);
+        };
+        gtag('js', new Date());
+        gtag('config', 'G-5C9P4GHHQ6');
+    };
+    checkPurchaseStatus();
+    setInterval(() => {
+        checkPurchaseStatus();
+    }, 10000);
     pageUpdated = !0
 }
 let currentMain = 0;
@@ -3126,7 +3622,11 @@ export const handleDownload = async ({
             if (active && !element.classList.contains('active'))
                 element.classList.add('active');
             const isVideo = url.slice(-1) === '0';
-            element.innerHTML = isVideo ? `<video url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" playsinline preload="auto" disablePictureInPicture loop muted autoplay><source src="${blobUrl}" type="${contentType}">Your browser does not support the video tag.</video><div class="delete-icon"></div>` : `<img url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" src="${blobUrl}" alt="Uploaded Photo"/><div class="delete-icon"></div>`;
+            if (iosMobileCheck())
+                element.innerHTML = isVideo ? `<video url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" preload="auto" autoplay loop muted playsinline disablePictureInPicture><source src="${blobUrl}" type="${contentType}">Your browser does not support the video tag.</video><div class="delete-icon"></div>` : `<img url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" src="${blobUrl}" alt="Uploaded Photo"/><div class="delete-icon"></div>`;
+            else
+                element.innerHTML = isVideo ? `<video url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" preload="auto" autoplay loop muted playsinline disablePictureInPicture><source src="${blobUrl}" type="${contentType}">Your browser does not support the video tag.</video><div class="delete-icon"></div>` : `<img url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" src="${blobUrl}" alt="Uploaded Photo"/><div class="delete-icon"></div>`;
+
             const activeContainers = document.querySelectorAll('.outputs .data-container.active');
             if (activeContainers.length > 0) {
                 for (const container of activeContainers) {
@@ -3175,6 +3675,18 @@ export const handleDelete = async (dbName, storeName, parent, databases) => {
         let itemToDelete = items.find(item => item.id === domIndex);
         if (!itemToDelete) {
             const domTimestamp = parseInt(element.getAttribute('timestamp'));
+            const timestamp = element?.getAttribute('timestamp');
+            const id = element?.getAttribute('id');
+            const referencePosition = `${timestamp}_${id}_position`;
+            const referenceRace = `${timestamp}_${id}_race`;
+            const referenceGender = `${timestamp}_${id}_gender`;
+            const trackFace = `${timestamp}_${id}_track`;
+            const referenceFrame = `${timestamp}_${id}_frame`;
+            localStorage.removeItem(referencePosition);
+            localStorage.removeItem(referenceRace);
+            localStorage.removeItem(referenceGender);
+            localStorage.removeItem(trackFace);
+            localStorage.removeItem(referenceFrame);
             itemToDelete = items.find(item => item.timestamp === domTimestamp)
         }
         if (itemToDelete) {
@@ -3204,6 +3716,17 @@ export const handleFileContainerEvents = async (event, dbName, storeName, contai
         if (downloadOutput) downloadOutput.disabled = !1;
     }
 
+    const element = parent.querySelector('img, video, initial');
+
+    if (!iosMobileCheck()) {
+        if (storeName === 'inputs' && element.tagName.toLowerCase() === 'video') {
+            //await showFrameSelector(element);
+        }
+    }
+
+    if (parent.classList.contains("active"))
+        return;
+
     const db = openDB(dbName, storeName);
     for (const activeElement of container.querySelectorAll(".data-container.active")) {
         activeElement.classList.remove("active");
@@ -3216,41 +3739,36 @@ export const handleFileContainerEvents = async (event, dbName, storeName, contai
         }
     }
 
-    const element = parent.querySelector('img, video, initial');
     const domIndex = parseInt(element.getAttribute('id'));
     if (!isNaN(domIndex)) {
-        if (parent.classList.contains("active")) {
-            parent.classList.remove("active");
-            await updateActiveState(await db, domIndex, !1);
-        } else {
-            parent.classList.add("active");
-            await updateActiveState(await db, domIndex, !0);
-
-            // Show video frame selector if storeName === 'inputs'
-            if (storeName === 'inputs' && element.tagName.toLowerCase() === 'video') {
-                showFrameSelector(element);
-            }
-        }
+        parent.classList.add("active");
+        await updateActiveState(await db, domIndex, !0);
     } else {
         alert(`The provided ID for the parent photo "${parent}" is invalid. Please check the ID and try again.`);
     }
 };
 
-async function showFrameSelector(videoElement) {
-    const userDoc = await getUserDoc();
-    if (document.getElementById('wrapper') || (!userDoc.promoter && !userDoc.admin)) return;
+export async function showFrameSelector(videoElement) {
+    if (document.getElementById('wrapper')) return;
 
-    const fps = parseFloat(videoElement.getAttribute('fps')) || 30;
+    const fps = parseFloat(videoElement.getAttribute('data-fps')) || 0;
+    if (!fps) {
+        showNotification(`Video FPS not found, please try again.`, 'Multi Face Swap', 'warning');
+        return;
+    }
 
     const wrapper = document.createElement('div');
     wrapper.id = 'wrapper';
+    wrapper.style.alignItems = 'unset';
     wrapper.innerHTML = `
         <div class="background-container" style="display: flex;flex-direction: column;">
             <a class="background-dot-container">
                 <div class="background-dot-container-content" style="padding: 0;">
                     <div id="innerContainer" class="background-container" style="display: contents;">
                         <div style="position: relative; display: contents; max-width: 100vw; max-height: 60vh;">
+                            <div class="loading-screen" style="position: absolute;"></div>
                             <video></video>
+                            <img></img>
                             <input type="range" min="0" max="0" value="0" style=" position: absolute; bottom: calc(2vh * var(--scale-factor-h)); left: 50%; transform: translateX(-50%); width: 97%; z-index: 2;"/>
                         </div>
                         <button class="close-button" style=" position: absolute; top: 1vh; right: 1vh; cursor: pointer; width: 4vh; height: 4vh; padding: 0; margin: 0;">
@@ -3266,9 +3784,140 @@ async function showFrameSelector(videoElement) {
             <a class="background-dot-container">
                 <div class="background-dot-container-content">
                     <div id="innerContainer" class="background-container" style="display: contents;">
-                        <div style="display: flex;justify-content: space-around;gap: calc(1.5vh* var(--scale-factor-h));">
-                            <button class="wide" id="">Detect Multiple Faces [Early Access - Not Working Yet]</button>
-                            <button class="wide" id="">Select Face [Early Access - Not Working Yet]</button>
+                        <div style="display: flex;flex-direction: column;justify-content: space-around;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                <div>
+                                                                                                                    <div id="faceGenderComboBox" class="combobox" tooltip style="gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                        <div class="tooltip">Specify the gender that we will face swap in the input. If not specified it will detect every gender.</div>
+                                                                                                                        <span class="combobox-text" title="Gender"></span>
+                                                                                                                        <span class="arrow-dwn"></span>
+                                                                                                                        <ul class="list-items">
+                                                                                                                            <li class="item">
+                                                                                                                                <label class="checkbox" tooltip>
+                                                                                                                                    <input type="checkbox" id="female"><span>Female</span>
+                                                                                                                                    <div class="tooltip">Will only try to detect female and skip males.</div>
+                                                                                                                                </label>
+                                                                                                                            </li>
+                                                                                                                            <li class="item">
+                                                                                                                                <label class="checkbox" tooltip>
+                                                                                                                                    <input type="checkbox" id="male"><span>Male</span>
+                                                                                                                                    <div class="tooltip">Will only try to detect males and skip females.</div>
+                                                                                                                                </label>
+                                                                                                                            </li>
+                                                                                                                        </ul>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                                <div>
+                                                                                                                    <div id="faceRaceComboBox" class="combobox" tooltip style="gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                        <div class="tooltip">Specify the race that we will face swap in the input. If not specified it will detect every race.</div>
+                                                                                                                        <span class="combobox-text" title="Race"></span>
+                                                                                                                        <span class="arrow-dwn"></span>
+                                                                                                                        <ul class="list-items">
+                                                                                                                            <li class="item">
+                                                                                                                                <label class="checkbox" tooltip>
+                                                                                                                                    <input type="checkbox" id="white"><span>White</span> 
+                                                                                                                                    <div class="tooltip">Limits detection to faces with White features.</div>
+                                                                                                                                </label>
+                                                                                                                            </li>
+                                                                                                                            <li class="item">
+                                                                                                                                <label class="checkbox" tooltip>
+                                                                                                                                    <input type="checkbox" id="black"><span>Black</span>
+                                                                                                                                    <div class="tooltip">Limits detection to faces with Black features.</div>
+                                                                                                                                </label>
+                                                                                                                            </li>
+                                                                                                                            <li class="item">
+                                                                                                                                <label class="checkbox" tooltip>
+                                                                                                                                    <input type="checkbox" id="latino"><span>Latino</span> 
+                                                                                                                                    <div class="tooltip">Limits detection to faces with Latino features.</div>
+                                                                                                                                </label>
+                                                                                                                            </li>
+                                                                                                                            <li class="item">
+                                                                                                                                <label class="checkbox" tooltip>
+                                                                                                                                    <input type="checkbox" id="asian"><span>Asian</span> 
+                                                                                                                                    <div class="tooltip">Limits detection to faces with Asian features.</div>
+                                                                                                                                </label>
+                                                                                                                            </li>
+                                                                                                                            <li class="item">
+                                                                                                                                <label class="checkbox" tooltip>
+                                                                                                                                    <input type="checkbox" id="indian"><span>Indian</span> 
+                                                                                                                                    <div class="tooltip">Limits detection to faces with Indian features.</div>
+                                                                                                                                </label>
+                                                                                                                            </li>
+                                                                                                                            <li class="item">
+                                                                                                                                <label class="checkbox" tooltip>
+                                                                                                                                    <input type="checkbox" id="arabic"><span>Arabic</span> 
+                                                                                                                                    <div class="tooltip">Limits detection to faces with Arabic features.</div>
+                                                                                                                                </label>
+                                                                                                                            </li>
+                                                                                                                        </ul>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                                    <div id="facePositionComboBox" class="combobox" tooltip style="gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                        <div class="tooltip">If there's 3 people and you want to swap the one in the middle, you set this to "2nd person" option based on the order.</div>
+                                                                                                                        <span class="combobox-text" title="Left to right"></span>
+                                                                                                                        <span class="arrow-dwn"></span>
+                                                                                                                        <ul class="list-items">
+                                                                                                                            <li class="item">
+                                                                                                                                <label class="checkbox" tooltip>
+                                                                                                                                    <input type="checkbox" id="0_person"><span>1st person</span>
+                                                                                                                                </label>
+                                                                                                                            </li>
+                                                                                                                            <li class="item">
+                                                                                                                                <label class="checkbox" tooltip>
+                                                                                                                                    <input type="checkbox" id="1_person"><span>2nd person</span>
+                                                                                                                                </label>
+                                                                                                                            </li>
+                                                                                                                            <li class="item">
+                                                                                                                                <label class="checkbox" tooltip>
+                                                                                                                                    <input type="checkbox" id="2_person"><span>3th person</span>
+                                                                                                                                </label>
+                                                                                                                            </li>
+                                                                                                                            <li class="item">
+                                                                                                                                <label class="checkbox" tooltip>
+                                                                                                                                    <input type="checkbox" id="3_person"><span>4th person</span>
+                                                                                                                                </label>
+                                                                                                                            </li>
+                                                                                                                            <li class="item">
+                                                                                                                                <label class="checkbox" tooltip>
+                                                                                                                                    <input type="checkbox" id="4_person"><span>5th person</span>
+                                                                                                                                </label>
+                                                                                                                            </li>
+                                                                                                                            <li class="item">
+                                                                                                                                <label class="checkbox" tooltip>
+                                                                                                                                    <input type="checkbox" id="5_person"><span>6th person</span>
+                                                                                                                                </label>
+                                                                                                                            </li>
+                                                                                                                            <li class="item">
+                                                                                                                                <label class="checkbox" tooltip>
+                                                                                                                                    <input type="checkbox" id="6_person"><span>7th person</span>
+                                                                                                                                </label>
+                                                                                                                            </li>
+                                                                                                                            <li class="item">
+                                                                                                                                <label class="checkbox" tooltip>
+                                                                                                                                    <input type="checkbox" id="7_person"><span>8th person</span>
+                                                                                                                                </label>
+                                                                                                                            </li>
+                                                                                                                            <li class="item">
+                                                                                                                                <label class="checkbox" tooltip>
+                                                                                                                                    <input type="checkbox" id="8_person"><span>9th person</span>
+                                                                                                                                </label>
+                                                                                                                            </li>
+                                                                                                                            <li class="item">
+                                                                                                                                <label class="checkbox" tooltip>
+                                                                                                                                    <input type="checkbox" id="9_person"><span>10th person</span>
+                                                                                                                                </label>
+                                                                                                                            </li>
+                                                                                                                        </ul>
+                                                                                                                    </div>
+                                                                                                                <div>
+                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                        <input type="checkbox" id="trackReferenceFace"><span>Face tracker</span>
+                                                                                                                        <div class="tooltip">Tracks the selected face across upcoming frames by comparing it to the detected face in the selected frame. If the face changes slightly in the next frame, the system identifies it as similar to the reference and continues tracking.</div>
+                                                                                                                    </label>
+                                                                                                                </div>
+                                                                                                                <div class="line"></div>
+                        <div style="display: flex;flex-direction: row;justify-content: space-around;gap: calc(1.5vh* var(--scale-factor-h));">
+                            <button class="wide" id="multipleFacesBtn">Start Identiciation Process</button>
+                        </div>
                         </div>
                     </div>
                 </div>
@@ -3276,74 +3925,442 @@ async function showFrameSelector(videoElement) {
         </div>
     `;
 
-    let screenMode = getScreenMode();
-    let firstBackgroundContainer = wrapper.getElementsByClassName('background-container')[0];
-    if (firstBackgroundContainer) {
-        firstBackgroundContainer.style.width = screenMode === 1 ? '75%' : '100%';
+    if (getScreenMode() === 1)
+        wrapper.style.alignItems = 'center';
+
+    let currentTime = 0;
+    let clonedVideo;
+
+    function createClonedVideo(maxRetries = 3, retryDelay = 1000) {
+        let retries = 0;
+
+        function attemptVideoLoad() {
+            clonedVideo = videoElement.cloneNode(true);
+            clonedVideo.style.width = '100%';
+            clonedVideo.style.borderRadius = 'var(--border-radius)';
+            clonedVideo.style.height = getScreenMode() === 1 ? '60vh' : '60vh';
+            clonedVideo.style.objectFit = getScreenMode() === 1 ? 'cover' : 'contain';
+            clonedVideo.style.position = 'relative';
+            clonedVideo.controls = false;
+            clonedVideo.autoplay = true;
+            clonedVideo.loop = true;
+            clonedVideo.muted = true;
+            clonedVideo.playsInline = true;
+            clonedVideo.addEventListener('error', handleError);
+            clonedVideo.pause();
+            document.body.appendChild(clonedVideo);
+        }
+
+        function handleError() {
+            if (retries < maxRetries) {
+                retries++;
+                showNotification(`Video could not be loaded. Retrying... (${retries}/${maxRetries})`, 'Multi Face Swap', 'default');
+                setTimeout(attemptVideoLoad, retryDelay);
+            } else {
+                showNotification('Failed to load video after multiple attempts.', 'Multi Face Swap', 'error');
+            }
+        }
+
+        attemptVideoLoad();
+        return clonedVideo;
     }
 
-    const clonedVideo = videoElement.cloneNode(true);
-    clonedVideo.style.width = '100%';
-    clonedVideo.style.height = '100%';
-    clonedVideo.style.borderRadius = 'var(--border-radius)';
-    clonedVideo.style.objectFit = 'contain';
-    clonedVideo.controls = false;
-    clonedVideo.autoplay = false;
-    clonedVideo.loop = false;
-    clonedVideo.pause();
+    async function replaceVideo() {
+        clonedVideo = createClonedVideo();
+        const videoContainer = wrapper.querySelector('video');
+        videoContainer.style.display = 'none';
+        clonedVideo.style.display = 'block';
+        videoContainer.replaceWith(clonedVideo);
+    }
 
     const slider = wrapper.querySelector('input[type="range"]');
     const closeButton = wrapper.querySelector('.close-button');
 
-    slider.addEventListener('input', () => {
-        const frame = parseInt(slider.value, 10);
-        clonedVideo.currentTime = frame / fps;
-    });
+    async function initVideoAndSlider() {
+        clonedVideo.addEventListener('loadedmetadata', () => {
+            const loadingScreen = wrapper.querySelector('.loading-screen');
+            if (loadingScreen) {
+                loadingScreen.remove();
+            } else {
+                console.warn('Loading screen element not found in wrapper.');
+            }
 
-    clonedVideo.addEventListener('loadedmetadata', () => {
-        slider.max = Math.floor(clonedVideo.duration * fps);
-    });
+            currentTime = clonedVideo.currentTime;
+            slider.max = Math.floor(clonedVideo.duration * fps);
 
-    closeButton.addEventListener('click', () => {
-        wrapper.remove();
-    });
+            const multipleFacesBtn = document.getElementById('multipleFacesBtn');
+            multipleFacesBtn.disabled = false;
+            multipleFacesBtn.textContent = 'Start Identiciation Process';
+        });
 
-    wrapper.addEventListener('mousedown', (event) => {
-        if (event.target === wrapper) {
+        slider.addEventListener('input', () => {
+            const frame = parseInt(slider.value, 10);
+            clonedVideo.currentTime = frame / fps;
+            currentTime = clonedVideo.currentTime;
+
+            clonedVideo.style.filter = 'brightness(100%)';
+        });
+
+        closeButton.addEventListener('click', () => {
             document.body.removeChild(wrapper);
-        }
-    });
+        });
 
-    const videoContainer = wrapper.querySelector('video');
-    videoContainer.replaceWith(clonedVideo);
+        wrapper.addEventListener('mousedown', (event) => {
+            if (event.target === wrapper) {
+                document.body.removeChild(wrapper);
+            }
+        });
 
-    // Add click event listener to toggle play/pause
-    let isPlaying = false;
-    clonedVideo.addEventListener('click', () => {
-        if (isPlaying) {
-            clonedVideo.pause();
-        } else {
-            clonedVideo.play();
-            updateSlider();
-        }
-        isPlaying = !isPlaying;
-    });
+        let isPlaying = false;
+        clonedVideo.addEventListener('click', () => {
+            if (isPlaying) {
+                clonedVideo.pause();
+            } else {
+                clonedVideo.play();
+                updateSlider(clonedVideo, slider);
+            }
+            isPlaying = !isPlaying;
+        });
 
-    // Update the slider value as the video plays
-    function updateSlider() {
+        document.body.appendChild(wrapper);
+    }
+
+    function updateSlider(video, slider) {
         const updateInterval = setInterval(() => {
-            if (clonedVideo.paused || clonedVideo.ended) {
+            if (video.paused || video.ended) {
                 clearInterval(updateInterval);
                 return;
             }
-            const frame = Math.floor(clonedVideo.currentTime * fps);
-            slider.value = frame;
-        }, 1000 / fps); // Update the slider every frame (depending on FPS)
+            currentTime = video.currentTime;
+            slider.value = Math.floor(currentTime * fps);
+        }, 1000 / fps);
     }
 
-    document.body.appendChild(wrapper);
-}
+    await replaceVideo();
+    await initVideoAndSlider();
 
+    const imgContainer = wrapper.querySelector('img');
+    imgContainer.style.display = "none";
+
+    const multipleFacesBtn = document.getElementById('multipleFacesBtn');
+    if (!multipleFacesBtn)
+        return;
+
+    const facePositionComboBox = document.getElementById('facePositionComboBox');
+    if (facePositionComboBox) {
+        const checkboxes = facePositionComboBox.querySelectorAll('.checkbox input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', (event) => {
+                multipleFacesBtn.disabled = false;
+                multipleFacesBtn.textContent = 'Start Identiciation Process';
+
+                const imgContainer = wrapper.querySelector('img');
+                imgContainer.style.display = "none";
+
+                const videoContainer = wrapper.querySelector('video');
+                videoContainer.style.display = "block";
+                videoContainer.style.filter = 'brightness(100%)';
+            });
+        });
+    }
+
+    const faceRaceComboBox = document.getElementById('faceRaceComboBox');
+    if (faceRaceComboBox) {
+        const checkboxes = faceRaceComboBox.querySelectorAll('.checkbox input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', (event) => {
+                multipleFacesBtn.disabled = false;
+                multipleFacesBtn.textContent = 'Start Identiciation Process';
+
+                const imgContainer = wrapper.querySelector('img');
+                imgContainer.style.display = "none";
+
+                const videoContainer = wrapper.querySelector('video');
+                videoContainer.style.display = "block";
+                videoContainer.style.filter = 'brightness(100%)';
+            });
+        });
+    }
+
+    const faceGenderComboBox = document.getElementById('faceGenderComboBox');
+    if (faceGenderComboBox) {
+        const checkboxes = faceGenderComboBox.querySelectorAll('.checkbox input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', (event) => {
+                multipleFacesBtn.disabled = false;
+                multipleFacesBtn.textContent = 'Start Identiciation Process';
+
+                const imgContainer = wrapper.querySelector('img');
+                imgContainer.style.display = "none";
+
+                const videoContainer = wrapper.querySelector('video');
+                videoContainer.style.display = "block";
+                videoContainer.style.filter = 'brightness(100%)';
+            });
+        });
+    }
+
+    async function startProcess() {
+        const multipleFacesBtn = document.getElementById('multipleFacesBtn');
+        if (multipleFacesBtn.textContent === 'Confirm!') {
+            wrapper.remove();
+            showNotification(`You have successfully selected the desired face. You can now start the actual process.`, 'Multi Face Swap', 'default');
+            return;
+        }
+
+        multipleFacesBtn.disabled = true;
+        multipleFacesBtn.textContent = 'Processing...';
+
+        const imgContainer = wrapper.querySelector('img');
+        imgContainer.style.display = "none";
+
+        const videoContainer = wrapper.querySelector('video');
+        videoContainer.style.display = "block";
+        videoContainer.style.filter = 'brightness(100%)';
+        clonedVideo.pause();
+
+        function getSelectedPerson() {
+            const checkboxes = document.querySelectorAll('#facePositionComboBox input[type="checkbox"]');
+            let id = null;
+
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    const personNumber = checkbox.id.split('_')[0];
+                    id = personNumber;
+                }
+            });
+
+            return id ? id : "none";
+        }
+
+        function getSelectedGender() {
+            const checkboxes = document.querySelectorAll('#faceGenderComboBox input[type="checkbox"]');
+            let id = null;
+
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    id = checkbox.id;
+                }
+            });
+
+            return id ? id : "none";
+        }
+
+        function getSelectedRace() {
+            const checkboxes = document.querySelectorAll('#faceRaceComboBox input[type="checkbox"]');
+            let id = null;
+
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    id = checkbox.id;
+                }
+            });
+
+            return id ? id : "none";
+        }
+
+        const trackReferenceFace = document.getElementById('trackReferenceFace');
+        const selectedPerson = getSelectedPerson();
+        const selectedRace = getSelectedRace();
+        const selectedGender = getSelectedGender();
+
+        /*if (!selectedPerson || selectedPerson === "none") {
+            multipleFacesBtn.disabled = false;
+            multipleFacesBtn.textContent = 'Try Again?';
+            showNotification(`Select the person to confirm correct face. If there's 3 people and you want to swap the one in the middle, you set this to "2nd person" option.`, 'Incorrect Settings', 'warning-important');
+            slider.style.display = 'block';
+            return;
+        }*/
+
+        try {
+            showNotification(`Starting the process...`, 'Process - Information', 'information');
+
+            let userData = await getUserData();
+            let userDoc = await getUserDoc();
+
+            if (typeof userData !== 'object' || !userData?.uid) {
+                const openSignInContainer = document.getElementById('openSignInContainer');
+                if (openSignInContainer)
+                    openSignInContainer.click();
+                multipleFacesBtn.disabled = true;
+                multipleFacesBtn.textContent = 'Not Available';
+                showNotification(`Please sign in or create an account to use our AI services with free (daily) trial.`, 'Warning - No User Found', 'warning-important');
+                slider.style.display = 'block';
+                return;
+            }
+
+            if (userDoc.isBanned) {
+                showNotification(`Your account is restricted. Email us for further detail.`, 'Warning - Banned Account', 'warning-important');
+                multipleFacesBtn.disabled = true;
+                multipleFacesBtn.textContent = 'Not Available';
+                slider.style.display = 'block';
+                return;
+            }
+
+            if (!userData.emailVerified) {
+                showNotification(`Please verify your email first.`, 'Warning - No Input Selected', 'warning-important');
+                multipleFacesBtn.disabled = true;
+                multipleFacesBtn.textContent = 'Not Available';
+                slider.style.display = 'block';
+                return;
+            }
+
+            async function getActiveFrameAsFile(videoElement, fileName = 'image.png') {
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = videoElement.videoWidth;
+                canvas.height = videoElement.videoHeight;
+
+                context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+                return new Promise((resolve, reject) => {
+                    canvas.toBlob(
+                        (blob) => {
+                            if (blob) {
+                                const file = new File([blob], fileName, { type: 'image/png' });
+                                resolve(file);
+                            } else {
+                                reject(new Error('Failed to convert frame to blob.'));
+                            }
+                        },
+                        'image/png'
+                    );
+                });
+            }
+
+            const activeFrame = await getActiveFrameAsFile(clonedVideo);
+            if (!activeFrame) {
+                showNotification(`Frame not found. Please try a different input.`, 'Warning', 'warning-important');
+                multipleFacesBtn.disabled = false;
+                multipleFacesBtn.textContent = 'Try Again?';
+                slider.style.display = 'block';
+                return;
+            }
+
+            const serverAddress = "https://3050-1-DF.deepany.ai";
+            const fileOutputId = `${Math.random().toString(36).substring(2, 15)}_${1}`;
+
+            const MAX_FILE_SIZE_MB = userDoc.promoter ? 1000 : 500;
+            const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
+            if (activeFrame.size > MAX_FILE_SIZE_BYTES) {
+                multipleFacesBtn.disabled = false;
+                multipleFacesBtn.textContent = 'Try Again?';
+                showNotification(`Size exceeds ${MAX_FILE_SIZE_MB}MB limit`, 'Process - Information', 'warning-important');
+                slider.style.display = 'block';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('face', activeFrame);
+            formData.append('userId', userData.uid);
+            formData.append('fileOutputId', fileOutputId);
+            formData.append('enableEnhancedLandmarks', document.getElementById("enableEnhancedLandmarks").checked);
+            formData.append('enableEnhancedAnalyzer', document.getElementById("enableEnhancedAnalyzer").checked);
+            formData.append('referencePosition', selectedPerson);
+            formData.append('referenceRace', selectedRace);
+            formData.append('referenceGender', selectedGender);
+            formData.append('trackFace', trackReferenceFace.checked);
+
+            const response = await fetch(`${serverAddress}/detect-multiple-faces`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.status !== STATUS_OK) {
+                const data = await response.json();
+                throw new Error(data.server);
+            }
+
+            const loadingSpinner = document.createElement('div');
+            loadingSpinner.className = 'loading-screen';
+            loadingSpinner.style.position = 'absolute';
+
+            const videoContainer = wrapper.querySelector('video');
+            videoContainer.style.filter = 'brightness(50%)';
+            videoContainer.parentElement.appendChild(loadingSpinner);
+
+            slider.style.display = 'none';
+
+            const result = await response.json();
+            const downloadUrl = serverAddress + '/download-output/' + fileOutputId;
+
+            const interval = setInterval(async () => {
+                const data = await fetchProcessState(downloadUrl);
+                if (data.status !== 'processing') {
+                    clearInterval(interval);
+
+                    showNotification(`Request ${data.status} With Status ${data.server}.`, 'Fetch Information', 'default');
+
+                    slider.style.display = 'block';
+                    loadingSpinner.remove();
+
+                    if (data.status === 'completed') {
+                        const response = await fetch(downloadUrl);
+                        if (!response.ok) {
+                            throw new Error('Failed to download the image');
+                        }
+
+                        multipleFacesBtn.disabled = false;
+                        multipleFacesBtn.textContent = 'Confirm!';
+
+                        const imageBlob = await response.blob();
+                        const imageObjectURL = URL.createObjectURL(imageBlob);
+
+                        const imgElement = document.createElement('img');
+                        imgElement.src = imageObjectURL;
+                        imgElement.style.width = '100%';
+                        imgElement.style.height = getScreenMode() === 1 ? '60vh' : '60vh';
+                        imgElement.style.objectFit = getScreenMode() === 1 ? 'cover' : 'contain';
+                        imgElement.style.borderRadius = 'var(--border-radius)';
+
+                        const imgContainer = wrapper.querySelector('img');
+                        imgContainer.style.display = "block";
+                        imgContainer.replaceWith(imgElement);
+
+                        const videoContainer = wrapper.querySelector('video');
+                        videoContainer.style.display = "none";
+
+                        const timestamp = videoContainer?.getAttribute('timestamp');
+                        const id = videoContainer?.getAttribute('id');
+                        const referencePosition = `${timestamp}_${id}_position`;
+                        const referenceRace = `${timestamp}_${id}_race`;
+                        const referenceGender = `${timestamp}_${id}_gender`;
+                        const trackFace = `${timestamp}_${id}_track`;
+                        const referenceFrame = `${timestamp}_${id}_frame`;
+
+                        localStorage.setItem(referencePosition, selectedPerson);
+                        localStorage.setItem(referenceRace, selectedRace);
+                        localStorage.setItem(referenceGender, selectedGender);
+                        localStorage.setItem(trackFace, trackReferenceFace.checked);
+                        localStorage.setItem(referenceFrame, currentTime);
+                    }
+                    else {
+                        const imgContainer = wrapper.querySelector('img');
+                        imgContainer.style.display = "none";
+
+                        const videoContainer = wrapper.querySelector('video');
+                        videoContainer.style.display = "block";
+                        videoContainer.style.filter = 'brightness(100%)';
+
+                        multipleFacesBtn.disabled = false;
+                        multipleFacesBtn.textContent = 'Try Again?';
+                    }
+                }
+            }, 250);
+
+            return result;
+        } catch (error) {
+            multipleFacesBtn.disabled = false;
+            multipleFacesBtn.textContent = 'Try Again?';
+            showNotification(error.message, 'Process - Information', 'warning-important');
+        }
+    }
+
+    multipleFacesBtn.addEventListener('click', async () => {
+        await startProcess();
+    });
+}
 
 export const handleUpload = async (event, dataBaseIndexName, dataBaseObjectStoreName, databases) => {
     try {
@@ -3364,7 +4381,19 @@ export const handleUpload = async (event, dataBaseIndexName, dataBaseObjectStore
         if (!db) {
             return
         }
-        const files = Array.from(event.target.files);
+
+        const files = Array.from(event.target.files).filter((file) => {
+            if (dataBaseObjectStoreName === 'faces')
+                return file.type.startsWith('image/') & file.type !== 'image/gif';
+
+            return file.type.startsWith('image/') || file.type.startsWith('video/');
+        });
+
+        if (files.length === 0) {
+            alert('No valid files found for upload.');
+            return;
+        }
+
         const mediaContainer = document.querySelector(`.${dataBaseObjectStoreName}`);
         const fragment = document.createDocumentFragment();
         const newMedia = [];
@@ -3385,7 +4414,7 @@ export const handleUpload = async (event, dataBaseIndexName, dataBaseObjectStore
                             id,
                             timestamp,
                             blob,
-                            isVideo: file.type.startsWith('video')
+                            isVideo: file.type.startsWith('video/') || file.type === 'image/gif'
                         });
                         resolve()
                     } catch (error) {
@@ -3524,12 +4553,88 @@ export const setupFileUpload = ({
     changeHandler
 }) => {
     const input = document.getElementById(inputId);
-    if (!input) return;
-    document.getElementById(buttonId).addEventListener('click', () => input.click());
+    const button = document.getElementById(buttonId);
+    const modal = document.getElementById(`upload-options-modal-${inputId}`);
+    if (!input || !button || !modal) return;
+
+    button.addEventListener('click', (event) => {
+        event.stopPropagation();
+        modal.classList.toggle('hidden');
+
+        if (!modal.classList.contains('hidden')) {
+            const modalWidth = modal.offsetWidth;
+            const modalHeight = modal.offsetHeight;
+            const left = event.clientX - modalWidth / 2;
+            const top = event.clientY - modalHeight / 4;
+            modal.style.position = 'fixed';
+            modal.style.left = `${left}px`;
+            modal.style.top = `${top}px`;
+        }
+    });
+
+    modal.addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
+
+    document.addEventListener('click', () => {
+        if (!modal.classList.contains('hidden')) {
+            modal.classList.add('hidden');
+        }
+    });
+
+    document.getElementById(`upload-device-${inputId}`).addEventListener('click', () => {
+        input.click();
+        document.getElementById(`upload-options-modal-${inputId}`).classList.add('hidden');
+    });
+
+    document.getElementById(`upload-link-${inputId}`).addEventListener('click', () => {
+        const linkInput = document.getElementById(`link-upload-${inputId}`);
+        linkInput.classList.remove('hidden');
+        document.getElementById(`upload-link-${inputId}`).classList.add('hidden');
+        linkInput.focus();
+    });
+
+    document.getElementById(`upload-link-${inputId}`).addEventListener('keypress', async (event) => {
+        if (event.key === 'Enter') {
+            const url = event.target.value.trim();
+            if (!url) {
+                alert('Please enter a valid URL.');
+                return;
+            }
+
+            try {
+
+            } catch (error) {
+                alert(`Failed to fetch or process the file: ${error.message}`);
+            }
+        }
+    });
+
     input.addEventListener('change', async (event) => {
-        await changeHandler(event, dataBaseIndexName, dataBaseObjectStoreName, databases)
-    })
+        await changeHandler(event, dataBaseIndexName, dataBaseObjectStoreName, databases);
+    });
+
+    button.addEventListener('dragover', (event) => {
+        event.preventDefault();
+        button.classList.add('dragover');
+    });
+
+    button.addEventListener('dragleave', () => {
+        button.classList.remove('dragover');
+    });
+
+    button.addEventListener('drop', async (event) => {
+        event.preventDefault();
+        button.classList.remove('dragover');
+
+        const files = event.dataTransfer.files;
+        if (files.length > 0) {
+            const mockEvent = { target: { files } };
+            await changeHandler(mockEvent, dataBaseIndexName, dataBaseObjectStoreName, databases);
+        }
+    });
 };
+
 export async function setClientStatus(message) {
     const outputs = document.querySelector('.outputs');
     if (outputs && outputs.firstChild) {
@@ -3628,18 +4733,20 @@ export async function checkServerStatus(databases, userId) {
     if (serverWithUserRequest) {
         handleUserRequest(serverWithUserRequest, databases, userId)
     } else {
+        const startProcessBtn = document.getElementById('startProcessBtn');
         startProcessBtn.disabled = !1;
-        if (!downloadFile) return;
-        const db = await openDB(`outputDB-${pageName}`, 'outputs');
-        const outputs = (await getFromDB(db)).reverse();
-        const lastOutput = outputs[outputs.length - 1];
-        const data = await fetchProcessState(lastOutput.url);
-        setClientStatus(data.server);
-        showNotification(`Request ${data.status} With Status ${data.server}.`, 'Fetch Information', 'default');
-        if (data.status === 'completed') {
-            updateDownloadFile(!1, databases, userId);
-            setCurrentUserDoc(getDocSnapshot);
-            await handleLastOutputDownload(lastOutput, databases)
+        if (downloadFile) {
+            const db = await openDB(`outputDB-${pageName}`, 'outputs');
+            const outputs = (await getFromDB(db)).reverse();
+            const lastOutput = outputs[outputs.length - 1];
+            const data = await fetchProcessState(lastOutput.url);
+            setClientStatus(data.server);
+            showNotification(`Request ${data.status} With Status ${data.server}.`, 'Fetch Information', 'default');
+            if (data.status === 'completed') {
+                updateDownloadFile(!1, databases, userId);
+                setCurrentUserDoc(getDocSnapshot);
+                await handleLastOutputDownload(lastOutput, databases)
+            }
         }
     }
 }
@@ -3650,7 +4757,7 @@ function has24HoursPassed(lastCreditEarned, currentTime) {
 
 async function showDailyCredits() {
     const userDoc = await getUserDoc();
-    if (document.getElementById('wrapper') || !userDoc) return;
+    if (document.getElementById('wrapper') || !userDoc || userDoc.dailyCredits > 0) return;
 
     if (userDoc.deadline) {
         const deadline = new Date(userDoc.deadline.seconds * 1000 + (userDoc.deadline.nanoseconds || 0) / 1000000);
@@ -3674,9 +4781,11 @@ async function showDailyCredits() {
 
         const timeData = await response.json();
         currentTime = timeData.currentTime;
-        timePassed =
-            has24HoursPassed(userDoc.lastCreditEarned || 0, currentTime) ||
-            has24HoursPassed(lastCancellationTime || 0, currentTime);
+        if (has24HoursPassed(userDoc.lastCreditEarned || 0, currentTime))
+            timePassed = true;
+
+        if (!has24HoursPassed(lastCancellationTime || 0, currentTime))
+            timePassed = false;
     } catch (error) {
         showNotification(message, 'Daily Credits', 'warning');
         return;
@@ -3722,19 +4831,19 @@ async function showDailyCredits() {
                                     <g transform="translate(0.000000,512.000000) scale(0.100000,-0.100000)" fill="white" stroke="none">
                                         <path d="M2433 5106 c-251 -58 -433 -270 -450 -528 -12 -171 47 -329 165 -447 231 -230 593 -230 824 0 117 117 176 276 165 442 -16 239 -164 436 -387 513 -91 32 -227 40 -317 20z"/>
                                         <path d="M2367 3824 c-205 -32 -471 -135 -633 -245 -148 -101 -234 -298 -221 -507 8 -141 73 -235 184 -268 71 -21 1657 -21 1729 1 67 20 117 64 151 133 26 52 28 66 28 167 -1 309 -128 466 -501 618 -258 106 -498 139 -737 101z"/>
-                                        <path d="M2511 2548 c-13 -7 -34 -26 -45 -41 -20 -27 -21 -41 -24 -370 l-4 -342 -270 -215 c-149 -118 -279 -228 -289 -245 -25 -40 -24 -75 4 -116 25 -38 77 -60 120 -52 14 3 144 99 288 214 144 115 265 209 269 209 4 0 125 -94 269 -209 144 -115 273 -211 288 -214 62 -12 124 30 138 92 14 63 -8 86 -298 316 l-276 220 0 328 c-1 346 -4 370 -49 410 -26 24 -90 32 -121 15z"/>
+                                        <path d="M2511 2548 c-13 -7 -34 -26 -45 -41 -20 -27 -21 -41 -24 -370 l-4 -342 -270 -215 c-149 -118 -279 -228 -289 -245 -25 -40 -24 -75 4 -116 25 -38 77 -60 120 -52 14 3 144 99 288 214 1.4.1.5 265 209 269 209 4 0 125 -94 269 -209 144 -115 273 -211 288 -214 62 -12 124 30 138 92 14 63 -8 86 -298 316 l-276 220 0 328 c-1 346 -4 370 -49 410 -26 24 -90 32 -121 15z"/>
                                         <path d="M975 2324 c-219 -33 -407 -187 -479 -393 -24 -71 -33 -233 -16 -310 30 -138 131 -283 254 -362 289 -188 675 -83 830 225 114 224 73 488 -103 666 -75 76 -132 112 -229 145 -66 23 -197 38 -257 29z"/>
                                         <path d="M3973 2320 c-176 -32 -340 -155 -419 -315 -83 -169 -83 -354 2 -521 99 -197 291 -315 514 -317 167 -1 290 50 411 172 83 83 137 178 159 282 18 81 8 240 -18 313 -65 179 -211 317 -391 370 -69 20 -191 28 -258 16z"/>
-                                        <path d="M906 1039 c-168 -18 -362 -81 -561 -182 -190 -97 -281 -202 -325 -373 -24 -93 -26 -229 -5 -301 20 -66 80 -134 144 -162 l51 -21 852 2 853 3 46 27 c97 57 129 130 129 292 0 300 -128 456 -496 607 -125 51 -291 94 -416 108 -108 12 -156 12 -272 0z"/><path d="M3936 1040 c-211 -26 -441 -106 -636 -220 -129 -75 -218 -191 -255 -330 -19 -69 -19 -271 -1 -321 19 -54 64 -107 115 -137 l46 -27 853 -3 852 -2 51 21 c64 28 124 96 144 162 21 72 19 208 -5 301 -27 105 -63 169 -140 247 -53 54 -88 77 -195 131 -152 77 -298 130 -434 158 -113 23 -298 32 -395 20z"/>
+                                        <path d="M906 1039 c-168 -18 -362 -81 -561 -182 -190 -97 -281 -202 -325 -373 -24 -93 -26 -229 -5 -301 20 -66 80 -1.4.1.4 -162 l51 -21 852 2 853 3 46 27 c97 57 129 130 129 292 0 300 -128 456 -496 607 -125 51 -291 94 -416 108 -108 12 -156 12 -272 0z"/><path d="M3936 1040 c-211 -26 -441 -106 -636 -220 -129 -75 -218 -191 -255 -330 -19 -69 -19 -271 -1 -321 19 -54 64 -107 115 -137 l46 -27 853 -3 852 -2 51 21 c64 28 124 96 1.4.1.2 21 72 19 208 -5 301 -27 105 -63 169 -140 247 -53 54 -88 77 -195 131 -152 77 -298 130 -434 158 -113 23 -298 32 -395 20z"/>
                                     </g>
                                 </svg>
                                 Redeem Referral Credits
                             </button>
                         </div>
 
-                            <p id="contactSupport" style="cursor: pointer;" onclick="window.location.href='mailto:durieun02@gmail.com';">
-                              Contact support? Email: durieun02@gmail.com
-                            </p>
+                        <p id="contactSupport" style="cursor: pointer;" onclick="window.location.href='mailto:zeroduri02@gmail.com';">
+                            Contact support? Email: zeroduri02@gmail.com
+                        </p>
 
                         <button class="close-button" style="position: absolute;top: 1vh;right: 1vh;cursor: pointer;width: 4vh;height: 4vh;padding: 0;">
                             <svg style="margin: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x">
@@ -3763,13 +4872,11 @@ async function showDailyCredits() {
 
     const closeButton = wrapper.querySelector('.close-button');
     closeButton.addEventListener('click', () => {
-        localStorage.setItem('lastCancellation', currentTime);
         wrapper.remove();
     });
 
     wrapper.addEventListener('mousedown', (event) => {
         if (event.target === wrapper) {
-            localStorage.setItem('lastCancellation', currentTime);
             document.body.removeChild(wrapper);
         }
     });
@@ -3781,40 +4888,111 @@ async function showDailyCredits() {
         linkElement.value = `https://deepany.ai/?referral=${encodeURIComponent(userDoc.referral)}`;
     }
 
+    const referralCredits = document.getElementById('redeemReferralCredits');
+    referralCredits.disabled = true;
+
+    const dailyCredits = document.getElementById('redeemDailyCredits');
+    dailyCredits.disabled = true;
+
     const infoMessage = document.getElementById('infoMessage');
     infoMessage.style.display = 'unset';
     infoMessage.textContent = 'Checking your daily credits qualification...';
     infoMessage.style.color = 'white';
 
-    try {
-        const response = await fetch(`${serverAddressAPI}/check-daily-credit`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId }),
-        });
+    async function checkDailyCredit() {
+        try {
+            const userInternetProtocol = await getUserInternetProtocol();
+            const isVPN = userInternetProtocol.isVPN || userInternetProtocol.isProxy || userInternetProtocol.isTOR;
+            const userInternetProtocolAddress = userInternetProtocol.userInternetProtocolAddress;
+            const userUniqueInternetProtocolId = userInternetProtocol.userUniqueInternetProtocolId;
 
-        const { message } = await response.json();
-        infoMessage.style.display = 'unset';
-        infoMessage.textContent = message;
-        infoMessage.style.color = response.status !== STATUS_OK ? 'red' : 'white';
-        setCurrentUserDoc(getDocSnapshot);
-        showNotification(message, 'Daily Credits', 'normal');
-    } catch ({ message }) {
-        infoMessage.style.display = 'unset';
-        infoMessage.textContent = message;
-        infoMessage.style.color = response.status !== STATUS_OK ? 'red' : 'white';
-        showNotification(message, 'Daily Credits', 'warning');
+            const response = await fetch(`${serverAddressAPI}/check-daily-credit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId,
+                    isVPN,
+                    userUniqueInternetProtocolId,
+                    userInternetProtocolAddress,
+                })
+            });
+
+            const { message } = await response.json();
+            infoMessage.style.display = 'unset';
+            infoMessage.innerHTML = response.status !== STATUS_OK ? `${message} <a href="#" id="retryLink" style="color: white; text-decoration: underline;">Try again?</a>` : `${message}`;
+            infoMessage.style.color = response.status !== STATUS_OK ? 'red' : 'white';
+            setCurrentUserDoc(getDocSnapshot);
+            showNotification(message, 'Daily Credits', 'normal');
+            referralCredits.disabled = false;
+            dailyCredits.disabled = false;
+
+            if (document.getElementById('retryLink')) {
+                document.getElementById('retryLink').addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    await checkDailyCredit();
+                });
+            }
+        } catch (error) {
+            infoMessage.style.display = 'unset';
+            infoMessage.innerHTML = `${error.message} <a href="#" id="retryLink" style="color: white; text-decoration: underline;">Try again?</a>`;
+            infoMessage.style.color = 'red';
+            showNotification(error.message, 'Daily Credits', 'warning');
+
+            if (document.getElementById('retryLink')) {
+                document.getElementById('retryLink').addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    await checkDailyCredit();
+                });
+            }
+        }
     }
 
-    const referralCredits = document.getElementById('redeemReferralCredits');
+    await checkDailyCredit();
+    localStorage.setItem('lastCancellation', currentTime);
+
+    const FIVE_MINUTES_MS = 300000;
+
+    function canClickAgain(buttonKey) {
+        const lastClicked = localStorage.getItem(buttonKey);
+        if (!lastClicked) return { canClick: true, timeLeft: 0 };
+
+        const timeSinceLastClick = Date.now() - parseInt(lastClicked, 10);
+        const timeLeft = Math.max(FIVE_MINUTES_MS - timeSinceLastClick, 0);
+
+        return { canClick: timeLeft === 0, timeLeft };
+    }
+
+    function formatTime(ms) {
+        const seconds = Math.floor(ms / 1000) % 60;
+        const minutes = Math.floor(ms / 60000);
+        return `${minutes} minute${minutes !== 1 ? 's' : ''} and ${seconds} second${seconds !== 1 ? 's' : ''}`;
+    }
+
+    function setLastClicked(buttonKey) {
+        localStorage.setItem(buttonKey, Date.now());
+    }
+
     referralCredits.addEventListener('click', async () => {
+        const buttonKey = 'referralCredits_lastClicked';
+        const { canClick, timeLeft } = canClickAgain(buttonKey);
+
+        if (!canClick) {
+            infoMessage.style.display = 'unset';
+            infoMessage.textContent = `You can click this button in ${formatTime(timeLeft)}.`;
+            infoMessage.style.color = 'red';
+            showNotification(`You can click this button in ${formatTime(timeLeft)}.`, 'Referral Credits', 'normal');
+            return;
+        }
+
         referralCredits.disabled = true;
-        infoMessage.style.display = 'unset';
-        infoMessage.textContent = 'Checking your daily credits qualification...';
-        infoMessage.style.color = 'white';
+        setLastClicked(buttonKey);
 
         try {
+            infoMessage.style.display = 'unset';
+            infoMessage.textContent = 'Checking your daily credits qualification...';
+            infoMessage.style.color = 'white';
             showNotification("Waiting for a response...", 'Referral Credits', 'normal');
+
             const response = await fetch(`${serverAddressAPI}/get-referral-credits`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -3822,31 +5000,41 @@ async function showDailyCredits() {
             });
 
             const { message } = await response.json();
-            infoMessage.style.display = 'unset';
-            infoMessage.textContent = message;
+            infoMessage.style.textContent = message;
             infoMessage.style.color = response.status !== STATUS_OK ? 'red' : 'white';
             setCurrentUserDoc(getDocSnapshot);
             showNotification(message, 'Referral Credits', 'normal');
-            await setCurrentUserDoc(getDocSnapshot, !0);
         } catch ({ message }) {
             infoMessage.style.display = 'unset';
             infoMessage.textContent = message;
-            infoMessage.style.color = response.status !== STATUS_OK ? 'red' : 'white';
+            infoMessage.style.color = 'red';
             showNotification(message, 'Referral Credits', 'warning');
         } finally {
             referralCredits.disabled = false;
         }
     });
 
-    const dailyCredits = document.getElementById('redeemDailyCredits');
     dailyCredits.addEventListener('click', async () => {
+        const buttonKey = 'dailyCredits_lastClicked';
+        const { canClick, timeLeft } = canClickAgain(buttonKey);
+
+        if (!canClick) {
+            infoMessage.style.display = 'unset';
+            infoMessage.textContent = `You can click this button in ${formatTime(timeLeft)}.`;
+            infoMessage.style.color = 'red';
+            showNotification(`You can click this button in ${formatTime(timeLeft)}.`, 'Referral Credits', 'normal');
+            return;
+        }
+
         dailyCredits.disabled = true;
-        infoMessage.style.display = 'unset';
-        infoMessage.textContent = 'Checking your referrals...';
-        infoMessage.style.color = 'white';
+        setLastClicked(buttonKey);
 
         try {
+            infoMessage.style.display = 'unset';
+            infoMessage.textContent = 'Checking your referrals...';
+            infoMessage.style.color = 'white';
             showNotification("Waiting for a response...", 'Daily Credits', 'normal');
+
             const response = await fetch(`${serverAddressAPI}/earn-daily-credit`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -3854,16 +5042,14 @@ async function showDailyCredits() {
             });
 
             const { message } = await response.json();
-            infoMessage.style.display = 'unset';
             infoMessage.textContent = message;
             infoMessage.style.color = response.status !== STATUS_OK ? 'red' : 'white';
             setCurrentUserDoc(getDocSnapshot);
             showNotification(message, 'Daily Credits', 'normal');
-            await setCurrentUserDoc(getDocSnapshot, !0);
         } catch ({ message }) {
             infoMessage.style.display = 'unset';
             infoMessage.textContent = message;
-            infoMessage.style.color = response.status !== STATUS_OK ? 'red' : 'white';
+            infoMessage.style.color = 'red';
             showNotification(message, 'Daily Credits', 'warning');
         } finally {
             dailyCredits.disabled = false;
@@ -3964,128 +5150,220 @@ export function createSectionAndElements() {
             })
         })
     });
-    const multiboxes = document.querySelectorAll(".multibox");
-    multiboxes.forEach(multibox => {
-        const selectBtn = multibox;
-        const items = multibox.querySelectorAll(".item");
-        const tooltip = multibox.querySelector(".tooltip");
-        const btnText = multibox.querySelector(".multibox-text");
-        const listItems = multibox.querySelector(".list-items");
-        selectBtn.addEventListener("click", (event) => {
-            event.stopPropagation();
-            multiboxes.forEach(box => {
-                if (box !== selectBtn) {
-                    box.classList.remove("open");
-                    box.querySelector(".list-items").style.display = "none"
-                }
-            });
-            selectBtn.classList.toggle("open");
-            listItems.style.display = selectBtn.classList.contains("open") ? "flex" : "none"
-        });
-        items.forEach(item => {
-            const checkbox = item.querySelector('input[type="checkbox"]');
-            const checkedItems = multibox.querySelectorAll(".item.checked input[type='checkbox']");
-            const selectedNames = Array.from(checkedItems).map(checkbox => {
-                const label = checkbox.parentElement.querySelector('span');
-                return label ? label.textContent.trim() : ''
-            }).filter(name => name !== '');
-            btnText.innerText = selectedNames.length > 0 ? selectedNames.join(', ') : btnText.getAttribute("title");
-            checkbox.addEventListener("change", () => {
-                item.classList.toggle("checked", checkbox.checked);
-                const checkedItems = multibox.querySelectorAll(".item.checked input[type='checkbox']");
-                const selectedNames = Array.from(checkedItems).map(checkbox => {
-                    const label = checkbox.parentElement.querySelector('span');
-                    return label ? label.textContent.trim() : ''
-                }).filter(name => name !== '');
-                btnText.innerText = selectedNames.length > 0 ? selectedNames.join(', ') : btnText.getAttribute("title")
-            })
-        });
-        listItems.addEventListener("mouseenter", () => {
-            tooltip.style.display = "none"
-        });
-        listItems.addEventListener("mouseleave", () => {
-            tooltip.style.display = "flex"
-        })
-    });
-    const comboboxes = document.querySelectorAll(".combobox");
-    comboboxes.forEach(combobox => {
-        const btnText = combobox.querySelector(".combobox-text");
-        const tooltip = combobox.querySelector(".tooltip");
-        const defaultTitle = btnText.getAttribute("title");
-        btnText.innerText = defaultTitle;
-        const listItems = combobox.querySelector(".list-items");
-        const selectBtn = combobox;
-        const sliderInput = combobox.querySelector('input[type="range"]');
-        if (sliderInput) {
-            sliderInput.addEventListener("click", (event) => {
-                event.stopPropagation()
-            })
-        }
-        selectBtn.addEventListener("click", (event) => {
-            event.stopPropagation();
-            comboboxes.forEach(cbx => {
-                if (cbx !== combobox) {
-                    const otherListItems = cbx.querySelector(".list-items");
-                    otherListItems.style.display = "none";
-                    cbx.classList.remove("open")
-                }
-            });
-            selectBtn.classList.toggle("open");
-            listItems.style.display = selectBtn.classList.contains("open") ? "flex" : "none"
-        });
-        const items = combobox.querySelectorAll(".item");
-        items.forEach(item => {
-            const checkbox = item.querySelector('input[type="checkbox"]');
-            if (checkbox.checked) {
-                items.forEach(i => {
-                    const cb = i.querySelector('input[type="checkbox"]');
-                    cb.checked = !1;
-                    i.classList.remove("checked")
+
+    const applyCommonLogic = (containerSelector, options = {}) => {
+        const containers = document.querySelectorAll(`${containerSelector}:not([data-initialized])`);
+
+        containers.forEach(container => {
+            container.setAttribute("data-initialized", "true");
+
+            const btnText = container.querySelector(options.textSelector || ".text");
+            const tooltip = container.querySelector(options.tooltipSelector || ".tooltip");
+            const listItems = container.querySelector(options.listItemsSelector || ".list-items");
+            const items = container.querySelectorAll(options.itemSelector || ".item");
+            const title = btnText?.getAttribute("title") || null;
+            const defaultTitle = btnText?.getAttribute("default") || null;
+            const sliderInput = container.querySelector("input[type='range']");
+
+            if (btnText) btnText.innerText = title;
+
+            const toggleOpen = (event) => {
+                event.stopPropagation();
+                const isCurrentlyOpen = container.classList.contains("open");
+
+                document.querySelectorAll(`${containerSelector}.open`).forEach(openContainer => {
+                    const otherListItems = openContainer.querySelector(options.listItemsSelector || ".list-items");
+                    if (otherListItems) otherListItems.style.display = "none";
+                    openContainer.classList.remove("open");
                 });
-                if (sliderInput)
-                    sliderInput.parentElement.style.display = 'flex';
-                checkbox.checked = !0;
-                item.classList.add("checked");
-                btnText.innerText = defaultTitle + ": " + checkbox.parentElement.querySelector('span').textContent.trim()
-            } else {
-                const anyChecked = [...items].some(i => i.querySelector('input[type="checkbox"]').checked);
-                if (!anyChecked) {
-                    btnText.innerText = defaultTitle + ": " + "Unspecified";
-                    if (sliderInput)
-                        sliderInput.parentElement.style.display = 'none'
-                }
-                item.classList.remove("checked")
+
+                container.classList.toggle("open", !isCurrentlyOpen);
+                listItems.style.display = !isCurrentlyOpen ? "flex" : "none";
+            };
+
+            if (container) container.addEventListener("click", toggleOpen);
+
+            if (sliderInput) {
+                sliderInput.addEventListener("click", (event) => {
+                    event.stopPropagation();
+                });
             }
-            checkbox.addEventListener("change", () => {
-                if (checkbox.checked) {
-                    items.forEach(i => {
-                        const cb = i.querySelector('input[type="checkbox"]');
-                        cb.checked = !1;
-                        i.classList.remove("checked")
-                    });
-                    if (sliderInput)
-                        sliderInput.parentElement.style.display = 'flex';
-                    checkbox.checked = !0;
-                    item.classList.add("checked");
-                    btnText.innerText = defaultTitle + ": " + checkbox.parentElement.querySelector('span').textContent.trim()
-                } else {
-                    const anyChecked = [...items].some(i => i.querySelector('input[type="checkbox"]').checked);
-                    if (!anyChecked) {
-                        btnText.innerText = defaultTitle + ": " + "Not specified";
+
+            if (options.selectBtnSelector === '.combobox') {
+                items.forEach(item => {
+                    const checkbox = item.querySelector('input[type="checkbox"]');
+                    if (checkbox.checked) {
+                        items.forEach(i => {
+                            const cb = i.querySelector('input[type="checkbox"]');
+                            cb.checked = !1;
+                            i.classList.remove("checked")
+                        });
                         if (sliderInput)
-                            sliderInput.parentElement.style.display = 'none'
+                            sliderInput.parentElement.style.display = 'flex';
+                        checkbox.checked = !0;
+                        item.classList.add("checked");
+                        btnText.innerText = title + ": " + checkbox.parentElement.querySelector('span').textContent.trim()
+                    } else {
+                        const anyChecked = [...items].some(i => i.querySelector('input[type="checkbox"]').checked);
+                        if (!anyChecked) {
+                            btnText.innerText = title + ": " + (defaultTitle ? defaultTitle : "Not Specified");
+                            if (sliderInput)
+                                sliderInput.parentElement.style.display = 'none'
+                        }
+                        item.classList.remove("checked")
                     }
-                    item.classList.remove("checked")
-                }
-            })
+                    checkbox.addEventListener("change", () => {
+                        if (checkbox.checked) {
+                            items.forEach(i => {
+                                const cb = i.querySelector('input[type="checkbox"]');
+                                cb.checked = !1;
+                                i.classList.remove("checked")
+                            });
+                            if (sliderInput)
+                                sliderInput.parentElement.style.display = 'flex';
+                            checkbox.checked = !0;
+                            item.classList.add("checked");
+                            btnText.innerText = title + ": " + checkbox.parentElement.querySelector('span').textContent.trim()
+                        } else {
+                            const anyChecked = [...items].some(i => i.querySelector('input[type="checkbox"]').checked);
+                            if (!anyChecked) {
+                                btnText.innerText = title + ": " + (defaultTitle ? defaultTitle : "Not Specified");
+                                if (sliderInput)
+                                    sliderInput.parentElement.style.display = 'none'
+                            }
+                            item.classList.remove("checked")
+                        }
+                    })
+                });
+            }
+            else if (options.selectBtnSelector === '.multibox') {
+                items.forEach(item => {
+                    const checkbox = item.querySelector('input[type="checkbox"]');
+                    const checkedItems = container.querySelectorAll(".item.checked input[type='checkbox']");
+                    const selectedNames = Array.from(checkedItems).map(checkbox => {
+                        const label = checkbox.parentElement.querySelector('span');
+                        return label ? label.textContent.trim() : ''
+                    }).filter(name => name !== '');
+                    btnText.innerText = selectedNames.length > 0 ? selectedNames.join(', ') : btnText.getAttribute("title");
+                    checkbox.addEventListener("change", () => {
+                        item.classList.toggle("checked", checkbox.checked);
+                        const checkedItems = container.querySelectorAll(".item.checked input[type='checkbox']");
+                        const selectedNames = Array.from(checkedItems).map(checkbox => {
+                            const label = checkbox.parentElement.querySelector('span');
+                            return label ? label.textContent.trim() : ''
+                        }).filter(name => name !== '');
+                        btnText.innerText = selectedNames.length > 0 ? selectedNames.join(', ') : btnText.getAttribute("title")
+                    })
+                });
+            } else {
+                items.forEach(item => {
+                    const checkbox = item.querySelector('input[type="checkbox"]');
+                    if (checkbox.checked) {
+                        items.forEach(i => {
+                            const cb = i.querySelector('input[type="checkbox"]');
+                            cb.checked = !1;
+                            i.classList.remove("checked")
+                        });
+                        if (sliderInput)
+                            sliderInput.parentElement.style.display = 'flex';
+                        checkbox.checked = !0;
+                        item.classList.add("checked");
+                        btnText.innerText = title + ": " + checkbox.parentElement.querySelector('span').textContent.trim()
+                    } else {
+                        const anyChecked = [...items].some(i => i.querySelector('input[type="checkbox"]').checked);
+                        if (!anyChecked) {
+                            btnText.innerText = title + ": " + (defaultTitle ? defaultTitle : "Default");
+                            if (sliderInput)
+                                sliderInput.parentElement.style.display = 'none'
+                        }
+                        item.classList.remove("checked")
+                    }
+                    checkbox.addEventListener("change", () => {
+                        if (checkbox.checked) {
+                            items.forEach(i => {
+                                const cb = i.querySelector('input[type="checkbox"]');
+                                cb.checked = !1;
+                                i.classList.remove("checked")
+                            });
+                            if (sliderInput)
+                                sliderInput.parentElement.style.display = 'flex';
+                            checkbox.checked = !0;
+                            item.classList.add("checked");
+                            btnText.innerText = title + ": " + checkbox.parentElement.querySelector('span').textContent.trim()
+                        } else {
+                            const anyChecked = [...items].some(i => i.querySelector('input[type="checkbox"]').checked);
+                            if (!anyChecked) {
+                                btnText.innerText = title + ": " + (defaultTitle ? defaultTitle : "Default");
+                                if (sliderInput)
+                                    sliderInput.parentElement.style.display = 'none'
+                            }
+                            item.classList.remove("checked")
+                        }
+                    })
+                });
+            }
+
+            listItems?.addEventListener("mouseenter", () => {
+                if (tooltip) tooltip.style.display = "none";
+            });
+            listItems?.addEventListener("mouseleave", () => {
+                if (tooltip) tooltip.style.display = "flex";
+            });
         });
-        listItems.addEventListener("mouseenter", () => {
-            tooltip.style.display = "none"
-        });
-        listItems.addEventListener("mouseleave", () => {
-            tooltip.style.display = "flex"
-        })
+    };
+
+    applyCommonLogic(".multibox", {
+        textSelector: ".multibox-text",
+        tooltipSelector: ".tooltip",
+        listItemsSelector: ".list-items",
+        itemSelector: ".item",
+        selectBtnSelector: ".multibox"
     });
+
+    applyCommonLogic(".combobox", {
+        textSelector: ".combobox-text",
+        tooltipSelector: ".tooltip",
+        listItemsSelector: ".list-items",
+        itemSelector: ".item",
+        selectBtnSelector: ".combobox"
+    });
+
+    applyCommonLogic(".rectangle", {
+        textSelector: "h4",
+        tooltipSelector: ".tooltip",
+        listItemsSelector: ".list-items",
+        itemSelector: ".item",
+        selectBtnSelector: ".rectangle .arrow-dwn"
+    });
+
+    const observer = new MutationObserver(() => {
+        applyCommonLogic(".multibox", {
+            textSelector: ".multibox-text",
+            tooltipSelector: ".tooltip",
+            listItemsSelector: ".list-items",
+            itemSelector: ".item",
+            selectBtnSelector: ".multibox"
+        });
+
+        applyCommonLogic(".combobox", {
+            textSelector: ".combobox-text",
+            tooltipSelector: ".tooltip",
+            listItemsSelector: ".list-items",
+            itemSelector: ".item",
+            selectBtnSelector: ".combobox"
+        });
+
+        applyCommonLogic(".rectangle", {
+            textSelector: "h4",
+            tooltipSelector: ".tooltip",
+            listItemsSelector: ".list-items",
+            itemSelector: ".item",
+            selectBtnSelector: ".rectangle .arrow-dwn"
+        });
+    });
+
+    //observer.observe(document.body, { childList: true, subtree: true });
+
     const rectangles = document.querySelectorAll(".rectangle");
     rectangles.forEach(rectangle => {
         const btnText = rectangle.querySelector("h4");
@@ -4167,23 +5445,42 @@ export function createSectionAndElements() {
         })
     });
     document.addEventListener("click", () => {
+        const multiboxes = document.querySelectorAll(".multibox");
         multiboxes.forEach(box => {
             box.classList.remove("open");
             box.querySelector(".list-items").style.display = "none"
         });
+        const comboboxes = document.querySelectorAll(".combobox");
         comboboxes.forEach(combobox => {
             combobox.querySelector(".list-items").style.display = "none";
             combobox.classList.remove("open")
         });
+        const rectangles = document.querySelectorAll(".rectangle");
         rectangles.forEach(rectangle => {
             rectangle.querySelector(".list-items").style.display = "none";
             rectangle.classList.remove("open")
         });
     })
 }
+const isBlobSupported = () => {
+    try {
+        if (typeof Blob === 'undefined') return false;
+        const testBlob = new Blob(['test'], { type: 'text/plain' });
+        if (typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') return false;
+        const testUrl = URL.createObjectURL(testBlob);
+        URL.revokeObjectURL(testUrl);
+        return true;
+    } catch (error) {
+        console.warn('Blob is not fully supported in this environment:', error);
+        return false;
+    }
+};
 export const processBlobToFile = async (blobUrl, fileName, type = null) => {
     try {
-        console.log(`Fetching blob from URL: ${blobUrl}`);
+        if (typeof blobUrl !== 'string' || (!blobUrl.startsWith('blob:') && !blobUrl.startsWith('http'))) {
+            throw new Error(`Invalid blob URL provided: ${blobUrl}`);
+        }
+        //console.log(`Fetching blob from URL: ${blobUrl}`);
         const response = await fetch(blobUrl);
         if (!response.ok) {
             throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
@@ -4204,6 +5501,19 @@ export const processBlobToFile = async (blobUrl, fileName, type = null) => {
     } catch (error) {
         console.error(`Error processing blob to file: ${error.message}`);
         alert(`Error processing blob to file: ${error.message}`);
+        if (!isBlobSupported()) {
+            alert(`Your environment does not support the Blob API.
+        
+Possible reasons:
+1. You are using an outdated browser (e.g., Internet Explorer or an old version of another browser).
+2. Your browser has disabled the Blob API due to security or compatibility settings.
+3. You are running in a restricted environment (e.g., sandboxed iframe or embedded webview).
+4. The Blob API is not implemented in your current platform.
+
+Please try updating your browser or using a different one to ensure compatibility.`);
+            console.error('Blob API is not supported in this environment.');
+            return null;
+        }
         return null;
     }
 };
@@ -4248,6 +5558,7 @@ export async function cancelProcess(showAlertion) {
                     });
                     if (showAlertion && response.ok) {
                         await response.json();
+                        const startProcessBtn = document.getElementById('startProcessBtn');
                         startProcessBtn.disabled = !1;
                         setClientStatus('Request got cancelled')
                     }
@@ -4261,11 +5572,5 @@ export async function cancelProcess(showAlertion) {
     } catch (error) {
         console.error('Error checking processes:', error)
     }
-}
-window.iosMobileCheck = function () {
-    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-    const isIOSDevice = /iPhone|iPad|iPod/i.test(userAgent);
-    const hasTouchscreen = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    return isIOSDevice && hasTouchscreen
 }
 ensureCameFromAd();

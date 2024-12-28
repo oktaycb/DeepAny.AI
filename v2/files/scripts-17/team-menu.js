@@ -8,7 +8,7 @@ window.addEventListener("load", event => {
         desc: "I like vodka and you :)",
         photo: "files/assets/profile.jpg",
         website: "https://www.bodyswap.me",
-        email: "durieun02@gmail.com",
+        email: "zeroduri02@gmail.com",
         linkedin: "",
         dribbble: ""
     },

@@ -26,7 +26,7 @@ main {
     display: none;
     position: absolute;
     background: 0 0;
-    transition: top var(--transition-duration-3),height var(--transition-duration-3);
+    transition: top var(--transition-duration-2),height var(--transition-duration-2);
     z-index: 1
 }
 
@@ -174,7 +174,8 @@ body {
 }
 
 #wrapper {
-    overflow: scroll
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .ar-4-3 .centered-container, .ar-4-3 .main-container {
@@ -213,11 +214,13 @@ h2 {
 }
 
 h3 {
+    font-weight: 400;
     font-size: calc((4vh * var(--scale-factor-h) ));
     line-height: calc((4vh * 1.33 * var(--scale-factor-h) ))
 }
 
 h4 {
+    font-weight: 400;
     font-size: calc((2.5vh * var(--scale-factor-h) ));
     line-height: calc((2.5vh * 1.33 * var(--scale-factor-h) ))
 }
@@ -257,7 +260,7 @@ a {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: calc(1vh* var(--scale-factor-h)) calc((2vh* var(--scale-factor-h)))
+    padding: calc(2vh* var(--scale-factor-h)) calc((2vh* var(--scale-factor-h)))
 }
 
 .text-gradient, a.active, a.text:hover {
@@ -391,7 +394,7 @@ option {
 .navbar {
     background: var(--background-lighter-color);
     width: 100vw;
-    transition: top var(--transition-duration-3);
+    transition: top var(--transition-duration-2);
     padding: calc(1vh * var(--scale-factor-h)) calc((2vh * var(--scale-factor-h)))
 }
 
@@ -426,7 +429,7 @@ option {
     position: fixed;
     z-index: 1001;
     display: flex;
-    transition: height var(--transition-duration-3),top var(--transition-duration-3),left var(--transition-duration-3)
+    transition: height var(--transition-duration-2),top var(--transition-duration-2),left var(--transition-duration-2)
 }
 
 .ar-4-3 .sidebar {
@@ -534,6 +537,17 @@ option {
     height: 100% !important
 }
 
+#upload-options-modal-face-upload, #upload-options-modal-input-upload {
+    position: fixed;
+    z-index: 1000;
+    width: max-content;
+}
+
+.upload-option {
+    padding: 1vh;
+    cursor: pointer;
+}
+
 .dropdown-menu {
     position: absolute;
     top: 100%;
@@ -556,6 +570,10 @@ option {
     .dropdown-menu li {
         margin: calc(1.25vh* var(--scale-factor-h)) 0;
         width: fit-content
+    }
+
+    .ar-4-3 .dropdown-menu li {
+        margin: calc(1.25vh* var(--scale-factor-h));
     }
 
 .capability:before, .feature svg {
@@ -607,7 +625,7 @@ ul {
     color: #f7f8f8
 }
 
-.incognito-overlay {
+.overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -969,12 +987,6 @@ input[type=range] {
     padding: 0 calc((2vh * var(--scale-factor-h)))
 }
 
-.disabled {
-    pointer-events: none;
-    cursor: not-allowed;
-    opacity: .75
-}
-
 .ar-4-3 .hamburger-menu.open .line:nth-child(2), .tooltip {
     opacity: 0
 }
@@ -1220,6 +1232,17 @@ input[type=range] {
     max-width: calc(4 * (var(--input-size) + var(--input-margin)))
 }
 
+.features-witdh {
+    display: flex;
+    flex-direction: column;
+    gap: calc(1vh* var(--scale-factor-h));
+    width: calc(4*(var(--input-size) + var(--input-margin)))
+}
+
+.ar-4-3 .features-witdh {
+    width: unset
+}
+
 .faces, .inputs {
     display: flex;
     flex-wrap: wrap;
@@ -1242,7 +1265,7 @@ input[type=range] {
     width: unset
 }
 
-    .ar-4-3 .faces:has(>:nth-child(n+3)), .ar-4-3 .inputs:has(>:nth-child(n+3)) {
+    .ar-4-3 .faces:has(>:nth-child(n+2)), .ar-4-3 .inputs:has(>:nth-child(n+2)) {
         overflow-y: scroll !important;
         width: unset;
         max-width: calc(2 *var(--input-size) + var(--input-margin) + var(--scrollbar-width));
@@ -1351,7 +1374,7 @@ input[type=range] {
         content: '+'
     }
 
-    .circular-button:hover {
+    .circular-button:hover, .dragover {
         background: linear-gradient(45deg,var(--orange),var(--red))
     }
 
@@ -1566,7 +1589,7 @@ label.checkbox input[type=checkbox]:checked {
     display: flex;
     justify-content: center;
     gap: calc(1.5vh* var(--scale-factor-h));
-    height: calc(7vh* var(--scale-factor-h));
+    height: calc(8vh* var(--scale-factor-h));
     width: 100%;
     color: #fff
 }
@@ -1817,4 +1840,14 @@ input, select, textarea {
     width: 100%;
     height: 100%;
     transition: --transition-grey var(--transition-duration-1)
+}
+
+.hidden {
+    display: none;
+}
+
+.disabled {
+    pointer-events: none;
+    cursor: not-allowed;
+    opacity: .75
 }

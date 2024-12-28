@@ -1,0 +1,1754 @@
+<!DOCTYPE html>
+<html lang="en" style="background: rgba(24, 24, 24, 1);" class="loading-screen">
+<head>
+    <title>AI Inpainting: Clothing Restoration and Editing</title>
+    <link rel="canonical" href="https://deepany.ai/inpaint">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="DeepAny.AI offers a powerful inpainting tool for precision image edits. Easily modify parts of your image with AI-driven tools that make seamless adjustments possible. No experience needed—start your free trial today!">
+    <meta name="keywords" content="AI inpainting, DeepAny, free inpainting tool, online photo editor, image manipulation, AI-powered image editing, seamless image edits, photo restoration, AI-enhanced images, picture editing with AI">
+    <meta name="apple-mobile-web-app-title" content="AI Inpaint" />
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://deepany.ai/inpainting">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:site_name" content="DeepAny.AI">
+    <meta property="og:title" content="DeepAny.AI | AI Inpainting Tool">
+    <meta property="og:description" content="Transform images with AI-powered inpainting! DeepAny.AI offers seamless, precise editing options to modify any image effortlessly.">
+    <meta property="og:image" content="https://deepany.ai/assets/brand.png">
+    <meta property="og:image:alt" content="DeepAny.AI | Brand Logo">
+
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://deepany.ai/inpainting">
+    <meta property="twitter:title" content="DeepAny.AI | AI Inpainting Tool">
+    <meta property="twitter:description" content="Edit parts of your images with AI-driven inpainting. Precision and creativity made easy with DeepAny.AI.">
+    <meta property="twitter:image" content="https://deepany.ai/assets/brand.png">
+
+    <style id="loading-stylesheet">
+        .loading-screen {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #ff7300;
+            border-radius: 50%;
+            width: 50px !important;
+            height: 50px !important;
+            animation: spin 2s linear infinite
+        }
+
+        @keyframes spin {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+    </style>
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="shortcut icon" href="/.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="stylesheet" href="css/styles.css?v=1.4.4.5.9.9.4">
+    <style>
+        .faces, .inputs {
+            width: calc(4 * (var(--input-size) + var(--input-margin)))
+        }
+
+            .faces:has(>:nth-child(n+3)), .inputs:has(>:nth-child(n+3)) {
+                width: calc(4 * (var(--input-size) + var(--input-margin)) + var(--scrollbar-width))
+            }
+
+        .ar-4-3 .faces:has(>:nth-child(n+2)), .ar-4-3 .inputs:has(>:nth-child(n+2)) {
+            max-width: calc(4 *var(--input-size) + var(--input-margin) + var(--scrollbar-width))
+        }
+    </style>
+</head>
+<body lang="en">
+    <script type="module" defer>
+        const version = '1.4.4.5.9.9.4';
+
+        async function loadModule(url) {
+            return import(`${url}?v=${version}`);
+        }
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            const functions = await loadModule('./scripts/functions.js');
+            const { getSelectedInputId, setDownloadCancelled, abortController, pageName, setFetchableServerAdresses, getFetchableServerAdresses, checkServerStatus, setDynamicInterval, updateDownloadFile, cancelProcess, fetchUploadedChunks, processBlobToFile, createSectionAndElements, setMaxWidth, saveCountIndex, handleDownload, handleFileContainerEvents, handleUpload, setupFileUpload, setClientStatus, customFetch, checkServerQueue, showNotification, openDB, addToDB, getFromDB, initDB, setUser, getUserData, getUserDoc, setAuthentication, getFirebaseModules, getDocSnapshot, getDocsSnapshot, getScreenMode, getCurrentMain, updateContent, ScreenMode, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol, fetchServerAddresses } = functions;
+
+            if (!window.indexedDB) {
+                alert('Your browser does not support IndexedDB.');
+            }
+
+            function savePageState() {
+                const requiredIds = [
+                    'removeBanner'
+                ];
+
+                if (!requiredIds.every(id => document.getElementById(id))) {
+                    return;
+                }
+
+                const getCheckboxState = id => document.getElementById(id)?.checked || false;
+                const activeLinks = Array.from(document.querySelectorAll('.nav-links .active')).map(link => link.getAttribute('for') || '');
+
+                const selectedRectangles = Array.from(document.querySelectorAll('.rectangle.selected')).map(rectangle => rectangle.id);
+
+                const state = {
+                    removeBanner: getCheckboxState('removeBanner'),
+                    activeLinks: activeLinks,
+                    selectedRectangles: selectedRectangles,
+                    positivePrompt: document.getElementById('positivePrompt').value,
+                    negativePrompt: document.getElementById('negativePrompt').value,
+                    rectangles: Array.from(document.querySelectorAll('.rectangle')).map(rectangle => ({
+                        text: rectangle.querySelector('h4')?.innerText || '',
+                        open: rectangle.classList.contains('open'),
+                        items: Array.from(rectangle.querySelectorAll('.item')).map(item => ({
+                            checked: item.querySelector('input[type="checkbox"]')?.checked || false,
+                        })),
+                    })),
+                    multiboxes: Array.from(document.querySelectorAll('.multibox')).map(multibox => ({
+                        text: multibox.querySelector('.multibox-text')?.innerText || '',
+                        open: multibox.classList.contains('open'),
+                        items: Array.from(multibox.querySelectorAll('.item')).map(item => ({
+                            checked: item.querySelector('input[type="checkbox"]')?.checked || false,
+                        })),
+                    })),
+                    comboboxes: Array.from(document.querySelectorAll('.combobox')).map(combobox => ({
+                        text: combobox.querySelector('.combobox-text')?.innerText || '',
+                        open: combobox.classList.contains('open'),
+                        items: Array.from(combobox.querySelectorAll('.item')).map(item => ({
+                            checked: item.querySelector('input[type="checkbox"]')?.checked || false,
+                        })),
+                    })),
+                };
+
+                localStorage.setItem(pageName, JSON.stringify(state));
+            }
+
+            let userData = await getUserData();
+            let userDoc = await getUserDoc();
+
+            function updateMainContent(screenMode, pageContent) {
+                pageContent.length = 0;
+                pageContent.push(`                      <div id="baseContainer" class="centered-container">
+                                                                                    <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
+                                                                                        <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
+                                                                                            <div class="background-dot-container">
+                                                                                                <div class="background-dot-container-content">
+                                                                                                    <div class="features-witdh">
+                                                                                                            <div class="rectangle-container" id="mode-selection">
+						                                                                                        <div class="rectangle" id="realistic">
+							                                                                                        <img src="assets/img1.png" alt="Image 1">
+							                                                                                        <h4 class="text non-bold" title="Realistic"></h4>
+                                                                                                                    <span class="arrow-dwn"></span>
+                                                                                                                       <ul class="list-items">
+                                                                                                                            <li class="item">
+                                                                                                                                <label class="checkbox">
+                                                                                                                                    <input type="checkbox" id="[default realistic]"><span>Default</span>
+                                                                                                                                </label>
+                                                                                                                            </li>
+                                                                                                                        </ul>
+						                                                                                        </div>
+						                                                                                        <div class="rectangle" id="anime">
+							                                                                                        <img src="assets/img2.png" alt="Image 2">
+							                                                                                        <h4 class="text non-bold" title="Anime"></h4>
+                                                                                                                    <span class="arrow-dwn"></span>
+                                                                                                                        <ul class="list-items">
+                                                                                                                            <li class="item">
+                                                                                                                                <label class="checkbox">
+                                                                                                                                    <input type="checkbox" id="[default anime]"><span>Default</span>
+                                                                                                                                </label>
+                                                                                                                            </li>
+                                                                                                                        </ul>
+						                                                                                        </div>
+					                                                                                        </div>
+                                                                                                            <div class="line"></div>
+                                                                                                            <div class="nav-links group1">
+                                                                                                                <li><a class="text" for="Positive">Positive</a></li>
+                                                                                                                <li><a class="text" for="Negative">Negative</a></li>
+                                                                                                                <li><a class="text" for="Generation">Generation</a></li>
+                                                                                                                <li><a class="text" for="Other">Other</a></li>
+                                                                                                            </div>
+                                                                                                            <div id="Positive" class="section" style="display: none;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                <div>
+                                                                                                                    <h4 class="non-bold">Positive Prompt</h4>
+                                                                                                                    <div style="font-size: 0px; font-weight: 400;" tooltip>
+                                                                                                                        <div class="tooltip">Enter a positive prompt to specify elements you want to enhance, add or remove from the image..</div>
+                                                                                                                        <textarea id="positivePrompt" placeholder="Leave empty or enter a desired positive prompt..." maxlength="2000" style="width: 100%;height: 100%;"></textarea>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                                <div class="line"></div>
+                                                                                                                <div class="nav-links group2" style="display: flex;flex-wrap: wrap;justify-items: center;">
+                                                                                                                    <li><a class="text" for="Identity">Identity</a></li>
+                                                                                                                    <li><a class="text" for="Action">Action</a></li>
+                                                                                                                    <li><a class="text" for="Head">Head</a></li>
+                                                                                                                    <li><a class="text" for="Body">Body</a></li>
+                                                                                                                    <li><a class="text" for="Age">Age</a></li>
+                                                                                                                    <li><a class="text" for="Clothing">Clothing</a></li>
+                                                                                                                    <li><a class="text" for="Enviroment">Enviroment</a></li>
+                                                                                                                    <li><a class="text" for="Quality">Quality</a></li>
+                                                                                                                </div>
+
+
+                                                                                                                    <div class="small-boxes" id="Identity">
+                                                                                                                        <div style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: column;">
+                                                                                                                            <div>
+                                                                                                                                <h4 class="uppercase text-gradient">Gender Identity</h4>
+                                                                                                                                <div class="small-box" tooltip data-value="1girl"><span class="arrow-dwn"></span>Female</div>
+                                                                                                                            </div>
+                                                                                                                            <div class="small-box" tooltip data-value="1boy"><span class="arrow-dwn"></span>Male</div>
+                                                                                                                            <div class="small-box" tooltip data-value="2girls"><span class="arrow-dwn"></span>2 Females</div>
+                                                                                                                            <div class="small-box" tooltip data-value="2boys"><span class="arrow-dwn"></span>2 Males</div>
+                                                                                                                        </div>
+
+                                                                                                                        <div style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: column;">
+                                                                                                                            <div>
+                                                                                                                                <h4 class="uppercase text-gradient">Presentation & Subcategories</h4>
+                                                                                                                            <div class="small-box" tooltip data-value="transgender"><span class="arrow-dwn"></span>Transgender</div>
+                                                                                                                            </div>
+                                                                                                                            <div class="small-box" tooltip data-value="feminine-presenting"><span class="arrow-dwn"></span>Feminine-presenting</div>
+                                                                                                                            <div class="small-box" tooltip data-value="masculine-presenting"><span class="arrow-dwn"></span>Masculine-presenting</div>
+                                                                                                                            <div class="small-box" tooltip data-value="crossdresser"><span class="arrow-dwn"></span>Crossdresser</div>
+                                                                                                                            <div class="small-box" tooltip data-value="otokonoko"><span class="arrow-dwn"></span>Otokonoko</div>
+                                                                                                                            <div class="small-box" tooltip data-value="tomboy"><span class="arrow-dwn"></span>Tomboy</div>
+                                                                                                                            <div class="small-box" tooltip data-value="femboy"><span class="arrow-dwn"></span>Femboy</div>
+                                                                                                                            <div class="small-box" tooltip data-value="androgynous"><span class="arrow-dwn"></span>Androgynous</div>
+                                                                                                                        </div>
+
+                                                                                                                        <div style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: column;">
+                                                                                                                            <div>
+                                                                                                                                <h4 class="uppercase text-gradient">Other Gender Identities</h4>
+                                                                                                                                <div class="small-box" tooltip data-value="non-binary"><span class="arrow-dwn"></span>Non-binary</div>
+                                                                                                                            </div>
+                                                                                                                            <div class="small-box" tooltip data-value="genderfluid"><span class="arrow-dwn"></span>Genderfluid</div>
+                                                                                                                            <div class="small-box" tooltip data-value="agender"><span class="arrow-dwn"></span>Agender</div>
+                                                                                                                            <div class="small-box" tooltip data-value="bigender"><span class="arrow-dwn"></span>Bigender</div>
+                                                                                                                        </div>
+                                                                                                                    </div>
+
+                                                                                                                    <div class="small-boxes" id="Action">
+                                                                                                                        <div style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: column;">
+                                                                                                                            <div>
+                                                                                                                                <h4 class="uppercase text-gradient">Standing & Sitting</h4>
+                                                                                                                                <div class="small-box" tooltip data-value="standing"><span class="arrow-dwn"></span>Standing</div>
+                                                                                                                            </div>
+                                                                                                                            <div class="small-box" tooltip data-value="sitting"><span class="arrow-dwn"></span>Sitting</div>
+                                                                                                                            <div class="small-box" tooltip data-value="kneeling"><span class="arrow-dwn"></span>Kneeling</div>
+                                                                                                                        </div>
+
+                                                                                                                        <div style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: column;">
+                                                                                                                            <div>
+                                                                                                                                <h4 class="uppercase text-gradient">Arm Movements</h4>
+                                                                                                                                <div class="small-box" tooltip data-value="raising arm"><span class="arrow-dwn"></span>Raising Arm</div>
+                                                                                                                            </div>
+                                                                                                                            <div class="small-box" tooltip data-value="crossed arms"><span class="arrow-dwn"></span>Crossed Arms</div>
+                                                                                                                            <div class="small-box" tooltip data-value="grabbing"><span class="arrow-dwn"></span>Grabbing</div>
+                                                                                                                            <div class="small-box" tooltip data-value="lifting oneself"><span class="arrow-dwn"></span>Lifting Oneself</div>
+                                                                                                                        </div>
+
+                                                                                                                        <div style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: column;">
+                                                                                                                            <div>
+                                                                                                                                <h4 class="uppercase text-gradient">Leg & Body Movements</h4>
+                                                                                                                                <div class="small-box" tooltip data-value="wide stance"><span class="arrow-dwn"></span>Wide Stance</div>
+                                                                                                                            </div>
+                                                                                                                            <div class="small-box" tooltip data-value="squatting"><span class="arrow-dwn"></span>Squatting</div>
+                                                                                                                            <div class="small-box" tooltip data-value="jumping"><span class="arrow-dwn"></span>Jumping</div>
+                                                                                                                            <div class="small-box" tooltip data-value="running"><span class="arrow-dwn"></span>Running</div>
+                                                                                                                            <div class="small-box" tooltip data-value="stretching"><span class="arrow-dwn"></span>Stretching</div>
+                                                                                                                            <div class="small-box" tooltip data-value="balancing"><span class="arrow-dwn"></span>Balancing</div>
+                                                                                                                            <div class="small-box" tooltip data-value="pushing"><span class="arrow-dwn"></span>Pushing</div>
+                                                                                                                            <div class="small-box" tooltip data-value="pulling"><span class="arrow-dwn"></span>Pulling</div>
+                                                                                                                            <div class="small-box" tooltip data-value="climbing"><span class="arrow-dwn"></span>Climbing</div>
+                                                                                                                            <div class="small-box" tooltip data-value="reaching up"><span class="arrow-dwn"></span>Reaching Up</div>
+                                                                                                                            <div class="small-box" tooltip data-value="twisting"><span class="arrow-dwn"></span>Twisting</div>
+                                                                                                                            <div class="small-box" tooltip data-value="crouching"><span class="arrow-dwn"></span>Crouching</div>
+                                                                                                                            <div class="small-box" tooltip data-value="walking"><span class="arrow-dwn"></span>Walking</div>
+                                                                                                                            <div class="small-box" tooltip data-value="leaning"><span class="arrow-dwn"></span>Leaning</div>
+                                                                                                                            <div class="small-box" tooltip data-value="turning around"><span class="arrow-dwn"></span>Turning Around</div>
+                                                                                                                        </div>
+
+                                                                                                                        <div style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: column;">
+                                                                                                                            <div>
+                                                                                                                                <h4 class="uppercase text-gradient">Actions with Legs & Hips</h4>
+                                                                                                                                <div class="small-box" tooltip data-value="kicking"><span class="arrow-dwn"></span>Kicking</div>
+                                                                                                                            </div>
+                                                                                                                            <div class="small-box" tooltip data-value="falling"><span class="arrow-dwn"></span>Falling</div>
+                                                                                                                            <div class="small-box" tooltip data-value="ducking"><span class="arrow-dwn"></span>Ducking</div>
+                                                                                                                            <div class="small-box" tooltip data-value="spreading legs"><span class="arrow-dwn"></span>Legs Apart</div>
+                                                                                                                            <div class="small-box" tooltip data-value="leaning back"><span class="arrow-dwn"></span>Leaning Back</div>
+                                                                                                                            <div class="small-box" tooltip data-value="arching back"><span class="arrow-dwn"></span>Arching Back</div>
+                                                                                                                            <div class="small-box" tooltip data-value="shifting hips"><span class="arrow-dwn"></span>Shifting Hips</div>
+                                                                                                                            <div class="small-box" tooltip data-value="crossing legs"><span class="arrow-dwn"></span>Legs Cross</div>
+                                                                                                                            <div class="small-box" tooltip data-value="bending over"><span class="arrow-dwn"></span>Bending Over</div>
+                                                                                                                        </div>
+
+                                                                                                                        <div style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: column;">
+                                                                                                                            <div>
+                                                                                                                                <h4 class="uppercase text-gradient">Hand & Facial Movements</h4>
+                                                                                                                                <div class="small-box" tooltip data-value="twirling hair"><span class="arrow-dwn"></span>Twirling Hair</div>
+                                                                                                                            </div>
+                                                                                                                            <div class="small-box" tooltip data-value="sliding fingers"><span class="arrow-dwn"></span>Sliding Fingers</div>
+                                                                                                                            <div class="small-box" tooltip data-value="biting lip"><span class="arrow-dwn"></span>Biting Lip</div>
+                                                                                                                            <div class="small-box" tooltip data-value="touching neck"><span class="arrow-dwn"></span>Touching Neck</div>
+                                                                                                                            <div class="small-box" tooltip data-value="running hands"><span class="arrow-dwn"></span>Running Hands</div>
+                                                                                                                            <div class="small-box" tooltip data-value="pulling clothes"><span class="arrow-dwn"></span>Pulling Clothes</div>
+                                                                                                                            <div class="small-box" tooltip data-value="leaning side"><span class="arrow-dwn"></span>Leaning Side</div>
+                                                                                                                            <div class="small-box" tooltip data-value="brushing skin"><span class="arrow-dwn"></span>Brushing Skin</div>
+                                                                                                                            <div class="small-box" tooltip data-value="reaching overhead"><span class="arrow-dwn"></span>Reaching Overhead</div>
+                                                                                                                            <div class="small-box" tooltip data-value="shifting hips"><span class="arrow-dwn"></span>Shifting Hips</div>
+                                                                                                                            <div class="small-box" tooltip data-value="twisting body"><span class="arrow-dwn"></span>Twisting Body</div>
+                                                                                                                        </div>
+                                                                                                                    </div>
+
+                                                                                                                    <div class="small-boxes" id="Head">
+                                                                                                                        <div style="display: flex;gap: calc(1vh* var(--scale-factor-h));flex-direction: column;">
+                                                                                                                            <div>
+                                                                                                                                <h4 class="uppercase text-gradient">Emotions</h4>
+							                                                                                                    <div class="small-box" tooltip data-value="angry"><span class="arrow-dwn"></span>Angry</div>
+                                                                                                                            </div>
+							                                                                                                <div class="small-box" tooltip data-value="crying"><span class="arrow-dwn"></span>Crying</div>
+							                                                                                                <div class="small-box" tooltip data-value="happy"><span class="arrow-dwn"></span>Happy</div>
+							                                                                                                <div class="small-box" tooltip data-value="laughing"><span class="arrow-dwn"></span>Laughing</div>
+							                                                                                                <div class="small-box" tooltip data-value="sad"><span class="arrow-dwn"></span>Sad</div>
+							                                                                                                <div class="small-box" tooltip data-value="serious"><span class="arrow-dwn"></span>Serious</div>
+							                                                                                                <div class="small-box" tooltip data-value="shocked"><span class="arrow-dwn"></span>Shocked</div>
+							                                                                                                <div class="small-box" tooltip data-value="smiling"><span class="arrow-dwn"></span>Smiling</div>
+							                                                                                                <div class="small-box" tooltip data-value="laughing"><span class="arrow-dwn"></span>Laughing</div>
+                                                                                                                        </div>
+                                                                                                                        
+                                                                                                                        <div style="display: flex;gap: calc(1vh* var(--scale-factor-h));flex-direction: column;">
+                                                                                                                            <div>
+                                                                                                                                <h4 class="uppercase text-gradient">Hair Style</h4>
+							                                                                                                    <div class="small-box" tooltip data-value="bangs hair"><span class="arrow-dwn"></span>Bangs Hair</div>
+                                                                                                                            </div>
+							                                                                                                <div class="small-box" tooltip data-value="bobcut hair"><span class="arrow-dwn"></span>Bobcut Hair</div>
+							                                                                                                <div class="small-box" tooltip data-value="braided hair"><span class="arrow-dwn"></span>Braided Hair</div>
+							                                                                                                <div class="small-box" tooltip data-value="hair bun hair"><span class="arrow-dwn"></span>Hair bun</div>
+							                                                                                                <div class="small-box" tooltip data-value="messy hair"><span class="arrow-dwn"></span>Messy Hair</div>
+							                                                                                                <div class="small-box" tooltip data-value="pigtails hair"><span class="arrow-dwn"></span>Pigtails Hair</div>
+							                                                                                                <div class="small-box" tooltip data-value="pixie hair"><span class="arrow-dwn"></span>Pixie Hair</div>
+							                                                                                                <div class="small-box" tooltip data-value="ponytail hair"><span class="arrow-dwn"></span>Ponytail Hair</div>
+							                                                                                                <div class="small-box" tooltip data-value="slicked hair"><span class="arrow-dwn"></span>Slicked Hair</div>
+							                                                                                                <div class="small-box" tooltip data-value="straight hair"><span class="arrow-dwn"></span>Straight Hair</div>
+                                                                                                                        </div>
+                                                                                                                        
+                                                                                                                        
+                                                                                                                        <div style="display: flex;gap: calc(1vh* var(--scale-factor-h));flex-direction: column;">
+                                                                                                                            <div>
+                                                                                                                                <h4 class="uppercase text-gradient">Hair Colour</h4>
+							                                                                                                    <div class="small-box" tooltip data-value="brunette"><span class="arrow-dwn"></span>Brunette</div>
+                                                                                                                            </div>
+							                                                                                                <div class="small-box" tooltip data-value="blonde"><span class="arrow-dwn"></span>Blonde</div>
+							                                                                                                <div class="small-box" tooltip data-value="ginger"><span class="arrow-dwn"></span>Ginger</div>
+							                                                                                                <div class="small-box" tooltip data-value="black hair"><span class="arrow-dwn"></span>Black Hair Colour</div>
+							                                                                                                <div class="small-box" tooltip data-value="red hair"><span class="arrow-dwn"></span>Red Hair Colour</div>
+							                                                                                                <div class="small-box" tooltip data-value="green hair"><span class="arrow-dwn"></span>Green Hair Colour</div>
+							                                                                                                <div class="small-box" tooltip data-value="blue hair"><span class="arrow-dwn"></span>Blue Hair Colour</div>
+							                                                                                                <div class="small-box" tooltip data-value="purple hair"><span class="arrow-dwn"></span>Purple Hair Colour</div>
+							                                                                                                <div class="small-box" tooltip data-value="pink hair"><span class="arrow-dwn"></span>Pink Hair Colour</div>
+							                                                                                                <div class="small-box" tooltip data-value="white hair"><span class="arrow-dwn"></span>White Hair Colour</div>
+                                                                                                                        </div>
+                                                                                                                        
+                                                                                                                        <div style="display: flex;gap: calc(1vh* var(--scale-factor-h));flex-direction: column;">
+                                                                                                                            <div>
+                                                                                                                                <h4 class="uppercase text-gradient">Eye Colour</h4>
+							                                                                                                    <div class="small-box" tooltip data-value="black eye"><span class="arrow-dwn"></span>Black Eye Colour</div>
+                                                                                                                            </div>
+							                                                                                                <div class="small-box" tooltip data-value="red eye"><span class="arrow-dwn"></span>Red Eye Colour</div>
+							                                                                                                <div class="small-box" tooltip data-value="green eye"><span class="arrow-dwn"></span>Green Eye Colour</div>
+							                                                                                                <div class="small-box" tooltip data-value="blue eye"><span class="arrow-dwn"></span>Blue Eye Colour</div>
+							                                                                                                <div class="small-box" tooltip data-value="purple eye"><span class="arrow-dwn"></span>Purple Eye Colour</div>
+							                                                                                                <div class="small-box" tooltip data-value="pink eye"><span class="arrow-dwn"></span>Pink Eye Colour</div>
+							                                                                                                <div class="small-box" tooltip data-value="white eye"><span class="arrow-dwn"></span>White Eye Colour</div>
+                                                                                                                        </div>
+                                                                                                                        
+                                                                                                                        <div style="display: flex;gap: calc(1vh* var(--scale-factor-h));flex-direction: column;">
+                                                                                                                            <div>
+                                                                                                                                <h4 class="uppercase text-gradient">Lip Colour</h4>
+							                                                                                                    <div class="small-box" tooltip data-value="black eye"><span class="arrow-dwn"></span>Black Eye Colour</div>
+                                                                                                                            </div>
+							                                                                                                <div class="small-box" tooltip data-value="red lip"><span class="arrow-dwn"></span>Red Lip Colour</div>
+							                                                                                                <div class="small-box" tooltip data-value="green lip"><span class="arrow-dwn"></span>Green Lip Colour</div>
+							                                                                                                <div class="small-box" tooltip data-value="blue lip"><span class="arrow-dwn"></span>Blue Lip Colour</div>
+							                                                                                                <div class="small-box" tooltip data-value="purple lip"><span class="arrow-dwn"></span>Purple Lip Colour</div>
+							                                                                                                <div class="small-box" tooltip data-value="pink lip"><span class="arrow-dwn"></span>Pink Lip Colour</div>
+							                                                                                                <div class="small-box" tooltip data-value="white lip"><span class="arrow-dwn"></span>White Lip Colour</div>
+                                                                                                                        </div>
+
+                                                                                                                        <div style="display: flex;gap: calc(1vh* var(--scale-factor-h));flex-direction: column;">
+                                                                                                                            <div>
+                                                                                                                                <h4 class="uppercase text-gradient">Eyebrow Features</h4>
+							                                                                                                    <div class="small-box" tooltip data-value="black eye"><span class="arrow-dwn"></span>Black Eye Colour</div>
+                                                                                                                            </div>
+		                                                                                                                    <div class="small-box" tooltip data-value="eyebrow thickness"><span class="arrow-dwn"></span>Eyebrow Thickness</div>
+                                                                                                                            <div class="small-box" tooltip data-value="eyebrow arches"><span class="arrow-dwn"></span>Eyebrow Arches</div>
+                                                                                                                            <div class="small-box" tooltip data-value="unibrow"><span class="arrow-dwn"></span>Unibrow</div>
+                                                                                                                        </div>
+
+                                                                                                                        <div style="display: flex;gap: calc(1vh* var(--scale-factor-h));flex-direction: column;">
+                                                                                                                            <div>
+                                                                                                                                <h4 class="uppercase text-gradient">Facial Features</h4>
+                                                                                                                                <div class="small-box" tooltip data-value="aegyo sal"><span class="arrow-dwn"></span>Aegyo sal</div>
+                                                                                                                            </div>
+                                                                                                                            <div class="small-box" tooltip data-value="freckles"><span class="arrow-dwn"></span>Freckles</div>
+                                                                                                                            <div class="small-box" tooltip data-value="moles"><span class="arrow-dwn"></span>Moles</div>
+                                                                                                                            <div class="small-box" tooltip data-value="scar"><span class="arrow-dwn"></span>Scar</div>
+                                                                                                                            <div class="small-box" tooltip data-value="wrinkles"><span class="arrow-dwn"></span>Wrinkles</div>
+                                                                                                                            <div class="small-box" tooltip data-value="beard"><span class="arrow-dwn"></span>Beard</div>
+                                                                                                                            <div class="small-box" tooltip data-value="mustache"><span class="arrow-dwn"></span>Mustache</div>
+                                                                                                                            <div class="small-box" tooltip data-value="sideburns"><span class="arrow-dwn"></span>Sideburns</div>
+                                                                                                                            <div class="small-box" tooltip data-value="chin cleft"><span class="arrow-dwn"></span>Chin Cleft</div>
+                                                                                                                            <div class="small-box" tooltip data-value="dimples"><span class="arrow-dwn"></span>Dimples</div>
+                                                                                                                            <div class="small-box" tooltip data-value="eyebrows"><span class="arrow-dwn"></span>Eyebrows</div>
+                                                                                                                            <div class="small-box" tooltip data-value="lip shape"><span class="arrow-dwn"></span>Lip Shape</div>
+                                                                                                                            <div class="small-box" tooltip data-value="jawline"><span class="arrow-dwn"></span>Jawline</div>
+                                                                                                                            <div class="small-box" tooltip data-value="cheek dimples"><span class="arrow-dwn"></span>Cheek Dimples</div>
+                                                                                                                            <div class="small-box" tooltip data-value="cheek fat pads"><span class="arrow-dwn"></span>Cheek Fat Pads</div>
+                                                                                                                            <div class="small-box" tooltip data-value="ear shape"><span class="arrow-dwn"></span>Ear Shape</div>
+                                                                                                                            <div class="small-box" tooltip data-value="eyelashes"><span class="arrow-dwn"></span>Eyelashes</div>
+                                                                                                                            <div class="small-box" tooltip data-value="eyelids"><span class="arrow-dwn"></span>Eyelids</div>
+                                                                                                                            <div class="small-box" tooltip data-value="hooded eyelids"><span class="arrow-dwn"></span>Hooded Eyelids</div>
+                                                                                                                            <div class="small-box" tooltip data-value="downturned eyes"><span class="arrow-dwn"></span>Downturned Eyes</div>
+                                                                                                                            <div class="small-box" tooltip data-value="nose shape"><span class="arrow-dwn"></span>Nose Shape</div>
+                                                                                                                            <div class="small-box" tooltip data-value="cheekbones"><span class="arrow-dwn"></span>Cheekbones</div>
+                                                                                                                            <div class="small-box" tooltip data-value="forehead"><span class="arrow-dwn"></span>Forehead</div>
+                                                                                                                            <div class="small-box" tooltip data-value="face shape"><span class="arrow-dwn"></span>Face Shape</div>
+                                                                                                                            <div class="small-box" tooltip data-value="wrinkles around eyes"><span class="arrow-dwn"></span>Wrinkles around eyes</div>
+                                                                                                                            <div class="small-box" tooltip data-value="bridge shaped nose"><span class="arrow-dwn"></span>Bridge Shaped Nose</div>
+                                                                                                                            <div class="small-box" tooltip data-value="nostril sized nose"><span class="arrow-dwn"></span>Nostril Sized Nose</div>
+                                                                                                                        </div>
+                                                                                                                    </div>
+					
+						                                                                                            <div class="small-boxes" id="Age">
+							                                                                                            <div class="small-box" tooltip data-value="mature"><span class="arrow-dwn"></span>Mature</div>
+							                                                                                            <div class="small-box" tooltip data-value="elderly"><span class="arrow-dwn"></span>Elderly</div>
+							                                                                                            <div class="small-box" tooltip data-value="teenage"><span class="arrow-dwn"></span>Teen Adult</div>
+							                                                                                            <div class="small-box" tooltip data-value="young"><span class="arrow-dwn"></span>Young Adult</div>
+							                                                                                            <div class="small-box" tooltip data-value="adult"><span class="arrow-dwn"></span>Adult</div>
+							                                                                                            <div class="small-box" tooltip data-value="middle-aged"><span class="arrow-dwn"></span>Middle-Aged</div>
+							                                                                                            <div class="small-box" tooltip data-value="senior"><span class="arrow-dwn"></span>Senior</div>
+						                                                                                            </div>
+
+                                                                                                                    <div class="small-boxes" id="Body">
+                                                                                                                        <div style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: column;">
+                                                                                                                            <div>
+                                                                                                                                <h4 class="uppercase text-gradient">Breast Types</h4>
+                                                                                                                                <div class="small-box" tooltip data-value="flat chest"><span class="arrow-dwn"></span>Flat Chest</div>
+                                                                                                                            </div>
+                                                                                                                            <div class="small-box" tooltip data-value="small breast"><span class="arrow-dwn"></span>Small Breast</div>
+                                                                                                                            <div class="small-box" tooltip data-value="medium breast"><span class="arrow-dwn"></span>Medium Breast</div>
+                                                                                                                            <div class="small-box" tooltip data-value="big breast"><span class="arrow-dwn"></span>Big Breast</div>
+                                                                                                                            <div class="small-box" tooltip data-value="massive breast"><span class="arrow-dwn"></span>Massive Breast</div>
+                                                                                                                            <div class="small-box" tooltip data-value="perky breasts"><span class="arrow-dwn"></span>Perky</div>
+                                                                                                                            <div class="small-box" tooltip data-value="saggy breasts"><span class="arrow-dwn"></span>Saggy</div>
+                                                                                                                            <div class="small-box" tooltip data-value="natural breasts"><span class="arrow-dwn"></span>Natural</div>
+                                                                                                                            <div class="small-box" tooltip data-value="enhanced breasts"><span class="arrow-dwn"></span>Enhanced</div>
+                                                                                                                            <div class="small-box" tooltip data-value="symmetrical breasts"><span class="arrow-dwn"></span>Symmetrical</div>
+                                                                                                                        </div>
+
+                                                                                                                        <div style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: column;">
+                                                                                                                            <div>
+                                                                                                                                <h4 class="uppercase text-gradient">Body Types</h4>
+                                                                                                                                <div class="small-box" tooltip data-value="skinny"><span class="arrow-dwn"></span>Skinny</div>
+                                                                                                                            </div>
+                                                                                                                            <div class="small-box" tooltip data-value="athletic"><span class="arrow-dwn"></span>Athletic</div>
+                                                                                                                            <div class="small-box" tooltip data-value="slim-fit"><span class="arrow-dwn"></span>Slim Fit</div>
+                                                                                                                            <div class="small-box" tooltip data-value="muscular"><span class="arrow-dwn"></span>Muscular</div>
+                                                                                                                            <div class="small-box" tooltip data-value="detailed body"><span class="arrow-dwn"></span>Detailed Body</div>
+                                                                                                                            <div class="small-box" tooltip data-value="full-figured"><span class="arrow-dwn"></span>Full Figured</div>
+                                                                                                                            <div class="small-box" tooltip data-value="chubby"><span class="arrow-dwn"></span>Chubby</div>
+                                                                                                                            <div class="small-box" tooltip data-value="round body"><span class="arrow-dwn"></span>Round</div>
+                                                                                                                            <div class="small-box" tooltip data-value="petite"><span class="arrow-dwn"></span>Petite</div>
+                                                                                                                            <div class="small-box" tooltip data-value="slim"><span class="arrow-dwn"></span>Slim</div>
+                                                                                                                            <div class="small-box" tooltip data-value="straight body"><span class="arrow-dwn"></span>Straight</div>
+                                                                                                                            <div class="small-box" tooltip data-value="curvy body"><span class="arrow-dwn"></span>Curvy</div>
+                                                                                                                            <div class="small-box" tooltip data-value="broad-shouldered"><span class="arrow-dwn"></span>Broad-shouldered</div>
+                                                                                                                            <div class="small-box" tooltip data-value="lanky body"><span class="arrow-dwn"></span>Lanky</div>
+                                                                                                                            <div class="small-box" tooltip data-value="athleisure body"><span class="arrow-dwn"></span>Athleisure</div>
+                                                                                                                            <div class="small-box" tooltip data-value="hourglass body"><span class="arrow-dwn"></span>Hourglass</div>
+                                                                                                                            <div class="small-box" tooltip data-value="pear-shaped body"><span class="arrow-dwn"></span>Pear Shaped</div>
+                                                                                                                            <div class="small-box" tooltip data-value="rectangle body"><span class="arrow-dwn"></span>Rectangle</div>
+                                                                                                                            <div class="small-box" tooltip data-value="apple-shaped body"><span class="arrow-dwn"></span>Apple Shaped</div>
+                                                                                                                            <div class="small-box" tooltip data-value="long-limbed"><span class="arrow-dwn"></span>Long Limbed</div>
+                                                                                                                            <div class="small-box" tooltip data-value="wide-hipped"><span class="arrow-dwn"></span>Wide Hipped</div>
+                                                                                                                        </div>
+                                                                                                                    </div>
+
+                                                                                                                    <div class="small-boxes" id="Clothing">
+                                                                                                                        <div style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: column;">
+                                                                                                                            <div>
+                                                                                                                                <h4 class="uppercase text-gradient">Breast Types</h4>
+                                                                                                                                <div class="small-box" tooltip data-value="lace bodysuit"><span class="arrow-dwn"></span>Lace Bodysuit</div>
+                                                                                                                            </div>
+                                                                                                                            <div class="small-box" tooltip data-value="lace thong"><span class="arrow-dwn"></span>Lace Thong</div>
+                                                                                                                            <div class="small-box" tooltip data-value="bodysuit"><span class="arrow-dwn"></span>Bodysuit</div>
+                                                                                                                            <div class="small-box" tooltip data-value="sheer dress"><span class="arrow-dwn"></span>Sheer Dress</div>
+                                                                                                                            <div class="small-box" tooltip data-value="leather lingerie"><span class="arrow-dwn"></span>Leather Lingerie</div>
+                                                                                                                            <div class="small-box" tooltip data-value="thigh highs"><span class="arrow-dwn"></span>Thigh Highs</div>
+                                                                                                                            <div class="small-box" tooltip data-value="stockings"><span class="arrow-dwn"></span>Stockings</div>
+                                                                                                                            <div class="small-box" tooltip data-value="bikini"><span class="arrow-dwn"></span>Bikini</div>
+                                                                                                                            <div class="small-box" tooltip data-value="corset"><span class="arrow-dwn"></span>Corset</div>
+                                                                                                                            <div class="small-box" tooltip data-value="bondage"><span class="arrow-dwn"></span>Bondage</div>
+                                                                                                                            <div class="small-box" tooltip data-value="satin robe"><span class="arrow-dwn"></span>Satin Robe</div>
+                                                                                                                            <div class="small-box" tooltip data-value="bralette"><span class="arrow-dwn"></span>Bralette</div>
+                                                                                                                            <div class="small-box" tooltip data-value="sports bra"><span class="arrow-dwn"></span>Sports Bra</div>
+                                                                                                                            <div class="small-box" tooltip data-value="mesh bodysuit"><span class="arrow-dwn"></span>Mesh Bodysuit</div>
+                                                                                                                            <div class="small-box" tooltip data-value="cut-out lingerie"><span class="arrow-dwn"></span>Cut-Out Lingerie</div>
+                                                                                                                            <div class="small-box" tooltip data-value="monokini"><span class="arrow-dwn"></span>Monokini</div>
+                                                                                                                            <div class="small-box" tooltip data-value="fishnet bodysuit"><span class="arrow-dwn"></span>Fishnet Bodysuit</div>
+                                                                                                                            <div class="small-box" tooltip data-value="underbust corset"><span class="arrow-dwn"></span>Underbust Corset</div>
+                                                                                                                        </div>
+
+                                                                                                                        <div style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: column;">
+                                                                                                                            <div>
+                                                                                                                                <h4 class="uppercase text-gradient">Breast Types</h4>
+                                                                                                                                <div class="small-box" tooltip data-value="tank tops"><span class="arrow-dwn"></span>Tank Tops</div>
+                                                                                                                            </div>
+                                                                                                                            <div class="small-box" tooltip data-value="racerback tank top"><span class="arrow-dwn"></span>Racerback Tank Top</div>
+                                                                                                                            <div class="small-box" tooltip data-value="strapless top"><span class="arrow-dwn"></span>Strapless Top</div>
+                                                                                                                            <div class="small-box" tooltip data-value="cami top"><span class="arrow-dwn"></span>Cami Top</div>
+                                                                                                                            <div class="small-box" tooltip data-value="crop top"><span class="arrow-dwn"></span>Crop Top</div>
+                                                                                                                            <div class="small-box" tooltip data-value="t-shirt"><span class="arrow-dwn"></span>T-shirt</div>
+                                                                                                                            <div class="small-box" tooltip data-value="blouse"><span class="arrow-dwn"></span>Blouse</div>
+                                                                                                                            <div class="small-box" tooltip data-value="turtleneck"><span class="arrow-dwn"></span>Turtleneck</div>
+                                                                                                                            <div class="small-box" tooltip data-value="hooded sweatshirt"><span class="arrow-dwn"></span>Hooded Sweatshirt</div>
+                                                                                                                            <div class="small-box" tooltip data-value="cardigan"><span class="arrow-dwn"></span>Cardigan</div>
+                                                                                                                            <div class="small-box" tooltip data-value="sweater"><span class="arrow-dwn"></span>Sweater</div>
+                                                                                                                            <div class="small-box" tooltip data-value="bralette with lace"><span class="arrow-dwn"></span>Bralette with Lace</div>
+                                                                                                                        </div>
+
+                                                                                                                        <div style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: column;">
+                                                                                                                            <div>
+                                                                                                                                <h4 class="uppercase text-gradient">Bottoms</h4>
+                                                                                                                                <div class="small-box" tooltip data-value="harem pants"><span class="arrow-dwn"></span>Harem Pants</div>
+                                                                                                                            </div>
+                                                                                                                            <div class="small-box" tooltip data-value="cargo shorts"><span class="arrow-dwn"></span>Cargo Shorts</div>
+                                                                                                                            <div class="small-box" tooltip data-value="joggers"><span class="arrow-dwn"></span>Joggers</div>
+                                                                                                                            <div class="small-box" tooltip data-value="onesie"><span class="arrow-dwn"></span>Onesie</div>
+                                                                                                                            <div class="small-box" tooltip data-value="tracksuit"><span class="arrow-dwn"></span>Tracksuit</div>
+                                                                                                                            <div class="small-box" tooltip data-value="sweatpants"><span class="arrow-dwn"></span>Sweatpants</div>
+                                                                                                                            <div class="small-box" tooltip data-value="leggings"><span class="arrow-dwn"></span>Leggings</div>
+                                                                                                                            <div class="small-box" tooltip data-value="jeans"><span class="arrow-dwn"></span>Jeans</div>
+                                                                                                                            <div class="small-box" tooltip data-value="shorts"><span class="arrow-dwn"></span>Shorts</div>
+                                                                                                                            <div class="small-box" tooltip data-value="legging shorts"><span class="arrow-dwn"></span>Legging Shorts</div>
+                                                                                                                            <div class="small-box" tooltip data-value="spandex shorts"><span class="arrow-dwn"></span>Spandex Shorts</div>
+                                                                                                                            <div class="small-box" tooltip data-value="compression shorts"><span class="arrow-dwn"></span>Compression Shorts</div>
+                                                                                                                            <div class="small-box" tooltip data-value="yoga pants"><span class="arrow-dwn"></span>Yoga Pants</div>
+                                                                                                                            <div class="small-box" tooltip data-value="trousers"><span class="arrow-dwn"></span>Trousers</div>
+                                                                                                                            <div class="small-box" tooltip data-value="underpants"><span class="arrow-dwn"></span>Underpants</div>
+                                                                                                                        </div>
+    
+                                                                                                                        <div style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: column;">
+                                                                                                                            <div>
+                                                                                                                                <h4 class="uppercase text-gradient">Dresses</h4>
+                                                                                                                                <div class="small-box" tooltip data-value="kimono dress"><span class="arrow-dwn"></span>Kimono Dress</div>
+                                                                                                                            </div>
+                                                                                                                            <div class="small-box" tooltip data-value="sundress"><span class="arrow-dwn"></span>Sundress</div>
+                                                                                                                            <div class="small-box" tooltip data-value="tunic"><span class="arrow-dwn"></span>Tunic</div>
+                                                                                                                            <div class="small-box" tooltip data-value="bodycon dress"><span class="arrow-dwn"></span>Bodycon Dress</div>
+                                                                                                                            <div class="small-box" tooltip data-value="skirt"><span class="arrow-dwn"></span>Skirt</div>
+                                                                                                                            <div class="small-box" tooltip data-value="pencil skirt"><span class="arrow-dwn"></span>Pencil Skirt</div>
+                                                                                                                            <div class="small-box" tooltip data-value="mini skirt"><span class="arrow-dwn"></span>Mini Skirt</div>
+                                                                                                                            <div class="small-box" tooltip data-value="cut-out dress"><span class="arrow-dwn"></span>Cut-Out Dress</div>
+                                                                                                                            <div class="small-box" tooltip data-value="jumpsuit"><span class="arrow-dwn"></span>Jumpsuit</div>
+                                                                                                                        </div>
+    
+                                                                                                                        <div style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: column;">
+                                                                                                                            <div>
+                                                                                                                                <h4 class="uppercase text-gradient">Outerwear</h4>
+                                                                                                                                <div class="small-box" tooltip data-value="peacoat"><span class="arrow-dwn"></span>Peacoat</div>
+                                                                                                                            </div>
+                                                                                                                            <div class="small-box" tooltip data-value="blazer"><span class="arrow-dwn"></span>Blazer</div>
+                                                                                                                            <div class="small-box" tooltip data-value="coat"><span class="arrow-dwn"></span>Coat</div>
+                                                                                                                            <div class="small-box" tooltip data-value="trench coat"><span class="arrow-dwn"></span>Trench Coat</div>
+                                                                                                                            <div class="small-box" tooltip data-value="waistcoat"><span class="arrow-dwn"></span>Waistcoat</div>
+                                                                                                                            <div class="small-box" tooltip data-value="tuxedo"><span class="arrow-dwn"></span>Tuxedo</div>
+                                                                                                                            <div class="small-box" tooltip data-value="poncho"><span class="arrow-dwn"></span>Poncho</div>
+                                                                                                                            <div class="small-box" tooltip data-value="kimono robe"><span class="arrow-dwn"></span>Kimono Robe</div>
+                                                                                                                            <div class="small-box" tooltip data-value="kimono cardigan"><span class="arrow-dwn"></span>Kimono Cardigan</div>
+                                                                                                                            <div class="small-box" tooltip data-value="kimono jacket"><span class="arrow-dwn"></span>Kimono Jacket</div>
+                                                                                                                            <div class="small-box" tooltip data-value="suit"><span class="arrow-dwn"></span>Suit</div>
+                                                                                                                            <div class="small-box" tooltip data-value="tie"><span class="arrow-dwn"></span>Tie</div>
+                                                                                                                            <div class="small-box" tooltip data-value="scarf"><span class="arrow-dwn"></span>Scarf</div>
+                                                                                                                            <div class="small-box" tooltip data-value="vest"><span class="arrow-dwn"></span>Vest</div>
+                                                                                                                            <div class="small-box" tooltip data-value="bomber jacket"><span class="arrow-dwn"></span>Bomber Jacket</div>
+                                                                                                                            <div class="small-box" tooltip data-value="biker jacket"><span class="arrow-dwn"></span>Biker Jacket</div>
+                                                                                                                            <div class="small-box" tooltip data-value="jacket"><span class="arrow-dwn"></span>Jacket</div>
+                                                                                                                        </div>
+    
+                                                                                                                        <div style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: column;">
+                                                                                                                            <div>
+                                                                                                                                <h4 class="uppercase text-gradient">Costumes</h4>
+                                                                                                                                <div class="small-box" tooltip data-value="cat costume"><span class="arrow-dwn"></span>Cat Costume</div>
+                                                                                                                            </div>
+                                                                                                                            <div class="small-box" tooltip data-value="bunny costume"><span class="arrow-dwn"></span>Bunny Costume</div>
+                                                                                                                            <div class="small-box" tooltip data-value="dog costume"><span class="arrow-dwn"></span>Dog Costume</div>
+                                                                                                                            <div class="small-box" tooltip data-value="witch costume"><span class="arrow-dwn"></span>Witch Costume</div>
+                                                                                                                            <div class="small-box" tooltip data-value="overalls"><span class="arrow-dwn"></span>Overalls</div>
+                                                                                                                            <div class="small-box" tooltip data-value="hoodie"><span class="arrow-dwn"></span>Hoodie</div>
+                                                                                                                        </div>
+    
+                                                                                                                        <div style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: column;">
+                                                                                                                            <div>
+                                                                                                                                <h4 class="uppercase text-gradient">Accessories</h4>
+                                                                                                                                <div class="small-box" tooltip data-value="jewelry"><span class="arrow-dwn"></span>Jewelry</div>
+                                                                                                                            </div>
+                                                                                                                            <div class="small-box" tooltip data-value="hats"><span class="arrow-dwn"></span>Hats</div>
+                                                                                                                            <div class="small-box" tooltip data-value="glasses"><span class="arrow-dwn"></span>Glasses</div>
+                                                                                                                            <div class="small-box" tooltip data-value="watches"><span class="arrow-dwn"></span>Watches</div>
+                                                                                                                            <div class="small-box" tooltip data-value="belts"><span class="arrow-dwn"></span>Belts</div>
+                                                                                                                            <div class="small-box" tooltip data-value="scarves"><span class="arrow-dwn"></span>Scarves</div>
+                                                                                                                            <div class="small-box" tooltip data-value="bags"><span class="arrow-dwn"></span>Bags</div>
+                                                                                                                            <div class="small-box" tooltip data-value="shoes"><span class="arrow-dwn"></span>Shoes</div>
+                                                                                                                            <div class="small-box" tooltip data-value="gloves"><span class="arrow-dwn"></span>Gloves</div>
+                                                                                                                        </div>
+                                                                           
+                                                                                                                    <div class="small-boxes" id="Environment">
+                                                                                                                      <div style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: column;">
+                                                                                                                        <div>
+                                                                                                                          <h4 class="uppercase text-gradient">Location</h4>
+                                                                                                                          <div class="small-box" tooltip data-value="indoors"><span class="arrow-dwn"></span>Indoors</div>
+                                                                                                                        </div>
+                                                                                                                        <div class="small-box" tooltip data-value="outdoors"><span class="arrow-dwn"></span>Outdoors</div>
+                                                                                                                        <div class="small-box" tooltip data-value="urban"><span class="arrow-dwn"></span>Urban</div>
+                                                                                                                        <div class="small-box" tooltip data-value="rural"><span class="arrow-dwn"></span>Rural</div>
+                                                                                                                        <div class="small-box" tooltip data-value="beach"><span class="arrow-dwn"></span>Beach</div>
+                                                                                                                        <div class="small-box" tooltip data-value="mountains"><span class="arrow-dwn"></span>Mountains</div>
+                                                                                                                        <div class="small-box" tooltip data-value="forest"><span class="arrow-dwn"></span>Forest</div>
+                                                                                                                        <div class="small-box" tooltip data-value="desert"><span class="arrow-dwn"></span>Desert</div>
+                                                                                                                      </div>
+
+                                                                                                                      <div style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: column;">
+                                                                                                                        <div>
+                                                                                                                          <h4 class="uppercase text-gradient">Time of Day</h4>
+                                                                                                                          <div class="small-box" tooltip data-value="morning"><span class="arrow-dwn"></span>Morning</div>
+                                                                                                                        </div>
+                                                                                                                        <div class="small-box" tooltip data-value="afternoon"><span class="arrow-dwn"></span>Afternoon</div>
+                                                                                                                        <div class="small-box" tooltip data-value="evening"><span class="arrow-dwn"></span>Evening</div>
+                                                                                                                        <div class="small-box" tooltip data-value="night"><span class="arrow-dwn"></span>Night</div>
+                                                                                                                        <div class="small-box" tooltip data-value="dawn"><span class="arrow-dwn"></span>Dawn</div>
+                                                                                                                        <div class="small-box" tooltip data-value="twilight"><span class="arrow-dwn"></span>Twilight</div>
+                                                                                                                      </div>
+
+                                                                                                                      <div style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: column;">
+                                                                                                                        <div>
+                                                                                                                          <h4 class="uppercase text-gradient">Weather</h4>
+                                                                                                                          <div class="small-box" tooltip data-value="overcast"><span class="arrow-dwn"></span>Overcast</div>
+                                                                                                                        </div>
+                                                                                                                        <div class="small-box" tooltip data-value="sunset"><span class="arrow-dwn"></span>Sunset</div>
+                                                                                                                        <div class="small-box" tooltip data-value="cloudy"><span class="arrow-dwn"></span>Cloudy</div>
+                                                                                                                        <div class="small-box" tooltip data-value="stormy"><span class="arrow-dwn"></span>Stormy</div>
+                                                                                                                      </div>
+
+                                                                                                                      <div style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: column;">
+                                                                                                                        <div>
+                                                                                                                          <h4 class="uppercase text-gradient">Background Types</h4>
+                                                                                                                          <div class="small-box" tooltip data-value="simple background"><span class="arrow-dwn"></span>Simple Background</div>
+                                                                                                                        </div>
+                                                                                                                        <div class="small-box" tooltip data-value="solid background"><span class="arrow-dwn"></span>Solid Background</div>
+                                                                                                                        <div class="small-box" tooltip data-value="blurred background"><span class="arrow-dwn"></span>Blurred Background</div>
+                                                                                                                        <div class="small-box" tooltip data-value="gradient background"><span class="arrow-dwn"></span>Gradient Background</div>
+                                                                                                                        <div class="small-box" tooltip data-value="textured background"><span class="arrow-dwn"></span>Textured Background</div>
+                                                                                                                        <div class="small-box" tooltip data-value="patterned background"><span class="arrow-dwn"></span>Patterned Background</div>
+                                                                                                                        <div class="small-box" tooltip data-value="nature background"><span class="arrow-dwn"></span>Nature Background</div>
+                                                                                                                        <div class="small-box" tooltip data-value="abstract background"><span class="arrow-dwn"></span>Abstract Background</div>
+                                                                                                                        <div class="small-box" tooltip data-value="minimal background"><span class="arrow-dwn"></span>Minimal Background</div>
+                                                                                                                      </div>
+
+                                                                                                                      <div style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: column;">
+                                                                                                                        <div>
+                                                                                                                          <h4 class="uppercase text-gradient">Theme</h4>
+                                                                                                                          <div class="small-box" tooltip data-value="fantasy"><span class="arrow-dwn"></span>Fantasy</div>
+                                                                                                                        </div>
+                                                                                                                        <div class="small-box" tooltip data-value="sci-fi"><span class="arrow-dwn"></span>Sci-Fi</div>
+                                                                                                                        <div class="small-box" tooltip data-value="horror"><span class="arrow-dwn"></span>Horror</div>
+                                                                                                                        <div class="small-box" tooltip data-value="romantic"><span class="arrow-dwn"></span>Romantic</div>
+                                                                                                                        <div class="small-box" tooltip data-value="action"><span class="arrow-dwn"></span>Action</div>
+                                                                                                                        <div class="small-box" tooltip data-value="adventure"><span class="arrow-dwn"></span>Adventure</div>
+                                                                                                                        <div class="small-box" tooltip data-value="comedy"><span class="arrow-dwn"></span>Comedy</div>
+                                                                                                                        <div class="small-box" tooltip data-value="mystery"><span class="arrow-dwn"></span>Mystery</div>
+                                                                                                                        <div class="small-box" tooltip data-value="thriller"><span class="arrow-dwn"></span>Thriller</div>
+                                                                                                                        <div class="small-box" tooltip data-value="drama"><span class="arrow-dwn"></span>Drama</div>
+                                                                                                                      </div>
+
+                                                                                                                      <div style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: column;">
+                                                                                                                        <div>
+                                                                                                                          <h4 class="uppercase text-gradient">Objects</h4>
+                                                                                                                          <div class="small-box" tooltip data-value="furniture"><span class="arrow-dwn"></span>Furniture</div>
+                                                                                                                        </div>
+                                                                                                                        <div class="small-box" tooltip data-value="vehicles"><span class="arrow-dwn"></span>Vehicles</div>
+                                                                                                                        <div class="small-box" tooltip data-value="props"><span class="arrow-dwn"></span>Props</div>
+                                                                                                                        <div class="small-box" tooltip data-value="tools"><span class="arrow-dwn"></span>Tools</div>
+                                                                                                                        <div class="small-box" tooltip data-value="weapons"><span class="arrow-dwn"></span>Weapons</div>
+                                                                                                                        <div class="small-box" tooltip data-value="machines"><span class="arrow-dwn"></span>Machines</div>
+                                                                                                                        <div class="small-box" tooltip data-value="technology"><span class="arrow-dwn"></span>Technology</div>
+                                                                                                                      </div>
+                                                                                                                    </div>
+
+                                                                                                                    <div class="small-boxes" id="Quality">
+                                                                                                                      <div style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: column;">
+                                                                                                                        <div>
+                                                                                                                          <h4 class="uppercase text-gradient">Quality</h4>
+                                                                                                                          <div class="small-box" tooltip data-value="masterpiece"><span class="arrow-dwn"></span>Masterpiece</div>
+                                                                                                                        </div>
+                                                                                                                        <div class="small-box" tooltip data-value="best quality"><span class="arrow-dwn"></span>Best Quality</div>
+                                                                                                                        <div class="small-box" tooltip data-value="extremely detailed"><span class="arrow-dwn"></span>Extremely Detailed</div>
+                                                                                                                        <div class="small-box" tooltip data-value="intricate"><span class="arrow-dwn"></span>Intricate</div>
+                                                                                                                        <div class="small-box" tooltip data-value="vivid"><span class="arrow-dwn"></span>Vivid</div>
+                                                                                                                        <div class="small-box" tooltip data-value="raw photo"><span class="arrow-dwn"></span>RAW Photo</div>
+                                                                                                                        <div class="small-box" tooltip data-value="anime screencap"><span class="arrow-dwn"></span>Anime Screencap</div>
+                                                                                                                        <div class="small-box" tooltip data-value="realistic"><span class="arrow-dwn"></span>Realistic</div>
+                                                                                                                        <div class="small-box" tooltip data-value="high-resolution"><span class="arrow-dwn"></span>High-Resolution</div>
+                                                                                                                        <div class="small-box" tooltip data-value="cinematic"><span class="arrow-dwn"></span>Cinematic</div>
+                                                                                                                        <div class="small-box" tooltip data-value="HDR"><span class="arrow-dwn"></span>HDR</div>
+                                                                                                                        <div class="small-box" tooltip data-value="artistic"><span class="arrow-dwn"></span>Artistic</div>
+                                                                                                                        <div class="small-box" tooltip data-value="3D render"><span class="arrow-dwn"></span>3D Render</div>
+                                                                                                                        <div class="small-box" tooltip data-value="stylized"><span class="arrow-dwn"></span>Stylized</div>
+                                                                                                                        <div class="small-box" tooltip data-value="photorealistic"><span class="arrow-dwn"></span>Photorealistic</div>
+                                                                                                                      </div>
+
+                                                                                                                      <div style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: column;">
+                                                                                                                        <div>
+                                                                                                                          <h4 class="uppercase text-gradient">Lighting</h4>
+                                                                                                                          <div class="small-box" tooltip data-value="natural light"><span class="arrow-dwn"></span>Natural Light</div>
+                                                                                                                        </div>
+                                                                                                                        <div class="small-box" tooltip data-value="soft lighting"><span class="arrow-dwn"></span>Soft Lighting</div>
+                                                                                                                        <div class="small-box" tooltip data-value="harsh lighting"><span class="arrow-dwn"></span>Harsh Lighting</div>
+                                                                                                                        <div class="small-box" tooltip data-value="ambient lighting"><span class="arrow-dwn"></span>Ambient Lighting</div>
+                                                                                                                        <div class="small-box" tooltip data-value="spotlight"><span class="arrow-dwn"></span>Spotlight</div>
+                                                                                                                        <div class="small-box" tooltip data-value="side lighting"><span class="arrow-dwn"></span>Side Lighting</div>
+                                                                                                                        <div class="small-box" tooltip data-value="backlighting"><span class="arrow-dwn"></span>Backlighting</div>
+                                                                                                                        <div class="small-box" tooltip data-value="moonlight"><span class="arrow-dwn"></span>Moonlight</div>
+                                                                                                                        <div class="small-box" tooltip data-value="neon lighting"><span class="arrow-dwn"></span>Neon Lighting</div>
+                                                                                                                        <div class="small-box" tooltip data-value="diffused light"><span class="arrow-dwn"></span>Diffused Light</div>
+                                                                                                                      </div>
+
+                                                                                                                      <div style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: column;">
+                                                                                                                        <div>
+                                                                                                                          <h4 class="uppercase text-gradient">Color</h4>
+                                                                                                                          <div class="small-box" tooltip data-value="monochromatic"><span class="arrow-dwn"></span>Monochromatic</div>
+                                                                                                                        </div>
+                                                                                                                        <div class="small-box" tooltip data-value="complementary"><span class="arrow-dwn"></span>Complementary</div>
+                                                                                                                        <div class="small-box" tooltip data-value="analogous"><span class="arrow-dwn"></span>Analogous</div>
+                                                                                                                        <div class="small-box" tooltip data-value="triadic"><span class="arrow-dwn"></span>Triadic</div>
+                                                                                                                        <div class="small-box" tooltip data-value="split-complementary"><span class="arrow-dwn"></span>Split-Complementary</div>
+                                                                                                                        <div class="small-box" tooltip data-value="warm tones"><span class="arrow-dwn"></span>Warm Tones</div>
+                                                                                                                        <div class="small-box" tooltip data-value="cool tones"><span class="arrow-dwn"></span>Cool Tones</div>
+                                                                                                                        <div class="small-box" tooltip data-value="pastel color palette"><span class="arrow-dwn"></span>Pastel Color Palette</div>
+                                                                                                                        <div class="small-box" tooltip data-value="bold color palette"><span class="arrow-dwn"></span>Bold Color Palette</div>
+                                                                                                                        <div class="small-box" tooltip data-value="neutral color palette"><span class="arrow-dwn"></span>Neutral Color Palette</div>
+                                                                                                                      </div>
+
+                                                                                                                      <div style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: column;">
+                                                                                                                        <div>
+                                                                                                                          <h4 class="uppercase text-gradient">Style</h4>
+                                                                                                                          <div class="small-box" tooltip data-value="abstract"><span class="arrow-dwn"></span>Abstract</div>
+                                                                                                                        </div>
+                                                                                                                        <div class="small-box" tooltip data-value="surreal"><span class="arrow-dwn"></span>Surreal</div>
+                                                                                                                        <div class="small-box" tooltip data-value="minimalist"><span class="arrow-dwn"></span>Minimalist</div>
+                                                                                                                        <div class="small-box" tooltip data-value="vintage"><span class="arrow-dwn"></span>Vintage</div>
+                                                                                                                        <div class="small-box" tooltip data-value="modern"><span class="arrow-dwn"></span>Modern</div>
+                                                                                                                        <div class="small-box" tooltip data-value="retro"><span class="arrow-dwn"></span>Retro</div>
+                                                                                                                        <div class="small-box" tooltip data-value="gothic"><span class="arrow-dwn"></span>Gothic</div>
+                                                                                                                        <div class="small-box" tooltip data-value="cartoonish"><span class="arrow-dwn"></span>Cartoonish</div>
+                                                                                                                        <div class="small-box" tooltip data-value="sketch"><span class="arrow-dwn"></span>Sketch</div>
+                                                                                                                      </div>
+                                                                                                                    </div>
+                                                                                                            </div>
+                                                                                                            <div id="Negative" class="section" style="display: none;position: relative;flex-direction: column;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                <div>
+                                                                                                                    <h4 class="uppercase text-gradient">Negative Prompt</h4>
+                                                                                                                    <div style="font-size: 0px;">
+                                                                                                                        <textarea id="negativePrompt" placeholder="Leave empty or enter a desired negative prompt..." maxlength="2000" style="width: 100%;height: 100%;"></textarea>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            <div id="Generation" class="section" style="display: none;position: relative;flex-direction: column;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                    <div>
+                                                                                                                        <h4 style="font-weight: 400;">Batch amount</h4>
+                                                                                                                        <div class="combobox" tooltip>
+                                                                                                                            <div class="tooltip">
+                                                                                                                                Choose the number of generations is a single process. By default its set to 1 output per generation if not set.
+                                                                                                                            </div>
+                                                                                                                            <span class="combobox-text" title="Batch amount" default="1x Generation"></span>
+                                                                                                                            <span class="arrow-dwn"></span>
+                                                                                                                            <ul class="list-items">
+                                                                                                                                <li class="item">
+                                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                                        <input type="checkbox" id="batch_2"><span>2x Generation</span>
+                                                                                                                                        <div class="tooltip">Takes 2x longer, results 2 different outputs in total.</div>
+                                                                                                                                    </label>
+                                                                                                                                </li>
+                                                                                                                                <li class="item">
+                                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                                        <input type="checkbox" id="batch_4"><span>4x Generation</span>
+                                                                                                                                        <div class="tooltip">Takes 4x longer, results 4 different outputs in total.</div>
+                                                                                                                                    </label>
+                                                                                                                                </li>
+                                                                                                                                <li class="item">
+                                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                                        <input type="checkbox" id="batch_8"><span>8x Generation</span>
+                                                                                                                                        <div class="tooltip">Takes 8x longer, results 8 different outputs in total.</div>
+                                                                                                                                    </label>
+                                                                                                                                </li>
+                                                                                                                            </ul>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                            </div>
+                                                                                                            <div id="Other" class="section" style="display: none;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                <div>
+                                                                                                                    <h4 style="font-weight: 400;">Remove Banner</h4>
+                                                                                                                    <label class="checkbox">
+                                                                                                                        <input type="checkbox" id="removeBanner"><span>Remove banner</span>
+                                                                                                                    </label>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            <div class="line"></div>
+                                                                                                        <div style="display: flex;gap: calc(1.5vh* var(--scale-factor-h));">
+                                                                                                            <button class="wide" id="startProcessBtn">Start Process</button>
+                                                                                                            <button class="wide" id="cancellProcessBtn">Cancel Process</button>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
+                                                                                        <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
+                                                                                            <div class="background-dot-container">
+                                                                                                <div class="background-dot-container-content">
+                                                                                                    <div class="outputs"></div>
+                                                                                                    <div style="display: flex;justify-content: space-around;gap: calc(1.5vh* var(--scale-factor-h));">
+                                                                                                        <button class="wide" id="downloadOutput">Download</button>
+                                                                                                        <button class="wide" id="viewOutput">View</button>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                                `);
+            }
+
+            loadPageContent(setUser, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, setAuthentication, updateMainContent, savePageState);
+
+            const mainContainers = document.querySelectorAll('.main-container');
+            mainContainers.forEach((mainContainer) => {
+                mainContainer.style.justifyContent = 'flex-start';
+            });
+
+            window.addEventListener('beforeunload', () => { savePageState(); });
+            window.addEventListener('pagehide', () => { savePageState(); });
+
+            document.addEventListener('click', () => { savePageState(); });
+            document.addEventListener('touchend', () => { savePageState(); });
+
+            const FILE_SIZE_LIMIT_MB = 50;
+            const STATUS_OK = 200;
+
+            function loadPageState() {
+                setMaxWidth();
+
+                const pageData = localStorage.getItem(pageName) || null;
+                if (pageData) {
+                    const state = JSON.parse(pageData || '{}') || {};
+
+                    const removeBanner = document.getElementById('removeBanner');
+                    if (removeBanner) removeBanner.checked = state.removeBanner || false;
+
+                    const positivePrompt = document.getElementById('positivePrompt');
+                    if (positivePrompt) positivePrompt.value = state.positivePrompt || '';
+
+                    const negativePrompt = document.getElementById('negativePrompt');
+                    if (negativePrompt) negativePrompt.value = state.negativePrompt || '';
+
+                    document.querySelectorAll('.nav-links .text').forEach(link => {
+                        if (state.activeLinks.includes(link.getAttribute('for'))) {
+                            link.classList.add('active');
+
+                            const targetSection = document.getElementById(link.getAttribute('for'));
+                            if (targetSection) {
+                                targetSection.style.display = 'flex';
+                            }
+                        }
+                    });
+
+                    if (state.selectedRectangles) {
+                        state.selectedRectangles.forEach(selectedId => {
+                            const rectangle = document.getElementById(selectedId);
+                            if (rectangle) {
+                                rectangle.classList.add('selected');
+                            }
+                        });
+                    }
+
+                    const multiboxQuery = document.querySelectorAll('.multibox');
+                    multiboxQuery.forEach((multibox, id) => {
+                        const btnText = multibox.querySelector('.multibox-text');
+                        const items = multibox.querySelectorAll('.item');
+
+                        if (state.multiboxes && state.multiboxes[id]) {
+                            if (btnText) btnText.innerText = state.multiboxes[id].text || '';
+
+                            if (state.multiboxes[id].open) {
+                                multibox.classList.add('open');
+                                const listItems = multibox.querySelector('.list-items');
+                                if (listItems) listItems.style.display = 'flex';
+                            } else {
+                                multibox.classList.remove('open');
+                                const listItems = multibox.querySelector('.list-items');
+                                if (listItems) listItems.style.display = 'none';
+                            }
+
+                            state.multiboxes[id].items.forEach((itemState, itemIndex) => {
+                                if (itemIndex < items.length) {
+                                    const checkbox = items[itemIndex].querySelector('input[type="checkbox"]');
+                                    if (checkbox) {
+                                        checkbox.checked = itemState.checked;
+                                        items[itemIndex].classList.toggle('checked', checkbox.checked);
+                                    }
+                                }
+                            });
+                        }
+                    });
+
+                    const rectangleQuery = document.querySelectorAll('.rectangle');
+                    rectangleQuery.forEach((rectangle, id) => {
+                        const btnText = rectangle.querySelector('h4');
+                        const items = rectangle.querySelectorAll('.item');
+
+                        if (state.rectangles && state.rectangles[id]) {
+                            if (btnText) btnText.innerText = state.rectangles[id].text || '';
+
+                            if (state.rectangles[id].open) {
+                                rectangle.classList.add('open');
+                                const listItems = rectangle.querySelector('.list-items');
+                                if (listItems) listItems.style.display = 'flex';
+                            } else {
+                                rectangle.classList.remove('open');
+                                const listItems = rectangle.querySelector('.list-items');
+                                if (listItems) listItems.style.display = 'none';
+                            }
+
+                            state.rectangles[id].items.forEach((itemState, itemIndex) => {
+                                if (itemIndex < items.length) {
+                                    const checkbox = items[itemIndex].querySelector('input[type="checkbox"]');
+                                    if (checkbox) {
+                                        checkbox.checked = itemState.checked;
+                                        items[itemIndex].classList.toggle('checked', checkbox.checked);
+                                    }
+                                }
+                            });
+                        }
+                    });
+
+
+                    const comboboxQuery = document.querySelectorAll('.combobox');
+                    comboboxQuery.forEach((combobox, id) => {
+                        const btnText = combobox.querySelector('.combobox-text');
+                        const items = combobox.querySelectorAll('.item');
+
+                        if (state.comboboxes && state.comboboxes[id]) {
+                            if (btnText) btnText.innerText = state.comboboxes[id].text || '';
+
+                            if (state.comboboxes[id].open) {
+                                combobox.classList.add('open');
+                                const listItems = combobox.querySelector('.list-items');
+                                if (listItems) listItems.style.display = 'flex';
+                            } else {
+                                combobox.classList.remove('open');
+                                const listItems = combobox.querySelector('.list-items');
+                                if (listItems) listItems.style.display = 'none';
+                            }
+
+                            state.comboboxes[id].items.forEach((itemState, itemIndex) => {
+                                if (itemIndex < items.length) {
+                                    const checkbox = items[itemIndex].querySelector('input[type="checkbox"]');
+                                    if (checkbox) {
+                                        checkbox.checked = itemState.checked;
+                                        items[itemIndex].classList.toggle('checked', checkbox.checked);
+                                    }
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    const checkboxIds = [];
+                    checkboxIds.forEach(id => {
+                        if (id) {
+                            const checkbox = document.getElementById(id);
+                            if (checkbox) {
+                                checkbox.checked = true;
+                                setTimeout(() => { checkbox.dispatchEvent(new Event('change')); }, 0);
+                            }
+                        }
+                    });
+                }
+            }
+
+            const databases = [
+                { indexName: `outputDB-${pageName}`, objectStore: 'outputs' }
+            ];
+
+            window.addEventListener('beforeunload', async () => { await saveCountIndex(databases); });
+            window.addEventListener('pagehide', async () => { await saveCountIndex(databases); });
+
+            document.addEventListener('click', async () => { await saveCountIndex(databases); });
+            document.addEventListener('touchend', async () => { await saveCountIndex(databases); });
+
+            const fileUploads = [
+                { buttonId: 'circular-button-input-upload', inputId: 'input-upload', dataBaseIndexName: `inputDB-${pageName}`, dataBaseObjectStoreName: 'inputs', databases }
+            ];
+
+            function handleDataValue(dataValue, qualityValue) {
+                const positivePrompt = document.getElementById("positivePrompt");
+                const currentPrompt = positivePrompt.value;
+
+                if (qualityValue === "1.0") {
+                    if (currentPrompt.indexOf(dataValue) === -1) {
+                        if (currentPrompt.trim() === "") {
+                            positivePrompt.value = dataValue;
+                        } else {
+                            positivePrompt.value = currentPrompt + ", " + dataValue;
+                        }
+                    }
+                } else {
+                    const formattedValue = `(${dataValue}:${qualityValue})`;
+                    if (currentPrompt.indexOf(formattedValue) === -1) {
+                        if (currentPrompt.trim() === "") {
+                            positivePrompt.value = formattedValue;
+                        } else {
+                            positivePrompt.value = currentPrompt + ", " + formattedValue;
+                        }
+                    }
+                }
+            }
+
+            function saveDataValue(dataValue, qualityValue, isFavorite) {
+                const savedData = JSON.parse(localStorage.getItem(`${pageName}-savedData`)) || {};
+                savedData[dataValue] = { quality: qualityValue, favorite: isFavorite };
+                localStorage.setItem(`${pageName}-savedData`, JSON.stringify(savedData));
+            }
+
+            function loadSavedData(dataValue, qualityValue, box) {
+                const savedData = JSON.parse(localStorage.getItem(`${pageName}-savedData`)) || {};
+                if (dataValue in savedData) {
+                    qualityValue.textContent = savedData[dataValue].quality;
+                    let isFavorite = savedData[dataValue].favorite;
+                    if (isFavorite) {
+                        box.classList.add("favorite");
+                    } else {
+                        box.classList.remove("favorite");
+                    }
+                    const slider = document.getElementById(dataValue.replace(/ /g, '-').toLowerCase() + "-priority");
+                    if (slider) {
+                        slider.value = savedData[dataValue].quality;
+                    }
+                }
+            }
+
+            const smallBoxes = document.querySelectorAll('.small-box');
+
+            const lazyLoadHandler = (entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        observer.unobserve(entry.target);
+                        console.log(entry.target);
+
+                        const dataValue = entry.target.getAttribute("data-value");
+
+                        const listItems = document.createElement("ul");
+                        listItems.classList.add("list-items");
+                        listItems.classList.add("fixed-position");
+                        listItems.style.display = "none";
+
+                        const sliderItem = document.createElement("li");
+                        sliderItem.classList.add("item");
+
+                        const sliderLabel = document.createElement("h3");
+                        sliderLabel.textContent = "Priority";
+
+                        const slider = document.createElement("input");
+                        slider.type = "range";
+                        slider.min = 0.1;
+                        slider.max = 2.0;
+                        slider.step = 0.1;
+                        slider.value = 1.0;
+                        slider.className = "slider";
+                        slider.id = `${dataValue}-priority`;
+
+                        const qualityValue = document.createElement("span");
+                        qualityValue.id = `${dataValue}-value`;
+                        qualityValue.textContent = slider.value;
+
+                        sliderItem.appendChild(sliderLabel);
+                        sliderItem.appendChild(slider);
+                        sliderItem.appendChild(qualityValue);
+
+                        const buttonItem = document.createElement("li");
+                        buttonItem.classList.add("item");
+
+                        const button = document.createElement("button");
+                        button.style.width = '100%';
+                        button.textContent = "Favorite";
+                        buttonItem.appendChild(button);
+
+                        listItems.appendChild(sliderItem);
+                        listItems.appendChild(buttonItem);
+
+                        entry.target.appendChild(listItems);
+                        loadSavedData(dataValue, qualityValue, entry.target);
+
+                        slider.addEventListener("input", (event) => {
+                            qualityValue.textContent = event.target.value;
+                            saveDataValue(dataValue, event.target.value);
+                        });
+
+                        button.addEventListener("click", () => {
+                            const isFavorite = entry.target.classList.toggle("favorite");
+                            saveDataValue(dataValue, qualityValue.textContent, isFavorite);
+                        });
+
+                        const arrow = entry.target.querySelector(".arrow-dwn");
+                        if (arrow && listItems) {
+                            const updatePosition = () => {
+                                const computedStyle = window.getComputedStyle(listItems);
+                                const isVisible = computedStyle.display !== "none";
+
+                                if (isVisible) {
+                                    const boxRect = entry.target.getBoundingClientRect();
+                                    const boxWidth = entry.target.offsetWidth;
+                                    const listItemsHeight = listItems.offsetHeight;
+                                    listItems.style.top = `calc(${boxRect.top + window.scrollY - listItemsHeight}px - 1vh * var(--scale-factor-h))`;
+                                    listItems.style.left = `${boxRect.left + window.scrollX}px`;
+                                    listItems.style.width = `${boxWidth}px`;
+
+                                    if (parseFloat(listItems.style.top) < 0) {
+                                        listItems.style.top = "0px";
+                                    }
+                                }
+                            };
+
+                            arrow.addEventListener("click", (event) => {
+                                event.stopPropagation();
+
+                                const computedStyle = window.getComputedStyle(listItems);
+                                const isVisible = computedStyle.display !== "none";
+
+                                if (!isVisible) {
+                                    listItems.style.display = "block";
+                                    updatePosition();
+                                } else {
+                                    listItems.style.display = "none";
+                                }
+                            });
+
+                            const attachScrollListener = (element) => {
+                                element.addEventListener("scroll", () => {
+                                    listItems.style.display = "none";
+                                    updatePosition();
+                                });
+                            };
+
+                            window.addEventListener("resize", updatePosition);
+
+                            const scrollableElements = document.querySelectorAll('*');
+                            scrollableElements.forEach((el) => {
+                                const overflowY = window.getComputedStyle(el).overflowY;
+                                if (overflowY === 'auto' || overflowY === 'scroll') {
+                                    attachScrollListener(el);
+                                }
+                            });
+                        }
+
+                        entry.target.addEventListener("click", () => {
+                            handleDataValue(dataValue, qualityValue.textContent);
+                        });
+                    }
+                });
+            };
+
+            const observer = new IntersectionObserver(lazyLoadHandler, {
+                rootMargin: '0px',
+                threshold: 0.1
+            });
+
+            smallBoxes.forEach(box => observer.observe(box));
+
+            let selectedModeId = null;
+
+            const rectangles = document.querySelectorAll(".rectangle");
+            rectangles.forEach((rectangle) => {
+                if (rectangle.classList.contains('selected'))
+                    selectedModeId = rectangle.id;
+
+                rectangle.addEventListener("click", () => {
+                    rectangles.forEach((rect) => rect.classList.remove("selected"));
+                    rectangle.classList.add("selected");
+                    selectedModeId = rectangle.id;
+                });
+            });
+
+            checkServerStatus(databases, userData?.uid);
+            setDynamicInterval(databases, userData?.uid);
+
+            async function loadPage() {
+                databases.forEach(db => initDB(db.indexName, db.objectStore, handleDownload, databases));
+
+                const inputs = document.querySelector('.inputs');
+                if (inputs) {
+                    inputs.addEventListener('click', async function (event) {
+                        await handleFileContainerEvents(event, `inputDB-${pageName}`, 'inputs', inputs, databases);
+                    });
+                }
+
+                const outputs = document.querySelector('.outputs');
+                if (outputs) {
+                    outputs.addEventListener('click', async function (event) {
+                        await handleFileContainerEvents(event, `outputDB-${pageName}`, 'outputs', outputs, databases);
+                    });
+                }
+
+                document.querySelectorAll('.question-mark').forEach(questionMark => {
+                    questionMark.addEventListener('click', (event) => {
+                        event.stopPropagation();
+                    });
+                });
+
+                fileUploads.forEach(config => setupFileUpload({ ...config, changeHandler: handleUpload }));
+                createSectionAndElements();
+
+                const startProcessBtn = document.getElementById('startProcessBtn');
+                startProcessBtn.addEventListener('click', async () => { await startProcess(); });
+
+                const cancellProcessBtn = document.getElementById('cancellProcessBtn');
+                cancellProcessBtn.addEventListener('click', async () => { await cancelProcess(true); });
+
+                async function startProcess() {
+                    startProcessBtn.disabled = true;
+
+                    try {
+                        showNotification(`Starting the process...`, 'Process - Information', 'information');
+
+                        if (!userData || !userData.uid) {
+                            const openSignInContainer = document.getElementById('openSignInContainer');
+                            if (openSignInContainer)
+                                openSignInContainer.click();
+                            startProcessBtn.disabled = false;
+                            showNotification(`Please sign in or create an account to use our AI services with free (daily) trial.`, 'Warning - No User Found', 'warning-important');
+                            return;
+                        }
+
+                        const dataContainer = document.createElement('div');
+                        dataContainer.className = 'data-container';
+
+                        const processText = document.createElement('div');
+                        processText.className = 'process-text';
+                        dataContainer.appendChild(processText);
+
+                        const outputs = document.querySelector('.outputs');
+                        outputs.style.display = 'flex';
+                        outputs.insertBefore(dataContainer, outputs.firstChild);
+
+                        if (!userData.emailVerified) {
+                            setClientStatus('Verify Your Email');
+                            showNotification(`Please verify you.`, 'Warning - No Input Selected', 'warning-important');
+                            startProcessBtn.disabled = false;
+                            return;
+                        }
+
+                        userDoc = await getUserDoc();
+
+                        const activePhotoInput = document.querySelector(".inputs .data-container.active img");
+                        if (!activePhotoInput) {
+                            setClientStatus(`Click Your Uploaded Input Above`);
+                            showNotification(`Click your uploaded input above to select it.`, 'Warning - No Input Selected', 'warning-important');
+                            startProcessBtn.disabled = false;
+                            return;
+                        }
+
+                        const removeBanner = document.getElementById("removeBanner");
+                        const removeBannerStateMultiplier = removeBanner.checked ? 2 : 1;
+
+                        let neededCredits = 0;
+                        neededCredits = removeBannerStateMultiplier;
+                        neededCredits = Math.max(1, neededCredits);
+
+                        async function getServerAddresses() {
+                            try {
+                                const snapshotPromise = getDocsSnapshot('servers');
+                                return await fetchServerAddresses(snapshotPromise, false);
+                            } catch (error) {
+                                showNotification(`Failed to get server addresses.`, 'Warning', 'warning');
+                                return null;
+                            }
+                        }
+
+                        let userInternetProtocol, userUniqueBrowserId, serverAddresses;
+
+                        const timeoutDuration = 15000;
+                        let remainingTime = timeoutDuration / 1000;
+                        let countdownInterval;
+
+                        const startCountdown = () => {
+                            countdownInterval = setInterval(() => {
+                                if (remainingTime > 0) {
+                                    setClientStatus(`Creating ID... ${remainingTime}`);
+                                    remainingTime--;
+                                } else {
+                                    clearInterval(countdownInterval);
+                                    setClientStatus('Timeout reached!');
+                                }
+                            }, 1000);
+                        };
+
+                        const fetchDataWithTimeout = () => {
+                            return new Promise((resolve, reject) => {
+                                const timeout = setTimeout(() => {
+                                    reject(new Error('Process took longer than 15 seconds.'));
+                                }, timeoutDuration);
+
+                                Promise.all([
+                                    getUserInternetProtocol(),
+                                    ensureUniqueId(),
+                                    getServerAddresses()
+                                ])
+                                    .then(([ip, id, addresses]) => {
+                                        clearTimeout(timeout);
+                                        clearInterval(countdownInterval);
+                                        resolve([ip, id, addresses]);
+                                    })
+                                    .catch((error) => {
+                                        clearTimeout(timeout);
+                                        clearInterval(countdownInterval);
+                                        reject(new Error(`Failed to create IDs. ${error.message}`));
+                                    });
+                            });
+                        };
+
+                        // Main function to manage the process
+                        const createUserIds = async () => {
+                            try {
+                                setClientStatus("Fetching ID's...");
+                                startCountdown();
+
+                                [userInternetProtocol, userUniqueBrowserId, serverAddresses] = await fetchDataWithTimeout();
+                            } catch (error) {
+                                showNotification(error.message, 'Warning', 'warning');
+                            }
+                        };
+
+                        await createUserIds();
+
+                        const proxyNotifications = {
+                            isTOR: {
+                                message: "TOR users may soon be restricted due to multi-accounting concerns. Disable TOR to avoid issues.",
+                                title: 'Warning - Proxy',
+                                type: 'warning-important'
+                            },
+                            isVPN: {
+                                message: "Using a VPN may cause errors, slow processes, and affect downloads. Consider disabling your VPN for improved performance.",
+                                title: 'Warning - VPN',
+                                type: 'warning-important'
+                            },
+                            isProxy: {
+                                message: "Using a proxy may cause errors, slow processes, and affect downloads. Consider disabling your proxy for better performance.",
+                                title: 'Warning - Proxy',
+                                type: 'warning-important'
+                            }
+                        };
+
+                        for (const [key, { message, title, type }] of Object.entries(proxyNotifications)) {
+                            if (userInternetProtocol[key]) {
+                                showNotification(message, title, type);
+                            }
+                        }
+
+                        const serverPromises = serverAddresses.map(server => checkServerQueue(server));
+                        const results = await Promise.all(serverPromises);
+                        const minQueueIndex = results.reduce((minIndex, queue, id, arr) => {
+                            return (queue < arr[minIndex]) ? id : minIndex;
+                        }, 0);
+
+                        if (results[minQueueIndex] === Infinity) {
+                            startProcessBtn.disabled = false;
+                            setClientStatus('Offline');
+                            showNotification(`Cannot fetch the server. A VPN could cause this or our server is currently offline. Contact an admin for more information.`, 'Warning - Process Failed', 'warning-important');
+                            return;
+                        }
+
+                        setFetchableServerAdresses([serverAddresses[minQueueIndex]]);
+
+                        const serverAddress = getFetchableServerAdresses()[0];
+                        setClientStatus(`Connecting`);
+                        showNotification(`Connecting to ${serverAddress}...`, 'Process - Information', 'information');
+
+                        const extension = 'png';
+                        const timestamp = activePhotoInput.getAttribute('timestamp');
+                        const id = activePhotoInput.getAttribute('id');
+
+                        if (!timestamp || !id) {
+                            setClientStatus(`Timestamp or id is missing.`);
+                            showNotification(`Timestamp or id is missing. Cannot create input file name. Please contact an administrator.`, 'Warning - Process Failed', 'warning-important');
+                            return;
+                        }
+
+                        const fileOutputId = `${Math.random().toString(36).substring(2, 15)}_${1}`;
+                        const userName = userDoc.username.replace(/[^a-zA-Z0-9_]/g, '');
+                        const inputFileName = `${userName}_${timestamp}_${id}_${1}.${extension}`;
+                        const imageFile = await processBlobToFile(activePhotoInput.src, inputFileName, 'image/png');
+
+                        if (!imageFile) {
+                            startProcessBtn.disabled = false;
+                            setClientStatus(`Blob to file failed`);
+                            showNotification(`Failed to create files.`, 'Warning - Process Failed', 'warning-important');
+                            return;
+                        }
+
+                        if (imageFile.size / 1048576 > FILE_SIZE_LIMIT_MB) {
+                            startProcessBtn.disabled = false;
+                            setClientStatus(`Size exceeds ${FILE_SIZE_LIMIT_MB}MB limit`);
+                            showNotification(`Size exceeds ${FILE_SIZE_LIMIT_MB}MB limit`, 'Process - Information', 'warning-important');
+                            return;
+                        }
+
+                        const positivePrompt = document.getElementById("positivePrompt").value;
+                        const negativePrompt = document.getElementById("negativePrompt").value;
+
+                        const maskSelectorIds = [
+                            document.getElementById('clothes'),
+                            document.getElementById('bikini')
+                        ];
+
+                        const maskSelector = getSelectedInputId(maskSelectorIds);
+
+                        const negativeMaskSelectorIds = [
+                            document.getElementById('face'),
+                            document.getElementById('hair')
+                        ];
+
+                        const negativeMaskSelector = getSelectedInputId(negativeMaskSelectorIds);
+
+                        const formData = new FormData();
+                        formData.append('userId', userData.uid);
+                        formData.append('imageFile', imageFile);
+                        formData.append('imageMask', imageFile);
+                        formData.append('modeSelector', selectedModeId);
+                        formData.append('removeBanner', removeBanner.checked);
+                        formData.append('poseRecognition', false);
+                        formData.append('depthRecognition', false);
+                        formData.append('edgeRecognition', false);
+                        formData.append('resSelector', true);
+                        formData.append('positivePrompt', positivePrompt);
+                        formData.append('negativePrompt', negativePrompt);
+                        formData.append('maskSelector', maskSelector);
+                        formData.append('negativeMaskSelector', negativeMaskSelector);
+                        formData.append('maskPrompt', '');
+                        formData.append('negativeMaskPrompt', '');
+                        formData.append('dilateAmount', 15);
+                        formData.append('restoreBodySelector', "False");
+                        formData.append('tilingSelector', "False");
+                        formData.append('samplerSelector', "2M");
+                        formData.append('modelSelector', "Default");
+                        formData.append('clotheDetectionSelector', "automatic");
+                        formData.append('breastSelector', "automatic");
+                        formData.append('genitaliaSelector', "Vagina");
+                        formData.append('textPrompt', "");
+                        formData.append('pixelReference', 128);
+                        formData.append('inpaintReferenceMode', "True");
+                        formData.append('keepMode', 0);
+                        formData.append('configScale', 7);
+                        formData.append('denoisingStrenght', 100);
+                        formData.append('userInternetProtocolAddress', userInternetProtocol.userInternetProtocolAddress);
+                        formData.append('userUniqueInternetProtocolId', userInternetProtocol.userUniqueInternetProtocolId);
+                        formData.append('fileOutputId', fileOutputId);
+                        formData.append('userUniqueBrowserId', userUniqueBrowserId);
+
+                        const response = await customFetch(`${serverAddress}/start-process`, {
+                            method: 'POST',
+                            body: formData
+                        }, (progress) => {
+                            setClientStatus(`Upload: ${progress.toFixed(0)}%`);
+                        });
+
+                        if (response.status !== STATUS_OK) {
+                            const data = await response.json();
+                            throw new Error(data.server);
+                        }
+
+                        const db = await openDB(`outputDB-${pageName}`, 'outputs');
+                        const url = `${serverAddress}/download-output/${fileOutputId}`;
+                        const firstChild = outputs.firstChild;
+
+                        if (firstChild && !firstChild.dataset.created) {
+                            firstChild.dataset.created = true;
+                            firstChild.innerHTML = `<div class="process-text">Indexing</div>`;
+
+                            await addToDB(db, [null, url]);
+                            await saveCountIndex(databases);
+
+                            const data = await getFromDB(db);
+                            const entry = data.find(item => item.url === url);
+                            firstChild.innerHTML = `<initial url="${entry.url}" id="${entry.id}" timestamp="${entry.timestamp}" processing></initial><div class="process-text">Indexing</div><div class="delete-icon"></div>`;
+                        }
+
+                        setClientStatus('Starting...');
+                        updateDownloadFile(true, databases, userData.uid);
+                    } catch (error) {
+                        startProcessBtn.disabled = false;
+                        setClientStatus(error.message);
+                        cancelProcess(false);
+                    }
+                }
+
+                const downloadOutput = document.getElementById('downloadOutput');
+                if (downloadOutput) {
+                    const activeDataContainer = document.querySelector(".outputs .data-container.active");
+                    if (!activeDataContainer) {
+                        downloadOutput.disabled = true;
+                        //showNotification(`Maintaince for IOS downloads (Not important if you are not IOS).`, 'Warning - Download', 'warning');
+                    }
+
+                    downloadOutput.addEventListener('click', async () => {
+                        const activeDataContainer = document.querySelector(".outputs .data-container.active");
+                        if (!activeDataContainer) {
+                            showNotification(`No active output container selected.`, 'Warning - Download', 'warning');
+                            return;
+                        }
+
+                        const activeInput = activeDataContainer.querySelector('img, video, initial');
+                        if (!activeInput) {
+                            showNotification(`No active input element found.`, 'Warning - Download', 'warning');
+                            return;
+                        }
+
+                        if (downloadOutput.textContent === "Pause") {
+                            const abortController = getAbortController();
+                            if (abortController) {
+                                abortController.abort();
+                                resetAbortController();
+                                setDownloadCancelled(true);
+                                showNotification(`Download paused successfully.`, 'Download - Paused', 'info');
+                            } else {
+                                showNotification(`No active download to pause.`, 'Warning - Pause', 'warning');
+                            }
+
+                            downloadOutput.textContent = "Resume";
+                            downloadOutput.classList.add("important");
+                            return;
+                        }
+
+                        if (downloadOutput.textContent === "Resume") {
+                            const selectedOutputInfo = {
+                                db: await openDB(`outputDB-${pageName}`, 'outputs'),
+                                url: activeInput.getAttribute('url'),
+                                timestamp: parseInt(activeInput.getAttribute('timestamp')),
+                                element: activeInput.parentElement,
+                                id: parseInt(activeInput.getAttribute('id')),
+                                active: activeInput.getAttribute('active'),
+                            };
+
+                            showNotification(`Resuming download for output ID: ${selectedOutputInfo.id}.`, 'Download - Resuming', 'info');
+                            return await handleDownload(selectedOutputInfo);
+                        }
+
+                        if (activeInput) {
+                            const id = activeInput.getAttribute('id');
+                            const fileName = 'output_' + `${id}.${activeInput.tagName === 'VIDEO' ? 'mp4' : 'png'}`;
+
+                            let methodUsed = 0;
+                            try {
+                                const domIndex = parseInt(activeInput.getAttribute('id'));
+                                const db = await openDB(`outputDB-${pageName}`, 'outputs');
+                                const items = await getFromDB(db);
+                                const item = items.find(item => item.id === domIndex);
+                                if (!item || !item.blob) {
+                                    throw new Error(`No blob found for ID: ${domIndex}`);
+                                }
+
+                                const blob = item.blob;
+
+                                if (window.showSaveFilePicker) {
+                                    methodUsed = 1;
+                                    showNotification('Attempting to use showSaveFilePicker...', 'Download - Info', 'info');
+
+                                    const fileHandle = await window.showSaveFilePicker({
+                                        suggestedName: fileName,
+                                        types: [
+                                            { description: 'Video Files', accept: { 'video/mp4': ['.mp4'], 'video/webm': ['.webm'] } },
+                                            { description: 'Image Files', accept: { 'image/png': ['.png'], 'image/jpeg': ['.jpg'] } },
+                                        ],
+                                    });
+
+                                    const writableStream = await fileHandle.createWritable();
+                                    await writableStream.write(blob);
+                                    await writableStream.close();
+                                    showNotification(`File saved successfully: ${fileName}`, 'Download - Success', 'success');
+                                } else if (navigator.share) {
+                                    methodUsed = 2;
+                                    showNotification('Attempting to use navigator.share...', 'Download - Info', 'info');
+
+                                    const fileToShare = new File([blob], fileName, { type: blob.type });
+                                    await navigator.share({ title: fileName, files: [fileToShare] });
+                                    showNotification(`File shared successfully: ${fileName}`, 'Download - Shared', 'success');
+                                } else {
+                                    methodUsed = 3;
+                                    showNotification('Attempting to use <a> tag for download...', 'Download - Info', 'info');
+
+                                    const objectURL = URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.href = objectURL;
+                                    a.download = fileName;
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    document.body.removeChild(a);
+                                    URL.revokeObjectURL(objectURL);
+                                    showNotification(`File downloaded successfully: ${fileName}`, 'Download - Success', 'success');
+                                }
+                            } catch (error) {
+                                showNotification(`Failed to save or share the file: ${fileName} - Error: ${error.message} - Method: ${methodUsed}`, 'Error - Download', 'error');
+                            }
+                        } else {
+                            showNotification(`No output is selected.`, 'Warning - Download', 'warning');
+                        }
+                    });
+                }
+
+                const viewOutput = document.getElementById('viewOutput');
+                if (viewOutput) {
+                    const activeDataContainer = document.querySelector(".outputs .data-container.active");
+                    if (!activeDataContainer)
+                        viewOutput.disabled = true;
+
+                    viewOutput.addEventListener('click', async () => {
+                        const activeDataContainer = document.querySelector(".outputs .data-container.active");
+                        const activeInput = activeDataContainer.querySelector('img, video, initial');
+
+                        if (activeInput) {
+                            if (viewOutput.textContent === 'Fetch') {
+                                const abortController = getAbortController();
+                                if (abortController) {
+                                    abortController.abort();
+                                    resetAbortController();
+                                    downloadOutput.textContent = "Resume";
+                                    setDownloadCancelled(true);
+                                }
+
+                                return window.open(activeInput.getAttribute('url'), '_blank');
+                            }
+
+                            const domIndex = parseInt(activeInput.getAttribute('id')); // Get the ID from the DOM element
+                            const db = await openDB(`outputDB-${pageName}`, 'outputs'); // Open the IndexedDB
+                            const items = await getFromDB(db); // Retrieve items from IndexedDB
+                            const item = items.find(item => item.id === domIndex); // Find the matching item by ID
+
+                            if (!item || !item.blob) {
+                                throw new Error(`No blob found for ID: ${domIndex}`);
+                            }
+
+                            const blob = item.blob;
+                            const blobUrl = URL.createObjectURL(blob);
+
+                            const existingWrapper = document.getElementById('wrapper');
+                            if (existingWrapper) return;
+
+                            const wrapper = document.createElement('div');
+                            wrapper.id = 'wrapper';
+
+                            const backgroundContainer = document.createElement('div');
+                            backgroundContainer.className = 'background-container';
+
+                            const backgroundDotContainer = document.createElement('a');
+                            backgroundDotContainer.className = 'background-dot-container';
+
+                            const backgroundDotContent = document.createElement('div');
+                            backgroundDotContent.className = 'background-dot-container-content';
+                            backgroundDotContent.style.padding = '0';
+
+                            const innerContainer = document.createElement('div');
+                            innerContainer.className = 'background-container';
+                            innerContainer.style.display = 'contents';
+                            innerContainer.id = 'innerContainer';
+
+                            const img = document.createElement('img');
+                            img.src = blobUrl;
+
+                            img.style.maxWidth = '100vw';
+                            img.style.maxHeight = '80vh';
+                            img.style.borderRadius = 'var(--border-radius)'; // This will round the edges with 15px radius
+                            img.style.objectFit = 'contain'; // Optional: keep the image's aspect ratio
+
+                            const closeButton = document.createElement('button');
+                            closeButton.className = 'close-button';
+                            closeButton.style.position = 'absolute';
+                            closeButton.style.top = '1vh';
+                            closeButton.style.right = '1vh';
+                            closeButton.style.cursor = 'pointer';
+                            closeButton.style.width = '4vh';
+                            closeButton.style.height = '4vh';
+                            closeButton.style.padding = '0';
+                            closeButton.style.margin = '0';
+
+                            const closeButtonIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                            closeButtonIcon.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                            closeButtonIcon.setAttribute('viewBox', '0 0 24 24');
+                            closeButtonIcon.setAttribute('fill', 'none');
+                            closeButtonIcon.setAttribute('stroke', 'currentColor');
+                            closeButtonIcon.setAttribute('stroke-width', '2');
+                            closeButtonIcon.setAttribute('stroke-linecap', 'round');
+                            closeButtonIcon.setAttribute('stroke-linejoin', 'round');
+                            closeButtonIcon.style.margin = '0';
+                            closeButtonIcon.style.width = 'calc((3.5vh * var(--scale-factor-h)))';
+                            closeButtonIcon.classList.add('lucide', 'lucide-x');
+
+                            const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                            path1.setAttribute('d', 'M18 6 6 18');
+                            const path2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                            path2.setAttribute('d', 'm6 6 12 12');
+
+                            closeButtonIcon.appendChild(path1);
+                            closeButtonIcon.appendChild(path2);
+
+                            closeButton.appendChild(closeButtonIcon);
+                            closeButton.addEventListener('click', () => {
+                                wrapper.remove();
+                            });
+
+                            innerContainer.appendChild(img);
+                            innerContainer.appendChild(closeButton);
+
+                            backgroundDotContent.appendChild(innerContainer);
+                            backgroundDotContainer.appendChild(backgroundDotContent);
+                            backgroundContainer.appendChild(backgroundDotContainer);
+                            wrapper.appendChild(backgroundContainer);
+                            document.body.appendChild(wrapper);
+                        }
+                    });
+                }
+            }
+
+            let previousScreenMode = null;
+
+            async function sizeBasedElements() {
+                setMaxWidth();
+                const screenMode = getScreenMode();
+                const shouldUpdate = previousScreenMode !== screenMode;
+                previousScreenMode = screenMode;
+                if (!shouldUpdate)
+                    return;
+
+                loadPageState();
+                loadPage();
+            }
+
+            sizeBasedElements();
+
+            window.addEventListener('resize', sizeBasedElements);
+        });
+    </script>
+</body>
+</html>

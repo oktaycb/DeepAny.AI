@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/4.5.0/css/swiper.min.css">
 
     <title>DeepArt | BodySwap.me (DeepAny.AI)</title>
@@ -2364,7 +2364,7 @@
 		}
 
 		updateCountdown(setTimer);
-		
+        online.style.display = 'block';
 		async function checkServerStatus() {
 		  try {
 			// Check if the user is authenticated
@@ -2379,25 +2379,25 @@
 				.then(response => {
 				  if (response.status === STATUS_NOTFOUND) {
 					console.error(`Server ${server} is offline.`);
-				    online.style.display = 'none';
-				    offline.style.display = 'block';
+				    //online.style.display = 'none';
+				    //offline.style.display = 'block';
 					return Infinity; // Server is offline
 				  } else if (response.status === STATUS_OK) {
-				    online.style.display = 'block';
-				    offline.style.display = 'none';
+				    //online.style.display = 'block';
+				    //offline.style.display = 'none';
 					return response.json();
 				  } else {
 					console.error(`Error while fetching ${server}: Status ${response.status}`);
-				    online.style.display = 'none';
-				    offline.style.display = 'block';
+				    //online.style.display = 'none';
+				    //offline.style.display = 'block';
 					return Infinity; // Server is offline
 				  }
 				})
 				.then(data => data.server)
 				.catch(error => {
 				  console.error(`Error while fetching ${server}:`, error);
-				  online.style.display = 'none';
-				  offline.style.display = 'block';
+				  //online.style.display = 'none';
+				  //offline.style.display = 'block';
 				  return Infinity; // Server is offline
 				});
 			});
@@ -2409,24 +2409,24 @@
 			  const lowestQueueIndex = getLowestQueueIndex(results);
 			  if (results[lowestQueueIndex] > -1 && results[lowestQueueIndex] <= MAX_TASK_LIMIT) {
 				//setClientStatus(`Available`);
-			    online.style.display = 'block';
-			    offline.style.display = 'none';
+			    //online.style.display = 'block';
+			    //offline.style.display = 'none';
 			  } else {
 			    const allServerAddress = (await fetchServerAddresses()).reverse();
 			    serverAddresses = allServerAddress;
 				//setClientStatus(`Reconnecting...`);
-			    online.style.display = 'none';
-			    offline.style.display = 'block';
+			   // online.style.display = 'none';
+			   // offline.style.display = 'block';
 			  }
 			} else {
 			  setClientStatus('Offline');
-			  online.style.display = 'none';
-			  offline.style.display = 'block';
+			 // online.style.display = 'none';
+			  //offline.style.display = 'block';
 			}
 		  } catch (error) {
 			setClientStatus(`ERROR`);
-			online.style.display = 'none';
-			offline.style.display = 'block';
+			//online.style.display = 'none';
+			//offline.style.display = 'block';
 		  }
 		  
 		  setTimer = 10000;

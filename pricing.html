@@ -5,7 +5,7 @@
     <link rel="canonical" href="https://deepany.ai/pricing">
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="Discover the best pricing plans for DeepAny.AI. Choose from a variety of options tailored to your needs, and get access to advanced AI tools and services at competitive rates.">
     <meta name="keywords" content="AI, DeepAny, bodyswap, technology, services, solutions">
     <meta name="apple-mobile-web-app-title" content="Pricing" />
@@ -166,26 +166,15 @@
         }
     </script>
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="shortcut icon" href="/.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="stylesheet" href="css/styles.css?v=1.3.9.1">
-    <link rel="preload" href="https://www.googletagmanager.com/gtag/js?id=G-BFR70Q5VX1" as="script">
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-BFR70Q5VX1"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        window.gtag = function () {
-            window.dataLayer.push(arguments);
-        };
-        gtag('js', new Date());
-        gtag('config', 'G-BFR70Q5VX1');
-    </script>
+    <link rel="stylesheet" href="css/styles.css?v=1.4.4.5.9.9.4">
 </head>
 <body lang="en">
     <div id="paymentContainer" style="margin: 0; padding: 0; overflow: hidden; display: none; width: 100%; height: 100vh; position: absolute; z-index: 99999;"></div>
     <script type="module" defer>
-        const version = '1.3.9.1';
+        const version = '1.4.4.5.9.9.4';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -239,7 +228,7 @@
                                                                                                                     <div class="background-dot-container-link" id="purchase">Purchase</div>
                                                                                                                     <div>
                                                                                                                         <div class="line"></div>
-                                                                                                                        <h4 id="discount-details">Loading...</h4>
+                                                                                                                        <h4 id="discount-details" style="display: flex;justify-content: space-between;gap: calc(2vh* var(--scale-factor-h));">Loading...</h4>
                                                                                                                         <p class="discount-details" id="discount">Loading...</p>
                                                                                                                         <div class="line"></div>
                                                                                                                         <div style="display: flex;gap: 0.5vh;align-items: center;">
@@ -327,7 +316,7 @@
 
                     if (response.ok) {
                         const responseData = await response.json();
-                        setCache('pricingData', responseData.data, 5 * 60 * 1000);
+                        setCache('pricingData', responseData.data, 1 * 24 * 60 * 60 * 1000);
                         setPricingData(responseData.data);
                     }
                 } catch (error) {
@@ -458,7 +447,7 @@
 
                 if (isSubscriptionMode) {
                     capabilityListElement.innerHTML = `
-                                                <li class="capability">${capabilities.faceSwap.name}: 2 hours per process</li>
+                                                <li class="capability">${capabilities.faceSwap.name}: Unlimited</li>
                                                 ${Object.values(capabilities).map(capability =>
                         capability.name !== capabilities.faceSwap.name
                             ? `<li class="capability">${capability.name}: Unlimited</li>`
@@ -539,10 +528,10 @@
                     maximumFractionDigits = 3;
                 } else if (value >= 0.01) {
                     minimumFractionDigits = 0;
-                    maximumFractionDigits = 2;
+                    maximumFractionDigits = 3;
                 } else if (value >= 0.001) {
                     minimumFractionDigits = 0;
-                    maximumFractionDigits = 3;
+                    maximumFractionDigits = 4;
                 }
 
                 const options = { style: 'decimal', minimumFractionDigits, maximumFractionDigits, };
@@ -661,17 +650,21 @@
                                 fpsSlider.addEventListener('input', function () { updateVariables(); });
                                 createdEvent = true;
                             }
-                            message = 'You can spend your credits anytime.';
+                            message = 'Any credits you purchase will not expire.';
 
                             let discountDisplay = '';
 
                             if (h1PriceAmount[ACTUAL] !== h1PriceAmount[DISCOUNT]) {
+                                discountDetailsElement.style.display = 'flex';
+                                discountDetailsElement.style.gap = 'calc(2vh* var(--scale-factor-h))';
                                 discountDetailsElement.innerHTML = `
+                                                <div>
                                                     Discounted:
                                                     <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
                                                     <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency, true)}</span>
+                                                </div>
 
-                                                <div class="plans-popular" id="popular-tag" style="display: flex; float: right;">
+                                                <div class="plans-popular" id="popular-tag" style="display: flex;">
                                                     <p class="plans-name text-gradient">OFF -${discount}%</p>
                                                 </div>
                                             `;
@@ -735,7 +728,19 @@
 
                             message = 'Use our products without credit limitations.';
                             if (durationDays === -1) {
-                                discountDetailsElement.textContent = '';
+                                discountDetailsElement.style.display = 'flex';
+                                discountDetailsElement.style.gap = 'calc(2vh* var(--scale-factor-h))';
+                                discountDetailsElement.innerHTML = `
+                                                 <div>
+                                                     Discounted:
+                                                     <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
+                                                     <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency, true)}</span>
+                                                 </div>
+
+                                                 <div class="plans-popular" id="popular-tag" style="display: flex;">
+                                                     <p class="plans-name text-gradient">OFF -${discount}%</p>
+                                                 </div>
+                                             `;
 
                                 let discountDisplay = '';
 
@@ -751,19 +756,23 @@
                                                 `;
                                 }
 
-                                updateDisplay(discountDisplay, '/day');
+                                updateDisplay(discountDisplay, '');
                             } else {
                                 let discountDisplay = '';
 
                                 if (h1PriceAmount[ACTUAL] !== h1PriceAmount[DISCOUNT]) {
+                                    discountDetailsElement.style.display = 'flex';
+                                    discountDetailsElement.style.gap = 'calc(2vh* var(--scale-factor-h))';
                                     discountDetailsElement.innerHTML = `
-                                                        Discounted:
-                                                        <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
-                                                        <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency, true)}</span>
-
-                                                    <div class="plans-popular" id="popular-tag" style="display: flex; float: right;">
-                                                        <p class="plans-name text-gradient">OFF -${discount}%</p>
-                                                    </div>
+                                                        <div>
+                                                            Discounted:
+                                                            <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
+                                                            <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency, true)}</span>
+                                                        </div>
+                                                        
+                                                        <div class="plans-popular" id="popular-tag" style="display: flex;">
+                                                            <p class="plans-name text-gradient">OFF -${discount}%</p>
+                                                        </div>
                                                 `;
 
                                     discountDisplay = `
@@ -879,10 +888,12 @@
                 function handleSuccess(requestData, responseData, isBTC) {
                     if (isBTC) {
                         window.open(responseData.data.hosted_url, '_blank');
+                        setCache('purchaseInProgressBTC', 'true', 1 * 24 * 60 * 60 * 1000);
                     } else {
                         const paymentContainer = document.getElementById('paymentContainer');
                         paymentContainer.style.display = 'block';
                         paymentContainer.innerHTML = responseData;
+                        setCache('purchaseInProgressCard', 'true', 1 * 24 * 60 * 60 * 1000);
                     }
 
                     triggerGtagEvent(requestData);
@@ -903,7 +914,7 @@
                         'user_email': requestData.userEmail,
                     };
 
-                    console.log('Sending conversion event to gtag:', eventParams); // Useful for debugging
+                    console.log('Sending conversion event to gtag:', eventParams);
                     gtag('event', 'conversion_event_purchase', eventParams);
                 }
             }
@@ -925,18 +936,5 @@
             sizeBasedElements();
         });
     </script>
-    <script async>
-        (function () {
-            document.addEventListener('DOMContentLoaded', function () {
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker
-                        .register('./scripts/service-worker.js')
-                        .then(() => console.log('Service worker registered successfully.'))
-                        .catch(err => console.error('Service worker registration failed:', err));
-                }
-            });
-        })();
-    </script>
-
 </body>
 </html>

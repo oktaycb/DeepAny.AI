@@ -5,7 +5,7 @@
     <link rel="canonical" href="https://deepany.ai/profile">
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="Manage your DeepAny.AI profile. Update your account details, review your activity, and customize your AI experience to suit your needs.">
     <meta name="keywords" content="AI, DeepAny, bodyswap, technology, services, solutions">
     <meta name="apple-mobile-web-app-title" content="Profile" />
@@ -34,25 +34,14 @@
         }
     </style>
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="shortcut icon" href="/.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="stylesheet" href="css/styles.css?v=1.3.9.1">
-    <link rel="preload" href="https://www.googletagmanager.com/gtag/js?id=G-BFR70Q5VX1" as="script">
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-BFR70Q5VX1"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        window.gtag = function () {
-            window.dataLayer.push(arguments);
-        };
-        gtag('js', new Date());
-        gtag('config', 'G-BFR70Q5VX1');
-    </script>
+    <link rel="stylesheet" href="css/styles.css?v=1.4.4.5.9.9.4">
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = '1.3.9.1';
+        const version = '1.4.4.5.9.9.4';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -119,9 +108,9 @@
                                                                                         <div style="font-size: 0px;">
                                                                                             <h4 style="font-weight: 300;">Profile Visibility</h4>
                                                                                             <select id="profileVisibility">
-                                                                                                <option value="public">Public</option>
                                                                                                 <option value="private">Private</option>
                                                                                                 <option value="friends">Friends Only</option>
+                                                                                                <option value="public">Public</option>
                                                                                             </select>
                                                                                         </div>
                                                                                         <div style="font-size: 0px;">
@@ -321,13 +310,13 @@
                                                                                     <div class="line"></div>
                                                                                     <h4>Plan</h4>
                                                                                     <div style="margin: calc((2vh * var(--scale-factor-h) + 4vw / 2 * var(--scale-factor-w)));">
-                                                                                        <p style="font-weight: 300;">Subscription: 01/01/2024</p>
+                                                                                        <p style="font-weight: 300;">Subscription: ?</p>
                                                                                     </div>
                                                                                     <div class="line"></div>
                                                                                     <h4>Invoices</h4>
                                                                                     <div style="margin: calc((2vh * var(--scale-factor-h) + 4vw / 2 * var(--scale-factor-w)));">
-                                                                                        <p style="font-weight: 300;">Payment Date: 01/01/2024</p>
-                                                                                        <p style="font-weight: 300;">Payment Amount: $99.99</p>
+                                                                                        <p style="font-weight: 300;">Payment Date: ?</p>
+                                                                                        <p style="font-weight: 300;">Payment Amount: ?</p>
                                                                                     </div>
                                                                                 </div>
                                                                             </a>
@@ -438,10 +427,45 @@
             });
 
             const serverAddressAPI = await fetchServerAddress(getDocSnapshot('servers', '3050-1'), 'API');
+            const FIVE_MINUTES_MS = 300000;
+
+            function canClickAgain(buttonKey) {
+                const lastClicked = localStorage.getItem(buttonKey);
+                if (!lastClicked) return { canClick: true, timeLeft: 0 };
+
+                const timeSinceLastClick = Date.now() - parseInt(lastClicked, 10);
+                const timeLeft = Math.max(FIVE_MINUTES_MS - timeSinceLastClick, 0);
+
+                return { canClick: timeLeft === 0, timeLeft };
+            }
+
+            function formatTime(ms) {
+                const seconds = Math.floor(ms / 1000) % 60;
+                const minutes = Math.floor(ms / 60000);
+                return `${minutes} minute${minutes !== 1 ? 's' : ''} and ${seconds} second${seconds !== 1 ? 's' : ''}`;
+            }
+
+            function setLastClicked(buttonKey) {
+                localStorage.setItem(buttonKey, Date.now());
+            }
 
             const referralCredits = document.getElementById('referralCredits');
+            referralCredits.disabled = false;
+
+            const dailyCredits = document.getElementById('dailyCredits');
+            dailyCredits.disabled = false;
+
             referralCredits.addEventListener('click', async () => {
+                const buttonKey = 'referralCredits_lastClicked';
+                const { canClick, timeLeft } = canClickAgain(buttonKey);
+
+                if (!canClick) {
+                    showNotification(`You can click this button in ${formatTime(timeLeft)}.`, 'Referral Credits', 'normal');
+                    return;
+                }
+
                 referralCredits.disabled = true;
+                setLastClicked(buttonKey);
 
                 try {
                     showNotification("Waiting for a response...", 'Referral Credits', 'normal');
@@ -461,9 +485,17 @@
                 }
             });
 
-            const dailyCredits = document.getElementById('dailyCredits');
             dailyCredits.addEventListener('click', async () => {
+                const buttonKey = 'dailyCredits_lastClicked';
+                const { canClick, timeLeft } = canClickAgain(buttonKey);
+
+                if (!canClick) {
+                    showNotification(`You can click this button in ${formatTime(timeLeft)}.`, 'Referral Credits', 'normal');
+                    return;
+                }
+
                 dailyCredits.disabled = true;
+                setLastClicked(buttonKey);
 
                 try {
                     showNotification("Waiting for a response...", 'Daily Credits', 'normal');
@@ -488,13 +520,6 @@
 
             document.getElementById("emailAddress").textContent = userData.email;
             document.getElementById("email").value = userData.email;
-        });
-    </script>
-    <script async>
-        document.addEventListener('DOMContentLoaded', function () {
-            if (typeof navigator.serviceWorker !== 'undefined') {
-                navigator.serviceWorker.register('./scripts/service-worker.js')
-            }
         });
     </script>
 </body>
