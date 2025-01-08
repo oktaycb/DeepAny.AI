@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en" style="background: rgba(24, 24, 24, 1);" class="loading-screen">
+<head>
+    <title>DeepAny.AI: FAQs & Policies</title>
+    <link rel="canonical" href="https://deepany.ai/faq">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Find answers to frequently asked questions about DeepAny.AI. Learn about account management, features, and payments.">
+    <meta name="keywords" content="FAQ, AI, DeepAny, technology, support">
+    <meta name="apple-mobile-web-app-title" content="FAQ" />
+
+    <style id="loading-stylesheet">
+        .loading-screen {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #ff7300;
+            border-radius: 50%;
+            width: 50px !important;
+            height: 50px !important;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+    </style>
+
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="shortcut icon" href="/.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="stylesheet" href="css/styles.css?v=1.1.1.1.1.5.8">
+</head>
+<body lang="en">
+    <script type="module" defer>
+        const version = '1.1.1.1.1.5.8';
+
+        async function loadModule(url) {
+            return import(`${url}?v=${version}`);
+        }
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            const functions = await loadModule('./scripts/functions.js');
+            const { setUser, setAuthentication, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol } = functions;
+
+            function updateMainContent(screenMode, pageContent) {
+                pageContent.length = 0;
+                pageContent.push(
+                    // first page
+                    `
+                                <div class="background-container fill-room">
+                                    <div class="background-dot-container">
+                                        <div class="background-dot-container-content">
+                                            <div class="flex-column background-dot-container-header">
+                                                <h3 class="uppercase text-gradient">FAQ</h3>
+                                                <p>Find answers to commonly asked questions about DeepAny.AI.</p>
+                                            </div>
+                                            <div class="line"></div>
+
+                                            <!-- Account Issues Section -->
+                                            <div class="faq-section">
+                                                <h4>Account Issues</h4>
+                                                <p><strong>Why is my account blocked?</strong></p>
+                                                <p>Your account may be blocked due to policy violations such as duplicate accounts or inappropriate usage. Contact support to investigate further.</p>
+                                                <p><strong>How do I recover my account?</strong></p>
+                                                <p>Contact our support team with your registered email to verify your identity and recover access.</p>
+                                            </div>
+                                            <div class="line"></div>
+
+                                            <!-- Features Section -->
+                                            <div class="faq-section">
+                                                <h4>Feature Questions</h4>
+                                                <p><strong>What is DeepAny.AI?</strong></p>
+                                                <p>DeepAny.AI is an AI-powered platform offering tools like face swapping, image editing, and custom AI-generated content creation.</p>
+                                                <p><strong>How do I use the face swap feature?</strong></p>
+                                                <p>Navigate to the Face Swap section on our website, upload a video and a photo, and let our AI handle the rest.</p>
+                                            </div>
+                                            <div class="line"></div>
+
+                                            <!-- Payment Section -->
+                                            <div class="faq-section">
+                                                <h4>Payment Queries</h4>
+                                                <p><strong>What payment methods do you accept?</strong></p>
+                                                <p>We accept credit and debit cards. Unfortunately, PayPal is not supported at this time.</p>
+                                                <p><strong>What if my payment fails?</strong></p>
+                                                <p>If your payment fails, ensure your card supports international transactions. If issues persist, contact your bank for assistance.</p>
+                                            </div>
+                                            <div class="line"></div>
+
+                                            <!-- Privacy Section -->
+                                            <div class="faq-section">
+                                                <h4>Privacy and Security</h4>
+                                                <p><strong>How is my data handled?</strong></p>
+                                                <p>We prioritize user privacy and ensure all data is securely stored. For more details, read our Privacy Policy.</p>
+                                                <p><strong>Can I control who sees my profile?</strong></p>
+                                                <p>Yes, you can manage profile visibility settings in the Privacy section of your account.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `,
+                    // second page
+                    `
+                                <div class="background-container fill-room">
+                                    <div class="background-dot-container">
+                                        <div class="background-dot-container-content">
+                                            <div class="flex-column background-dot-container-header">
+                                                <h3 class="uppercase text-gradient">PURCHASE AGREEMENT</h3>
+                                                <p>Learn more about our purchase agreement for DeepAny.AI.</p>
+                                            </div>
+                                            <div class="line"></div>
+
+                                            <!-- Membership and Credit Purchase Agreement -->
+                                            <div class="faq-section">
+                                                <h3 class="bold">MEMBERSHIP & CREDIT</h3>
+                                                <p><strong>1. PARTIES</strong></p>
+                                                <p>This agreement is between DeepAny, referred to as the "Company," and, referred to as the "Customer."</p>
+
+                                                <p><strong>2. SUBJECT</strong></p>
+                                                <p>The Customer agrees to the terms to purchase services, including Faceswap, Inpaint, and DeepArt, provided by DeepAny.</p>
+
+                                                <p><strong>3. MEMBERSHIP AND CREDIT PURCHASE</strong></p>
+                                                <p>3.1. The Customer may purchase a subscription or credits via the DeepAny website using specified payment methods.</p>
+                                                <p>3.2. During the subscription, the Customer is entitled to unlimited use of Faceswap, Inpaint, and DeepArt services.</p>
+                                                <p>3.3. Credits purchased have no limited usage period and can be used across services.</p>
+
+                                                <p><strong>4. REFUND AND REIMBURSEMENT</strong></p>
+                                                <p>4.1. No refunds are provided for purchased subscriptions and credits.</p>
+                                                <p>4.2. Credits may be refunded in case of poor results, subject to evaluations by DeepAny.</p>
+
+                                                <p><strong>5. USE OF SERVICES</strong></p>
+                                                <p>5.1. To use services, the Customer must adhere to rules on the DeepAny website.</p>
+                                                <p>5.2. DeepAny reserves the right to suspend or terminate the Customer's account for misuse.</p>
+
+                                                <p><strong>6. GENERAL PROVISIONS</strong></p>
+                                                <p>6.1. This agreement cannot be modified without written consent.</p>
+                                                <p>6.2. Disputes will be resolved per processes defined by DeepAny.</p>
+
+                                                <p><strong>7. ACCEPTANCE</strong></p>
+                                                <p>This agreement is accepted by the Customer upon completing payment on the DeepAny website.</p>
+
+                                                <p><strong>8. CONTACT</strong></p>
+                                                <p>Communication will take place through the contact channels on the DeepAny website [Discord, Reddit, Mail].</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `,
+                    // third page
+                    `
+                                <div class="background-container fill-room">
+                                    <div class="background-dot-container">
+                                        <div class="background-dot-container-content">
+                                            <div class="flex-column background-dot-container-header">
+                                                <h3 class="uppercase text-gradient">TOS</h3>
+                                                <p>Learn more about our TOS for DeepAny.AI.</p>
+                                            </div>
+                                            <div class="line"></div>
+
+                                            <div class="faq-section" style="display: flex;justify-content: space-between;flex-direction: column;height: 100%;">
+                                                <div>
+                                                    <h3 class="bold">GUIDELINES AND TERMS OF USE</h3>
+
+                                                    <h4 class="bold">Acceptance of Terms</h4>
+                                                    <p>By accessing or using our AI generation platform, you agree to comply with and be bound by the following guidelines and terms of use. If you do not agree with these terms, please do not use the platform.</p>
+
+                                                    <h4 class="bold">Guidelines for Usage</h4>
+                                                    <ul>
+                                                        <li>Only use media for which you have legal rights.</li>
+                                                        <li>Do not violate the privacy or rights of individuals without explicit consent.</li>
+                                                        <li>Users are solely responsible for their creations.</li>
+                                                    </ul>
+
+                                                    <h4 class="bold">Content Review and Moderation</h4>
+                                                    <p>If you ask for a refund; We employ a content review and moderation process. If we believe that the results are bad, you will get a full refund of the process cost.</p>
+                                                    <p>Your data is stored for two days. No one else has access to the data than us and is secure. Your data will not be searched or shared until you give permission.</p>
+
+                                                    <h4 class="bold">Intellectual Property</h4>
+                                                    <p>You retain ownership of the content you upload for creating content.</p>
+                                                    <p>If you ever lose your files, please contact an administrator within two days.</p>
+
+                                                    <h4 class="bold">Disclaimer</h4>
+                                                    <p>This platform is provided "as is," and we make no warranties regarding the accuracy, reliability, or availability of the AI technology. We are not responsible for any misuse or harm resulting from the use of content generated on this platform.</p>
+
+                                                    <h4 class="bold">Changes to Terms</h4>
+                                                    <p>We reserve the right to modify these guidelines and terms of use at any time. Your continued use of the platform after such modifications constitutes your acceptance of the updated terms.</p>
+                                                </div>
+
+                                                <div class="contact-info">
+                                                    <h3 class="bold">Contact Information</h3>
+                                                    <p><strong>Email:</strong> durieun02@gmail.com</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `,
+                );
+            }
+
+            // Initialize the content
+            loadPageContent(setUser, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, setAuthentication, updateMainContent);
+        });
+    </script>
+</body>
+</html>

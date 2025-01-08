@@ -2,7 +2,7 @@
     return /iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
-const version = '1.4.4.5.9.9.4';
+const version = '1.1.1.1.1.5.8';
 
 export function setCache(key, value, ttl) {
     const now = new Date();
@@ -150,16 +150,19 @@ export async function getUserInternetProtocol() {
                     };
                 }
             } catch (error) {
+                //alert(`Error fetching from ${urls[i]}: ${error.message}`);
                 console.error(`Error fetching from ${urls[i]}: ${error.message}`);
             }
         }
         throw new Error('No IP field in any response');
     } catch (error) {
-        alert('All attempts to fetch internet protocol data failed: ' + error.message);
+        alert(
+            `All attempts to fetch internet protocol data failed: ${error.message}. 
+Please ensure that your ad-blocker or VPN is disabled and try again.`
+        );
         return null;
     }
 }
-
 export async function createStaticIdentifier(jsonData) {
     try {
         if (!Array.isArray(jsonData)) {
@@ -459,7 +462,7 @@ async function loadEvercookieUserUniqueBrowserId() {
 function loadEvercookieScript() {
     return new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = '/libraries/evercookie/evercookie3.js?v=1.4.4.5.9.9.4';
+        script.src = '/libraries/evercookie/evercookie3.js?v=1.1.1.1.1.5.8';
         script.onload = () => {
             //console.log('[loadEvercookieScript] Evercookie script loaded successfully.');
             resolve();
@@ -514,9 +517,9 @@ function loadJQueryAndEvercookie() {
             });
         };
 
-        loadScript('/libraries/evercookie/jquery-1.4.2.min.js?v=1.4.4.5.9.9.4', 'jQuery')
-            .then(() => loadScript('/libraries/evercookie/swfobject-2.2.min.js?v=1.4.4.5.9.9.4', 'swfobject'))
-            .then(() => loadScript('/libraries/evercookie/dtjava.js?v=1.4.4.5.9.9.4', 'dtjava'))
+        loadScript('/libraries/evercookie/jquery-1.4.2.min.js?v=1.1.1.1.1.5.8', 'jQuery')
+            .then(() => loadScript('/libraries/evercookie/swfobject-2.2.min.js?v=1.1.1.1.1.5.8', 'swfobject'))
+            .then(() => loadScript('/libraries/evercookie/dtjava.js?v=1.1.1.1.1.5.8', 'dtjava'))
             .then(() => loadEvercookieScript())
             .then(resolve)
             .catch((error) => {
@@ -525,6 +528,40 @@ function loadJQueryAndEvercookie() {
             });
     });
 }
+
+let isGtagConfigured = false;
+
+function configureGtag() {
+    if (isGtagConfigured) {
+        return;
+    }
+
+    let storedConsent;
+    try {
+        storedConsent = JSON.parse(localStorage.getItem(`consentPreferences_${version}`)) || null;
+    } catch (error) {
+        console.error("Stored consent preferences could not be parsed:", error);
+    }
+
+    const defaultConsent = {
+        analytics_storage: "granted",
+        ad_storage: "granted",
+        functionality_storage: "granted",
+        personalization_storage: "granted",
+        security_storage: "granted",
+        ad_user_data: "granted",
+        ad_personalization: "granted",
+        ads_data_redaction: "granted",
+    };
+
+    gtag('consent', 'default', storedConsent || defaultConsent);
+    gtag('consent', 'update', storedConsent || defaultConsent);
+    gtag('js', new Date());
+    gtag('config', 'G-5C9P4GHHQ6');
+
+    isGtagConfigured = true;
+}
+
 
 function createNotificationsContainer() {
     let container = document.getElementById('notification');
@@ -1748,9 +1785,16 @@ async function createSignFormSection(registerForm, retrieveImageFromURL, getFire
                     return await fetchServerAddress(getDocSnapshot('servers', '3050-1'), 'API')
                 }
                 const [userInternetProtocol, uniqueId, serverAddressAPI] = await Promise.all([getUserInternetProtocol(), ensureUniqueId(), getServerAddressAPI()]);
-                if (userInternetProtocol.isVPN || userInternetProtocol.isProxy || userInternetProtocol.isTOR) {
+                if (!userInternetProtocol || !userInternetProtocol?.hasOwnProperty('isVPN')) {
+                    throw new Error("Unable to verify VPN status. Please disable adblockers or extensions and try again.");
+                }
+
+                if (userInternetProtocol?.isVPN || userInternetProtocol?.isProxy || userInternetProtocol?.isTOR) {
                     throw new Error("You can't use VPN/Proxy/TOR while signing up. Please disable them and try again.");
                 }
+
+                configureGtag();
+                gtag('event', 'conversion', { 'send_to': 'AW-16739497290/U9qPCOThoYAaEMrqga4-' });
 
                 const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
@@ -2274,7 +2318,7 @@ function createSideBarData(sidebar) {
                             <svg style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M991.776 535.2c0-25.632-9.984-49.76-28.064-67.872L588.992 92.128c-36.256-36.288-99.488-36.288-135.744-0.032L317.408 227.808c-37.408 37.408-37.44 98.336-0.032 135.776l374.656 375.136c18.144 18.144 42.24 28.128 67.936 28.128 25.632 0 49.728-9.984 67.84-28.096l35.328-35.296 26.112 26.144c12.512 12.512 12.512 32.768 1.856 43.584l-95.904 82.048c-12.448 12.544-32.736 12.48-45.248 0l-245.536-245.824 0 0-3.2-3.2c-37.44-37.408-98.336-37.472-135.744-0.096l-9.632 9.632L294.4 554.336c-6.24-6.24-14.432-9.376-22.624-9.376-8.192 0-16.384 3.136-22.656 9.376 0 0 0 0.032-0.032 0.032l-22.56 22.56c0 0 0 0 0 0l-135.872 135.712c-37.408 37.408-37.44 98.304-0.032 135.776l113.12 113.184c18.688 18.688 43.296 28.064 67.872 28.064 24.576 0 49.152-9.344 67.904-28.032l135.808-135.712c0.032-0.032 0.032-0.096 0.064-0.128l22.528-22.496c6.016-6.016 9.376-14.112 9.376-22.624 0-8.48-3.36-16.64-9.344-22.624l-96.896-96.96 9.6-9.6c12.48-12.544 32.768-12.48 45.248 0.032l0-0.032 3.2 3.2 0 0.032 245.568 245.856c18.944 18.912 43.872 28.256 68.544 28.256 24.032 0 47.808-8.896 65.376-26.56l95.904-82.048c37.44-37.408 37.472-98.336 0.032-135.808l-26.112-26.112 55.232-55.168C981.76 584.928 991.776 560.832 991.776 535.2zM362.144 848.544c-0.032 0.032-0.032 0.096-0.064 0.128l-67.776 67.712c-12.48 12.416-32.864 12.448-45.312 0L135.904 803.2c-12.48-12.48-12.48-32.768 0-45.28l67.904-67.84 0 0 67.936-67.84 158.336 158.432L362.144 848.544zM918.368 557.824l-135.808 135.68c-12.064 12.096-33.152 12.096-45.216-0.032L362.656 318.368c-12.48-12.512-12.48-32.8 0-45.28l135.84-135.712C504.544 131.328 512.576 128 521.12 128s16.608 3.328 22.624 9.344l374.688 375.2c6.016 6.016 9.344 14.048 9.344 22.592C927.776 543.712 924.448 551.744 918.368 557.824z" fill="white"/><path d="M544.448 186.72c-12.352-12.672-32.64-12.832-45.248-0.48-12.64 12.384-12.832 32.64-0.48 45.248l322.592 329.216c6.24 6.368 14.528 9.6 22.848 9.6 8.096 0 16.16-3.04 22.4-9.152 12.64-12.352 12.8-32.608 0.448-45.248L544.448 186.72z" fill="white"/></svg>
                             Cloth Inpainting
                         </a>
-                        <a class="button disabled" id="artGeneratorButton" href="art-generator">
+                        <a class="button" id="artGeneratorButton" href="art-generator">
                             <svg style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M512 1024C229.888 1024 0 794.112 0 512S229.888 0 512 0s512 229.888 512 512c0 104.96-44.544 180.736-132.096 225.28-52.736 26.624-109.056 29.696-159.232 31.744-60.928 3.072-99.328 6.144-117.76 37.376-13.312 22.528-3.584 41.984 12.8 71.68 15.36 27.136 36.352 65.024 7.168 100.352-33.28 40.448-82.944 45.568-122.88 45.568z m0-970.24c-252.928 0-458.24 205.824-458.24 458.24s205.824 458.24 458.24 458.24c41.984 0 66.56-7.68 81.408-26.112 5.12-6.144 2.56-13.312-12.288-40.448-16.384-29.696-41.472-74.752-12.288-124.928 33.792-57.856 98.304-60.928 161.28-63.488 46.592-2.048 94.72-4.608 137.216-26.112 69.12-35.328 102.912-93.184 102.912-177.664 0-252.416-205.312-457.728-458.24-457.728z" fill="white" /><path d="M214.016 455.68m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M384 244.736m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M645.12 229.376m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M804.352 426.496m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white"/></svg>
                             Art Generator
                         </a>
@@ -2287,7 +2331,7 @@ function createSideBarData(sidebar) {
 							</svg>
 							Discord
 						</a>
-						<a class="button" id="twitterButton" translate="no" href="https://x.com/zeroduri" target="_blank" >
+						<a class="button" id="twitterButton" translate="no" href="https://x.com/deepanyai" target="_blank" >
 							<svg  viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 							<path id="Vector" d="M14.7339 10.1623L23.4764 0H21.4047L13.8136 8.82385L7.7507 0H0.757812L9.92616 13.3432L0.757812 24H2.82961L10.846 14.6817L17.2489 24H24.2418L14.7334 10.1623H14.7339ZM3.57609 1.55963H6.75823L21.4056 22.5113H18.2235L3.57609 1.55963Z" fill="white"/>
 							</svg>
@@ -2297,6 +2341,20 @@ function createSideBarData(sidebar) {
 							<svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24"><path d="M14.238 15.348c.085.084.085.221 0 .306-.465.462-1.194.687-2.231.687l-.008-.002-.008.002c-1.036 0-1.766-.225-2.231-.688-.085-.084-.085-.221 0-.305.084-.084.222-.084.307 0 .379.377 1.008.561 1.924.561l.008.002.008-.002c.915 0 1.544-.184 1.924-.561.085-.084.223-.084.307 0zm-3.44-2.418c0-.507-.414-.919-.922-.919-.509 0-.923.412-.923.919 0 .506.414.918.923.918.508.001.922-.411.922-.918zm13.202-.93c0 6.627-5.373 12-12 12s-12-5.373-12-12 5.373-12 12-12 12 5.373 12 12zm-5-.129c0-.851-.695-1.543-1.55-1.543-.417 0-.795.167-1.074.435-1.056-.695-2.485-1.137-4.066-1.194l.865-2.724 2.343.549-.003.034c0 .696.569 1.262 1.268 1.262.699 0 1.267-.566 1.267-1.262s-.568-1.262-1.267-1.262c-.537 0-.994.335-1.179.804l-2.525-.592c-.11-.027-.223.037-.257.145l-.965 3.038c-1.656.02-3.155.466-4.258 1.181-.277-.255-.644-.415-1.05-.415-.854.001-1.549.693-1.549 1.544 0 .566.311 1.056.768 1.325-.03.164-.05.331-.05.5 0 2.281 2.805 4.137 6.253 4.137s6.253-1.856 6.253-4.137c0-.16-.017-.317-.044-.472.486-.261.82-.766.82-1.353zm-4.872.141c-.509 0-.922.412-.922.919 0 .506.414.918.922.918s.922-.412.922-.918c0-.507-.413-.919-.922-.919z" fill="white"/></svg>
 							Reddit
 						</a>
+                        <div style="display: flex;gap: 1vh;flex-direction: row;justify-content: center;">
+                            <a id="faqLink" style="font-size: calc((1.75vh* var(--scale-factor-h)));" style="cursor: pointer;" href="guidelines?page=0&1.1.1.1.1.5.8">
+                                • FAQ
+                            </a>
+                            <a id="policiesLink" style="font-size: calc((1.75vh* var(--scale-factor-h)));" style="cursor: pointer;" href="guidelines?page=1&1.1.1.1.1.5.8">
+                                • Policy
+                            </a>
+                            <a id="guidelinesLink" style="font-size: calc((1.75vh* var(--scale-factor-h)));" style="cursor: pointer;" href="guidelines?page=2&1.1.1.1.1.5.8">
+                                • TOS
+                            </a>
+                            <a id="contactUsLink" style="font-size: calc((1.75vh* var(--scale-factor-h)));" style="cursor: pointer;" href="guidelines?page=2&1.1.1.1.1.5.8" onclick="window.location.href='mailto:durieun02@gmail.com';">
+                                • Help
+                            </a>
+					    </div>
 					</div>
 				</div>
 				`;
@@ -2476,20 +2534,28 @@ function createSideBarData(sidebar) {
     }
 }
 
-function triggerPurchaseConfirmationEvent(requestData) {
+async function triggerPurchaseConfirmationEvent(requestData) {
+    configureGtag();
     if (typeof gtag !== 'function') {
         alert('gtag is not defined. Ensure gtag.js is loaded.');
         return;
     }
 
+    async function convertToUSD(amount, currency) {
+        if (currency === 'USD') return amount;
+        const rates = await fetchConversionRates();
+        return amount / rates[currency];
+    }
+
+    const convertedValue = await convertToUSD(requestData.calculatedTotal, requestData.selectedCurrency);
     const eventParams = {
         transaction_id: `TRANS_${requestData.userId}_${Date.now()}`,
-        currency: requestData.selectedCurrency,
-        value: parseFloat(requestData.calculatedTotal) || 0,
+        currency: 'USD',
+        value: parseFloat(convertedValue) || 0,
         items: [
             {
                 item_name: requestData.selectedMode === 'subscription' ? 'Subscription' : 'Credits',
-                price: parseFloat(requestData.calculatedTotal) || 0,
+                price: parseFloat(convertedValue) || 0,
                 quantity: 1,
             },
         ],
@@ -2497,15 +2563,20 @@ function triggerPurchaseConfirmationEvent(requestData) {
         user_email: requestData.userEmail,
     };
 
-    //console.log('Sending purchase confirmation event to gtag:', eventParams);
     gtag('event', 'purchase', eventParams);
+    gtag('event', 'conversion_event_purchase', eventParams);
+    gtag('event', 'conversion', {
+        'send_to': 'AW-16739497290/8jI_CLPPr4AaEMrqga4-',
+        'value': parseFloat(convertedValue) || 10.0,
+        'currency': 'USD',
+        'transaction_id': eventParams.transaction_id,
+    });
 }
 
 async function checkPurchaseStatus() {
     try {
         const userData = await getUserData();
         if (!userData || !userData.uid) {
-            console.error('User data not found.');
             return;
         }
 
@@ -2617,10 +2688,12 @@ function displayPurchaseConfirmation(purchaseData) {
 }
 
 export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, setAuthentication, updateMainContent, savePageState = null) {
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = window.gtag || function () {
+        window.dataLayer.push(arguments);
+    };
     let previousScreenMode = null,
-        cleanupEvents = null,
-        cleanPages = null,
-        reconstructMainStyles = null;
+        cleanupEvents = null;
     let screenMode = getScreenMode();
     if (!localStorage.getItem('sidebarStateInitialized') && screenMode !== 1) {
         localStorage.setItem('sidebarState', 'keepSideBar');
@@ -2768,7 +2841,7 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
 						<li>
 							<a class="text" href="#">Community</a>
 							<ul class="dropdown-menu">
-								<li><a class="text" href="https://x.com/zeroduri" target="_blank" translate="no">X</a></li>
+								<li><a class="text" href="https://x.com/deepanyai" target="_blank" translate="no">X</a></li>
 								<li><a class="text" href="https://discord.com/invite/Vrmt8UfDK8" target="_blank" translate="no">Discord</a></li>
 								<li><a class="text" href="https://www.reddit.com/r/deepanyai/" target="_blank" translate="no">Reddit</a></li>
 							</ul>
@@ -2805,21 +2878,11 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
         const currentContentLength = pageContent.length;
         if (oldContentLength !== currentContentLength) {
             if (oldContentLength > 0) {
-                if (!cleanPages) {
-                    const {
-                        cleanPages
-                    } = await import('../defaultPageLoads/accessVariables.js');
-                    cleanPages(pageContent)
-                } else cleanPages(pageContent)
+                cleanPages(pageContent);
             }
             createPages(pageContent);
             if (oldContentLength > 0) {
-                if (!reconstructMainStyles) {
-                    const {
-                        reconstructMainStyles
-                    } = await import('../defaultPageLoads/accessVariables.js');
-                    reconstructMainStyles(pageContent)
-                } else reconstructMainStyles(pageContent)
+                reconstructMainStyles(pageContent);
             }
         }
         updateContent(pageContent);
@@ -2894,21 +2957,41 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
             }
         });
     });
-    const links = document.querySelectorAll('a[href]');
-    if (links.length)
-        links.forEach(link => observer.observe(link));
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = "https://www.googletagmanager.com/gtag/js?id=G-5C9P4GHHQ6";
-    document.head.appendChild(script);
-    script.onload = function () {
-        window.dataLayer = window.dataLayer || [];
-        window.gtag = function () {
-            window.dataLayer.push(arguments);
-        };
-        gtag('js', new Date());
-        gtag('config', 'G-5C9P4GHHQ6');
-    };
+
+    setTimeout(() => {
+        if (!document.querySelector('script[src*="gtag/js"]')) {
+            let storedConsent;
+            try {
+                storedConsent = JSON.parse(localStorage.getItem(`consentPreferences_${version}`)) || null;
+            } catch (error) {
+                console.error("Stored consent preferences could not be parsed:", error);
+            }
+
+            const defaultConsent = {
+                analytics_storage: "granted",
+                ad_storage: "granted",
+                functionality_storage: "granted",
+                personalization_storage: "granted",
+                security_storage: "granted",
+                ad_user_data: "granted",
+                ad_personalization: "granted",
+                ads_data_redaction: "granted",
+            };
+
+            gtag('consent', 'default', storedConsent || defaultConsent);
+            gtag('consent', 'update', storedConsent || defaultConsent);
+
+            const scriptGA = document.createElement('script');
+            scriptGA.async = true;
+            scriptGA.src = "https://www.googletagmanager.com/gtag/js?id=G-5C9P4GHHQ6";
+            document.head.appendChild(scriptGA);
+
+            scriptGA.onload = function () {
+                configureGtag();
+                gtag('event', 'conversion', { 'send_to': 'AW-16739497290/lxH_CN3FrIAaEMrqga4-' });
+            };
+        }
+    }, 500);
     checkPurchaseStatus();
     setInterval(() => {
         checkPurchaseStatus();
@@ -2932,11 +3015,29 @@ export function getScreenMode() {
     if (aspectRatio <= 4 / 3) return ScreenMode.PC;
     return ScreenMode.PC
 }
-export function setCurrentMain(value) {
-    currentMain = value
-}
 export function getCurrentMain() {
-    return currentMain
+    const urlParams = new URLSearchParams(window.location.search);
+    const pageParam = urlParams.get('page');
+    window.history.replaceState(null, '', `${window.location.pathname}`);
+
+    if (pageParam !== null) {
+        localStorage.setItem(`${pageName}_currentMain`, pageParam);
+        currentMain = parseInt(pageParam, 10); // Use page number if available
+    } else {
+        const localStorageValue = localStorage.getItem(`${pageName}_currentMain`);
+        if (localStorageValue !== null) {
+            currentMain = parseInt(localStorageValue, 10); // Fallback to localStorage
+        }
+    }
+    return currentMain;
+}
+export function setCurrentMain(value) {
+    currentMain = value;
+    localStorage.setItem(`${pageName}_currentMain`, currentMain.toString());
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.delete(`${pageName}_currentMain`);
+    urlParams.set('page', currentMain.toString()); 
+    window.history.replaceState(null, '', `${window.location.pathname}`);
 }
 export function setWindowHeight(value) {
     windowHeight = value
@@ -2968,10 +3069,15 @@ export function getSidebarActive() {
     return sidebarActive
 }
 export function setNavbarActive(value) {
-    navbarActive = value
+    navbarActive = value;
+    localStorage.setItem(`${pageName}_navbarActive`, navbarActive.toString());
 }
 export function getNavbarActive() {
-    return navbarActive
+    const storedValue = localStorage.getItem(`${pageName}_navbarActive`);
+    if (storedValue !== null) {
+        navbarActive = storedValue !== 'false';
+    }
+    return navbarActive;
 }
 export function setActualNavbarHeight(value) {
     actualNavbarHeight = value
@@ -3052,6 +3158,7 @@ export function setNavbar(navbar, mains, sidebar) {
             navbar.style.top = -navbar.offsetHeight + "px"
         }
         if (sidebar) {
+            sidebar.style.top = `${getNavbarHeight()}px`;
             sidebar.style.height = '100vh'
         }
     }
@@ -3072,7 +3179,7 @@ export function showSidebar(sidebar, hamburgerMenu, setUser = null, setAuthentic
             return;
         createUserData(sidebar, screenMode, setAuthentication, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
         createSideBarData(sidebar);
-        ['exploreButton', 'profileButton', 'premiumButton', 'faceSwapButton', 'inpaintButton', 'artGeneratorButton', 'userLayout'].forEach(id => {
+        ['exploreButton', 'profileButton', 'premiumButton', 'faceSwapButton', 'inpaintButton', 'artGeneratorButton', 'userLayout', 'faqLink', 'policiesLink', 'guidelinesLink', 'contactUsLink'].forEach(id => {
             const element = document.getElementById(id);
             if (element) {
                 element.addEventListener('click', () => localStorage.setItem('sidebarState', 'removeSidebar'))
@@ -3748,13 +3855,21 @@ export const handleFileContainerEvents = async (event, dbName, storeName, contai
     }
 };
 
-export async function showFrameSelector(videoElement) {
+export async function showFrameSelector(element) {
     if (document.getElementById('wrapper')) return;
 
-    const fps = parseFloat(videoElement.getAttribute('data-fps')) || 0;
-    if (!fps) {
-        showNotification(`Video FPS not found, please try again.`, 'Multi Face Swap', 'warning');
-        return;
+    const videoElement = element.querySelector('video');
+    const imgElement = element.querySelector('img');
+    const targetElement = videoElement || imgElement;
+    const isVideo = targetElement && targetElement.tagName === "VIDEO" || targetElement instanceof HTMLVideoElement;
+
+    const fps = parseFloat(targetElement.getAttribute('data-fps')) || 0;
+
+    if (isVideo) {
+        if (!fps) {
+            showNotification(`Video FPS not found, please try again.`, 'Multi Face Swap', 'warning');
+            return;
+        }
     }
 
     const wrapper = document.createElement('div');
@@ -3766,9 +3881,10 @@ export async function showFrameSelector(videoElement) {
                 <div class="background-dot-container-content" style="padding: 0;">
                     <div id="innerContainer" class="background-container" style="display: contents;">
                         <div style="position: relative; display: contents; max-width: 100vw; max-height: 60vh;">
-                            <div class="loading-screen" style="position: absolute;"></div>
-                            <video></video>
-                            <img></img>
+                            <div class="loading-screen" id="initialLoadingSpinner" style="position: absolute;"></div>
+                            <video query="videoContainer" style="display: none;"></video>
+                            <img query="imgContainer" style="display: none;"></img>
+                            <img query="outputContainer" style="display: none;"></img>
                             <input type="range" min="0" max="0" value="0" style=" position: absolute; bottom: calc(2vh * var(--scale-factor-h)); left: 50%; transform: translateX(-50%); width: 97%; z-index: 2;"/>
                         </div>
                         <button class="close-button" style=" position: absolute; top: 1vh; right: 1vh; cursor: pointer; width: 4vh; height: 4vh; padding: 0; margin: 0;">
@@ -3916,7 +4032,7 @@ export async function showFrameSelector(videoElement) {
                                                                                                                 </div>
                                                                                                                 <div class="line"></div>
                         <div style="display: flex;flex-direction: row;justify-content: space-around;gap: calc(1.5vh* var(--scale-factor-h));">
-                            <button class="wide" id="multipleFacesBtn">Start Identiciation Process</button>
+                            <button class="wide" id="multipleFacesBtn">Start Identification Process</button>
                         </div>
                         </div>
                     </div>
@@ -3929,77 +4045,95 @@ export async function showFrameSelector(videoElement) {
         wrapper.style.alignItems = 'center';
 
     let currentTime = 0;
-    let clonedVideo;
+    let clonedInput;
 
-    function createClonedVideo(maxRetries = 3, retryDelay = 1000) {
+    function createClonedInput(maxRetries = 3, retryDelay = 1000) {
         let retries = 0;
 
-        function attemptVideoLoad() {
-            clonedVideo = videoElement.cloneNode(true);
-            clonedVideo.style.width = '100%';
-            clonedVideo.style.borderRadius = 'var(--border-radius)';
-            clonedVideo.style.height = getScreenMode() === 1 ? '60vh' : '60vh';
-            clonedVideo.style.objectFit = getScreenMode() === 1 ? 'cover' : 'contain';
-            clonedVideo.style.position = 'relative';
-            clonedVideo.controls = false;
-            clonedVideo.autoplay = true;
-            clonedVideo.loop = true;
-            clonedVideo.muted = true;
-            clonedVideo.playsInline = true;
-            clonedVideo.addEventListener('error', handleError);
-            clonedVideo.pause();
-            document.body.appendChild(clonedVideo);
+        function attemptInputLoad() {
+            clonedInput = targetElement.cloneNode(true);
+            clonedInput.style.width = '100%';
+            clonedInput.style.borderRadius = 'var(--border-radius)';
+            clonedInput.style.height = getScreenMode() === 1 ? '60vh' : '60vh';
+            clonedInput.style.objectFit = getScreenMode() === 1 ? 'cover' : 'contain';
+            clonedInput.style.position = 'relative';
+            if (isVideo) {
+                clonedInput.controls = false;
+                clonedInput.autoplay = true;
+                clonedInput.loop = true;
+                clonedInput.muted = true;
+                clonedInput.playsInline = true;
+                clonedInput.addEventListener('error', handleError);
+                clonedInput.pause();
+                clonedInput.setAttribute('query', 'videoContainer');
+            }
+            else {
+                clonedInput.setAttribute('query', 'imgContainer');
+            }
+
+            document.body.appendChild(clonedInput);
         }
 
         function handleError() {
             if (retries < maxRetries) {
                 retries++;
                 showNotification(`Video could not be loaded. Retrying... (${retries}/${maxRetries})`, 'Multi Face Swap', 'default');
-                setTimeout(attemptVideoLoad, retryDelay);
+                setTimeout(attemptInputLoad, retryDelay);
             } else {
                 showNotification('Failed to load video after multiple attempts.', 'Multi Face Swap', 'error');
             }
         }
 
-        attemptVideoLoad();
-        return clonedVideo;
+        attemptInputLoad();
+        return clonedInput;
     }
 
-    async function replaceVideo() {
-        clonedVideo = createClonedVideo();
-        const videoContainer = wrapper.querySelector('video');
-        videoContainer.style.display = 'none';
-        clonedVideo.style.display = 'block';
-        videoContainer.replaceWith(clonedVideo);
+    async function replaceInput() {
+        clonedInput = createClonedInput();
+        const inputContainer = isVideo ? wrapper.querySelector('[query="videoContainer"]') : wrapper.querySelector('[query="imgContainer"]');
+        inputContainer.style.display = 'none';
+        clonedInput.style.display = 'block';
+        inputContainer.replaceWith(clonedInput);
     }
 
     const slider = wrapper.querySelector('input[type="range"]');
+    if (!isVideo)
+        slider.style.display = 'none';
+
     const closeButton = wrapper.querySelector('.close-button');
 
-    async function initVideoAndSlider() {
-        clonedVideo.addEventListener('loadedmetadata', () => {
-            const loadingScreen = wrapper.querySelector('.loading-screen');
-            if (loadingScreen) {
-                loadingScreen.remove();
+    async function initInput() {
+        clonedInput.addEventListener(isVideo ? 'loadedmetadata' : 'load', () => {
+            const loadingSpinner = wrapper.querySelector('#initialLoadingSpinner');
+            if (loadingSpinner) {
+                loadingSpinner.remove();
             } else {
-                console.warn('Loading screen element not found in wrapper.');
+                alert('Loading screen element not found in wrapper.');
             }
 
-            currentTime = clonedVideo.currentTime;
-            slider.max = Math.floor(clonedVideo.duration * fps);
+            if (isVideo) {
+                currentTime = clonedInput.currentTime;
+                slider.max = Math.floor(clonedInput.duration * fps);
+            }
 
             const multipleFacesBtn = document.getElementById('multipleFacesBtn');
             multipleFacesBtn.disabled = false;
-            multipleFacesBtn.textContent = 'Start Identiciation Process';
+            multipleFacesBtn.textContent = 'Start Identification Process';
         });
 
-        slider.addEventListener('input', () => {
-            const frame = parseInt(slider.value, 10);
-            clonedVideo.currentTime = frame / fps;
-            currentTime = clonedVideo.currentTime;
-
-            clonedVideo.style.filter = 'brightness(100%)';
+        clonedInput.addEventListener('error', () => {
+            alert(isVideo ? 'Video failed to load.' : 'Image failed to load.');
         });
+
+        if (isVideo) {
+            slider.addEventListener('input', () => {
+                const frame = parseInt(slider.value, 10);
+                clonedInput.currentTime = frame / fps;
+                currentTime = clonedInput.currentTime;
+
+                clonedInput.style.filter = 'brightness(100%)';
+            });
+        }
 
         closeButton.addEventListener('click', () => {
             document.body.removeChild(wrapper);
@@ -4011,36 +4145,41 @@ export async function showFrameSelector(videoElement) {
             }
         });
 
-        let isPlaying = false;
-        clonedVideo.addEventListener('click', () => {
-            if (isPlaying) {
-                clonedVideo.pause();
-            } else {
-                clonedVideo.play();
-                updateSlider(clonedVideo, slider);
+        if (isVideo) {
+            function updateSlider(video, slider) {
+                const updateInterval = setInterval(() => {
+                    if (video.paused || video.ended) {
+                        clearInterval(updateInterval);
+                        return;
+                    }
+                    currentTime = video.currentTime;
+                    slider.value = Math.floor(currentTime * fps);
+                }, 1000 / fps);
             }
-            isPlaying = !isPlaying;
-        });
+
+            let isPlaying = false;
+            clonedInput.addEventListener('click', () => {
+                if (isPlaying) {
+                    clonedInput.pause();
+                } else {
+                    clonedInput.play();
+                    updateSlider(clonedInput, slider);
+                }
+                isPlaying = !isPlaying;
+            });
+        }
 
         document.body.appendChild(wrapper);
     }
 
-    function updateSlider(video, slider) {
-        const updateInterval = setInterval(() => {
-            if (video.paused || video.ended) {
-                clearInterval(updateInterval);
-                return;
-            }
-            currentTime = video.currentTime;
-            slider.value = Math.floor(currentTime * fps);
-        }, 1000 / fps);
-    }
+    await replaceInput();
+    await initInput();
 
-    await replaceVideo();
-    await initVideoAndSlider();
+    const trackReferenceFaceGrandparent = document.getElementById('trackReferenceFace').parentElement.parentElement;
+    trackReferenceFaceGrandparent.style.display = isVideo ? 'unset' : 'none';
 
-    const imgContainer = wrapper.querySelector('img');
-    imgContainer.style.display = "none";
+    const outputContainer = wrapper.querySelector('[query="outputContainer"]');
+    outputContainer.style.display = "none";
 
     const multipleFacesBtn = document.getElementById('multipleFacesBtn');
     if (!multipleFacesBtn)
@@ -4052,14 +4191,14 @@ export async function showFrameSelector(videoElement) {
         checkboxes.forEach(checkbox => {
             checkbox.addEventListener('change', (event) => {
                 multipleFacesBtn.disabled = false;
-                multipleFacesBtn.textContent = 'Start Identiciation Process';
+                multipleFacesBtn.textContent = 'Start Identification Process';
 
-                const imgContainer = wrapper.querySelector('img');
-                imgContainer.style.display = "none";
+                const outputContainer = wrapper.querySelector('[query="outputContainer"]');
+                outputContainer.style.display = "none";
 
-                const videoContainer = wrapper.querySelector('video');
-                videoContainer.style.display = "block";
-                videoContainer.style.filter = 'brightness(100%)';
+                const inputContainer = isVideo ? wrapper.querySelector('[query="videoContainer"]') : wrapper.querySelector('[query="imgContainer"]');
+                inputContainer.style.display = "block";
+                inputContainer.style.filter = 'brightness(100%)';
             });
         });
     }
@@ -4070,14 +4209,14 @@ export async function showFrameSelector(videoElement) {
         checkboxes.forEach(checkbox => {
             checkbox.addEventListener('change', (event) => {
                 multipleFacesBtn.disabled = false;
-                multipleFacesBtn.textContent = 'Start Identiciation Process';
+                multipleFacesBtn.textContent = 'Start Identification Process';
 
-                const imgContainer = wrapper.querySelector('img');
-                imgContainer.style.display = "none";
+                const outputContainer = wrapper.querySelector('[query="outputContainer"]');
+                outputContainer.style.display = "none";
 
-                const videoContainer = wrapper.querySelector('video');
-                videoContainer.style.display = "block";
-                videoContainer.style.filter = 'brightness(100%)';
+                const inputContainer = isVideo ? wrapper.querySelector('[query="videoContainer"]') : wrapper.querySelector('[query="imgContainer"]');
+                inputContainer.style.display = "block";
+                inputContainer.style.filter = 'brightness(100%)';
             });
         });
     }
@@ -4088,14 +4227,14 @@ export async function showFrameSelector(videoElement) {
         checkboxes.forEach(checkbox => {
             checkbox.addEventListener('change', (event) => {
                 multipleFacesBtn.disabled = false;
-                multipleFacesBtn.textContent = 'Start Identiciation Process';
+                multipleFacesBtn.textContent = 'Start Identification Process';
 
-                const imgContainer = wrapper.querySelector('img');
-                imgContainer.style.display = "none";
+                const outputContainer = wrapper.querySelector('[query="outputContainer"]');
+                outputContainer.style.display = "none";
 
-                const videoContainer = wrapper.querySelector('video');
-                videoContainer.style.display = "block";
-                videoContainer.style.filter = 'brightness(100%)';
+                const inputContainer = isVideo ? wrapper.querySelector('[query="videoContainer"]') : wrapper.querySelector('[query="imgContainer"]');
+                inputContainer.style.display = "block";
+                inputContainer.style.filter = 'brightness(100%)';
             });
         });
     }
@@ -4111,13 +4250,14 @@ export async function showFrameSelector(videoElement) {
         multipleFacesBtn.disabled = true;
         multipleFacesBtn.textContent = 'Processing...';
 
-        const imgContainer = wrapper.querySelector('img');
-        imgContainer.style.display = "none";
+        const outputContainer = wrapper.querySelector('[query="outputContainer"]');
+        outputContainer.style.display = "none";
 
-        const videoContainer = wrapper.querySelector('video');
-        videoContainer.style.display = "block";
-        videoContainer.style.filter = 'brightness(100%)';
-        clonedVideo.pause();
+        const inputContainer = isVideo ? wrapper.querySelector('[query="videoContainer"]') : wrapper.querySelector('[query="imgContainer"]');
+        inputContainer.style.display = "block";
+        inputContainer.style.filter = 'brightness(100%)';
+        if (isVideo)
+            clonedInput.pause();
 
         function getSelectedPerson() {
             const checkboxes = document.querySelectorAll('#facePositionComboBox input[type="checkbox"]');
@@ -4168,7 +4308,8 @@ export async function showFrameSelector(videoElement) {
             multipleFacesBtn.disabled = false;
             multipleFacesBtn.textContent = 'Try Again?';
             showNotification(`Select the person to confirm correct face. If there's 3 people and you want to swap the one in the middle, you set this to "2nd person" option.`, 'Incorrect Settings', 'warning-important');
-            slider.style.display = 'block';
+                if (isVideo)
+                    slider.style.display = 'block';
             return;
         }*/
 
@@ -4179,13 +4320,15 @@ export async function showFrameSelector(videoElement) {
             let userDoc = await getUserDoc();
 
             if (typeof userData !== 'object' || !userData?.uid) {
+                wrapper.remove();
                 const openSignInContainer = document.getElementById('openSignInContainer');
                 if (openSignInContainer)
                     openSignInContainer.click();
                 multipleFacesBtn.disabled = true;
                 multipleFacesBtn.textContent = 'Not Available';
                 showNotification(`Please sign in or create an account to use our AI services with free (daily) trial.`, 'Warning - No User Found', 'warning-important');
-                slider.style.display = 'block';
+                if (isVideo)
+                    slider.style.display = 'block';
                 return;
             }
 
@@ -4193,7 +4336,8 @@ export async function showFrameSelector(videoElement) {
                 showNotification(`Your account is restricted. Email us for further detail.`, 'Warning - Banned Account', 'warning-important');
                 multipleFacesBtn.disabled = true;
                 multipleFacesBtn.textContent = 'Not Available';
-                slider.style.display = 'block';
+                if (isVideo)
+                    slider.style.display = 'block';
                 return;
             }
 
@@ -4201,17 +4345,24 @@ export async function showFrameSelector(videoElement) {
                 showNotification(`Please verify your email first.`, 'Warning - No Input Selected', 'warning-important');
                 multipleFacesBtn.disabled = true;
                 multipleFacesBtn.textContent = 'Not Available';
-                slider.style.display = 'block';
+                if (isVideo)
+                    slider.style.display = 'block';
                 return;
             }
 
-            async function getActiveFrameAsFile(videoElement, fileName = 'image.png') {
+            async function getActiveViewAsFile(targetElement, fileName = 'image.png') {
                 const canvas = document.createElement('canvas');
                 const context = canvas.getContext('2d');
-                canvas.width = videoElement.videoWidth;
-                canvas.height = videoElement.videoHeight;
 
-                context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+                if (isVideo) {
+                    canvas.width = targetElement.videoWidth;
+                    canvas.height = targetElement.videoHeight;
+                    context.drawImage(targetElement, 0, 0, canvas.width, canvas.height);
+                } else {
+                    canvas.width = targetElement.naturalWidth;
+                    canvas.height = targetElement.naturalHeight;
+                    context.drawImage(targetElement, 0, 0, canvas.width, canvas.height);
+                }
 
                 return new Promise((resolve, reject) => {
                     canvas.toBlob(
@@ -4228,12 +4379,13 @@ export async function showFrameSelector(videoElement) {
                 });
             }
 
-            const activeFrame = await getActiveFrameAsFile(clonedVideo);
-            if (!activeFrame) {
+            const activeFile = await getActiveViewAsFile(clonedInput);
+            if (!activeFile) {
                 showNotification(`Frame not found. Please try a different input.`, 'Warning', 'warning-important');
                 multipleFacesBtn.disabled = false;
                 multipleFacesBtn.textContent = 'Try Again?';
-                slider.style.display = 'block';
+                if (isVideo)
+                    slider.style.display = 'block';
                 return;
             }
 
@@ -4243,16 +4395,17 @@ export async function showFrameSelector(videoElement) {
             const MAX_FILE_SIZE_MB = userDoc.promoter ? 1000 : 500;
             const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
-            if (activeFrame.size > MAX_FILE_SIZE_BYTES) {
+            if (activeFile.size > MAX_FILE_SIZE_BYTES) {
                 multipleFacesBtn.disabled = false;
                 multipleFacesBtn.textContent = 'Try Again?';
                 showNotification(`Size exceeds ${MAX_FILE_SIZE_MB}MB limit`, 'Process - Information', 'warning-important');
-                slider.style.display = 'block';
+                if (isVideo)
+                    slider.style.display = 'block';
                 return;
             }
 
             const formData = new FormData();
-            formData.append('face', activeFrame);
+            formData.append('face', activeFile);
             formData.append('userId', userData.uid);
             formData.append('fileOutputId', fileOutputId);
             formData.append('enableEnhancedLandmarks', document.getElementById("enableEnhancedLandmarks").checked);
@@ -4272,15 +4425,30 @@ export async function showFrameSelector(videoElement) {
                 throw new Error(data.server);
             }
 
-            const loadingSpinner = document.createElement('div');
+            let loadingSpinner = document.createElement('div');
             loadingSpinner.className = 'loading-screen';
             loadingSpinner.style.position = 'absolute';
 
-            const videoContainer = wrapper.querySelector('video');
-            videoContainer.style.filter = 'brightness(50%)';
-            videoContainer.parentElement.appendChild(loadingSpinner);
+            const inputContainer = isVideo ? wrapper.querySelector('[query="videoContainer"]') : wrapper.querySelector('[query="imgContainer"]');
+            inputContainer.style.filter = 'brightness(50%)';
+            inputContainer.parentElement.appendChild(loadingSpinner);
 
-            slider.style.display = 'none';
+            const timestamp = inputContainer?.getAttribute('timestamp');
+            const id = inputContainer?.getAttribute('id');
+            const referencePosition = `${timestamp}_${id}_position`;
+            const referenceRace = `${timestamp}_${id}_race`;
+            const referenceGender = `${timestamp}_${id}_gender`;
+            const trackFace = `${timestamp}_${id}_track`;
+            const referenceFrame = `${timestamp}_${id}_frame`;
+
+            localStorage.removeItem(referencePosition);
+            localStorage.removeItem(referenceRace);
+            localStorage.removeItem(referenceGender);
+            localStorage.removeItem(trackFace);
+            localStorage.removeItem(referenceFrame);
+
+            if (isVideo)
+                slider.style.display = 'none';
 
             const result = await response.json();
             const downloadUrl = serverAddress + '/download-output/' + fileOutputId;
@@ -4289,10 +4457,10 @@ export async function showFrameSelector(videoElement) {
                 const data = await fetchProcessState(downloadUrl);
                 if (data.status !== 'processing') {
                     clearInterval(interval);
-
                     showNotification(`Request ${data.status} With Status ${data.server}.`, 'Fetch Information', 'default');
 
-                    slider.style.display = 'block';
+                    if (isVideo)
+                        slider.style.display = 'block';
                     loadingSpinner.remove();
 
                     if (data.status === 'completed') {
@@ -4314,34 +4482,26 @@ export async function showFrameSelector(videoElement) {
                         imgElement.style.objectFit = getScreenMode() === 1 ? 'cover' : 'contain';
                         imgElement.style.borderRadius = 'var(--border-radius)';
 
-                        const imgContainer = wrapper.querySelector('img');
-                        imgContainer.style.display = "block";
-                        imgContainer.replaceWith(imgElement);
+                        const outputContainer = wrapper.querySelector('[query="outputContainer"]');
+                        outputContainer.style.display = "block";
+                        outputContainer.replaceWith(imgElement);
 
-                        const videoContainer = wrapper.querySelector('video');
-                        videoContainer.style.display = "none";
-
-                        const timestamp = videoContainer?.getAttribute('timestamp');
-                        const id = videoContainer?.getAttribute('id');
-                        const referencePosition = `${timestamp}_${id}_position`;
-                        const referenceRace = `${timestamp}_${id}_race`;
-                        const referenceGender = `${timestamp}_${id}_gender`;
-                        const trackFace = `${timestamp}_${id}_track`;
-                        const referenceFrame = `${timestamp}_${id}_frame`;
+                        const inputContainer = isVideo ? wrapper.querySelector('[query="videoContainer"]') : wrapper.querySelector('[query="imgContainer"]');
+                        inputContainer.style.display = "none";
 
                         localStorage.setItem(referencePosition, selectedPerson);
                         localStorage.setItem(referenceRace, selectedRace);
                         localStorage.setItem(referenceGender, selectedGender);
-                        localStorage.setItem(trackFace, trackReferenceFace.checked);
+                        localStorage.setItem(trackFace, !isVideo ? true : trackReferenceFace.checked);
                         localStorage.setItem(referenceFrame, currentTime);
                     }
                     else {
-                        const imgContainer = wrapper.querySelector('img');
-                        imgContainer.style.display = "none";
+                        const outputContainer = wrapper.querySelector('[query="outputContainer"]');
+                        outputContainer.style.display = "none";
 
-                        const videoContainer = wrapper.querySelector('video');
-                        videoContainer.style.display = "block";
-                        videoContainer.style.filter = 'brightness(100%)';
+                        const inputContainer = isVideo ? wrapper.querySelector('[query="videoContainer"]') : wrapper.querySelector('[query="imgContainer"]');
+                        inputContainer.style.display = "block";
+                        inputContainer.style.filter = 'brightness(100%)';
 
                         multipleFacesBtn.disabled = false;
                         multipleFacesBtn.textContent = 'Try Again?';
@@ -4373,8 +4533,29 @@ export const handleUpload = async (event, dataBaseIndexName, dataBaseObjectStore
                 alert('Storage limit exceeded. Please free up space or clear cache.')
             } else if (error.name === 'SecurityError') {
                 alert('Database access is restricted. Please check browser settings or disable private mode.')
+            } else if (error.message.includes('BlobURLs')) {
+                alert(
+                    'It seems there is an issue with Blob URLs not being supported in your browser or environment.\n\n' +
+                    'To resolve this:\n' +
+                    '- Ensure your browser is updated to the latest version (Chrome, Firefox, Edge).\n' +
+                    '- Avoid using the application in private/incognito mode.\n' +
+                    '- Disable browser extensions that may block IndexedDB or Blob URLs.\n\n' +
+                    'If the problem persists, try switching to a different browser or device.'
+                );
+            } else if (error.message.includes('backing store')) {
+                alert(
+                    'It seems there is an issue with the browser\'s IndexedDB storage. Please follow these steps to resolve it:\n\n' +
+                    '1. Open Chrome Developer Tools:\n   - Right-click anywhere on the page and select "Inspect", or press "Ctrl+Shift+I" (Windows) / "Cmd+Option+I" (Mac).\n' +
+                    '2. Go to the "Application" tab.\n' +
+                    '3. Under "Storage", click on "IndexedDB".\n' +
+                    '4. Right-click on the database causing the issue and select "Delete".\n\n' +
+                    'Additional Suggestions:\n' +
+                    '- Disable any browser extensions that might restrict IndexedDB access.\n' +
+                    '- Ensure your browser is updated to the latest version.\n' +
+                    '- If the problem persists, try using a fresh Chrome profile or a different browser.'
+                );
             } else {
-                alert(`Opening media database failed: ${error.message || error}`)
+                alert(`Opening media database failed: ${error.message || error}`);
             }
             return null
         });
@@ -4541,7 +4722,30 @@ export const handleUpload = async (event, dataBaseIndexName, dataBaseObjectStore
         mediaContainer.insertBefore(fragment, mediaContainer.firstChild);
         localStorage.setItem(`${pageName}_${dataBaseObjectStoreName}-count`, await countInDB(db))
     } catch (error) {
-        alert(`Opening media database failed: ${error.message || error}`)
+        if (error.message.includes('BlobURLs')) {
+            alert(
+                'It seems there is an issue with Blob URLs not being supported in your browser or environment.\n\n' +
+                'To resolve this:\n' +
+                '- Ensure your browser is updated to the latest version (Chrome, Firefox, Edge).\n' +
+                '- Avoid using the application in private/incognito mode.\n' +
+                '- Disable browser extensions that may block IndexedDB or Blob URLs.\n\n' +
+                'If the problem persists, try switching to a different browser or device.'
+            );
+        } else if (error.message.includes('backing store')) {
+            alert(
+                'It seems there is an issue with the browser\'s IndexedDB storage. Please follow these steps to resolve it:\n\n' +
+                '1. Open Chrome Developer Tools:\n   - Right-click anywhere on the page and select "Inspect", or press "Ctrl+Shift+I" (Windows) / "Cmd+Option+I" (Mac).\n' +
+                '2. Go to the "Application" tab.\n' +
+                '3. Under "Storage", click on "IndexedDB".\n' +
+                '4. Right-click on the database causing the issue and select "Delete".\n\n' +
+                'Additional Suggestions:\n' +
+                '- Disable any browser extensions that might restrict IndexedDB access.\n' +
+                '- Ensure your browser is updated to the latest version.\n' +
+                '- If the problem persists, try using a fresh Chrome profile or a different browser.'
+            );
+        } else {
+            alert(`Opening media database failed: ${error.message || error}`);
+        }
     }
 };
 export const setupFileUpload = ({
@@ -4755,9 +4959,20 @@ function has24HoursPassed(lastCreditEarned, currentTime) {
     return currentTime - lastCreditEarned >= 24 * 60 * 60 * 1000;
 }
 
+export async function hasSubscriptionPlan() {
+    const userDoc = await getUserDoc();
+    if (!userDoc || !userDoc.deadline)
+        return false;
+
+    const deadline = new Date(userDoc.deadline.seconds * 1000 + (userDoc.deadline.nanoseconds || 0) / 1000000);
+    const now = new Date();
+    const timeDiff = deadline.getTime() - now.getTime();
+    return timeDiff > 0;
+}
+
 async function showDailyCredits() {
     const userDoc = await getUserDoc();
-    if (document.getElementById('wrapper') || !userDoc || userDoc.dailyCredits > 0) return;
+    if (document.getElementById('wrapper') || !userDoc || userDoc.dailyCredits >= 10) return;
 
     if (userDoc.deadline) {
         const deadline = new Date(userDoc.deadline.seconds * 1000 + (userDoc.deadline.nanoseconds || 0) / 1000000);
@@ -4831,18 +5046,18 @@ async function showDailyCredits() {
                                     <g transform="translate(0.000000,512.000000) scale(0.100000,-0.100000)" fill="white" stroke="none">
                                         <path d="M2433 5106 c-251 -58 -433 -270 -450 -528 -12 -171 47 -329 165 -447 231 -230 593 -230 824 0 117 117 176 276 165 442 -16 239 -164 436 -387 513 -91 32 -227 40 -317 20z"/>
                                         <path d="M2367 3824 c-205 -32 -471 -135 -633 -245 -148 -101 -234 -298 -221 -507 8 -141 73 -235 184 -268 71 -21 1657 -21 1729 1 67 20 117 64 151 133 26 52 28 66 28 167 -1 309 -128 466 -501 618 -258 106 -498 139 -737 101z"/>
-                                        <path d="M2511 2548 c-13 -7 -34 -26 -45 -41 -20 -27 -21 -41 -24 -370 l-4 -342 -270 -215 c-149 -118 -279 -228 -289 -245 -25 -40 -24 -75 4 -116 25 -38 77 -60 120 -52 14 3 144 99 288 214 1.4.1.5 265 209 269 209 4 0 125 -94 269 -209 144 -115 273 -211 288 -214 62 -12 124 30 138 92 14 63 -8 86 -298 316 l-276 220 0 328 c-1 346 -4 370 -49 410 -26 24 -90 32 -121 15z"/>
+                                        <path d="M2511 2548 c-13 -7 -34 -26 -45 -41 -20 -27 -21 -41 -24 -370 l-4 -342 -270 -215 c-149 -118 -279 -228 -289 -245 -25 -40 -24 -75 4 -116 25 -38 77 -60 120 -52 14 3 144 99 288 214 144 115 265 209 269 209 4 0 125 -94 269 -209 144 -115 273 -211 288 -214 62 -12 124 30 138 92 14 63 -8 86 -298 316 l-276 220 0 328 c-1 346 -4 370 -49 410 -26 24 -90 32 -121 15z"/>
                                         <path d="M975 2324 c-219 -33 -407 -187 -479 -393 -24 -71 -33 -233 -16 -310 30 -138 131 -283 254 -362 289 -188 675 -83 830 225 114 224 73 488 -103 666 -75 76 -132 112 -229 145 -66 23 -197 38 -257 29z"/>
                                         <path d="M3973 2320 c-176 -32 -340 -155 -419 -315 -83 -169 -83 -354 2 -521 99 -197 291 -315 514 -317 167 -1 290 50 411 172 83 83 137 178 159 282 18 81 8 240 -18 313 -65 179 -211 317 -391 370 -69 20 -191 28 -258 16z"/>
-                                        <path d="M906 1039 c-168 -18 -362 -81 -561 -182 -190 -97 -281 -202 -325 -373 -24 -93 -26 -229 -5 -301 20 -66 80 -1.4.1.4 -162 l51 -21 852 2 853 3 46 27 c97 57 129 130 129 292 0 300 -128 456 -496 607 -125 51 -291 94 -416 108 -108 12 -156 12 -272 0z"/><path d="M3936 1040 c-211 -26 -441 -106 -636 -220 -129 -75 -218 -191 -255 -330 -19 -69 -19 -271 -1 -321 19 -54 64 -107 115 -137 l46 -27 853 -3 852 -2 51 21 c64 28 124 96 1.4.1.2 21 72 19 208 -5 301 -27 105 -63 169 -140 247 -53 54 -88 77 -195 131 -152 77 -298 130 -434 158 -113 23 -298 32 -395 20z"/>
+                                        <path d="M906 1039 c-168 -18 -362 -81 -561 -182 -190 -97 -281 -202 -325 -373 -24 -93 -26 -229 -5 -301 20 -66 80 -134 144 -162 l51 -21 852 2 853 3 46 27 c97 57 129 130 129 292 0 300 -128 456 -496 607 -125 51 -291 94 -416 108 -108 12 -156 12 -272 0z"/><path d="M3936 1040 c-211 -26 -441 -106 -636 -220 -129 -75 -218 -191 -255 -330 -19 -69 -19 -271 -1 -321 19 -54 64 -107 115 -137 l46 -27 853 -3 852 -2 51 21 c64 28 124 96 144 162 21 72 19 208 -5 301 -27 105 -63 169 -140 247 -53 54 -88 77 -195 131 -152 77 -298 130 -434 158 -113 23 -298 32 -395 20z"/>
                                     </g>
                                 </svg>
                                 Redeem Referral Credits
                             </button>
                         </div>
 
-                        <p id="contactSupport" style="cursor: pointer;" onclick="window.location.href='mailto:zeroduri02@gmail.com';">
-                            Contact support? Email: zeroduri02@gmail.com
+                        <p id="contactSupport" style="cursor: pointer;" onclick="window.location.href='mailto:durieun02@gmail.com';">
+                            Contact support? Email: durieun02@gmail.com
                         </p>
 
                         <button class="close-button" style="position: absolute;top: 1vh;right: 1vh;cursor: pointer;width: 4vh;height: 4vh;padding: 0;">
@@ -4893,6 +5108,10 @@ async function showDailyCredits() {
 
     const dailyCredits = document.getElementById('redeemDailyCredits');
     dailyCredits.disabled = true;
+
+    const existingContent = dailyCredits.innerHTML;
+    const svgMatch = existingContent.match(/<svg[\s\S]*?<\/svg>/);
+    const svg = svgMatch ? svgMatch[0] : '';
 
     const infoMessage = document.getElementById('infoMessage');
     infoMessage.style.display = 'unset';
@@ -4950,14 +5169,14 @@ async function showDailyCredits() {
     await checkDailyCredit();
     localStorage.setItem('lastCancellation', currentTime);
 
-    const FIVE_MINUTES_MS = 300000;
+    const MINUTES_MS = 1 * 60 * 1000;
 
     function canClickAgain(buttonKey) {
         const lastClicked = localStorage.getItem(buttonKey);
         if (!lastClicked) return { canClick: true, timeLeft: 0 };
 
         const timeSinceLastClick = Date.now() - parseInt(lastClicked, 10);
-        const timeLeft = Math.max(FIVE_MINUTES_MS - timeSinceLastClick, 0);
+        const timeLeft = Math.max(MINUTES_MS - timeSinceLastClick, 0);
 
         return { canClick: timeLeft === 0, timeLeft };
     }
@@ -5000,7 +5219,7 @@ async function showDailyCredits() {
             });
 
             const { message } = await response.json();
-            infoMessage.style.textContent = message;
+            infoMessage.textContent = message;
             infoMessage.style.color = response.status !== STATUS_OK ? 'red' : 'white';
             setCurrentUserDoc(getDocSnapshot);
             showNotification(message, 'Referral Credits', 'normal');
@@ -5022,10 +5241,25 @@ async function showDailyCredits() {
             infoMessage.style.display = 'unset';
             infoMessage.textContent = `You can click this button in ${formatTime(timeLeft)}.`;
             infoMessage.style.color = 'red';
-            showNotification(`You can click this button in ${formatTime(timeLeft)}.`, 'Referral Credits', 'normal');
+            showNotification(`You can click this button in ${formatTime(timeLeft)}.`, 'Daily Credits', 'normal');
             return;
         }
 
+        if (dailyCredits.textContent.includes("Daily Credits") || dailyCredits.textContent.includes("Try Again?")) {
+            const maxCredits = 10;
+            const currentCredits = userDoc.dailyCredits || 0;
+            const potentialGain = maxCredits - currentCredits;
+
+            if (potentialGain < maxCredits) {
+                infoMessage.style.display = 'unset';
+                infoMessage.textContent = `Claiming now will only give extra ${potentialGain}. To claim all 10, spend your remaining ${currentCredits} daily credits first. Do you still want to proceed?`;
+                infoMessage.style.color = 'white';
+                dailyCredits.innerHTML = `${svg} Yes, Proceed!`;
+                return;
+            }
+        }
+
+        dailyCredits.innerHTML = `${svg} Proceeding...`;
         dailyCredits.disabled = true;
         setLastClicked(buttonKey);
 
@@ -5050,8 +5284,10 @@ async function showDailyCredits() {
             infoMessage.style.display = 'unset';
             infoMessage.textContent = message;
             infoMessage.style.color = 'red';
+            dailyCredits.innerHTML = `${svg} Try Again?`;
             showNotification(message, 'Daily Credits', 'warning');
         } finally {
+            dailyCredits.innerHTML = `${svg} Redeem Daily Credits`;
             dailyCredits.disabled = false;
         }
     });
@@ -5362,7 +5598,7 @@ export function createSectionAndElements() {
         });
     });
 
-    //observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(document.body, { childList: true, subtree: true });
 
     const rectangles = document.querySelectorAll(".rectangle");
     rectangles.forEach(rectangle => {

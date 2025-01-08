@@ -37,11 +37,11 @@
     <link rel="shortcut icon" href="/.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="stylesheet" href="css/styles.css?v=1.4.4.5.9.9.4">
+    <link rel="stylesheet" href="css/styles.css?v=1.1.1.1.1.5.8">
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = '1.4.4.5.9.9.4';
+        const version = '1.1.1.1.1.5.8';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -427,14 +427,14 @@
             });
 
             const serverAddressAPI = await fetchServerAddress(getDocSnapshot('servers', '3050-1'), 'API');
-            const FIVE_MINUTES_MS = 300000;
+            const MINUTES_MS = 1 * 60 * 1000;
 
             function canClickAgain(buttonKey) {
                 const lastClicked = localStorage.getItem(buttonKey);
                 if (!lastClicked) return { canClick: true, timeLeft: 0 };
 
                 const timeSinceLastClick = Date.now() - parseInt(lastClicked, 10);
-                const timeLeft = Math.max(FIVE_MINUTES_MS - timeSinceLastClick, 0);
+                const timeLeft = Math.max(MINUTES_MS - timeSinceLastClick, 0);
 
                 return { canClick: timeLeft === 0, timeLeft };
             }
@@ -494,12 +494,24 @@
                     return;
                 }
 
+                if (dailyCredits.textContent.includes("Daily Credits") || dailyCredits.textContent.includes("Try Again?")) {
+                    const maxCredits = 10;
+                    const currentCredits = userDoc.dailyCredits || 0;
+                    const potentialGain = maxCredits - currentCredits;
+
+                    if (potentialGain < maxCredits) {
+                        showNotification(`Claiming now will only give extra ${potentialGain}. To claim all 10, spend your remaining ${currentCredits} daily credits first. Do you still want to proceed?`, 'Daily Credits', 'warning');
+                        dailyCredits.innerHTML = `Yes, Proceed!`;
+                        return;
+                    }
+                }
+
+                dailyCredits.innerHTML = `Proceeding...`;
                 dailyCredits.disabled = true;
                 setLastClicked(buttonKey);
 
                 try {
                     showNotification("Waiting for a response...", 'Daily Credits', 'normal');
-                    // Todo: add a warning saying credits will not add up.
                     const response = await fetch(`${serverAddressAPI}/earn-daily-credit`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -511,8 +523,10 @@
                     showNotification(message, 'Daily Credits', 'normal');
                 } catch ({ message }) {
                     showNotification(message, 'Daily Credits', 'warning');
+                    dailyCredits.innerHTML = `Try Again?`;
                 } finally {
                     dailyCredits.disabled = false;
+                    dailyCredits.innerHTML = `Daily Credits`;
                 }
             });
 

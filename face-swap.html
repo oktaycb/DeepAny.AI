@@ -52,11 +52,11 @@
     <link rel="shortcut icon" href="/.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="stylesheet" href="css/styles.css?v=1.4.4.5.9.9.4">
+    <link rel="stylesheet" href="css/styles.css?v=1.1.1.1.1.5.8">
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = '1.4.4.5.9.9.4';
+        const version = '1.1.1.1.1.5.8';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -64,7 +64,7 @@
 
         document.addEventListener('DOMContentLoaded', async function () {
             const functions = await loadModule('./scripts/functions.js');
-            const { showFrameSelector, getSelectedInputId, setDownloadCancelled, getAbortController, resetAbortController, pageName, setFetchableServerAdresses, getFetchableServerAdresses, checkServerStatus, setDynamicInterval, updateDownloadFile, cancelProcess, fetchUploadedChunks, processBlobToFile, createSectionAndElements, setMaxWidth, saveCountIndex, handleDownload, handleFileContainerEvents, handleUpload, setupFileUpload, setClientStatus, customFetch, checkServerQueue, showNotification, openDB, addToDB, getFromDB, initDB, setUser, getUserData, getUserDoc, setAuthentication, getFirebaseModules, getDocSnapshot, getDocsSnapshot, getScreenMode, getCurrentMain, updateContent, ScreenMode, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol, fetchServerAddresses } = functions;
+            const { hasSubscriptionPlan, showFrameSelector, getSelectedInputId, setDownloadCancelled, getAbortController, resetAbortController, pageName, setFetchableServerAdresses, getFetchableServerAdresses, checkServerStatus, setDynamicInterval, updateDownloadFile, cancelProcess, fetchUploadedChunks, processBlobToFile, createSectionAndElements, setMaxWidth, saveCountIndex, handleDownload, handleFileContainerEvents, handleUpload, setupFileUpload, setClientStatus, customFetch, checkServerQueue, showNotification, openDB, addToDB, getFromDB, initDB, setUser, getUserData, getUserDoc, setAuthentication, getFirebaseModules, getDocSnapshot, getDocsSnapshot, getScreenMode, getCurrentMain, updateContent, ScreenMode, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol, fetchServerAddresses } = functions;
 
             if (!window.indexedDB) {
                 alert('Your browser does not support IndexedDB.');
@@ -522,7 +522,9 @@
 
                 const frameRate = 30;
                 const totalMinutes = (maximumAllowedFrames / frameRate) / 60;
-                const frameLimitMessage = `Frame limit is ${Math.floor(maximumAllowedFrames)}: Allows you to upload a video up to ${totalMinutes.toFixed(2)} minutes at ${frameRate} FPS.`;
+                const frameLimitMessage = hasSubscriptionPlan() ?
+                    `Frame limiter is active as you’re using subscription. With credits, you'd not be limited to ${totalMinutes.toFixed(2)} minutes at ${frameRate} FPS.` :
+                    `Frame limiter is not active as you’re using credits. With a subscription, you'd be limited to ${totalMinutes.toFixed(2)} minutes at ${frameRate} FPS.`;
 
                 showNotification(
                     frameLimitMessage,
@@ -797,8 +799,13 @@
 
                 const openMultiFaceSwapWrapperBtn = document.getElementById('openMultiFaceSwapWrapperBtn');
                 openMultiFaceSwapWrapperBtn.addEventListener('click', async () => {
-                    const element = document.querySelector(".inputs .data-container.active video");
-                    await showFrameSelector(element);
+                    const activeInput = document.querySelector(".inputs .data-container.active");
+                    if (!activeInput) {
+                        showNotification(`Please select one of your uploaded inputs by clicking on it above.`, 'Warning - No Active Input', 'warning-important');
+                        return;
+                    }
+
+                    await showFrameSelector(activeInput);
                 });
 
                 const startProcessBtn = document.getElementById('startProcessBtn');
@@ -871,7 +878,7 @@
                                 return;
                             }
 
-                            if (videoDurationTotalFrames > maximumAllowedFrames && !userDoc.admin && !userDoc.promoter) {
+                            if (videoDurationTotalFrames > maximumAllowedFrames && !userDoc.admin && !userDoc.promoter && hasSubscriptionPlan()) {
                                 setClientStatus(`Exceeding Frame Limit ${maximumAllowedFrames}`);
 
                                 const message = !keepFPS.checked
@@ -1043,7 +1050,7 @@
                             return;
                         }
 
-                        const MAX_FILE_SIZE_MB = userDoc.promoter ? 1000 : 500;
+                        const MAX_FILE_SIZE_MB = 2000;
                         const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
                         if ((faceFile.size + inputFile.size) > MAX_FILE_SIZE_BYTES) {

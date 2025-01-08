@@ -169,12 +169,12 @@
     <link rel="shortcut icon" href="/.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="stylesheet" href="css/styles.css?v=1.4.4.5.9.9.4">
+    <link rel="stylesheet" href="css/styles.css?v=1.1.1.1.1.5.8">
 </head>
 <body lang="en">
     <div id="paymentContainer" style="margin: 0; padding: 0; overflow: hidden; display: none; width: 100%; height: 100vh; position: absolute; z-index: 99999;"></div>
     <script type="module" defer>
-        const version = '1.4.4.5.9.9.4';
+        const version = '1.1.1.1.1.5.8';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -261,7 +261,7 @@
             let prices = [];
             let durationsInDays = [];
             let subprices = [];
-            let discountedSubprices = []; // Added for the discounted prices
+            let discountedSubprices = [];
             let durations = [];
             let discount = 0;
 
@@ -272,14 +272,14 @@
             ]);
 
             async function getPricingData() {
-                const cacheKey = 'pricingData';
+                const cacheKey = `pricingData_${version}`;
                 const cachedData = getCache(cacheKey);
 
                 if (cachedData) {
                     setPricingData(cachedData);
                 } else {
                     try {
-                        const response = await fetch(`${serverAddressPAYTR}/get-pricing`, {
+                        const response = await fetch(`${serverAddressPAYTR}/get-pricing-2`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -306,7 +306,7 @@
 
             async function fetchPricingDataInBackground() {
                 try {
-                    const response = await fetch(`${serverAddressPAYTR}/get-pricing`, {
+                    const response = await fetch(`${serverAddressPAYTR}/get-pricing-2`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -316,7 +316,7 @@
 
                     if (response.ok) {
                         const responseData = await response.json();
-                        setCache('pricingData', responseData.data, 1 * 24 * 60 * 60 * 1000);
+                        setCache(`pricingData_${version}`, responseData.data, 1 * 24 * 60 * 60 * 1000);
                         setPricingData(responseData.data);
                     }
                 } catch (error) {
@@ -463,15 +463,17 @@
             const features = {
                 subscription: [
                     { text: "Verified account", icon: checkmarkIcon },
-                    { text: "Upload limit to 500MB", icon: checkmarkIcon },
+                    { text: "Upload limit to 2GB", icon: checkmarkIcon },
                     { text: "Multiple face swap", icon: checkmarkIcon },
-                    { text: "Priority queue", icon: checkmarkIcon }
+                    { text: "Priority queue", icon: checkmarkIcon },
+                    { text: "No Frame Limiter", icon: xIcon },
                 ],
                 credits: [
                     { text: "Verified account", icon: checkmarkIcon },
-                    { text: "Upload limit to 500MB", icon: checkmarkIcon },
+                    { text: "Upload limit to 2GB", icon: checkmarkIcon },
                     { text: "Multiple face swap", icon: checkmarkIcon },
-                    { text: "Priority queue", icon: xIcon }
+                    { text: "Priority queue", icon: xIcon },
+                    { text: "No Frame Limiter", icon: checkmarkIcon },
                 ]
             };
 
@@ -505,25 +507,47 @@
                     default: locale = 'en-US';
                 }
 
-                if (value >= 1000) {
-                    value = Math.round(value) - 0.01;
+                function customRound(value, divider) {
+                    let rounded = Math.round(value * divider) / divider;
+                    if (!(rounded % 1 === 0.25 || rounded % 1 === 0.75)) 
+                        rounded -= 0.01;
+                    return rounded;
+                }
+
+                if (value >= 999.99) {
+                    value = customRound(value, 1);
                     minimumFractionDigits = 0;
                     maximumFractionDigits = 4;
-                } else if (value >= 750) {
-                    value = Math.round(value / 100) * 100 - 0.01;
-                    minimumFractionDigits = 0;
-                    maximumFractionDigits = 4;
-                } else if (value >= 100) {
+                } else if (value >= 599.99) {
                     value = Math.floor(value / 10) * 10 - 0.01;
                     minimumFractionDigits = 0;
                     maximumFractionDigits = 4;
-                } else if (value >= 5) {
-                    value = Math.round(value) - 0.01;
+                } else if (value >= 199.99) {
+                    value = customRound(value, 1);
                     minimumFractionDigits = 0;
                     maximumFractionDigits = 4;
+                } else if (value >= 99.99) {
+                    value = customRound(value, 1);
+                    minimumFractionDigits = 0;
+                    maximumFractionDigits = 4;
+                } else if (value >= 24.99) {
+                    value = customRound(value, 2);
+                    minimumFractionDigits = 0;
+                    maximumFractionDigits = 3;
+                } else if (value >= 9.99) {
+                    value = customRound(value, 4);
+                    minimumFractionDigits = 0;
+                    maximumFractionDigits = 3;
+                } else if (value >= 5) {
+                    value = customRound(value, 2);
+                    minimumFractionDigits = 0;
+                    maximumFractionDigits = 3;
+                } else if (value >= 0.99) {
+                    value = customRound(value, currency === 'TRY' ? 8 : 4);
+                    minimumFractionDigits = 0;
+                    maximumFractionDigits = 2;
                 } else if (value >= 0.1) {
-                    const factor = 10;
-                    value = (Math.floor(value * factor) / factor) - 0.01;
+                    value = customRound(value, 10);
                     minimumFractionDigits = 0;
                     maximumFractionDigits = 3;
                 } else if (value >= 0.01) {
@@ -665,7 +689,7 @@
                                                 </div>
 
                                                 <div class="plans-popular" id="popular-tag" style="display: flex;">
-                                                    <p class="plans-name text-gradient">OFF -${discount}%</p>
+                                                    <p class="plans-name text-gradient">OFF -${((1 - (price[DISCOUNT] / price[ACTUAL])) * 100).toFixed(0) }%</p>
                                                 </div>
                                             `;
 
@@ -738,7 +762,7 @@
                                                  </div>
 
                                                  <div class="plans-popular" id="popular-tag" style="display: flex;">
-                                                     <p class="plans-name text-gradient">OFF -${discount}%</p>
+                                                     <p class="plans-name text-gradient">OFF -${((1 - (price[DISCOUNT] / price[ACTUAL])) * 100).toFixed(0)}%</p>
                                                  </div>
                                              `;
 
@@ -771,7 +795,7 @@
                                                         </div>
                                                         
                                                         <div class="plans-popular" id="popular-tag" style="display: flex;">
-                                                            <p class="plans-name text-gradient">OFF -${discount}%</p>
+                                                            <p class="plans-name text-gradient">OFF -${((1 - (price[DISCOUNT] / price[ACTUAL])) * 100).toFixed(0) }%</p>
                                                         </div>
                                                 `;
 
@@ -895,27 +919,6 @@
                         paymentContainer.innerHTML = responseData;
                         setCache('purchaseInProgressCard', 'true', 1 * 24 * 60 * 60 * 1000);
                     }
-
-                    triggerGtagEvent(requestData);
-                }
-
-                function triggerGtagEvent(requestData) {
-                    if (typeof gtag !== 'function') {
-                        alert('gtag is not defined. Ensure gtag.js is loaded.');
-                        return;
-                    }
-
-                    const eventParams = {
-                        'value': parseFloat(calculatePrice(sliderElement.value)) || 0,
-                        'currency': requestData.selectedCurrency,
-                        'transaction_id': `TRANS_${requestData.userId}_${Date.now()}`,
-                        'selected_mode': requestData.selectedMode,
-                        'user_id': requestData.userId,
-                        'user_email': requestData.userEmail,
-                    };
-
-                    console.log('Sending conversion event to gtag:', eventParams);
-                    gtag('event', 'conversion_event_purchase', eventParams);
                 }
             }
 
