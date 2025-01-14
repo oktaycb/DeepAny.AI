@@ -112,7 +112,7 @@ auth.onAuthStateChanged(async function (user) {
           // Obtain the user's IP address
           let userInternetProtocolAddress;
           try {
-            const response = await fetch('https://api64.ipify.org?format=json');
+            const response = await fetchWithRandom('https://api64.ipify.org?format=json');
             const data = await response.json();
             userInternetProtocolAddress = data.ip;
           } catch (error) {
@@ -145,7 +145,7 @@ auth.onAuthStateChanged(async function (user) {
 		const serverAddressAPI = await fetchServerAddressAPI();
 		console.log('Fetched server address (API):', serverAddressAPI);
 
-          const response = await fetch(serverAddressAPI + '/create-user', {
+          const response = await fetchWithRandom(serverAddressAPI + '/create-user', {
             method: 'POST',
             headers: {
 			  'ngrok-skip-browser-warning': 'true',

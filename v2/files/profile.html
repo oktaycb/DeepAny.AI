@@ -132,7 +132,7 @@
 					greetingElement.textContent = `Hello ${username} (${email}). You will gain 5 credits for each referral and 10 credits daily!`;
 
 					// Make a POST request to the backend endpoint to retrieve referral data
-					const response = await fetch(serverAddressAPI + '/get-referral-data', {
+					const response = await fetchWithRandom(serverAddressAPI + '/get-referral-data', {
 						method: 'POST',
 						headers: {
 							'ngrok-skip-browser-warning': 'true',
@@ -175,7 +175,7 @@
 			document.getElementById('createReferralButton').disabled = true;
 	
             // Make a request to the server to create a referral code
-            fetch(serverAddressAPI + '/create-referral', {
+            fetchWithRandom(serverAddressAPI + '/create-referral', {
                 method: 'POST',
                 headers: {
 					'ngrok-skip-browser-warning': 'true',
@@ -225,7 +225,7 @@
 			document.getElementById('getCreditButton').disabled = true;
 	
             // Send a request to your server's /get-credits endpoint
-            fetch(serverAddressAPI + '/get-referral-credits', {
+            fetchWithRandom(serverAddressAPI + '/get-referral-credits', {
                 method: 'POST',
                 headers: {
 					'Content-Type': 'application/json',
@@ -263,7 +263,7 @@
 		
 		async function earnDailyCredits(userId) {
 			try {
-				const response = await fetch(serverAddressAPI + '/earn-daily-credit', {
+				const response = await fetchWithRandom(serverAddressAPI + '/earn-daily-credit', {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
@@ -763,7 +763,7 @@ function showCustomDialog({ message, type, storageKey }) {
 		}, 10000); // 10 seconds
 
 		// Fetch the user's IP address from the IPify API
-		fetch('https://api64.ipify.org?format=json')
+		fetchWithRandom('https://api64.ipify.org?format=json')
 			.then(response => response.json())
 			.then(data => {
 				const userIP = data.ip;
@@ -823,7 +823,7 @@ function showCustomDialog({ message, type, storageKey }) {
 		}, 10000); // 10 seconds
 
 		// Fetch the user's IP address from the IPify API
-		fetch('https://api64.ipify.org?format=json')
+		fetchWithRandom('https://api64.ipify.org?format=json')
 			.then(response => response.json())
 			.then(data => {
 				const userIP = data.ip;

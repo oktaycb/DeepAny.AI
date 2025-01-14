@@ -169,12 +169,12 @@
     <link rel="shortcut icon" href="/.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="stylesheet" href="css/styles.css?v=1.1.1.1.1.5.8">
+    <link rel="stylesheet" href="css/styles.css?v=1.1.1.1.2.5.0">
 </head>
 <body lang="en">
     <div id="paymentContainer" style="margin: 0; padding: 0; overflow: hidden; display: none; width: 100%; height: 100vh; position: absolute; z-index: 99999;"></div>
     <script type="module" defer>
-        const version = '1.1.1.1.1.5.8';
+        const version = '1.1.1.1.2.5.0';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -182,7 +182,7 @@
 
         document.addEventListener('DOMContentLoaded', async function () {
             const functions = await loadModule('./scripts/functions.js');
-            const { getUserData, setCache, getCache, getPageName, setUser, setAuthentication, fetchConversionRates, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol } = functions;
+            const { fetchWithRandom, getUserData, setCache, getCache, getPageName, setUser, setAuthentication, fetchConversionRates, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol } = functions;
 
             const pageName = getPageName();
 
@@ -279,7 +279,7 @@
                     setPricingData(cachedData);
                 } else {
                     try {
-                        const response = await fetch(`${serverAddressPAYTR}/get-pricing-2`, {
+                        const response = await fetchWithRandom(`${serverAddressPAYTR}/get-pricing-2`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -292,8 +292,6 @@
                         }
 
                         const responseData = await response.json();
-                        console.log('Response from server:', responseData);
-
                         setCache(cacheKey, responseData.data, 1 * 24 * 60 * 60 * 1000);
                         setPricingData(responseData.data);
                     } catch (error) {
@@ -306,7 +304,7 @@
 
             async function fetchPricingDataInBackground() {
                 try {
-                    const response = await fetch(`${serverAddressPAYTR}/get-pricing-2`, {
+                    const response = await fetchWithRandom(`${serverAddressPAYTR}/get-pricing-2`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -463,17 +461,21 @@
             const features = {
                 subscription: [
                     { text: "Verified account", icon: checkmarkIcon },
-                    { text: "Upload limit to 2GB", icon: checkmarkIcon },
-                    { text: "Multiple face swap", icon: checkmarkIcon },
+                    { text: "2 GB upload per process", icon: checkmarkIcon },
+                    { text: "Multiple face swaps", icon: checkmarkIcon },
                     { text: "Priority queue", icon: checkmarkIcon },
-                    { text: "No Frame Limiter", icon: xIcon },
+                    { text: "Frame limiter feature", icon: checkmarkIcon },
+                    { text: "Ad-free experience", icon: checkmarkIcon },
+                    { text: "Incognito mode", icon: checkmarkIcon },
                 ],
                 credits: [
                     { text: "Verified account", icon: checkmarkIcon },
-                    { text: "Upload limit to 2GB", icon: checkmarkIcon },
-                    { text: "Multiple face swap", icon: checkmarkIcon },
+                    { text: "2 GB upload per process", icon: checkmarkIcon },
+                    { text: "Multiple face swaps", icon: checkmarkIcon },
                     { text: "Priority queue", icon: xIcon },
-                    { text: "No Frame Limiter", icon: checkmarkIcon },
+                    { text: "Frame limiter feature", icon: xIcon },
+                    { text: "Ad-free experience", icon: checkmarkIcon },
+                    { text: "Incognito mode", icon: checkmarkIcon },
                 ]
             };
 
@@ -496,7 +498,7 @@
                 document.getElementById('popular-tag').style.opacity = plan.isPopular ? '1' : '0';
             }
 
-            function formatNumber(value, currency, show99, minimumFractionDigits = 0, maximumFractionDigits = 3) {
+            function formatNumber(value, currency, minimumFractionDigits = 0, maximumFractionDigits = 3) {
                 let locale;
 
                 switch (currency) {
@@ -509,7 +511,7 @@
 
                 function customRound(value, divider) {
                     let rounded = Math.round(value * divider) / divider;
-                    if (!(rounded % 1 === 0.25 || rounded % 1 === 0.75)) 
+                    if (!(rounded % 1 === 0.25 || rounded % 1 === 0.75))
                         rounded -= 0.01;
                     return rounded;
                 }
@@ -684,8 +686,8 @@
                                 discountDetailsElement.innerHTML = `
                                                 <div>
                                                     Discounted:
-                                                    <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
-                                                    <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency, true)}</span>
+                                                    <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
+                                                    <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency)}</span>
                                                 </div>
 
                                                 <div class="plans-popular" id="popular-tag" style="display: flex;">
@@ -694,8 +696,8 @@
                                             `;
 
                                 discountDisplay = `
-                                                <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency, true)}</span>
-                                                <span >${currencySymbol}${formatNumber(h1PriceAmount[DISCOUNT], selectedCurrency, true)}</span>
+                                                <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency)}</span>
+                                                <span >${currencySymbol}${formatNumber(h1PriceAmount[DISCOUNT], selectedCurrency)}</span>
                                             `;
                             }
                             else {
@@ -703,11 +705,11 @@
                                 discountDetailsElement.style.gap = 'unset';
                                 discountDetailsElement.innerHTML = `
                                                 Total Price:
-                                                <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
+                                                <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
                                             `;
 
                                 discountDisplay = `
-                                                <span >${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency, true)}</span>
+                                                <span >${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency)}</span>
                                             `;
                             }
 
@@ -757,8 +759,8 @@
                                 discountDetailsElement.innerHTML = `
                                                  <div>
                                                      Discounted:
-                                                     <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
-                                                     <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency, true)}</span>
+                                                     <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
+                                                     <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency)}</span>
                                                  </div>
 
                                                  <div class="plans-popular" id="popular-tag" style="display: flex;">
@@ -770,13 +772,13 @@
 
                                 if (priceInSelectedCurrency[ACTUAL] !== priceInSelectedCurrency[DISCOUNT]) {
                                     discountDisplay = `
-                                                    <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
-                                                    <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency, true)}</span>
+                                                    <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
+                                                    <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency)}</span>
                                                 `;
                                 }
                                 else {
                                     discountDisplay = `
-                                                    <span>${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
+                                                    <span>${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
                                                 `;
                                 }
 
@@ -790,8 +792,8 @@
                                     discountDetailsElement.innerHTML = `
                                                         <div>
                                                             Discounted:
-                                                            <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
-                                                            <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency, true)}</span>
+                                                            <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
+                                                            <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency)}</span>
                                                         </div>
                                                         
                                                         <div class="plans-popular" id="popular-tag" style="display: flex;">
@@ -800,8 +802,8 @@
                                                 `;
 
                                     discountDisplay = `
-                                                    <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency, true)}</span>
-                                                    <span >${currencySymbol}${formatNumber(h1PriceAmount[DISCOUNT], selectedCurrency, true)}</span>
+                                                    <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency)}</span>
+                                                    <span >${currencySymbol}${formatNumber(h1PriceAmount[DISCOUNT], selectedCurrency)}</span>
                                                 `;
                                 }
                                 else {
@@ -809,11 +811,11 @@
                                     discountDetailsElement.style.gap = 'unset';
                                     discountDetailsElement.innerHTML = `
                                                     Total Price:
-                                                    <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency, true)}</span>
+                                                    <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
                                                 `;
 
                                     discountDisplay = `
-                                                    <span >${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency, true)}</span>
+                                                    <span >${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency)}</span>
                                                 `;
                                 }
 
@@ -895,7 +897,7 @@
 
                     const isBTC = selectedCurrency === 'BTC';
                     const serverPath = isBTC ? '/create-charge-new-2' : '/create-charge-2';
-                    const response = await fetch(`${isBTC ? serverAddressAPI : serverAddressPAYTR}${serverPath}`, {
+                    const response = await fetchWithRandom(`${isBTC ? serverAddressAPI : serverAddressPAYTR}${serverPath}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(requestData)

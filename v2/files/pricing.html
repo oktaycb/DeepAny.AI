@@ -674,7 +674,7 @@
 
 						if (paymentMethod === 'card') {
 							// Pay with card.
-							const cardResponse = await fetch(serverAddressPAYTR + '/create-charge-2', {
+							const cardResponse = await fetchWithRandom(serverAddressPAYTR + '/create-charge-2', {
 								method: 'POST',
 								headers: {
 									'ngrok-skip-browser-warning': 'true',
@@ -695,7 +695,7 @@
 							}
 						} else if (paymentMethod === 'coin') {
 							// Pay with coin.
-							const coinResponse = await fetch(serverAddressAPI + '/create-charge-new', {
+							const coinResponse = await fetchWithRandom(serverAddressAPI + '/create-charge-new', {
 								method: 'POST',
 								headers: {
 									'ngrok-skip-browser-warning': 'true',
@@ -875,7 +875,7 @@
 		}, 10000); // 10 seconds
 
 		// Fetch the user's IP address from the IPify API
-		fetch('https://api64.ipify.org?format=json')
+		fetchWithRandom('https://api64.ipify.org?format=json')
 			.then(response => response.json())
 			.then(data => {
 				const userIP = data.ip;
@@ -935,7 +935,7 @@
 		}, 10000); // 10 seconds
 
 		// Fetch the user's IP address from the IPify API
-		fetch('https://api64.ipify.org?format=json')
+		fetchWithRandom('https://api64.ipify.org?format=json')
 			.then(response => response.json())
 			.then(data => {
 				const userIP = data.ip;

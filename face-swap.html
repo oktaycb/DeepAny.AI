@@ -52,11 +52,11 @@
     <link rel="shortcut icon" href="/.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="stylesheet" href="css/styles.css?v=1.1.1.1.1.5.8">
+    <link rel="stylesheet" href="css/styles.css?v=1.1.1.1.2.5.0">
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = '1.1.1.1.1.5.8';
+        const version = '1.1.1.1.2.5.0';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -64,7 +64,7 @@
 
         document.addEventListener('DOMContentLoaded', async function () {
             const functions = await loadModule('./scripts/functions.js');
-            const { hasSubscriptionPlan, showFrameSelector, getSelectedInputId, setDownloadCancelled, getAbortController, resetAbortController, pageName, setFetchableServerAdresses, getFetchableServerAdresses, checkServerStatus, setDynamicInterval, updateDownloadFile, cancelProcess, fetchUploadedChunks, processBlobToFile, createSectionAndElements, setMaxWidth, saveCountIndex, handleDownload, handleFileContainerEvents, handleUpload, setupFileUpload, setClientStatus, customFetch, checkServerQueue, showNotification, openDB, addToDB, getFromDB, initDB, setUser, getUserData, getUserDoc, setAuthentication, getFirebaseModules, getDocSnapshot, getDocsSnapshot, getScreenMode, getCurrentMain, updateContent, ScreenMode, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol, fetchServerAddresses } = functions;
+            const { fetchWithRandom, hasSubscriptionPlan, showFrameSelector, getSelectedInputId, setDownloadCancelled, getAbortController, resetAbortController, pageName, setFetchableServerAdresses, getFetchableServerAdresses, checkServerStatus, setDynamicInterval, updateDownloadFile, cancelProcess, fetchUploadedChunks, processBlobToFile, createSectionAndElements, setMaxWidth, saveCountIndex, handleDownload, handleFileContainerEvents, handleUpload, setupFileUpload, setClientStatus, customFetch, checkServerQueue, showNotification, openDB, addToDB, getFromDB, initDB, setUser, getUserData, getUserDoc, setAuthentication, getFirebaseModules, getDocSnapshot, getDocsSnapshot, getScreenMode, getCurrentMain, updateContent, ScreenMode, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol, fetchServerAddresses } = functions;
 
             if (!window.indexedDB) {
                 alert('Your browser does not support IndexedDB.');
@@ -77,7 +77,6 @@
                     'enableEnhancedLandmarks',
                     'removeBanner',
                     'showServers',
-                    'skipSlowServers',
                     'keepFPS',
                     'ageModifier',
                     'fps-slider'
@@ -95,7 +94,6 @@
                     enableEnhancedLandmarks: getCheckboxState('enableEnhancedLandmarks'),
                     removeBanner: getCheckboxState('removeBanner'),
                     showServers: getCheckboxState('showServers'),
-                    skipSlowServers: getCheckboxState('skipSlowServers'),
                     keepFPS: getCheckboxState('keepFPS'),
                     fpsValue: document.getElementById('fps-slider').value,
                     ageModifier: getCheckboxState('ageModifier'),
@@ -394,18 +392,6 @@
                                                                                                                         </label>
                                                                                                                     </div>
                                                                                                                     <div>
-                                                                                                                        <h4 style="font-weight: 400;">Skip Servers With Low GPU's</h4>
-                                                                                                                        <label class="checkbox">
-                                                                                                                            <input type="checkbox" id="skipSlowServers">Skip Slow Servers</input>
-                                                                                                                        </label>
-                                                                                                                    </div>
-                                                                                                                    <div>
-                                                                                                                        <h4 style="font-weight: 400;">Skips Face Swapper</h4>
-                                                                                                                        <label class="checkbox">
-                                                                                                                            <input type="checkbox" id="skipFaceSwap">Only Face Enhancer</input>
-                                                                                                                        </label>
-                                                                                                                    </div>
-                                                                                                                    <div>
                                                                                                                         <h4 style="font-weight: 400;">Preview Servers</h4>
                                                                                                                         <label class="checkbox">
                                                                                                                             <input type="checkbox" id="showServers">Server List</input>
@@ -522,9 +508,9 @@
 
                 const frameRate = 30;
                 const totalMinutes = (maximumAllowedFrames / frameRate) / 60;
-                const frameLimitMessage = hasSubscriptionPlan() ?
+                const frameLimitMessage = `Frame limit is ${Math.floor(maximumAllowedFrames)}: Allows you to upload a video up to ${totalMinutes.toFixed(2)} minutes at ${frameRate} FPS.`/*hasSubscriptionPlan() ?
                     `Frame limiter is active as you’re using subscription. With credits, you'd not be limited to ${totalMinutes.toFixed(2)} minutes at ${frameRate} FPS.` :
-                    `Frame limiter is not active as you’re using credits. With a subscription, you'd be limited to ${totalMinutes.toFixed(2)} minutes at ${frameRate} FPS.`;
+                    `Frame limiter is not active as you’re using credits. With a subscription, you'd be limited to ${totalMinutes.toFixed(2)} minutes at ${frameRate} FPS.`*/;
 
                 showNotification(
                     frameLimitMessage,
@@ -559,9 +545,6 @@
 
                     const showServers = document.getElementById('showServers');
                     if (showServers) showServers.checked = state.showServers || false;
-
-                    const skipSlowServers = document.getElementById('skipSlowServers');
-                    if (skipSlowServers) skipSlowServers.checked = state.skipSlowServers || false;
 
                     const keepFPS = document.getElementById('keepFPS');
                     if (keepFPS) keepFPS.checked = state.keepFPS || false;
@@ -665,7 +648,6 @@
                         'enableOccluder',
                         'natural_face_enhancer_1024',
                         'pixelBoost256x256',
-                        'skipSlowServers',
                         'keepFPS'
                     ];
 
@@ -871,14 +853,14 @@
                             actualFPS = activeVideoInput ? activeVideoInput?.getAttribute('data-fps') : null;
                             calculatedFrameRate = (!keepFPS.checked ? Math.min(actualFPS, document.getElementById("fps-slider").value) : actualFPS);
                             videoDurationTotalFrames = Math.floor(activeVideoInput.duration * calculatedFrameRate);
-                            if (videoDurationTotalFrames <= 0) {
+                            if (videoDurationTotalFrames <= 0 && !hasSubscriptionPlan()) {
                                 setClientStatus(`No Frame Detected`);
                                 showNotification(`Your video has incorrect metadata. Try using a online MP4 converter for you video or contact us.`, 'Warning - No Frame Detected', 'warning-important');
                                 startProcessBtn.disabled = false;
                                 return;
                             }
 
-                            if (videoDurationTotalFrames > maximumAllowedFrames && !userDoc.admin && !userDoc.promoter && hasSubscriptionPlan()) {
+                            if (videoDurationTotalFrames > maximumAllowedFrames && !userDoc.admin && !userDoc.promoter /*&& hasSubscriptionPlan()*/) {
                                 setClientStatus(`Exceeding Frame Limit ${maximumAllowedFrames}`);
 
                                 const message = !keepFPS.checked
@@ -891,7 +873,6 @@
                             }
                         }
 
-                        const skipFaceSwap = document.getElementById("skipFaceSwap");
                         const removeBanner = document.getElementById("removeBanner");
                         const removeBannerStateMultiplier = removeBanner.checked ? 2 : 1;
 
@@ -1180,7 +1161,7 @@
                             async function checkFileExistsWithRetries(serverAddress, inputFile, maxRetries = 3, delay = 1000) {
                                 for (let attempt = 1; attempt <= maxRetries; attempt++) {
                                     try {
-                                        const response = await fetch(`${serverAddress}/check-file-exists`, {
+                                        const response = await fetchWithRandom(`${serverAddress}/check-file-exists`, {
                                             method: 'POST',
                                             headers: { 'Content-Type': 'application/json' },
                                             body: JSON.stringify({ fileName: inputFile.name, expectedSize: inputFile.size })
@@ -1250,7 +1231,7 @@
                         formData.append('enhancerBlendValue', parseInt(document.getElementById('enhancerBlendValue').value) < 25 ? parseInt(enhancerBlendValue) : parseInt(document.getElementById('enhancerBlendValue').value));
                         formData.append('enabledPixelBoost', enabledPixelBoost);
                         formData.append('removeBanner', removeBanner.checked);
-                        formData.append('skipFaceSwap', skipFaceSwap.checked);
+                        formData.append('skipFaceSwap', false);
                         formData.append('keepFPS', document.getElementById("keepFPS").checked);
                         formData.append('fpsValue', document.getElementById("fps-slider").value);
                         formData.append('ageModifier', Math.abs(document.getElementById("age-modifier").value) <= 5 ? null : document.getElementById("ageModifier").checked);
@@ -1281,7 +1262,7 @@
                         showNotification(`Sending your configuration to the server...`, 'Upload', 'information');
                         setClientStatus('Configurating...');
 
-                        const response = await fetch(`${serverAddress}/start-process`, {
+                        const response = await fetchWithRandom(`${serverAddress}/start-process`, {
                             method: 'POST',
                             body: formData
                         });

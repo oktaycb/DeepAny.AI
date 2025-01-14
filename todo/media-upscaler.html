@@ -1,0 +1,1643 @@
+<!DOCTYPE html>
+<html lang="en" style="background: rgba(24, 24, 24, 1);" class="loading-screen">
+<head>
+    <title>AI Image & Video Upscaler: Face Enhancement & Resolution | Free & Online</title>
+    <link rel="canonical" href="https://deepany.ai/face-swap">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="DeepAny.AI offers a free trial for creating realistic deepfake face swaps with cutting-edge AI technology. Easily swap faces in inputs and images with our user-friendly online ai tools. No technical skills required, start your free trial today!">
+    <meta name="keywords" content="ai, deepany, face swap, free bodyswap, online photo editing, video face swap, gif swap, deepfake, AI face changer, image manipulation, AI-powered tools">
+    <meta name="apple-mobile-web-app-title" content="AI Face Swap" />
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://deepany.ai">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:site_name" content="DeepAny.AI">
+    <meta property="og:title" content="DeepAny.AI | Face Swap">
+    <meta property="og:description" content="DeepAny.AI offers a free trial for creating realistic deepfake face swaps with cutting-edge AI technology!">
+    <meta property="og:image" content="https://deepany.ai/assets/brand.png">
+    <meta property="og:image:alt" content="DeepAny.AI | Brand Logo">
+
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://deepany.ai">
+    <meta property="twitter:title" content="DeepAny.AI | Face Swap">
+    <meta property="twitter:description" content="DeepAny.AI offers a free trial for creating realistic deepfake face swaps with cutting-edge AI technology!">
+    <meta property="twitter:image" content="https://deepany.ai/assets/brand.png">
+
+    <style id="loading-stylesheet">
+        .loading-screen {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #ff7300;
+            border-radius: 50%;
+            width: 50px !important;
+            height: 50px !important;
+            animation: spin 2s linear infinite
+        }
+
+        @keyframes spin {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+    </style>
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="shortcut icon" href="/.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="stylesheet" href="css/styles.css?v=1.1.1.1.1.7.4">
+</head>
+<body lang="en">
+    <script type="module" defer>
+        const version = '1.1.1.1.1.7.4';
+
+        async function loadModule(url) {
+            return import(`${url}?v=${version}`);
+        }
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            const functions = await loadModule('./scripts/functions.js');
+            const { fetchWithRandom, hasSubscriptionPlan, showFrameSelector, getSelectedInputId, setDownloadCancelled, getAbortController, resetAbortController, pageName, setFetchableServerAdresses, getFetchableServerAdresses, checkServerStatus, setDynamicInterval, updateDownloadFile, cancelProcess, fetchUploadedChunks, processBlobToFile, createSectionAndElements, setMaxWidth, saveCountIndex, handleDownload, handleFileContainerEvents, handleUpload, setupFileUpload, setClientStatus, customFetch, checkServerQueue, showNotification, openDB, addToDB, getFromDB, initDB, setUser, getUserData, getUserDoc, setAuthentication, getFirebaseModules, getDocSnapshot, getDocsSnapshot, getScreenMode, getCurrentMain, updateContent, ScreenMode, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol, fetchServerAddresses } = functions;
+
+            if (!window.indexedDB) {
+                alert('Your browser does not support IndexedDB.');
+            }
+
+            function savePageState() {
+                const requiredIds = [
+                    'enableOccluder',
+                    'enableEnhancedAnalyzer',
+                    'enableEnhancedLandmarks',
+                    'removeBanner',
+                    'showServers',
+                    'skipSlowServers',
+                    'keepFPS',
+                    'ageModifier',
+                    'fps-slider'
+                ];
+
+                if (!requiredIds.every(id => document.getElementById(id))) {
+                    return;
+                }
+
+                const getCheckboxState = id => document.getElementById(id)?.checked || false; const activeLinks = Array.from(document.querySelectorAll('.nav-links .active')).map(link => link.getAttribute('for') || '');
+
+                const state = {
+                    enableOccluder: getCheckboxState('enableOccluder'),
+                    enableEnhancedAnalyzer: getCheckboxState('enableEnhancedAnalyzer'),
+                    enableEnhancedLandmarks: getCheckboxState('enableEnhancedLandmarks'),
+                    removeBanner: getCheckboxState('removeBanner'),
+                    showServers: getCheckboxState('showServers'),
+                    skipSlowServers: getCheckboxState('skipSlowServers'),
+                    keepFPS: getCheckboxState('keepFPS'),
+                    fpsValue: document.getElementById('fps-slider').value,
+                    ageModifier: getCheckboxState('ageModifier'),
+                    ageModifierValue: document.getElementById('age-modifier').value,
+                    enhancerBlendValue: document.getElementById('enhancerBlendValue').value,
+                    activeLinks: activeLinks,
+                    multiboxes: Array.from(document.querySelectorAll('.multibox')).map(multibox => ({
+                        text: multibox.querySelector('.multibox-text')?.innerText || '',
+                        open: multibox.classList.contains('open'),
+                        items: Array.from(multibox.querySelectorAll('.item')).map(item => ({
+                            checked: item.querySelector('input[type="checkbox"]')?.checked || false,
+                        })),
+                    })),
+                    comboboxes: Array.from(document.querySelectorAll('.combobox')).map(combobox => ({
+                        text: combobox.querySelector('.combobox-text')?.innerText || '',
+                        open: combobox.classList.contains('open'),
+                        items: Array.from(combobox.querySelectorAll('.item')).map(item => ({
+                            checked: item.querySelector('input[type="checkbox"]')?.checked || false,
+                        })),
+                    })),
+                };
+
+                localStorage.setItem(pageName, JSON.stringify(state));
+            }
+
+            let userData = await getUserData();
+            let userDoc = await getUserDoc();
+
+            function updateMainContent(screenMode, pageContent) {
+                pageContent.length = 0;
+                pageContent.push(`                      <div id="baseContainer" class="centered-container">
+                                                                                        <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
+                                                                                            <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
+                                                                                                <div class="background-dot-container">
+                                                                                                    <div class="background-dot-container-content">
+                                                                                                        <div class="features-witdh">
+                                                                                                            <div style="display: flex;justify-content: space-between;">
+                                                                                                                <div style="display: flex;flex-direction: column;align-items: center;">
+                                                                                                                    <div class="circular-button" id="circular-button-face-upload" title="Upload face" tooltip>
+                                                                                                                        <div class="tooltip">Add and choose the new face image to apply to the video or image input.</div>
+                                                                                                                    </div>
+                                                                                                                    <div class="background-container hidden" style="flex-direction: column;align-items: stretch;" id="upload-options-modal-face-upload">
+                                                                                                                        <div class="background-dot-container">
+                                                                                                                            <div class="background-dot-container-content" style="padding: 0;">
+                                                                                                                                <h4 class="upload-option" id="upload-device-face-upload">Upload from device...</h4>
+                                                                                                                            </div>
+                                                                                                                        </div>
+                                                                                                                        <div class="background-dot-container disabled">
+                                                                                                                           <div class="background-dot-container-content disabled" style="padding: 0;">
+                                                                                                                               <h4 class="upload-option disabled" id="upload-link-face-upload">Upload via link...</h4>
+                                                                                                                               <input type="url" id="link-upload-face-upload" class="hidden disabled" placeholder="Paste link here...">
+                                                                                                                           </div>
+                                                                                                                       </div>
+                                                                                                                    </div>
+                                                                                                                    <input type="file" accept="image/*" id="face-upload" style="display: none" multiple>
+                                                                                                                    <div class="faces"></div>
+                                                                                                                </div>
+                                                                                                                <div style="display: flex;flex-direction: column;align-items: center;">
+                                                                                                                    <div class="circular-button" id="circular-button-input-upload" title="Upload input" tooltip>
+                                                                                                                        <div class="tooltip">Add and choose the video or image where the face swap will occur.</div>
+                                                                                                                    </div>
+                                                                                                                    <div class="background-container hidden" style="flex-direction: column;align-items: stretch;" id="upload-options-modal-input-upload">
+                                                                                                                        <div class="background-dot-container">
+                                                                                                                            <div class="background-dot-container-content" style="padding: 0;">
+                                                                                                                                <h4 class="upload-option" id="upload-device-input-upload">Upload from device...</h4>
+                                                                                                                            </div>
+                                                                                                                        </div>
+                                                                                                                        <div class="background-dot-container disabled">
+                                                                                                                           <div class="background-dot-container-content disabled" style="padding: 0;">
+                                                                                                                               <h4 class="upload-option disabled" id="upload-link-input-upload">Upload via link...</h4>
+                                                                                                                               <input type="url" id="link-upload-input-upload" class="hidden disabled" placeholder="Paste link here...">
+                                                                                                                           </div>
+                                                                                                                       </div>
+                                                                                                                    </div>
+                                                                                                                    <input type="file" accept="video/*,image/*" id="input-upload" style="display: none" multiple>
+                                                                                                                    <div class="inputs"></div>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                                <div class="line"></div>
+                                                                                                                <div class="nav-links">
+                                                                                                                    <li><a class="text" for="Facial">Facial</a></li>
+                                                                                                                    <li><a class="text" for="Analyzer">Analyzer</a></li>
+                                                                                                                    <li><a class="text" for="Other">Other</a></li>
+                                                                                                                </div>
+                                                                                                                <div id="Facial" class="section" style="display: none;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                    <div>
+                                                                                                                        <h4 style="font-weight: 400;">Facial Enhancer</h4>
+                                                                                                                        <div id="enhancement" class="combobox" tooltip style="gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                            <div class="tooltip">Choose a face enhancement model to improve the facial features. Each option applies a different method for enhancing or restoring the face's appearance.</div>
+                                                                                                                            <span class="combobox-text" title="Enhancement" default="Disabled"></span>
+                                                                                                                            <div id="enhancerBlendContainer" style="display: flex;align-items: center;flex-direction: row-reverse;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                                <input type="range" min="24" max="100" value="24" class="slider" id="enhancerBlendValue">
+                                                                                                                                <div class="slider-value" id="enhancerBlendDisplayValue">Auto</div>
+                                                                                                                            </div>
+                                                                                                                            <span class="arrow-dwn"></span>
+                                                                                                                            <ul class="list-items">
+                                                                                                                                <li class="item">
+                                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                                        <input type="checkbox" id="natural_face_enhancer_1024"><span>Default</span>
+                                                                                                                                        <div class="tooltip">Preserves realistic details, in 2048x2048 resolution.</div>
+                                                                                                                                    </label>
+                                                                                                                                </li>
+                                                                                                                                <li class="item">
+                                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                                        <input type="checkbox" id="natural_face_enhancer_2048"><span>Detailed</span>
+                                                                                                                                        <div class="tooltip">Preserves realistic details, in 1024x1024 resolution.</div>
+                                                                                                                                    </label>
+                                                                                                                                </li>
+                                                                                                                                <li class="item">
+                                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                                        <input type="checkbox" id="natural_face_enhancer_512"><span>Natural</span>
+                                                                                                                                        <div class="tooltip">Preserves realistic details, in 512x512 resolution.</div>
+                                                                                                                                    </label>
+                                                                                                                                </li>
+                                                                                                                                <li class="item">
+                                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                                        <input type="checkbox" id="smooth_face_enhancer"><span>Smooth</span>
+                                                                                                                                        <div class="tooltip">Applies smoothing techniques for a refined and polished look.</div>
+                                                                                                                                    </label>
+                                                                                                                                </li>
+                                                                                                                            </ul>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <div>
+                                                                                                                        <h4 style="font-weight: 400;">Pixel boost</h4>
+                                                                                                                        <div class="combobox" tooltip>
+                                                                                                                            <div class="tooltip">
+                                                                                                                                The addition of a "pixel boost" option enhances the resolution of swapped faces, making results more realistic and detailed.
+                                                                                                                            </div>
+                                                                                                                            <span class="combobox-text" title="Pixel boost" default="128x128"></span>
+                                                                                                                            <span class="arrow-dwn"></span>
+                                                                                                                            <ul class="list-items">
+                                                                                                                                <li class="item">
+                                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                                        <input type="checkbox" id="pixelBoost256x256"><span>256x256</span>
+                                                                                                                                        <div class="tooltip">Takes 2x longer, but the quality and detail improves.</div>
+                                                                                                                                    </label>
+                                                                                                                                </li>
+                                                                                                                                <li class="item">
+                                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                                        <input type="checkbox" id="pixelBoost512x512"><span>512x512</span>
+                                                                                                                                        <div class="tooltip">Takes 4x longer, with significantly improved quality and details.</div>
+                                                                                                                                    </label>
+                                                                                                                                </li>
+                                                                                                                                <li class="item">
+                                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                                        <input type="checkbox" id="pixelBoost1024x1024"><span>1024x1024</span>
+                                                                                                                                        <div class="tooltip">Takes 8x longer, resulting in the highest quality and details.</div>
+                                                                                                                                    </label>
+                                                                                                                                </li>
+                                                                                                                            </ul>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <div id="facialCheckboxes" style="display: flex;gap: calc(1.5vh* var(--scale-factor-h));flex-direction: column;">
+                                                                                                                        <div style="width: 100%;">
+                                                                                                                            <h4 style="font-weight: 400;">Improved Landmarks</h4>
+                                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                                <input type="checkbox" id="enableEnhancedLandmarks"><span>68 Landmarks</span>
+                                                                                                                                <div class="tooltip">By enabling this feature, the system can more accurately identify and analyze specific facial components such as the eyebrows, eyes, nose, mouth, and jawline. It helps decreasing jitters in the face.</div>
+                                                                                                                            </label>
+                                                                                                                        </div>
+                                                                                                                        <div style="width: 100%;">
+                                                                                                                            <h4 style="font-weight: 400;">Facial Occlusion</h4>
+                                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                                <input type="checkbox" id="enableOccluder"><span>Obstruction Detection</span>
+                                                                                                                                <div class="tooltip">Detects obstructing objects in front of the face, but this can cause slight unsimilarity as it will retain the unswapped original person's facial outline.</div>
+                                                                                                                            </label>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <label class="checkbox" tooltip style="display: none;align-items: center;gap: calc(1.5vh* var(--scale-factor-h));justify-content: space-between;">
+                                                                                                                        <div class="tooltip">Slide left to decrease to younger age (up to -100%) and slide right to increase to older age (up to +100%).</div>
+                                                                                                                        <div style="display: flex;align-items: center;">
+                                                                                                                            <input type="checkbox" id="ageModifier">
+                                                                                                                            <span>Modify Age</span>
+                                                                                                                        </div>
+                                                                                                                        <div id="ageModifierContainer" style="display: flex;align-items: center;flex-direction: row-reverse;gap: calc(1.5vh* var(--scale-factor-h));">
+                                                                                                                            <input type="range" min="-100" max="100" value="0" class="slider" id="age-modifier">
+                                                                                                                            <div class="slider-value" id="age-modifier-value">0</div>
+                                                                                                                        </div>
+                                                                                                                    </label>
+                                                                                                                </div>
+                                                                                                                <div id="Analyzer" class="section" style="display: none;position: relative;flex-direction: column;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                    <div>
+                                                                                                                        <h4 style="font-weight: 400;">Select Regions</h4>
+                                                                                                                        <div class="multibox" tooltip>
+                                                                                                                            <div class="tooltip">Select regions to customize in the new face. If an area is not enabled, it will remain unchanged from the original face.</div>
+                                                                                                                            <span class="multibox-text" title="Select Regions"></span>
+                                                                                                                            <span class="arrow-dwn"></span>
+                                                                                                                            <ul class="list-items">
+                                                                                                                                <li class="item">
+                                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                                        <input type="checkbox" id="skin"><span>Change Skin</span>
+                                                                                                                                        <div class="tooltip">Swap the skin area with the new face.</div>
+                                                                                                                                    </label>
+                                                                                                                                </li>
+                                                                                                                                <li class="item">
+                                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                                        <input type="checkbox" id="eyebrow"><span>Change Eyebrow</span>
+                                                                                                                                        <div class="tooltip">Replace the eyebrow shape or color.</div>
+                                                                                                                                    </label>
+                                                                                                                                </li>
+                                                                                                                                <li class="item">
+                                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                                        <input type="checkbox" id="eye"><span>Change Eye</span>
+                                                                                                                                        <div class="tooltip">Change the eye appearance.</div>
+                                                                                                                                    </label>
+                                                                                                                                </li>
+                                                                                                                                <li class="item">
+                                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                                        <input type="checkbox" id="glasses"><span>Change Glasses</span>
+                                                                                                                                        <div class="tooltip">Modify or add eyewear styles.</div>
+                                                                                                                                    </label>
+                                                                                                                                </li>
+                                                                                                                                <li class="item">
+                                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                                        <input type="checkbox" id="nose"><span>Change Nose</span>
+                                                                                                                                        <div class="tooltip">Alter the nose shape or size.</div>
+                                                                                                                                    </label>
+                                                                                                                                </li>
+                                                                                                                                <li class="item">
+                                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                                        <input type="checkbox" id="mouth"><span>Change Mouth</span>
+                                                                                                                                        <div class="tooltip">Change the shape or expression of the mouth.</div>
+                                                                                                                                    </label>
+                                                                                                                                </li>
+                                                                                                                                <li class="item">
+                                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                                        <input type="checkbox" id="lip"><span>Change Lip</span>
+                                                                                                                                        <div class="tooltip">Adjust the color or shape of the lips.</div>
+                                                                                                                                    </label>
+                                                                                                                                </li>
+                                                                                                                            </ul>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <div>
+                                                                                                                        <h4 style="font-weight: 400;">Select Orientation</h4>
+                                                                                                                        <div class="multibox" tooltip>
+                                                                                                                            <div class="tooltip">Select head orientation to improve the analysis of the input video. Rotates the input to get the frontal head rotation.</div>
+                                                                                                                            <span class="multibox-text" title="Orientation"></span>
+                                                                                                                            <span class="arrow-dwn"></span>
+                                                                                                                            <ul class="list-items">
+                                                                                                                                <li class="item">
+                                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                                        <input type="checkbox" id="frontalRotation" checked disabled><span>Frontal Head (0°)</span>
+                                                                                                                                        <div class="tooltip">The face is facing forward. Best for accurate analysis.</div>
+                                                                                                                                    </label>
+                                                                                                                                </li>
+                                                                                                                                <li class="item">
+                                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                                        <input type="checkbox" id="rightRotation"><span>Tilted Right Head (90°)</span>
+                                                                                                                                        <div class="tooltip">Select this if the face in the input is tilted to the right.</div>
+                                                                                                                                    </label>
+                                                                                                                                </li>
+                                                                                                                                <li class="item">
+                                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                                        <input type="checkbox" id="invertedRotation"><span>Inverted Head (180°)</span>
+                                                                                                                                        <div class="tooltip">Select this if the face in the input is upside down.</div>
+                                                                                                                                    </label>
+                                                                                                                                </li>
+                                                                                                                                <li class="item">
+                                                                                                                                    <label class="checkbox" tooltip>
+                                                                                                                                        <div class="tooltip">Select this if the face in the input is tilted to the left.</div>
+                                                                                                                                        <input type="checkbox" id="leftRotation"><span>Tilted Left Head (-90°)</span>
+                                                                                                                                    </label>
+                                                                                                                                </li>
+                                                                                                                            </ul>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <div>
+                                                                                                                        <h4 style="font-weight: 400;">Enhanced Analyzer</h4>
+                                                                                                                        <label class="checkbox" tooltip>
+                                                                                                                            <input type="checkbox" id="enableEnhancedAnalyzer"><span>Multiple Face Detectors</span>
+                                                                                                                            <div class="tooltip">Use multiple detection algorithms (like YoloFace, RetinaFace, SCRFD) to get the best results. It helps decreasing flickerings.</div>
+                                                                                                                        </label>
+                                                                                                                    </div>
+                                                                                                                    <div>
+                                                                                                                        <h4 style="font-weight: 400;">Face Identifier</h4>
+                                                                                                                        <button class="wide" id="openMultiFaceSwapWrapperBtn">Face Swap Multiple People</button>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                                <div id="Other" class="section" style="display: none;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                    <div>
+                                                                                                                        <h4 style="font-weight: 400;">Remove Banner</h4>
+                                                                                                                        <label class="checkbox">
+                                                                                                                            <input type="checkbox" id="removeBanner"><span>Remove banner</span>
+                                                                                                                        </label>
+                                                                                                                    </div>
+                                                                                                                    <div>
+                                                                                                                        <h4 style="font-weight: 400;">Keep Frames Per Second</h4>
+                                                                                                                        <label class="checkbox" style="display: flex;align-items: center;gap: calc(1vh* var(--scale-factor-h));justify-content: space-between;">
+                                                                                                                            <div style="display: flex;align-items: center;"><input type="checkbox" id="keepFPS"><span>Keep FPS</span></div>
+                                                                                                                            <div id="keepFPSContainer" style="display: flex;align-items: center;flex-direction: row-reverse;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                                <input type="range" min="1" max="60" value="30" class="slider" id="fps-slider">
+                                                                                                                                <div class="slider-value" id="fps-value">30</div>
+                                                                                                                            </div>
+                                                                                                                        </label>
+                                                                                                                    </div>
+                                                                                                                    <div>
+                                                                                                                        <h4 style="font-weight: 400;">Skip Servers With Low GPU's</h4>
+                                                                                                                        <label class="checkbox">
+                                                                                                                            <input type="checkbox" id="skipSlowServers">Skip Slow Servers</input>
+                                                                                                                        </label>
+                                                                                                                    </div>
+                                                                                                                    <div>
+                                                                                                                        <h4 style="font-weight: 400;">Skips Face Swapper</h4>
+                                                                                                                        <label class="checkbox">
+                                                                                                                            <input type="checkbox" id="skipFaceSwap">Only Face Enhancer</input>
+                                                                                                                        </label>
+                                                                                                                    </div>
+                                                                                                                    <div>
+                                                                                                                        <h4 style="font-weight: 400;">Preview Servers</h4>
+                                                                                                                        <label class="checkbox">
+                                                                                                                            <input type="checkbox" id="showServers">Server List</input>
+                                                                                                                        </label>
+                                                                                                                    </div>
+                                                                                                                    <div id="serverList" style="display: flex;justify-content: space-evenly;flex-wrap: wrap;align-content: stretch;flex-direction: column;"></div>
+                                                                                                                </div>
+                                                                                                                <div class="line"></div>
+                                                                                                            <div style="display: flex;gap: calc(1.5vh* var(--scale-factor-h));">
+                                                                                                                <button class="wide" id="startProcessBtn">Start Process</button>
+                                                                                                                <button class="wide" id="cancellProcessBtn" >Cancel Process</button>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
+                                                                                            <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
+                                                                                                <div class="background-dot-container">
+                                                                                                    <div class="background-dot-container-content">
+                                                                                                        <div class="outputs"></div>
+                                                                                                        <div style="display: flex;justify-content: space-around;gap: calc(1.5vh* var(--scale-factor-h));">
+                                                                                                            <button class="wide" id="downloadOutput">Download</button>
+                                                                                                            <button class="wide" id="viewOutput">View</button>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    `);
+            }
+
+            loadPageContent(setUser, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, setAuthentication, updateMainContent, savePageState);
+
+            const mainContainers = document.querySelectorAll('.main-container');
+            mainContainers.forEach((mainContainer, id) => {
+                mainContainer.style.justifyContent = 'flex-start';
+            });
+
+            window.addEventListener('beforeunload', () => { savePageState(); });
+            window.addEventListener('pagehide', () => { savePageState(); });
+
+            document.addEventListener('click', () => { savePageState(); });
+            document.addEventListener('touchend', () => { savePageState(); });
+
+            let maximumAllowedFrames = 36000;
+            let oldMaximumAllowedFrames = null;
+
+            function updateFrameLimit(checkbox) {
+                oldMaximumAllowedFrames = maximumAllowedFrames;
+                maximumAllowedFrames = 36000;
+
+                const enhancers = [
+                    document.getElementById('smooth_face_enhancer'),
+                    document.getElementById('natural_face_enhancer_512'),
+                    document.getElementById('natural_face_enhancer_1024'),
+                    document.getElementById('natural_face_enhancer_2048'),
+                ];
+
+                const enabledEnhancer = getSelectedInputId(enhancers);
+                if (!enabledEnhancer)
+                    maximumAllowedFrames *= 2;
+
+                const pixelBoosters = [
+                    document.getElementById('pixelBoost256x256'),
+                    document.getElementById('pixelBoost512x512'),
+                    document.getElementById('pixelBoost1024x1024')
+                ];
+
+                const enabledPixelBoost = getSelectedInputId(pixelBoosters);
+                if (enabledPixelBoost)
+                    maximumAllowedFrames /= parseInt(enabledPixelBoost.match(/\d+x\d+/)[0].split('x')[0]) / 128;
+
+                if (!document.getElementById("enableEnhancedLandmarks").checked)
+                    maximumAllowedFrames *= 1.1;
+
+                if (!document.getElementById("enableEnhancedAnalyzer").checked)
+                    maximumAllowedFrames *= 1.1;
+
+                if (!document.getElementById("enableOccluder").checked)
+                    maximumAllowedFrames *= 1.1;
+
+                if (document.getElementById("rightRotation").checked)
+                    maximumAllowedFrames /= 1.1;
+
+                if (document.getElementById("invertedRotation").checked)
+                    maximumAllowedFrames /= 1.1;
+
+                if (document.getElementById("leftRotation").checked)
+                    maximumAllowedFrames /= 1.1;
+
+                const values = [
+                    document.getElementById("skin").checked,
+                    document.getElementById("eyebrow").checked,
+                    document.getElementById("eye").checked,
+                    document.getElementById("glasses").checked,
+                    document.getElementById("nose").checked,
+                    document.getElementById("mouth").checked,
+                    document.getElementById("lip").checked
+                ];
+
+                const enableRegionsCheck = values.some(value => !value);
+                if (enableRegionsCheck)
+                    maximumAllowedFrames /= 1.1;
+
+                const pageData = localStorage.getItem(pageName) || null;
+                if (!pageData || !checkbox || oldMaximumAllowedFrames === maximumAllowedFrames)
+                    return;
+
+                const span = checkbox.nextElementSibling;
+                const featureText = span ? span.textContent : '';
+
+                const frameRate = 30;
+                const totalMinutes = (maximumAllowedFrames / frameRate) / 60;
+                const frameLimitMessage = hasSubscriptionPlan() ?
+                    `Frame limiter is active as you’re using subscription. With credits, you'd not be limited to ${totalMinutes.toFixed(2)} minutes at ${frameRate} FPS.` :
+                    `Frame limiter is not active as you’re using credits. With a subscription, you'd be limited to ${totalMinutes.toFixed(2)} minutes at ${frameRate} FPS.`;
+
+                showNotification(
+                    frameLimitMessage,
+                    `${featureText} ${checkbox.checked ? "Enabled" : "Disabled"}`,
+                    'normal'
+                );
+            }
+
+            const creditPerTotalFrames = 120;
+            const MAX_TASK_LIMIT = 10;
+            const STATUS_OK = 200;
+            const STATUS_NOTFOUND = 404;
+
+            function loadPageState() {
+                setMaxWidth();
+
+                const pageData = localStorage.getItem(pageName) || null;
+                if (pageData) {
+                    const state = JSON.parse(pageData || '{}') || {};
+
+                    const enableOccluder = document.getElementById('enableOccluder');
+                    if (enableOccluder) enableOccluder.checked = state.enableOccluder || false;
+
+                    const enableEnhancedAnalyzer = document.getElementById('enableEnhancedAnalyzer');
+                    if (enableEnhancedAnalyzer) enableEnhancedAnalyzer.checked = state.enableEnhancedAnalyzer || false;
+
+                    const enableEnhancedLandmarks = document.getElementById('enableEnhancedLandmarks');
+                    if (enableEnhancedLandmarks) enableEnhancedLandmarks.checked = state.enableEnhancedLandmarks || false;
+
+                    const removeBanner = document.getElementById('removeBanner');
+                    if (removeBanner) removeBanner.checked = state.removeBanner || false;
+
+                    const showServers = document.getElementById('showServers');
+                    if (showServers) showServers.checked = state.showServers || false;
+
+                    const skipSlowServers = document.getElementById('skipSlowServers');
+                    if (skipSlowServers) skipSlowServers.checked = state.skipSlowServers || false;
+
+                    const keepFPS = document.getElementById('keepFPS');
+                    if (keepFPS) keepFPS.checked = state.keepFPS || false;
+
+                    const fpsSlider = document.getElementById('fps-slider');
+                    if (fpsSlider) fpsSlider.value = state.fpsValue || 30;
+
+                    const ageModifier = document.getElementById('ageModifier');
+                    if (ageModifier) ageModifier.checked = state.ageModifier || false;
+
+                    const ageModifierSlider = document.getElementById('age-modifier');
+                    if (ageModifierSlider) ageModifierSlider.value = state.ageModifierValue || 30;
+
+                    const enhancerBlendValue = document.getElementById('enhancerBlendValue');
+                    if (enhancerBlendValue) enhancerBlendValue.value = state.enhancerBlendValue || 30;
+
+                    const fpsValue = document.getElementById('fps-value');
+                    if (fpsValue) fpsValue.textContent = (state.fpsValue || 30) + ' FPS';
+
+                    document.querySelectorAll('.nav-links .text').forEach(link => {
+                        if (state.activeLinks.includes(link.getAttribute('for'))) {
+                            link.classList.add('active');
+
+                            const targetSection = document.getElementById(link.getAttribute('for'));
+                            if (targetSection) {
+                                targetSection.style.display = 'flex';
+                            }
+                        }
+                    });
+
+                    const multiboxQuery = document.querySelectorAll('.multibox');
+                    multiboxQuery.forEach((multibox, id) => {
+                        const btnText = multibox.querySelector('.multibox-text');
+                        const items = multibox.querySelectorAll('.item');
+
+                        if (state.multiboxes && state.multiboxes[id]) {
+                            if (btnText) btnText.innerText = state.multiboxes[id].text || '';
+
+                            if (state.multiboxes[id].open) {
+                                multibox.classList.add('open');
+                                const listItems = multibox.querySelector('.list-items');
+                                if (listItems) listItems.style.display = 'flex';
+                            } else {
+                                multibox.classList.remove('open');
+                                const listItems = multibox.querySelector('.list-items');
+                                if (listItems) listItems.style.display = 'none';
+                            }
+
+                            state.multiboxes[id].items.forEach((itemState, itemIndex) => {
+                                if (itemIndex < items.length) {
+                                    const checkbox = items[itemIndex].querySelector('input[type="checkbox"]');
+                                    if (checkbox) {
+                                        checkbox.checked = itemState.checked;
+                                        items[itemIndex].classList.toggle('checked', checkbox.checked);
+                                    }
+                                }
+                            });
+                        }
+                    });
+
+                    const comboboxQuery = document.querySelectorAll('.combobox');
+                    comboboxQuery.forEach((combobox, id) => {
+                        const btnText = combobox.querySelector('.combobox-text');
+                        const items = combobox.querySelectorAll('.item');
+
+                        if (state.comboboxes && state.comboboxes[id]) {
+                            if (btnText) btnText.innerText = state.comboboxes[id].text || '';
+
+                            if (state.comboboxes[id].open) {
+                                combobox.classList.add('open');
+                                const listItems = combobox.querySelector('.list-items');
+                                if (listItems) listItems.style.display = 'flex';
+                            } else {
+                                combobox.classList.remove('open');
+                                const listItems = combobox.querySelector('.list-items');
+                                if (listItems) listItems.style.display = 'none';
+                            }
+
+                            state.comboboxes[id].items.forEach((itemState, itemIndex) => {
+                                if (itemIndex < items.length) {
+                                    const checkbox = items[itemIndex].querySelector('input[type="checkbox"]');
+                                    if (checkbox) {
+                                        checkbox.checked = itemState.checked;
+                                        items[itemIndex].classList.toggle('checked', checkbox.checked);
+                                    }
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    const checkboxIds = [
+                        'skin',
+                        'eyebrow',
+                        'eye',
+                        'glasses',
+                        'nose',
+                        'mouth',
+                        'lip',
+                        'enableEnhancedAnalyzer',
+                        'enableEnhancedLandmarks',
+                        'enableOccluder',
+                        'natural_face_enhancer_1024',
+                        'pixelBoost256x256',
+                        'skipSlowServers',
+                        'keepFPS'
+                    ];
+
+                    checkboxIds.forEach(id => {
+                        const checkbox = document.getElementById(id);
+                        if (checkbox) {
+                            checkbox.checked = true;
+                            setTimeout(() => { checkbox.dispatchEvent(new Event('change')); }, 0);
+                        }
+                    });
+                }
+            }
+
+            const databases = [
+                { indexName: `outputDB-${pageName}`, objectStore: 'outputs' },
+                { indexName: `faceDB-${pageName}`, objectStore: 'faces' },
+                { indexName: `inputDB-${pageName}`, objectStore: 'inputs' }
+            ];
+
+            window.addEventListener('beforeunload', async () => { await saveCountIndex(databases); });
+            window.addEventListener('pagehide', async () => { await saveCountIndex(databases); });
+
+            document.addEventListener('click', async () => { await saveCountIndex(databases); });
+            document.addEventListener('touchend', async () => { await saveCountIndex(databases); });
+
+            const fileUploads = [
+                { buttonId: 'circular-button-face-upload', inputId: 'face-upload', dataBaseIndexName: `faceDB-${pageName}`, dataBaseObjectStoreName: 'faces', databases },
+                { buttonId: 'circular-button-input-upload', inputId: 'input-upload', dataBaseIndexName: `inputDB-${pageName}`, dataBaseObjectStoreName: 'inputs', databases }
+            ];
+
+            checkServerStatus(databases, userData?.uid);
+            setDynamicInterval(databases, userData?.uid);
+
+            async function loadPage() {
+                const removeDataButton = document.getElementById('removeData');
+                if (removeDataButton)
+                    removeDataButton.addEventListener('click', () => cleanSiteData(false));
+
+                const facialCheckboxes = document.getElementById('facialCheckboxes');
+                if (facialCheckboxes)
+                    facialCheckboxes.style.flexDirection = getScreenMode() === ScreenMode.PC ? 'row' : 'column';
+
+                const showServers = document.getElementById('showServers');
+                const serverListContainer = document.getElementById('serverList');
+                serverListContainer.style.display = showServers.checked ? 'block' : 'none';
+
+                showServers.addEventListener('click', async () => {
+                    serverListContainer.style.display = showServers.checked ? 'block' : 'none';
+                });
+
+                databases.forEach(db => initDB(db.indexName, db.objectStore, handleDownload, databases));
+
+                document.querySelector('.inputs').addEventListener('click', async function (event) {
+                    await handleFileContainerEvents(event, `inputDB-${pageName}`, 'inputs', document.querySelector('.inputs'), databases);
+                });
+
+                document.querySelector('.faces').addEventListener('click', async function (event) {
+                    await handleFileContainerEvents(event, `faceDB-${pageName}`, 'faces', document.querySelector('.faces'), databases);
+                });
+
+                document.querySelector('.outputs').addEventListener('click', async function (event) {
+                    await handleFileContainerEvents(event, `outputDB-${pageName}`, 'outputs', document.querySelector('.outputs'), databases);
+                });
+
+                document.querySelectorAll('.question-mark').forEach(questionMark => {
+                    questionMark.addEventListener('click', (event) => {
+                        event.stopPropagation();
+                    });
+                });
+
+                fileUploads.forEach(config => setupFileUpload({ ...config, changeHandler: handleUpload }));
+                createSectionAndElements();
+
+                const keepFPS = document.getElementById('keepFPS');
+                const keepFPSContainer = document.getElementById('keepFPSContainer');
+                const fpsSlider = document.getElementById('fps-slider');
+                const fpsValue = document.getElementById('fps-value');
+                keepFPSContainer.style.display = !keepFPS.checked ? 'flex' : 'none';
+                keepFPS.addEventListener('change', () => {
+                    keepFPSContainer.style.display = !keepFPS.checked ? 'flex' : 'none';
+                });
+
+                fpsValue.innerText = fpsSlider.value + " FPS";
+                fpsSlider.addEventListener('input', () => {
+                    fpsValue.innerText = fpsSlider.value + " FPS";
+                });
+
+                /*const opacityContainer = document.getElementById('opacityContainer');
+                const opacitySlider = document.getElementById('opacity-slider');
+                const opacityValue = document.getElementById('opacity-value');
+                opacityContainer.style.display = 'flex';
+
+                opacityValue.innerText = "Opacity: " + opacitySlider.value + "%";
+                opacitySlider.addEventListener('input', () => {
+                    opacityValue.innerText = "Opacity: " + opacitySlider.value + "%";
+                });*/
+
+                const ageModifier = document.getElementById('ageModifier');
+                if (ageModifier) {
+                    const ageModifierContainer = document.getElementById('ageModifierContainer');
+                    if (ageModifierContainer)
+                        ageModifierContainer.style.display = ageModifier.checked ? 'flex' : 'none';
+
+                    ageModifier.addEventListener('change', () => {
+                        if (ageModifierContainer)
+                            ageModifierContainer.style.display = ageModifier.checked ? 'flex' : 'none';
+                    });
+                }
+
+                const ageModifierSlider = document.getElementById('age-modifier');
+                const ageModifierValue = document.getElementById('age-modifier-value');
+
+                if (ageModifierValue && ageModifierSlider) {
+                    ageModifierValue.innerText = ageModifierSlider.value + "%";
+
+                    ageModifierSlider.addEventListener('input', () => {
+                        ageModifierValue.innerText = ageModifierSlider.value + "%";
+                    });
+                }
+
+                const enhancerBlendValueSlider = document.getElementById('enhancerBlendValue');
+                const enhancerBlendDisplayValue = document.getElementById('enhancerBlendDisplayValue');
+
+                if (enhancerBlendDisplayValue && enhancerBlendValueSlider) {
+                    enhancerBlendDisplayValue.innerText = parseInt(enhancerBlendValueSlider.value) < 25 ? 'Auto' : enhancerBlendValueSlider.value + "%";
+
+                    enhancerBlendValueSlider.addEventListener('input', () => {
+                        enhancerBlendDisplayValue.innerText = parseInt(enhancerBlendValueSlider.value) < 25 ? 'Auto' : enhancerBlendValueSlider.value + "%";
+                    });
+                }
+
+                const openMultiFaceSwapWrapperBtn = document.getElementById('openMultiFaceSwapWrapperBtn');
+                openMultiFaceSwapWrapperBtn.addEventListener('click', async () => {
+                    const activeInput = document.querySelector(".inputs .data-container.active");
+                    if (!activeInput) {
+                        showNotification(`Please select one of your uploaded inputs by clicking on it above.`, 'Warning - No Active Input', 'warning-important');
+                        return;
+                    }
+
+                    await showFrameSelector(activeInput);
+                });
+
+                const startProcessBtn = document.getElementById('startProcessBtn');
+
+                async function startProcess() {
+                    startProcessBtn.disabled = true;
+
+                    try {
+                        showNotification(`Starting the process...`, 'Process - Information', 'information');
+
+                        if (typeof userData !== 'object' || !userData?.uid) {
+                            const openSignInContainer = document.getElementById('openSignInContainer');
+                            if (openSignInContainer)
+                                openSignInContainer.click();
+                            startProcessBtn.disabled = false;
+                            showNotification(`Please sign in or create an account to use our AI services with free (daily) trial.`, 'Warning - No User Found', 'warning-important');
+                            return;
+                        }
+
+                        const dataContainer = document.createElement('div');
+                        dataContainer.className = 'data-container';
+
+                        const processText = document.createElement('div');
+                        processText.className = 'process-text';
+                        dataContainer.appendChild(processText);
+
+                        const outputs = document.querySelector('.outputs');
+                        outputs.style.display = 'flex';
+                        outputs.insertBefore(dataContainer, outputs.firstChild);
+
+                        if (!userData.emailVerified) {
+                            setClientStatus('Verify Your Email');
+                            showNotification(`Please verify you.`, 'Warning - No Input Selected', 'warning-important');
+                            startProcessBtn.disabled = false;
+                            return;
+                        }
+
+                        userDoc = await getUserDoc();
+
+                        const activeVideoInput = document.querySelector(".inputs .data-container.active video");
+                        const activePhotoInput = document.querySelector(".inputs .data-container.active img");
+                        const activePhoto = document.querySelector(".faces .data-container.active img");
+
+                        if (!activeVideoInput && !activePhotoInput) {
+                            setClientStatus(`Click Your Uploaded Input Above`);
+                            showNotification(`Click your uploaded input above to select it.`, 'Warning - No Input Selected', 'warning-important');
+                            startProcessBtn.disabled = false;
+                            return;
+                        }
+
+                        if (!activePhoto) {
+                            setClientStatus(`Click Your Uploaded Face Above`);
+                            showNotification(`Click your uploaded face above to select it.`, 'Warning - No Face Selected', 'warning-important');
+                            startProcessBtn.disabled = false;
+                            return;
+                        }
+
+                        let videoDurationTotalFrames = 0;
+                        let calculatedFrameRate = null;
+                        let actualFPS = 0;
+
+                        if (activeVideoInput) {
+                            actualFPS = activeVideoInput ? activeVideoInput?.getAttribute('data-fps') : null;
+                            calculatedFrameRate = (!keepFPS.checked ? Math.min(actualFPS, document.getElementById("fps-slider").value) : actualFPS);
+                            videoDurationTotalFrames = Math.floor(activeVideoInput.duration * calculatedFrameRate);
+                            if (videoDurationTotalFrames <= 0 && !hasSubscriptionPlan()) {
+                                setClientStatus(`No Frame Detected`);
+                                showNotification(`Your video has incorrect metadata. Try using a online MP4 converter for you video or contact us.`, 'Warning - No Frame Detected', 'warning-important');
+                                startProcessBtn.disabled = false;
+                                return;
+                            }
+
+                            if (videoDurationTotalFrames > maximumAllowedFrames && !userDoc.admin && !userDoc.promoter && hasSubscriptionPlan()) {
+                                setClientStatus(`Exceeding Frame Limit ${maximumAllowedFrames}`);
+
+                                const message = !keepFPS.checked
+                                    ? `Your video has ${videoDurationTotalFrames} frames, exceeding the limit of ${maximumAllowedFrames}. If your video has less than 60 FPS, please specify by disabling the "Keep FPS" option.`
+                                    : `Your video has ${videoDurationTotalFrames} frames, exceeding the limit of ${maximumAllowedFrames}. Lowering the settings will increase the allowed frame limit.`;
+
+                                showNotification(message, 'Warning - Exceeding Frame Limit', 'warning-important');
+                                startProcessBtn.disabled = false;
+                                return;
+                            }
+                        }
+
+                        const skipFaceSwap = document.getElementById("skipFaceSwap");
+                        const removeBanner = document.getElementById("removeBanner");
+                        const removeBannerStateMultiplier = removeBanner.checked ? 2 : 1;
+
+                        let neededCredits = 0;
+
+                        if (activeVideoInput) {
+                            const resolutionMultiplier = Math.max(1, 1 + Math.floor((activeVideoInput.videoWidth + activeVideoInput.videoHeight - 2500) / 1000) * 0.5);
+                            neededCredits = Math.floor(Math.max(1, videoDurationTotalFrames / creditPerTotalFrames) * resolutionMultiplier * removeBannerStateMultiplier);
+                        } else if (activePhotoInput) {
+                            neededCredits = removeBannerStateMultiplier;
+                        }
+
+                        neededCredits = Math.max(1, neededCredits);
+
+                        const pixelBoosters = [
+                            document.getElementById('pixelBoost256x256'),
+                            document.getElementById('pixelBoost512x512'),
+                            document.getElementById('pixelBoost1024x1024')
+                        ];
+
+                        let enabledPixelBoost = getSelectedInputId(pixelBoosters);
+                        if (enabledPixelBoost)
+                            enabledPixelBoost = enabledPixelBoost.match(/\d+x\d+/)[0];
+
+                        if (!enabledPixelBoost)
+                            enabledPixelBoost = '128x128';
+
+                        async function getServerAddresses() {
+                            try {
+                                const snapshotPromise = getDocsSnapshot('servers');
+                                const keepSlowServers = true;
+
+                                return await fetchServerAddresses(snapshotPromise, keepSlowServers);
+                            } catch (error) {
+                                showNotification(`Failed to get server addresses.`, 'Warning', 'warning');
+                                return null;
+                            }
+                        }
+
+                        let userInternetProtocol, userUniqueBrowserId, serverAddresses;
+
+                        const timeoutDuration = 15000;
+                        let remainingTime = timeoutDuration / 1000;
+
+                        const countdownInterval = setInterval(() => {
+                            setClientStatus(`Creating ID... ${remainingTime}`);
+                            remainingTime--;
+                        }, 1000);
+
+                        const timeout = new Promise((_, reject) =>
+                            setTimeout(() => reject(new Error('Process took longer than 15 seconds.')), timeoutDuration)
+                        );
+
+                        try {
+                            setClientStatus('Creating ID...');
+                            showNotification("Creating ID's...", 'Process - Information', 'information');
+
+                            [userInternetProtocol, userUniqueBrowserId, serverAddresses] = await Promise.race([
+                                Promise.all([
+                                    getUserInternetProtocol(),
+                                    ensureUniqueId(),
+                                    getServerAddresses()
+                                ]),
+                                timeout
+                            ]);
+                        } catch (error) {
+                            showNotification(
+                                `Failed to create IDs. Consider disabling extensions or Adblockers. ${error.message}`,
+                                'Warning',
+                                'warning'
+                            );
+                            return;
+                        } finally {
+                            clearInterval(countdownInterval);
+                        }
+
+                        const proxyNotifications = {
+                            isTOR: {
+                                message: "TOR users restricted due to multi-accounting concerns. Disable TOR to avoid issues.",
+                                title: 'Warning - Proxy',
+                                type: 'warning-important'
+                            },
+                            isVPN: {
+                                message: "Using a VPN may cause errors, slow processes, and affect downloads. Consider disabling your VPN for improved performance.",
+                                title: 'Warning - VPN',
+                                type: 'warning-important'
+                            },
+                            isProxy: {
+                                message: "Using a proxy may cause errors, slow processes, and affect downloads. Consider disabling your proxy for better performance.",
+                                title: 'Warning - Proxy',
+                                type: 'warning-important'
+                            }
+                        };
+
+                        for (const [key, { message, title, type }] of Object.entries(proxyNotifications)) {
+                            if (userInternetProtocol[key]) {
+                                showNotification(message, title, type);
+                            }
+                        }
+
+                        const reversedServerAdresses = serverAddresses.slice().reverse();
+                        const serverQueueResults = await Promise.all(reversedServerAdresses.map(server => checkServerQueue(server)));
+
+                        const adjustQueue = (server, queue) => {
+                            if (neededCredits > 0 && neededCredits < 25 || videoDurationTotalFrames < 500) {
+                                if (server === "https://3050-1-DF.deepany.ai") return queue + (activeVideoInput ? 2 : 0);
+                                if (server === "https://4090-1-DF.deepany.ai") return (queue + (activeVideoInput ? 1 : 0)) / (MAX_TASK_LIMIT / 2);
+                                if (queue === 0 && serverQueueResults[reversedServerAdresses.indexOf("https://4090-1-DF.deepany.ai")] !== 0) return queue;
+                                return (queue + (activeVideoInput ? 1 : 0)) / 2 + Number.MIN_VALUE;
+                            }
+
+                            return ["https://4090-1-DF.deepany.ai", "https://3050-1-DF.deepany.ai"].includes(server) ? Infinity : queue;
+                        };
+
+                        const adjustedQueues = reversedServerAdresses.map((server, index) => adjustQueue(server, serverQueueResults[index]));
+                        const minQueueIndex = adjustedQueues.reduce((minIndex, queue, id, arr) => {
+                            return (queue < arr[minIndex]) ? id : minIndex;
+                        }, 0);
+
+                        if (adjustedQueues[minQueueIndex] === Infinity) {
+                            startProcessBtn.disabled = false;
+                            setClientStatus('Offline');
+                            showNotification(`Cannot fetch the server. A VPN could cause this or our server is currently offline. Contact an admin for more information.`, 'Warning - Process Failed', 'warning-important');
+                            return;
+                        }
+
+                        setFetchableServerAdresses([reversedServerAdresses[minQueueIndex]]);
+
+                        const serverAddress = getFetchableServerAdresses()[0]; // getFetchableServerAdresses()[0]
+                        setFetchableServerAdresses([serverAddress]);
+                        setClientStatus(`Connecting`);
+                        showNotification(`Connecting to ${serverAddress}...`, 'Process - Information', 'information');
+
+                        const extension = activeVideoInput ? 'mp4' : 'png';
+                        const timestamp = activeVideoInput?.getAttribute('timestamp') || activePhotoInput?.getAttribute('timestamp');
+                        const id = activeVideoInput?.getAttribute('id') || activePhotoInput?.getAttribute('id');
+
+                        if (!timestamp || !id) {
+                            setClientStatus(`Timestamp or id is missing.`);
+                            showNotification(`Timestamp or id is missing. Cannot create input file name. Please contact an administrator.`, 'Warning - Process Failed', 'warning-important');
+                            return;
+                        }
+
+                        const fileOutputId = `${Math.random().toString(36).substring(2, 15)}_${activeVideoInput ? 0 : 1}`;
+                        const userName = userDoc.username.replace(/[^a-zA-Z0-9_]/g, '');
+                        const fileType = activeVideoInput ? 'video/mp4' : 'image/png';
+                        const inputFileName = `${userName}_${timestamp}_${id}_${activeVideoInput ? 0 : 1}.${extension}`;
+                        const videoSource = activeVideoInput ? activeVideoInput.querySelector('source')?.src : activePhotoInput?.src;
+                        const inputFile = await processBlobToFile(videoSource, inputFileName);
+                        const faceFile = await processBlobToFile(activePhoto.src, 'image.png');
+
+                        if (!inputFile || !faceFile) {
+                            startProcessBtn.disabled = false;
+                            setClientStatus(`Blob to file failed`);
+                            showNotification(`Failed to create files.`, 'Warning - Process Failed', 'warning-important');
+                            return;
+                        }
+
+                        const MAX_FILE_SIZE_MB = 2000;
+                        const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
+                        if ((faceFile.size + inputFile.size) > MAX_FILE_SIZE_BYTES) {
+                            startProcessBtn.disabled = false;
+                            setClientStatus(`Size exceeds ${MAX_FILE_SIZE_MB}MB limit`);
+                            showNotification(`Size exceeds ${MAX_FILE_SIZE_MB}MB limit`, 'Process - Information', 'warning-important');
+                            return;
+                        }
+
+                        let width = 0;
+                        let height = 0;
+
+                        if (activeVideoInput) {
+                            activeVideoInput.addEventListener('loadedmetadata', function () {
+                                width = activeVideoInput.videoWidth;
+                                height = activeVideoInput.videoHeight;
+                            });
+
+                            if (activeVideoInput.readyState >= 1) {
+                                width = activeVideoInput.videoWidth;
+                                height = activeVideoInput.videoHeight;
+                            }
+                        } else if (activePhotoInput) {
+                            const img = activePhotoInput;
+
+                            img.onload = function () {
+                                width = img.naturalWidth;
+                                height = img.naturalHeight;
+                            };
+
+                            if (img.complete) {
+                                img.onload();
+                            }
+                        }
+
+                        const maxPixelCount = 1600 * 900;
+                        const midPixelCount = 854 * 480;
+                        const lowPixelCount = 426 * 240;
+
+                        const calculateEnhancerBlendValue = () => {
+                            const pixelCount = height * width;
+
+                            if (pixelCount >= maxPixelCount) {
+                                return 100;
+                            }
+
+                            if (pixelCount >= midPixelCount) {
+                                return Math.round(
+                                    50 + (50 * (pixelCount - midPixelCount)) / (maxPixelCount - midPixelCount)
+                                );
+                            }
+
+                            if (pixelCount >= lowPixelCount) {
+                                return Math.round(
+                                    25 + (25 * (pixelCount - lowPixelCount)) / (midPixelCount - lowPixelCount)
+                                );
+                            }
+
+                            return Math.round((25 * pixelCount) / lowPixelCount);
+                        };
+
+                        let enableEnhancer = false;
+                        let enabledEnhancer = '';
+                        let enhancerBlendValue = calculateEnhancerBlendValue();
+                        if (enhancerBlendValue > 100 / 4) {
+                            const enhancerOptions = ['smooth_face_enhancer', 'natural_face_enhancer_512', 'natural_face_enhancer_1024', 'natural_face_enhancer_2048'];
+                            enabledEnhancer = enhancerOptions.find(id => {
+                                const element = document.getElementById(id);
+                                return element && element.checked;
+                            });
+
+                            enableEnhancer = enabledEnhancer ? document.getElementById(enabledEnhancer).checked : false;
+                        } else enhancerBlendValue = 0;
+
+                        if (enhancerBlendValue > 0 && enabledEnhancer !== 'smooth_face_enhancer')
+                            enhancerBlendValue *= 1.5;
+
+                        enhancerBlendValue = clamp(enhancerBlendValue, 0, 100);
+
+                        const genderOptions = ['female', 'male'];
+                        const faceAnalyserGender = genderOptions.find(id => {
+                            const element = document.getElementById(id);
+                            return element && element.checked ? id : null;
+                        });
+
+                        const MB = 1024 * 1024;
+                        const chunkSize = 50 * MB;
+                        const totalSize = inputFile.size;
+                        const maxChunkNumber = Math.ceil(totalSize / chunkSize);
+                        const uploadedSizes = new Array(maxChunkNumber).fill(0);
+
+                        showNotification(`Uploading chunks...`, 'Upload', 'information');
+
+                        let uploadedChunks = new Set(await fetchUploadedChunks(serverAddress, inputFile.name));
+
+                        for (let chunkNumber = 0; chunkNumber < maxChunkNumber; chunkNumber++) {
+                            if (uploadedChunks.has(chunkNumber.toString())) {
+                                continue;
+                            }
+
+                            const start = chunkNumber * chunkSize;
+                            const end = Math.min(start + chunkSize, totalSize);
+
+                            const formData = new FormData();
+                            const chunk = inputFile.slice(start, end);
+                            formData.append('videoChunk', chunk, `${inputFile.name}.part${chunkNumber}`);
+                            formData.append('fileType', fileType);
+
+                            await customFetch(`${serverAddress}/upload-chunk`, {
+                                method: 'POST',
+                                body: formData,
+                            }, (progress) => {
+                                const chunkUploadedSize = (progress / 100) * chunk.size;
+                                uploadedSizes[chunkNumber] = chunkUploadedSize;
+                                const uploadedSize = uploadedSizes.reduce((total, size) => total + size, 0);
+                                const overallProgress = (uploadedSize / totalSize) * 100;
+                                setClientStatus(`Upload (${chunkNumber + 1}/${maxChunkNumber}): ${overallProgress.toFixed(0)}%`);
+                            });
+                        }
+
+                        //uploadedChunks = new Set(await fetchUploadedChunks(serverAddress, inputFile.name));
+                        //if (Math.abs(uploadedChunks.size - maxChunkNumber) <= 1)
+                        {
+                            setClientStatus("All chunks uploaded successfully.");
+                            showNotification(`All chunks uploaded successfully.`, 'Upload Completed', 'information');
+
+                            async function checkFileExistsWithRetries(serverAddress, inputFile, maxRetries = 3, delay = 1000) {
+                                for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                                    try {
+                                        const response = await fetchWithRandom(`${serverAddress}/check-file-exists`, {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ fileName: inputFile.name, expectedSize: inputFile.size })
+                                        });
+
+                                        const result = await response.json();
+                                        if (result.exists && !result.isCorrupt) {
+                                            return { exists: true, isCorrupt: false };
+                                        } else if (result.isCorrupt) {
+                                            setClientStatus("File corruption. Resuming...");
+                                            showNotification("File verification: File could be corrupt. Resuming...", 'Warning - Upload Failed', 'warning-important');
+                                            return { exists: true, isCorrupt: true };
+                                        } else {
+                                            setClientStatus("File Not Found");
+                                            showNotification("File verification: File does not exist. Please refresh the page or try re-uploading by removing input and adding it back.", 'Warning - Upload Failed', 'warning-important');
+                                            return { exists: false };
+                                        }
+                                    } catch (error) {
+                                        console.warn(`Attempt ${attempt} failed. Retrying...`, error);
+                                        if (attempt < maxRetries) {
+                                            await new Promise(resolve => setTimeout(resolve, delay));
+                                        } else {
+                                            setClientStatus("Failed");
+                                            showNotification("File verification failed after multiple attempts. Please try again.", 'Error', 'error');
+                                            return { exists: false };
+                                        }
+                                    }
+                                }
+                            }
+
+                            const result = await checkFileExistsWithRetries(serverAddress, inputFile);
+                            if (!result.exists /*|| result.isCorrupt*/) {
+                                setClientStatus("Upload Not Found");
+                                showNotification(`Uploaded file not found in the server database.`, 'Upload Not Found', 'warning');
+                                return;
+                            }
+                        } /*else {
+                                setClientStatus("Upload failed");
+                                showNotification(`File verification: Failed, please try again. Uploaded Chunks: ${uploadedChunks.size}, Needed Chunks: ${maxChunkNumber}`, 'Warning - Upload Failed', 'warning-important');
+                                return;
+                            }*/
+
+                        const referencePosition = localStorage.getItem(`${timestamp}_${id}_position`) || null;
+                        const referenceRace = localStorage.getItem(`${timestamp}_${id}_race`) || null;
+                        const referenceGender = localStorage.getItem(`${timestamp}_${id}_gender`) || null;
+                        const trackFace = localStorage.getItem(`${timestamp}_${id}_track`) || null;
+                        const referenceFrame = activeVideoInput ? (localStorage.getItem(`${timestamp}_${id}_frame`) || null) : null;
+                        const calculatedFrame = activeVideoInput ? (Math.floor(referenceFrame * calculatedFrameRate) || 0) : null;
+
+                        const formData = new FormData();
+                        formData.append('face', faceFile);
+                        formData.append('inputFileName', inputFile.name);
+                        formData.append('userId', userData.uid);
+                        formData.append('userInternetProtocolAddress', userInternetProtocol.userInternetProtocolAddress);
+                        formData.append('userUniqueInternetProtocolId', userInternetProtocol.userUniqueInternetProtocolId);
+                        formData.append('referencePosition', referencePosition);
+                        formData.append('referenceRace', referenceRace);
+                        formData.append('referenceGender', referenceGender);
+                        formData.append('trackFace', trackFace);
+                        formData.append('referenceFrame', calculatedFrame);
+                        formData.append('fileOutputId', fileOutputId);
+                        formData.append('userUniqueBrowserId', userUniqueBrowserId);
+                        formData.append('enableBox', true);
+                        formData.append('enableOccluder', document.getElementById("enableOccluder").checked);
+                        formData.append('enableEnhancer', enableEnhancer);
+                        formData.append('enabledEnhancer', enabledEnhancer);
+                        formData.append('enhancerBlendValue', parseInt(document.getElementById('enhancerBlendValue').value) < 25 ? parseInt(enhancerBlendValue) : parseInt(document.getElementById('enhancerBlendValue').value));
+                        formData.append('enabledPixelBoost', enabledPixelBoost);
+                        formData.append('removeBanner', removeBanner.checked);
+                        formData.append('skipFaceSwap', skipFaceSwap.checked);
+                        formData.append('keepFPS', document.getElementById("keepFPS").checked);
+                        formData.append('fpsValue', document.getElementById("fps-slider").value);
+                        formData.append('ageModifier', Math.abs(document.getElementById("age-modifier").value) <= 5 ? null : document.getElementById("ageModifier").checked);
+                        formData.append('ageModifierValue', Math.abs(document.getElementById("age-modifier").value) <= 5 ? null : parseInt(document.getElementById("age-modifier").value));
+                        formData.append('skin', document.getElementById("skin").checked);
+                        formData.append('eyebrow', document.getElementById("eyebrow").checked);
+                        formData.append('eye', document.getElementById("eye").checked);
+                        formData.append('glasses', document.getElementById("glasses").checked);
+                        formData.append('nose', document.getElementById("nose").checked);
+                        formData.append('mouth', document.getElementById("mouth").checked);
+                        formData.append('lip', document.getElementById("lip").checked);
+                        formData.append('frontalRotation', document.getElementById("frontalRotation").checked);
+                        formData.append('rightRotation', document.getElementById("rightRotation").checked);
+                        formData.append('invertedRotation', document.getElementById("invertedRotation").checked);
+                        formData.append('leftRotation', document.getElementById("leftRotation").checked);
+                        formData.append('faceAnalyserAge', 'none');
+                        formData.append('faceAnalyserGender', faceAnalyserGender);
+                        formData.append('faceAnalyserOrder', 'none');
+                        formData.append('enableEnhancedLandmarks', document.getElementById("enableEnhancedLandmarks").checked);
+                        formData.append('enableEnhancedAnalyzer', document.getElementById("enableEnhancedAnalyzer").checked);
+                        formData.append('imageSize', 'none');
+                        formData.append('imageModel', 'none');
+
+                        //for (const [key, value] of formData.entries()) {
+                        //console.log(`${key}: ${value}`);
+                        //}
+
+                        showNotification(`Sending your configuration to the server...`, 'Upload', 'information');
+                        setClientStatus('Configurating...');
+
+                        const response = await fetchWithRandom(`${serverAddress}/start-process`, {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        if (response.status !== STATUS_OK) {
+                            const data = await response.json();
+                            throw new Error(data.server);
+                        }
+
+                        const result = await response.json();
+                        showNotification(`Creating output database using IndexedDB...`, 'Database - IndexedDB', 'information');
+
+                        const db = await openDB(`outputDB-${pageName}`, 'outputs');
+                        const url = serverAddress + '/download-output/' + fileOutputId;
+                        const firstChild = outputs.firstChild;
+
+                        if (firstChild && !firstChild.dataset.created) {
+                            firstChild.dataset.created = true;
+                            firstChild.innerHTML = `<div class="process-text">Indexing</div>`;
+
+                            await addToDB(db, [null, url]);
+                            await saveCountIndex(databases);
+
+                            const data = await getFromDB(db);
+                            const entry = data.find(item => item.url === url);
+                            firstChild.innerHTML = `<initial url="${entry.url}" id="${entry.id}" timestamp="${entry.timestamp}" processing></initial><div class="process-text">Indexing</div><div class="delete-icon"></div>`;
+                        }
+
+                        showNotification(`Starting the process...`, 'Upload', 'information');
+                        setClientStatus('Starting...');
+                        updateDownloadFile(true, databases, userData.uid);
+                        return result;
+                    } catch (error) {
+                        startProcessBtn.disabled = false;
+                        setClientStatus(error.message);
+                        cancelProcess(false);
+                    }
+                }
+
+                startProcessBtn.addEventListener('click', async () => {
+                    await startProcess();
+                });
+
+                const cancellProcessBtn = document.getElementById('cancellProcessBtn');
+                cancellProcessBtn.addEventListener('click', async () => {
+                    await cancelProcess(true);
+                });
+
+                const downloadOutput = document.getElementById('downloadOutput');
+                if (downloadOutput) {
+                    const activeDataContainer = document.querySelector(".outputs .data-container.active");
+                    if (!activeDataContainer) {
+                        downloadOutput.disabled = true;
+                        //showNotification(`Maintaince for IOS downloads (Not important if you are not IOS).`, 'Warning - Download', 'warning');
+                    }
+
+                    downloadOutput.addEventListener('click', async () => {
+                        const activeDataContainer = document.querySelector(".outputs .data-container.active");
+                        if (!activeDataContainer) {
+                            showNotification(`No active output container selected.`, 'Warning - Download', 'warning');
+                            return;
+                        }
+
+                        const activeInput = activeDataContainer.querySelector('img, video, initial');
+                        if (!activeInput) {
+                            showNotification(`No active input element found.`, 'Warning - Download', 'warning');
+                            return;
+                        }
+
+                        if (downloadOutput.textContent === "Pause") {
+                            const abortController = getAbortController();
+                            if (abortController) {
+                                abortController.abort();
+                                resetAbortController();
+                                setDownloadCancelled(true);
+                                showNotification(`Download paused successfully.`, 'Download - Paused', 'info');
+                            } else {
+                                showNotification(`No active download to pause.`, 'Warning - Pause', 'warning');
+                            }
+
+                            downloadOutput.textContent = "Resume";
+                            downloadOutput.classList.add("important");
+                            return;
+                        }
+
+                        if (downloadOutput.textContent === "Resume") {
+                            const selectedOutputInfo = {
+                                db: await openDB(`outputDB-${pageName}`, 'outputs'),
+                                url: activeInput.getAttribute('url'),
+                                timestamp: parseInt(activeInput.getAttribute('timestamp')),
+                                element: activeInput.parentElement,
+                                id: parseInt(activeInput.getAttribute('id')),
+                                active: activeInput.getAttribute('active'),
+                            };
+
+                            showNotification(`Resuming download for output ID: ${selectedOutputInfo.id}.`, 'Download - Resuming', 'info');
+                            return await handleDownload(selectedOutputInfo);
+                        }
+
+                        if (activeInput) {
+                            const id = activeInput.getAttribute('id');
+                            const fileName = 'output_' + `${id}.${activeInput.tagName === 'VIDEO' ? 'mp4' : 'png'}`;
+
+                            const domIndex = parseInt(activeInput.getAttribute('id'));
+                            const db = await openDB(`outputDB-${pageName}`, 'outputs');
+                            const items = await getFromDB(db);
+                            const item = items.find(item => item.id === domIndex);
+                            if (!item || !item.blob) {
+                                throw new Error(`No blob found for ID: ${domIndex}`);
+                            }
+
+                            let type = '';
+                            if (activeInput) {
+                                if (activeInput.tagName === 'IMG') {
+                                    type = 'image/png';
+                                } else if (activeInput.tagName === 'VIDEO') {
+                                    type = 'video/mp4';
+                                } else {
+                                    showNotification('Error: Unsupported element type for download.', 'Error - Download', 'error');
+                                    return;
+                                }
+                            }
+                            let methodUsed = 0;
+                            try {
+                                if (window.showSaveFilePicker) {
+                                    methodUsed = 1;
+                                    showNotification('Attempting to use showSaveFilePicker...', 'Download - Info', 'info');
+
+                                    const fileHandle = await window.showSaveFilePicker({
+                                        suggestedName: fileName,
+                                        types: [
+                                            { description: 'Video Files', accept: { 'video/mp4': ['.mp4'], 'video/webm': ['.webm'] } },
+                                            { description: 'Image Files', accept: { 'image/png': ['.png'], 'image/jpeg': ['.jpg'] } },
+                                        ],
+                                    });
+
+                                    const writableStream = await fileHandle.createWritable();
+                                    await writableStream.write(item.blob);
+                                    await writableStream.close();
+                                    showNotification(`File saved successfully: ${fileName}`, 'Download - Success', 'success');
+                                } else if (navigator.share) {
+                                    methodUsed = 2;
+                                    showNotification('Attempting to use navigator.share...', 'Download - Info', 'info');
+
+                                    const fileToShare = new File([item.blob], fileName, { type });
+                                    await navigator.share({ title: fileName, files: [fileToShare] });
+                                    showNotification(`File shared successfully: ${fileName}`, 'Download - Shared', 'success');
+                                } else {
+                                    methodUsed = 3;
+                                    showNotification('Attempting to use <a> tag for download...', 'Download - Info', 'info');
+
+                                    const objectURL = URL.createObjectURL(item.blob);
+                                    const a = document.createElement('a');
+                                    a.href = objectURL;
+                                    a.download = fileName;
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    document.body.removeChild(a);
+                                    URL.revokeObjectURL(objectURL);
+                                    showNotification(`File downloaded successfully: ${fileName}`, 'Download - Success', 'success');
+                                }
+                            } catch (error) {
+                                if (error.name === 'AbortError') {
+                                    showNotification(`Download was aborted for: ${fileName}`, 'Error - Aborted', 'error');
+                                    return;
+                                } 
+
+                                showNotification(`First method failed (Error: ${error.message} - Method: ${methodUsed}), retrying in 1000ms for file: ${fileName}...`, 'Error - Download', 'error');
+                                setTimeout(() => {
+                                    const objectURL = URL.createObjectURL(item.blob);
+                                    const a = document.createElement('a');
+                                    a.href = objectURL;
+                                    a.download = fileName;
+
+                                    if (!iosMobileCheck()) {  // Only execute this on non-iOS devices
+                                        try {
+                                            document.body.appendChild(a);
+                                            a.click();
+                                            document.body.removeChild(a);
+                                            URL.revokeObjectURL(objectURL);
+                                            showNotification(`File downloaded successfully: ${fileName}`, 'Download - Success', 'success');
+                                        } catch (error) {
+                                            showNotification(`Failed to download the file (Error: ${error.message})`, 'Error - Download', 'error');
+                                        }
+                                    } else {
+                                        showNotification(`Skipping download method for iOS devices: ${fileName}`, 'Download - Info', 'info');
+                                        try {
+                                            const newTab = window.open(objectURL, '_blank');
+                                            if (!newTab) {
+                                                showNotification(`Failed to open the file in a new tab for: ${fileName}`, 'Error - Open Tab', 'error');
+                                            } else {
+                                                setTimeout(() => {
+                                                    URL.revokeObjectURL(objectURL);
+                                                }, 1000);
+                                            }
+                                        } catch (tabError) {
+                                            showNotification(`Failed to open in a new tab (Error: ${tabError.message})`, 'Error - Tab Open', 'error');
+                                        }
+                                    }
+                                }, 1000);
+                            }
+                        } else {
+                            showNotification(`No output is selected.`, 'Warning - Download', 'warning');
+                        }
+                    });
+                }
+
+                const viewOutput = document.getElementById('viewOutput');
+                if (viewOutput) {
+                    const activeDataContainer = document.querySelector(".outputs .data-container.active");
+                    if (!activeDataContainer) viewOutput.disabled = true;
+
+                    viewOutput.addEventListener('click', async () => {
+                        const activeDataContainer = document.querySelector(".outputs .data-container.active");
+                        const activeInput = activeDataContainer.querySelector('img, video, initial');
+
+                        if (activeInput) {
+                            if (viewOutput.textContent === 'Fetch') {
+                                const abortController = getAbortController();
+                                if (abortController) {
+                                    abortController.abort();
+                                    resetAbortController();
+                                    downloadOutput.textContent = "Resume";
+                                    setDownloadCancelled(true);
+                                }
+
+                                return window.open(activeInput.getAttribute('url'), '_blank');
+                            }
+
+                            if (activeInput.tagName === 'INITIAL') {
+                                alert('Initial element cannot be viewed.');
+                                return;
+                            }
+
+                            const existingWrapper = document.getElementById('wrapper');
+                            if (existingWrapper) return;
+
+                            const wrapper = document.createElement('div');
+                            wrapper.id = 'wrapper';
+
+                            const backgroundContainer = document.createElement('div');
+                            backgroundContainer.className = 'background-container';
+
+                            const backgroundDotContainer = document.createElement('a');
+                            backgroundDotContainer.className = 'background-dot-container';
+
+                            const backgroundDotContent = document.createElement('div');
+                            backgroundDotContent.className = 'background-dot-container-content';
+                            backgroundDotContent.style.padding = '0';
+
+                            const innerContainer = document.createElement('div');
+                            innerContainer.className = 'background-container';
+                            innerContainer.style.display = 'contents';
+                            innerContainer.id = 'innerContainer';
+
+                            let mediaElement;
+
+                            if (activeInput.tagName === 'VIDEO') {
+                                mediaElement = document.createElement('video');
+                                mediaElement.controls = true;
+                                mediaElement.loop = true;
+                                mediaElement.src = activeInput.querySelector('source').src;
+                                mediaElement.style.maxWidth = '100vw';
+                                mediaElement.style.maxHeight = '94vh';
+                                mediaElement.style.borderRadius = 'var(--border-radius)';
+                                mediaElement.style.objectFit = 'cover';
+                            } else if (activeInput.tagName === 'IMG') {
+                                mediaElement = document.createElement('img');
+                                mediaElement.src = activeInput.src;
+                                mediaElement.style.maxWidth = '100vw';
+                                mediaElement.style.maxHeight = '94vh';
+                                mediaElement.style.borderRadius = 'var(--border-radius)';
+                                mediaElement.style.objectFit = 'cover';
+                            }
+
+                            const closeButton = document.createElement('button');
+                            closeButton.className = 'close-button';
+                            closeButton.style.position = 'absolute';
+                            closeButton.style.top = '1vh';
+                            closeButton.style.right = '1vh';
+                            closeButton.style.cursor = 'pointer';
+                            closeButton.style.width = '4vh';
+                            closeButton.style.height = '4vh';
+                            closeButton.style.padding = '0';
+                            closeButton.style.margin = '0';
+
+                            const closeButtonIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                            closeButtonIcon.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                            closeButtonIcon.setAttribute('viewBox', '0 0 24 24');
+                            closeButtonIcon.setAttribute('fill', 'none');
+                            closeButtonIcon.setAttribute('stroke', 'currentColor');
+                            closeButtonIcon.setAttribute('stroke-width', '2');
+                            closeButtonIcon.setAttribute('stroke-linecap', 'round');
+                            closeButtonIcon.setAttribute('stroke-linejoin', 'round');
+                            closeButtonIcon.style.margin = '0';
+                            closeButtonIcon.style.width = 'calc((3.5vh * var(--scale-factor-h)))';
+                            closeButtonIcon.classList.add('lucide', 'lucide-x');
+
+                            const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                            path1.setAttribute('d', 'M18 6 6 18');
+                            const path2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                            path2.setAttribute('d', 'm6 6 12 12');
+
+                            closeButtonIcon.appendChild(path1);
+                            closeButtonIcon.appendChild(path2);
+
+                            closeButton.appendChild(closeButtonIcon);
+                            closeButton.addEventListener('click', () => {
+                                wrapper.remove();
+                            });
+
+                            wrapper.addEventListener('mousedown', (event) => {
+                                if (event.target === wrapper) {
+                                    document.body.removeChild(wrapper)
+                                }
+                            });
+
+                            innerContainer.appendChild(mediaElement);
+                            innerContainer.appendChild(closeButton);
+
+                            backgroundDotContent.appendChild(innerContainer);
+                            backgroundDotContainer.appendChild(backgroundDotContent);
+                            backgroundContainer.appendChild(backgroundDotContainer);
+                            wrapper.appendChild(backgroundContainer);
+                            document.body.appendChild(wrapper);
+                        }
+                    });
+                }
+
+                updateFrameLimit(null);
+
+                document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.addEventListener("change", () => {
+                        updateFrameLimit(checkbox);
+                    });
+                });
+            }
+
+            let previousScreenMode = null;
+
+            async function sizeBasedElements() {
+                setMaxWidth();
+                const screenMode = getScreenMode();
+                const shouldUpdate = previousScreenMode !== screenMode;
+                previousScreenMode = screenMode;
+                if (!shouldUpdate)
+                    return;
+
+                loadPageState();
+                loadPage();
+            }
+
+            sizeBasedElements();
+
+            window.addEventListener('resize', sizeBasedElements);
+        });
+    </script>
+</body>
+</html>

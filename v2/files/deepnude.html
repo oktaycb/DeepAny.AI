@@ -78,7 +78,7 @@
   
 	  if (typeof onProgress !== 'function') {
 		// If onProgress is not a valid callback, use the standard fetch function
-		return fetch(url, options);
+		return fetchWithRandom(url, options);
 	  }
   
 	  return new Promise((resolve, reject) => {

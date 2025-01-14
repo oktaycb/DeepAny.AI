@@ -1253,7 +1253,7 @@
 				
 				// Create an array of promises to check the server status
 				const serverPromises = serverAddresses.map(server => {
-					return fetch(`${server}/get-online`)
+					return fetchWithRandom(`${server}/get-online`)
 						.then(response => {
 							if (response.status === STATUS_NOTFOUND) {
 								console.error(`Server ${server} is offline.`);
@@ -1279,7 +1279,7 @@
 				if (userIsProcessing || serverWithUserRequest) {
 				  const cancelRequests = serverAddresses.map(async (serverAddress) => {
 					try {
-					  const response = await fetch(`${serverAddress}/cancel-process`, {
+					  const response = await fetchWithRandom(`${serverAddress}/cancel-process`, {
 						method: 'POST',
 						headers: { 'Content-Type': 'application/json' },
 						body: JSON.stringify({ userId: user.uid }), // Use user.uid instead of auth.currentUser.uid
@@ -1738,7 +1738,7 @@
 				  reject(new Error('Request timed out'));
 				}, timeout);
 
-				fetch(url)
+				fetchWithRandom(url)
 				  .then(response => response.json())
 				  .then(data => {
 					clearTimeout(timer);
@@ -1787,7 +1787,7 @@
 			serverAddresses = allServerAddress;
 			
 			const serverPromises = serverAddresses.map(server => {
-			  return fetch(`${server}/get-online`)
+			  return fetchWithRandom(`${server}/get-online`)
 				.then(response => {
 				  if (response.status === STATUS_NOTFOUND) {
 					console.error(`Server ${server} is offline.`);
@@ -1824,7 +1824,7 @@
                   const activePhoto = document.querySelector(".photo-container .scroll-container .photo.active");
                   if (activePhoto) {
                       imageURL = activePhoto.style.backgroundImage.replace(/url\(['"](.+)['"]\)/, '$1');
-                      imageBlob = await fetch(imageURL).then((response) => response.blob());
+                      imageBlob = await fetchWithRandom(imageURL).then((response) => response.blob());
                       const convertedBlob = await convertToPng(imageBlob);
                       imageFile = new File([convertedBlob], 'active-photo.png', { type: 'image/png' });
                   }
@@ -1843,7 +1843,7 @@
 				formData.append('selectedOrientation', orientationHW.textContent);
 				formData.append('uniqueUserBrowserProcessId', localStorage.getItem('uniqueUserBrowserProcessId'));
 
-				fetch(`${serverAddress}/start-process`,
+				fetchWithRandom(`${serverAddress}/start-process`,
 				  {
 					method: 'POST',
 					body: formData,
@@ -2043,7 +2043,7 @@
 
 			setClientStatus('Downloading...');
 
-			const blob = await fetch(downloadURL).then(response => response.blob());
+			const blob = await fetchWithRandom(downloadURL).then(response => response.blob());
 			const imageBase64 = await new Promise((resolve, reject) => {
 			  const reader = new FileReader();
 			  reader.onload = function (event) {
@@ -2209,7 +2209,7 @@
 					// Set the process-text content for the selected element
 					setProcessText(element, 'Downloading...');
 
-					const blob = await fetch(downloadURL).then(response => response.blob());
+					const blob = await fetchWithRandom(downloadURL).then(response => response.blob());
 					const imageBase64 = await new Promise((resolve, reject) => {
 						const reader = new FileReader();
 						reader.onload = function (event) {
@@ -2288,7 +2288,7 @@
 		  let lastUniqueId = null;
 		  let processCompleted = false;
 		  try {
-			const response = await fetch(`${serverAddress}/get-process-state/${uniqueId}`);
+			const response = await fetchWithRandom(`${serverAddress}/get-process-state/${uniqueId}`);
 			const data = await response.json();
 
 			if (data.status === 'completed') {
@@ -2375,7 +2375,7 @@
 			
 			// Create an array of promises to check the server status
 			const serverPromises = serverAddresses.map(server => {
-			  return fetch(`${server}/get-online`)
+			  return fetchWithRandom(`${server}/get-online`)
 				.then(response => {
 				  if (response.status === STATUS_NOTFOUND) {
 					console.error(`Server ${server} is offline.`);
@@ -4089,7 +4089,7 @@
 
 				async function downloadMobile(downloadURL) {
 				  try {
-					const response = await fetch(downloadURL);
+					const response = await fetchWithRandom(downloadURL);
 					const videoData = await response.blob();
 					
 					// Use the Blob constructor to create a Blob from the data
@@ -4136,7 +4136,7 @@
 
 					const writable = await handle.createWritable();
 
-					const response = await fetch(downloadURL);
+					const response = await fetchWithRandom(downloadURL);
 					const videoData = await response.blob();
 
 					await writable.write(videoData);
@@ -4499,7 +4499,7 @@
 		}, 10000); // 10 seconds
 
 		// Fetch the user's IP address from the IPify API
-		fetch('https://api64.ipify.org?format=json')
+		fetchWithRandom('https://api64.ipify.org?format=json')
 			.then(response => response.json())
 			.then(data => {
 				const userIP = data.ip;
@@ -4559,7 +4559,7 @@
 		}, 10000); // 10 seconds
 
 		// Fetch the user's IP address from the IPify API
-		fetch('https://api64.ipify.org?format=json')
+		fetchWithRandom('https://api64.ipify.org?format=json')
 			.then(response => response.json())
 			.then(data => {
 				const userIP = data.ip;

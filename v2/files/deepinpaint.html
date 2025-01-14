@@ -1276,7 +1276,7 @@
 	  
 		  if (typeof onProgress !== 'function') {
 			// If onProgress is not a valid callback, use the standard fetch function
-			return fetch(url, options);
+			return fetchWithRandom(url, options);
 		  }
 	  
 		  return new Promise((resolve, reject) => {
@@ -1343,7 +1343,7 @@
 				
 				// Create an array of promises to check the server status
 				const serverPromises = serverAddresses.map(server => {
-					return fetch(`${server}/get-online`)
+					return fetchWithRandom(`${server}/get-online`)
 						.then(response => {
 							if (response.status === STATUS_NOTFOUND) {
 								console.error(`Server ${server} is offline.`);
@@ -1369,7 +1369,7 @@
 				if (userIsProcessing || serverWithUserRequest) {
 				  const cancelRequests = serverAddresses.map(async (serverAddress) => {
 					try {
-					  const response = await fetch(`${serverAddress}/cancel-process`, {
+					  const response = await fetchWithRandom(`${serverAddress}/cancel-process`, {
 						method: 'POST',
 						headers: { 'Content-Type': 'application/json' },
 						body: JSON.stringify({ userId: user.uid }), // Use user.uid instead of auth.currentUser.uid
@@ -1864,7 +1864,7 @@
 			serverAddresses = allServerAddress;
 			
 			const serverPromises = serverAddresses.map(server => {
-			  return fetch(`${server}/get-online`)
+			  return fetchWithRandom(`${server}/get-online`)
 				.then(response => {
 				  if (response.status === STATUS_NOTFOUND) {
 				    startProcessBtn.disabled = false;
@@ -1902,7 +1902,7 @@
 				const imageMask = new File([canvasBlob], 'drawing.png', { type: 'image/png' });
 
 				const imageURL = activePhoto.style.backgroundImage.replace(/url\(['"](.+)['"]\)/, '$1');
-				const imageResponse = await fetch(imageURL);
+				const imageResponse = await fetchWithRandom(imageURL);
 				const imageBlob = await imageResponse.blob();
 				const convertedBlob = await convertToPng(imageBlob);
 				const imageFile = new File([convertedBlob], 'active-photo.png', { type: 'image/png' });
@@ -2382,7 +2382,7 @@
 		  let lastUniqueId = null;
 		  let processCompleted = false;
 		  try {
-			const response = await fetch(`${serverAddress}/get-process-state/${uniqueId}`);
+			const response = await fetchWithRandom(`${serverAddress}/get-process-state/${uniqueId}`);
 			const data = await response.json();
 
 			if (data.status === 'completed') {
@@ -2466,7 +2466,7 @@
 
 			// Create an array of promises to check the server status
 			const serverPromises = serverAddresses.map(server => {
-			  return fetch(`${server}/get-online`)
+			  return fetchWithRandom(`${server}/get-online`)
 				.then(response => {
 				  if (response.status === STATUS_NOTFOUND) {
 					console.error(`Server ${server} is offline.`);
@@ -3064,7 +3064,7 @@
 		}, 10000); // 10 seconds
 
 		// Fetch the user's IP address from the IPify API
-		fetch('https://api64.ipify.org?format=json')
+		fetchWithRandom('https://api64.ipify.org?format=json')
 			.then(response => response.json())
 			.then(data => {
 				const userIP = data.ip;
@@ -3124,7 +3124,7 @@
 		}, 10000); // 10 seconds
 
 		// Fetch the user's IP address from the IPify API
-		fetch('https://api64.ipify.org?format=json')
+		fetchWithRandom('https://api64.ipify.org?format=json')
 			.then(response => response.json())
 			.then(data => {
 				const userIP = data.ip;
@@ -3768,7 +3768,7 @@ drawingCanvas.addEventListener('wheel', (e) => {
 
 				async function downloadMobile(downloadURL) {
 				  try {
-					const response = await fetch(downloadURL);
+					const response = await fetchWithRandom(downloadURL);
 					const videoData = await response.blob();
 					
 					// Use the Blob constructor to create a Blob from the data
@@ -3815,7 +3815,7 @@ drawingCanvas.addEventListener('wheel', (e) => {
 
 					const writable = await handle.createWritable();
 
-					const response = await fetch(downloadURL);
+					const response = await fetchWithRandom(downloadURL);
 					const videoData = await response.blob();
 
 					await writable.write(videoData);

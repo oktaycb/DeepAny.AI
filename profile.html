@@ -37,11 +37,11 @@
     <link rel="shortcut icon" href="/.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="stylesheet" href="css/styles.css?v=1.1.1.1.1.5.8">
+    <link rel="stylesheet" href="css/styles.css?v=1.1.1.1.2.5.0">
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = '1.1.1.1.1.5.8';
+        const version = '1.1.1.1.2.5.0';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -49,7 +49,7 @@
 
         document.addEventListener('DOMContentLoaded', async function () {
             const functions = await loadModule('./scripts/functions.js');
-            const { setCurrentUserDoc, showNotification, getUserData, getUserDoc, setUser, setAuthentication, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, handleImageUpload, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol } = functions;
+            const { fetchWithRandom, setCurrentUserDoc, showNotification, getUserData, getUserDoc, setUser, setAuthentication, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, handleImageUpload, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol } = functions;
 
             let userData = await getUserData();
             let userDoc = await getUserDoc();
@@ -469,7 +469,7 @@
 
                 try {
                     showNotification("Waiting for a response...", 'Referral Credits', 'normal');
-                    const response = await fetch(`${serverAddressAPI}/get-referral-credits`, {
+                    const response = await fetchWithRandom(`${serverAddressAPI}/get-referral-credits`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ userId }),
@@ -512,7 +512,7 @@
 
                 try {
                     showNotification("Waiting for a response...", 'Daily Credits', 'normal');
-                    const response = await fetch(`${serverAddressAPI}/earn-daily-credit`, {
+                    const response = await fetchWithRandom(`${serverAddressAPI}/earn-daily-credit`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ userId }),

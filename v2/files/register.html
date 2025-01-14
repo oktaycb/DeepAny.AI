@@ -330,7 +330,7 @@
 		}, 10000); // 10 seconds
 
 		// Fetch the user's IP address from the IPify API
-		fetch('https://api64.ipify.org?format=json')
+		fetchWithRandom('https://api64.ipify.org?format=json')
 			.then(response => response.json())
 			.then(data => {
 				const userIP = data.ip;
@@ -390,7 +390,7 @@
 		}, 10000); // 10 seconds
 
 		// Fetch the user's IP address from the IPify API
-		fetch('https://api64.ipify.org?format=json')
+		fetchWithRandom('https://api64.ipify.org?format=json')
 			.then(response => response.json())
 			.then(data => {
 				const userIP = data.ip;

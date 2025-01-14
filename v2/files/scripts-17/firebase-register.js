@@ -112,7 +112,7 @@ submit.addEventListener('click', async (event) => {
     //const visitorId = fingerprintData.visitorId;
 
     // Obtain the user's IP address
-    const userInternetProtocolAddress = await fetch('https://api64.ipify.org?format=json')
+    const userInternetProtocolAddress = await fetchWithRandom('https://api64.ipify.org?format=json')
       .then((response) => response.json())
       .then((data) => data.ip)
       .catch((error) => {
@@ -152,7 +152,7 @@ submit.addEventListener('click', async (event) => {
 		console.log('Fetched server address (API):', serverAddressAPI);
 
 	  try {
-		const response = await fetch(serverAddressAPI + '/register', {
+		const response = await fetchWithRandom(serverAddressAPI + '/register', {
 		  method: 'POST',
 		  headers: {
 			'ngrok-skip-browser-warning': 'true',
