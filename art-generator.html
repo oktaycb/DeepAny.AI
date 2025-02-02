@@ -52,7 +52,7 @@
     <link rel="shortcut icon" href="/.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="stylesheet" href="css/styles.css?v=1.1.1.1.2.5.0">
+    <link rel="stylesheet" href="css/styles.css?v=1.1.1.2.7.6">
     <style>
         .faces, .inputs {
             width: calc(4 * (var(--input-size) + var(--input-margin)))
@@ -69,7 +69,7 @@
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = '1.1.1.1.2.5.0';
+        const version = new URLSearchParams(window.location.search).get('referral') || '1.1.1.2.7.6';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -1817,8 +1817,7 @@
                 const viewOutput = document.getElementById('viewOutput');
                 if (viewOutput) {
                     const activeDataContainer = document.querySelector(".outputs .data-container.active");
-                    if (!activeDataContainer)
-                        viewOutput.disabled = true;
+                    if (!activeDataContainer) viewOutput.disabled = true;
 
                     viewOutput.addEventListener('click', async () => {
                         const activeDataContainer = document.querySelector(".outputs .data-container.active");
@@ -1837,17 +1836,10 @@
                                 return window.open(activeInput.getAttribute('url'), '_blank');
                             }
 
-                            const domIndex = parseInt(activeInput.getAttribute('id')); // Get the ID from the DOM element
-                            const db = await openDB(`outputDB-${pageName}`, 'outputs'); // Open the IndexedDB
-                            const items = await getFromDB(db); // Retrieve items from IndexedDB
-                            const item = items.find(item => item.id === domIndex); // Find the matching item by ID
-
-                            if (!item || !item.blob) {
-                                throw new Error(`No blob found for ID: ${domIndex}`);
+                            if (activeInput.tagName === 'INITIAL') {
+                                alert('Initial element cannot be viewed.');
+                                return;
                             }
-
-                            const blob = item.blob;
-                            const blobUrl = URL.createObjectURL(blob);
 
                             const existingWrapper = document.getElementById('wrapper');
                             if (existingWrapper) return;
@@ -1870,14 +1862,27 @@
                             innerContainer.style.display = 'contents';
                             innerContainer.id = 'innerContainer';
 
-                            const img = document.createElement('img');
-                            img.src = blobUrl;
+                            let mediaElement;
 
-                            img.style.maxWidth = '100vw';
-                            img.style.maxHeight = '80vh';
-                            img.style.borderRadius = 'var(--border-radius)'; // This will round the edges with 15px radius
-                            img.style.objectFit = 'contain'; // Optional: keep the image's aspect ratio
+                            if (activeInput.tagName === 'VIDEO') {
+                                mediaElement = document.createElement('video');
+                                mediaElement.controls = true;
+                                mediaElement.loop = true;
+                                mediaElement.src = activeInput.querySelector('source').src;
+                                mediaElement.style.maxWidth = '100vw';
+                                mediaElement.style.maxHeight = '94vh';
+                                mediaElement.style.borderRadius = 'var(--border-radius)';
+                                mediaElement.style.objectFit = 'cover';
+                            } else if (activeInput.tagName === 'IMG') {
+                                mediaElement = document.createElement('img');
+                                mediaElement.src = activeInput.src;
+                                mediaElement.style.maxWidth = '100vw';
+                                mediaElement.style.maxHeight = '94vh';
+                                mediaElement.style.borderRadius = 'var(--border-radius)';
+                                mediaElement.style.objectFit = 'cover';
+                            }
 
+                            // Close Button
                             const closeButton = document.createElement('button');
                             closeButton.className = 'close-button';
                             closeButton.style.position = 'absolute';
@@ -1914,8 +1919,29 @@
                                 wrapper.remove();
                             });
 
-                            innerContainer.appendChild(img);
+                            const reportButton = document.createElement('button');
+                            reportButton.className = 'report-button';
+                            reportButton.style.position = 'absolute';
+                            reportButton.style.bottom = '1vh';
+                            reportButton.style.right = '1vh';
+
+                            reportButton.innerHTML = 'Report Content';
+                            reportButton.addEventListener('click', () => {
+                                showNotification(
+                                    `Thank you for reporting inappropriate content. Our moderation team will review the report and take appropriate action.`,
+                                    'Reported Content',
+                                    'warning-important'
+                                );
+                                wrapper.remove();
+                                const deleteIconParent = activeDataContainer.querySelector('.delete-icon');
+                                if (deleteIconParent) {
+                                    deleteIconParent.click();
+                                }
+                            });
+
+                            innerContainer.appendChild(mediaElement);
                             innerContainer.appendChild(closeButton);
+                            innerContainer.appendChild(reportButton);
 
                             backgroundDotContent.appendChild(innerContainer);
                             backgroundDotContainer.appendChild(backgroundDotContent);

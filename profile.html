@@ -37,11 +37,11 @@
     <link rel="shortcut icon" href="/.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="stylesheet" href="css/styles.css?v=1.1.1.1.2.5.0">
+    <link rel="stylesheet" href="css/styles.css?v=1.1.1.2.7.6">
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = '1.1.1.1.2.5.0';
+        const version = new URLSearchParams(window.location.search).get('referral') || '1.1.1.2.7.6';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -160,14 +160,12 @@
                                                                                                 <h4 style="font-weight: 300;">Email Address</h4>
                                                                                                 <input translate="no" id="email" value="" readonly="">
                                                                                             </div>
-                                                                                                   <div style="font-size: 0px;">
+                                                                                            <div style="font-size: 0px;">
                                                                                                 <h4 style="font-weight: 300;">Password</h4>
                                                                                                 <input translate="no" id="password" type="password" value="******" readonly="">
                                                                                             </div>
-                                                                                            <div style="font-size: 0px;">
-                                                                                                <h4 style="font-weight: 300;">Phone Number</h4>
-                                                                                                <input translate="no" id="phoneNumber" value="******" readonly="">
-                                                                                            </div>
+                                                                                            <div class="line"></div>
+                                                                                            <button id="deleteAccount" style="width: 100%">Delete Account</button>
                                                                                         </div>
                                                                                     <div class="line"></div>
                                                                                         <h4>About Me</h4>
@@ -291,10 +289,8 @@
                                                                                             <h4 style="font-weight: 300;">Password</h4>
                                                                                             <input id="password" type="password" value="******" readonly="">
                                                                                         </div>
-                                                                                        <div style="font-size: 0px;">
-                                                                                            <h4 style="font-weight: 300;">Phone Number</h4>
-                                                                                            <input id="phoneNumber" value="******" readonly="">
-                                                                                        </div>
+                                                                                        <div class="line"></div>
+                                                                                        <button id="deleteAccount" style="width: 100%">Delete Account</button>
                                                                                     </div>
                                                                                 </div>
                                                                             </a>
@@ -404,6 +400,10 @@
             if (!userData || !userDoc) {
                 return;
             }
+
+            document.getElementById('deleteAccount').addEventListener('click', function () {
+                window.location.href = '/delete-account';
+            });
 
             const userId = userData.uid;
 

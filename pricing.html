@@ -169,12 +169,12 @@
     <link rel="shortcut icon" href="/.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="stylesheet" href="css/styles.css?v=1.1.1.1.2.5.0">
+    <link rel="stylesheet" href="css/styles.css?v=1.1.1.2.7.6">
 </head>
 <body lang="en">
     <div id="paymentContainer" style="margin: 0; padding: 0; overflow: hidden; display: none; width: 100%; height: 100vh; position: absolute; z-index: 99999;"></div>
     <script type="module" defer>
-        const version = '1.1.1.1.2.5.0';
+        const version = new URLSearchParams(window.location.search).get('referral') || '1.1.1.2.7.6';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -191,18 +191,22 @@
                 pageContent.push(`<div id="baseContainer" class="centered-container long">
                                                                                                 <div style="display: flex;flex-direction: column; gap: calc(2vh* var(--scale-factor-h));">
                                                                                                                 <div class="background-container">
-                                                                                                                    <p class="background-dot-container-option selected" id="credits-mode">Credits</p>
+                                                                                                                    <p class="background-dot-container-option" payment-provider="PAYTR" translate="no">Card</p>
+                                                                                                                    <p class="background-dot-container-option" payment-provider="BTC" translate="no">Coinbase</p>
+                                                                                                                </div>
+
+                                                                                                                <div class="background-container">
+                                                                                                                    <p class="background-dot-container-option" id="credits-mode">Credits</p>
                                                                                                                     <p class="background-dot-container-option" id="subscription-mode">Subscription</p>
                                                                                                                     <p class="background-dot-container-option not-available" id="renewal-mode">Renewal</p>
                                                                                                                 </div>
 
-
+                                                                                                                
                                                                                                                 <div class="background-container">
-                                                                                                                    <p class="background-dot-container-option selected" data-currency="USD" translate="no">$USD</p>
+                                                                                                                    <p class="background-dot-container-option" data-currency="USD" translate="no">$USD</p>
                                                                                                                     <p class="background-dot-container-option" data-currency="EUR" translate="no">€EUR</p>
                                                                                                                     <p class="background-dot-container-option" data-currency="GBP" translate="no">£GBP</p>
                                                                                                                     <p class="background-dot-container-option" data-currency="TRY" translate="no">₺TRY</p>
-                                                                                                                    <p class="background-dot-container-option important-outline" data-currency="BTC" translate="no">COIN</p>
                                                                                                                 </div>
 
 
@@ -342,8 +346,9 @@
 
                 const slider = document.getElementById('slider');
                 const state = {
-                    selectedMode: document.querySelector('.background-dot-container-option.selected').id || '',
+                    selectedMode: document.querySelector('.background-dot-container-option.selected[id]').id || '',
                     selectedCurrency: document.querySelector('.background-dot-container-option.selected[data-currency]')?.getAttribute('data-currency') || '',
+                    selectedPaymentProvider: document.querySelector('.background-dot-container-option.selected[payment-provider]')?.getAttribute('payment-provider') || '',
                     sliderValue: slider.value,
                     sliderMax: slider.max,
                     costPerDay: document.getElementById('cost-per-day').innerText,
@@ -367,6 +372,11 @@
             if (state.selectedCurrency) {
                 document.querySelectorAll('.background-dot-container-option[data-currency]').forEach(el => el.classList.remove('selected'));
                 document.querySelector(`[data-currency="${state.selectedCurrency}"]`).classList.add('selected');
+            }
+
+            if (state.selectedPaymentProvider) {
+                document.querySelectorAll('.background-dot-container-option[payment-provider]').forEach(el => el.classList.remove('selected'));
+                document.querySelector(`[payment-provider="${state.selectedPaymentProvider}"]`).classList.add('selected');
             }
 
             const slider = document.getElementById('slider');
@@ -464,7 +474,7 @@
                     { text: "2 GB upload per process", icon: checkmarkIcon },
                     { text: "Multiple face swaps", icon: checkmarkIcon },
                     { text: "Priority queue", icon: checkmarkIcon },
-                    { text: "Frame limiter feature", icon: checkmarkIcon },
+                    { text: "Frame limiter", icon: checkmarkIcon },
                     { text: "Ad-free experience", icon: checkmarkIcon },
                     { text: "Incognito mode", icon: checkmarkIcon },
                 ],
@@ -473,7 +483,7 @@
                     { text: "2 GB upload per process", icon: checkmarkIcon },
                     { text: "Multiple face swaps", icon: checkmarkIcon },
                     { text: "Priority queue", icon: xIcon },
-                    { text: "Frame limiter feature", icon: xIcon },
+                    { text: "Frame limiter", icon: checkmarkIcon },
                     { text: "Ad-free experience", icon: checkmarkIcon },
                     { text: "Incognito mode", icon: checkmarkIcon },
                 ]
@@ -583,10 +593,15 @@
                 const selectedCurrencyElement = document.querySelector('.background-dot-container-option.selected[data-currency]');
                 let selectedCurrency = selectedCurrencyElement ? selectedCurrencyElement.getAttribute('data-currency') : 'USD';
 
+                const selectedPaymentProviderElement = document.querySelector('.background-dot-container-option.selected[payment-provider]');
+                let selectedPaymentProvider = selectedPaymentProviderElement ? selectedPaymentProviderElement.getAttribute('payment-provider') : 'PAYTR';
+                let taxAmt = selectedPaymentProvider === 'PAYTR' ? 3.59 : 1.01;
+
                 const sliderElement = document.getElementById("slider");
                 const subscriptionMode = document.getElementById("subscription-mode");
                 const creditsMode = document.getElementById("credits-mode");
                 const currencyOptions = document.querySelectorAll(".background-dot-container-option[data-currency]");
+                const paymentProviderOptions = document.querySelectorAll(".background-dot-container-option[payment-provider]");
                 const dailyPriceAmountElement = document.getElementById("cost-per-day");
                 const discountElement = document.getElementById("discount");
                 const discountDetailsElement = document.getElementById("discount-details");
@@ -607,6 +622,36 @@
                     });
                 });
 
+                paymentProviderOptions.forEach(option => {
+                    option.addEventListener('click', () => {
+                        const newProvider = option.getAttribute("payment-provider");
+                        if (newProvider !== selectedPaymentProvider) {
+                            paymentProviderOptions.forEach(opt => opt.classList.remove("selected"));
+                            option.classList.add("selected");
+                            selectedPaymentProvider = newProvider;
+                            updatePrices();
+                        }
+                    });
+                });
+
+                if (!Array.from(currencyOptions).some(option => option.classList.contains("selected"))) {
+                    if (Array.from(currencyOptions).length > 0) {
+                        const firstCurrencyOption = Array.from(currencyOptions)[0];
+                        firstCurrencyOption.classList.add("selected");
+                        selectedCurrency = firstCurrencyOption.getAttribute("data-currency");
+                        updatePrices();
+                    }
+                }
+
+                if (!Array.from(paymentProviderOptions).some(option => option.classList.contains("selected"))) {
+                    if (Array.from(paymentProviderOptions).length > 0) {
+                        const firstPaymentProviderOption = Array.from(paymentProviderOptions)[0];
+                        firstPaymentProviderOption.classList.add("selected");
+                        selectedPaymentProvider = firstPaymentProviderOption.getAttribute("payment-provider");
+                        updatePrices();
+                    }
+                }
+
                 function updatePrices() {
                     updateSliderRange();
                     const isCreditsMode = creditsMode.classList.contains("selected");
@@ -616,7 +661,7 @@
 
                     let value, price = [0, 0], h1PriceAmount = [0, 0], priceInSelectedCurrency = [0, 0];
                     let message = '';
-                    let isNonUSDOrBTC = selectedCurrency !== 'USD' && selectedCurrency !== 'BTC';
+                    let isNonUSDOrBTC = selectedCurrency !== 'USD';
 
                     const convertCurrency = (amount) => isNonUSDOrBTC && conversionRates ? amount * conversionRates[selectedCurrency] : amount;
                     const updateDisplay = (text, unit) => {
@@ -625,7 +670,7 @@
                     };
 
                     function getCurrencySymbol(currency) {
-                        const symbols = { USD: '$', EUR: '€', GBP: '£', TRY: '₺', BTC: '$' };
+                        const symbols = { USD: '$', EUR: '€', GBP: '£', TRY: '₺' };
                         return symbols[currency] || currency;
                     }
 
@@ -642,8 +687,13 @@
                         function updateVariables() {
                             const selectedCurrencyElement = document.querySelector('.background-dot-container-option.selected[data-currency]');
                             selectedCurrency = selectedCurrencyElement ? selectedCurrencyElement.getAttribute('data-currency') : 'USD';
+
+                            const selectedPaymentProviderElement = document.querySelector('.background-dot-container-option.selected[payment-provider]');
+                            selectedPaymentProvider = selectedPaymentProviderElement ? selectedPaymentProviderElement.getAttribute('payment-provider') : 'PAYTR';
+                            taxAmt = selectedPaymentProvider === 'PAYTR' ? 3.59 : 1.01;
+
                             currencySymbol = getCurrencySymbol(selectedCurrency);
-                            isNonUSDOrBTC = selectedCurrency !== 'USD' && selectedCurrency !== 'BTC';
+                            isNonUSDOrBTC = selectedCurrency !== 'USD';
 
                             value = sliderElement.value;
                             updatePlan(plans[value] || plans['default']);
@@ -684,10 +734,11 @@
                                 discountDetailsElement.style.display = 'flex';
                                 discountDetailsElement.style.gap = 'calc(2vh* var(--scale-factor-h))';
                                 discountDetailsElement.innerHTML = `
-                                                <div>
+                                                <div style="display: ruby;">
                                                     Discounted:
                                                     <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
                                                     <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency)}</span>
+                                                    <!--<small style="opacity: 0.5;line-height: calc((1vh* 1.5* var(--scale-factor-h)));">(+${taxAmt}%)</small>-->
                                                 </div>
 
                                                 <div class="plans-popular" id="popular-tag" style="display: flex;">
@@ -701,11 +752,14 @@
                                             `;
                             }
                             else {
-                                discountDetailsElement.style.display = 'unset';
+                                discountDetailsElement.style.display = 'ruby';
                                 discountDetailsElement.style.gap = 'unset';
                                 discountDetailsElement.innerHTML = `
                                                 Total Price:
-                                                <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
+                                                <div style="display: ruby;">
+                                                    <span>${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
+                                                    <!--<small style="opacity: 0.5;line-height: calc((1vh* 1.5* var(--scale-factor-h)));">(+${taxAmt}%)</small>-->
+                                                <div>
                                             `;
 
                                 discountDisplay = `
@@ -728,8 +782,13 @@
                         function updateVariables() {
                             const selectedCurrencyElement = document.querySelector('.background-dot-container-option.selected[data-currency]');
                             selectedCurrency = selectedCurrencyElement ? selectedCurrencyElement.getAttribute('data-currency') : 'USD';
+
+                            const selectedPaymentProviderElement = document.querySelector('.background-dot-container-option.selected[payment-provider]');
+                            selectedPaymentProvider = selectedPaymentProviderElement ? selectedPaymentProviderElement.getAttribute('payment-provider') : 'PAYTR';
+                            taxAmt = selectedPaymentProvider === 'PAYTR' ? 3.59 : 1.01;
+
                             currencySymbol = getCurrencySymbol(selectedCurrency);
-                            isNonUSDOrBTC = selectedCurrency !== 'USD' && selectedCurrency !== 'BTC';
+                            isNonUSDOrBTC = selectedCurrency !== 'USD';
 
                             value = sliderElement.value;
                             updatePlan(plans[value] || plans['default']);
@@ -757,10 +816,11 @@
                                 discountDetailsElement.style.display = 'flex';
                                 discountDetailsElement.style.gap = 'calc(2vh* var(--scale-factor-h))';
                                 discountDetailsElement.innerHTML = `
-                                                 <div>
+                                                 <div style="display: ruby;">
                                                      Discounted:
                                                      <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
                                                      <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency)}</span>
+                                                     <!--<small style="opacity: 0.5;line-height: calc((1vh* 1.5* var(--scale-factor-h)));">(+${taxAmt}%)</small>-->
                                                  </div>
 
                                                  <div class="plans-popular" id="popular-tag" style="display: flex;">
@@ -790,10 +850,11 @@
                                     discountDetailsElement.style.display = 'flex';
                                     discountDetailsElement.style.gap = 'calc(2vh* var(--scale-factor-h))';
                                     discountDetailsElement.innerHTML = `
-                                                        <div>
+                                                        <div style="display: ruby;">
                                                             Discounted:
                                                             <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
                                                             <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency)}</span>
+                                                            <!--<small style="opacity: 0.5;line-height: calc((1vh* 1.5* var(--scale-factor-h)));">(+${taxAmt}%)</small>-->
                                                         </div>
                                                         
                                                         <div class="plans-popular" id="popular-tag" style="display: flex;">
@@ -807,11 +868,14 @@
                                                 `;
                                 }
                                 else {
-                                    discountDetailsElement.style.display = 'unset';
+                                    discountDetailsElement.style.display = 'ruby';
                                     discountDetailsElement.style.gap = 'unset';
                                     discountDetailsElement.innerHTML = `
                                                     Total Price:
-                                                    <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
+                                                    <div style="display: ruby;">
+                                                        <span>${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
+                                                        <!--<small style="opacity: 0.5;line-height: calc((1vh* 1.5* var(--scale-factor-h)));">(+${taxAmt}%)</small>-->
+                                                    <div>
                                                 `;
 
                                     discountDisplay = `
@@ -854,6 +918,7 @@
                 sliderElement.addEventListener("input", updateSliderValue);
 
                 let currentMode = state.selectedMode;
+
                 subscriptionMode.addEventListener('click', () => {
                     if (currentMode !== 'subscription-mode') {
                         subscriptionMode.classList.add("selected");
@@ -865,6 +930,7 @@
                 });
 
                 creditsMode.addEventListener('click', () => {
+                    
                     if (currentMode !== 'credits-mode') {
                         creditsMode.classList.add("selected");
                         subscriptionMode.classList.remove("selected");
@@ -895,7 +961,7 @@
                         selectedMode,
                     };
 
-                    const isBTC = selectedCurrency === 'BTC';
+                    const isBTC = selectedPaymentProvider === 'BTC';
                     const serverPath = isBTC ? '/create-charge-new-2' : '/create-charge-2';
                     const response = await fetchWithRandom(`${isBTC ? serverAddressAPI : serverAddressPAYTR}${serverPath}`, {
                         method: 'POST',

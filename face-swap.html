@@ -52,11 +52,11 @@
     <link rel="shortcut icon" href="/.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="stylesheet" href="css/styles.css?v=1.1.1.1.2.5.0">
+    <link rel="stylesheet" href="css/styles.css?v=1.1.1.2.7.6">
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = '1.1.1.1.2.5.0';
+        const version = new URLSearchParams(window.location.search).get('referral') || '1.1.1.2.7.6';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -1538,6 +1538,7 @@
                                 mediaElement.style.objectFit = 'cover';
                             }
 
+                            // Close Button
                             const closeButton = document.createElement('button');
                             closeButton.className = 'close-button';
                             closeButton.style.position = 'absolute';
@@ -1574,14 +1575,29 @@
                                 wrapper.remove();
                             });
 
-                            wrapper.addEventListener('mousedown', (event) => {
-                                if (event.target === wrapper) {
-                                    document.body.removeChild(wrapper)
+                            const reportButton = document.createElement('button');
+                            reportButton.className = 'report-button';
+                            reportButton.style.position = 'absolute';
+                            reportButton.style.bottom = '1vh';
+                            reportButton.style.right = '1vh';
+                            
+                            reportButton.innerHTML = 'Report Content';
+                            reportButton.addEventListener('click', () => {
+                                showNotification(
+                                    `Thank you for reporting inappropriate content. Our moderation team will review the report and take appropriate action.`,
+                                    'Reported Content',
+                                    'warning-important'
+                                );
+                                wrapper.remove();
+                                const deleteIconParent = activeDataContainer.querySelector('.delete-icon');
+                                if (deleteIconParent) {
+                                    deleteIconParent.click();
                                 }
                             });
 
                             innerContainer.appendChild(mediaElement);
                             innerContainer.appendChild(closeButton);
+                            //innerContainer.appendChild(reportButton);
 
                             backgroundDotContent.appendChild(innerContainer);
                             backgroundDotContainer.appendChild(backgroundDotContent);
