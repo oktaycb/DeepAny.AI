@@ -1,0 +1,21 @@
+.loading-screen {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #ff7300;
+    border-radius: 50%;
+    width: 50px !important;
+    height: 50px !important;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+
+    100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}

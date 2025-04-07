@@ -2,12 +2,450 @@
     return /iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
+const storedVersion = localStorage.getItem('version');
+const urlVersion = new URLSearchParams(window.location.search).get('version');
+const defaultVersion = '1.1.1.5.0.8';
+
+// Use URL version, then localStorage version, then default version
+const version = urlVersion || storedVersion || defaultVersion;
+
 let referral = localStorage.getItem('referral') || new URLSearchParams(window.location.search).get('referral');
 if (!localStorage.getItem('referral') && referral)
     localStorage.setItem('referral', referral);
 
-const version = new URLSearchParams(window.location.search).get('version') || '1.1.1.2.7.6';
-console.log(version);
+let currentMain = 0;
+let windowHeight = window.innerHeight;
+let windowWidth = window.innerWidth;
+let aspectRatio = windowHeight / windowWidth;
+let sidebarActive = !0;
+let navbarActive = !0;
+let actualNavbarHeight = 0;
+let navbarHeight = 0;
+
+export function getPageName() {
+    const url = window.location.pathname;
+    const pathArray = url.split('/');
+    return pathArray[pathArray.length - 1] || 'default'
+}
+export const pageName = getPageName();
+
+export function dispatchEvent(event) {
+    window.dispatchEvent(new Event(event))
+}
+export function getScreenMode() {
+    const aspectRatio = getAspectRatio();
+    if (aspectRatio < 4 / 4) return ScreenMode.PHONE;
+    return ScreenMode.PC
+}
+export function getCurrentMain() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const pageParam = urlParams.get('page');
+    //window.history.replaceState(null, '', `${window.location.pathname}`);
+
+    if (pageParam !== null) {
+        localStorage.setItem(`${pageName}_currentMain`, pageParam);
+        currentMain = parseInt(pageParam, 10);
+    } else {
+        const localStorageValue = localStorage.getItem(`${pageName}_currentMain`);
+        if (localStorageValue !== null) {
+            currentMain = parseInt(localStorageValue, 10);
+        }
+    }
+    return currentMain;
+}
+export function setCurrentMain(value) {
+    currentMain = value;
+    localStorage.setItem(`${pageName}_currentMain`, currentMain.toString());
+    //const urlParams = new URLSearchParams(window.location.search);
+    //urlParams.delete(`${pageName}_currentMain`);
+    //urlParams.set('page', currentMain.toString()); 
+    //window.history.replaceState(null, '', `${window.location.pathname}`);
+}
+export function setWindowHeight(value) {
+    windowHeight = value
+}
+export function getWindowHeight() {
+    return windowHeight
+}
+export function setWindowWidth(value) {
+    windowWidth = value
+}
+export function getWindowWidth() {
+    return windowWidth
+}
+export function setAspectRatio() {
+    if (windowHeight != window.innerHeight || windowWidth != window.innerWidth || aspectRatio != window.innerWidth / window.innerHeight) {
+        setWindowHeight(window.innerHeight);
+        setWindowWidth(window.innerWidth);
+        aspectRatio = getWindowWidth() / getWindowHeight()
+    }
+}
+export function getAspectRatio() {
+    setAspectRatio();
+    return aspectRatio
+}
+export function setSidebarActive(value) {
+    sidebarActive = value;
+    localStorage.setItem(`${pageName}_sidebarActive`, sidebarActive.toString());
+}
+
+export function getSidebarActive() {
+    const storedValue = localStorage.getItem(`${pageName}_sidebarActive`);
+    if (storedValue !== null) {
+        sidebarActive = storedValue !== 'false';
+    }
+    return sidebarActive;
+}
+
+export function setNavbarActive(value) {
+    navbarActive = value;
+    localStorage.setItem(`${pageName}_navbarActive`, navbarActive.toString());
+}
+
+export function getNavbarActive() {
+    const storedValue = localStorage.getItem(`${pageName}_navbarActive`);
+    if (storedValue !== null) {
+        navbarActive = storedValue !== 'false';
+    }
+    return navbarActive;
+}
+
+export function setActualNavbarHeight(value) {
+    actualNavbarHeight = value
+}
+export function getActualNavbarHeight() {
+    return actualNavbarHeight
+}
+export function setNavbarHeight(value) {
+    navbarHeight = value
+}
+export function getNavbarHeight() {
+    return navbarHeight
+}
+export function setSidebar(sidebar) {
+    const type = getScreenMode() !== 1 ? 2 : 0;
+    if (type === 2) {
+        if (getSidebarActive()) {
+            sidebar.style.right = '0';
+            sidebar.style.left = '0';
+            sidebar.style.top = navbarHeight + "px";
+            return
+        }
+        if (sidebar) {
+            sidebar.style.right = '0';
+            sidebar.style.left = '0';
+            sidebar.style.top = -getWindowHeight() + "px"
+        }
+    } else if (type === 1) {
+        if (getSidebarActive()) {
+            sidebar.style.right = '0';
+            return
+        }
+        if (sidebar)
+            sidebar.style.right = -sidebar.offsetWidth + "px"
+    } else if (type === 0) {
+        if (getSidebarActive()) {
+            sidebar.style.left = '0';
+            return
+        }
+        if (sidebar)
+            sidebar.style.left = -sidebar.offsetWidth + 'px'
+    }
+}
+export function moveMains(mains, currentMain) {
+    if (mains && mains.length > 0) {
+        mains.forEach((main, i) => {
+            const offset = (i - Math.min(mains.length - 1, currentMain)) * getWindowHeight();
+            main.style.top = `${offset + getNavbarHeight()}px`;
+            main.style.height = `${getWindowHeight() - getNavbarHeight()}px`;
+            main.style.width = `${getWindowWidth()}px`
+        })
+    }
+}
+export function reconstructMainStyles() {
+    let mains = document.querySelectorAll('main');
+    if (mains && mains.length > 0) {
+        mains.forEach((main, i) => {
+            main.style.display = 'grid';
+            main.style.top = `${i * getWindowHeight() + getNavbarHeight()}px`;
+            main.style.height = `${getWindowHeight() - getNavbarHeight()}px`;
+            main.style.width = `${getWindowWidth()}px`
+        })
+    }
+}
+export function setNavbar(navbar, mains, sidebar) {
+    setActualNavbarHeight(navbar ? navbar.offsetHeight : 0);
+    setNavbarHeight(getNavbarActive() ? navbar.offsetHeight : 0);
+    moveMains(mains, currentMain);
+    if (getNavbarActive()) {
+        navbar.style.top = '0';
+        if (sidebar) {
+            if (getScreenMode() === ScreenMode.PC)
+                sidebar.style.top = `${getNavbarHeight()}px`;
+            sidebar.style.height = `${getWindowHeight() - getNavbarHeight()}px`
+        }
+    } else {
+        if (navbar) {
+            navbar.style.top = -navbar.offsetHeight + "px"
+        }
+        if (sidebar) {
+            sidebar.style.top = `${getNavbarHeight()}px`;
+            sidebar.style.height = '100vh'
+        }
+    }
+}
+let previousScreenMode = 0;
+export function showSidebar(sidebar, hamburgerMenu, setUser = null, setAuthentication = null, retrieveImageFromURL = null, getUserInternetProtocol = null, ensureUniqueId = null, fetchServerAddress = null, getFirebaseModules = null, getDocSnapshot = null) {
+    setSidebarActive(sidebar);
+    setSidebar(sidebar);
+    if (hamburgerMenu)
+        hamburgerMenu.classList.add('open');
+    localStorage.removeItem('sidebarState');
+
+    function loadSideBar() {
+        const screenMode = getScreenMode();
+        const shouldUpdate = previousScreenMode !== screenMode;
+        previousScreenMode = screenMode;
+        if (!shouldUpdate)
+            return;
+        createUserData(sidebar, screenMode, setAuthentication, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
+        createSideBarData(sidebar);
+        ['exploreButton', 'profileButton', 'premiumButton', 'faceSwapButton', 'inpaintButton', 'artGeneratorButton', 'videoGeneratorButton', 'userLayout', 'faqLink', 'policiesLink', 'guidelinesLink', 'contactUsLink'].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.addEventListener('click', () => localStorage.setItem('sidebarState', 'removeSidebar'))
+            }
+        });
+        if (setUser && screenMode === ScreenMode.PHONE)
+            setUser();
+    }
+    loadSideBar();
+    if (!window.hasResizeEventListener) {
+        window.addEventListener('resize', loadSideBar);
+        window.hasResizeEventListener = !0
+    }
+}
+export function showNavbar(navbar, mains, sidebar) {
+    setNavbarActive(navbar);
+    setNavbar(navbar, mains, sidebar);
+    setSidebar(sidebar)
+}
+export function removeSidebar(sidebar, hamburgerMenu) {
+    setSidebarActive(!1);
+    setSidebar(sidebar);
+    if (hamburgerMenu)
+        hamburgerMenu.classList.remove('open');
+    localStorage.setItem('sidebarState', 'keepSideBar')
+}
+export function removeNavbar(navbar, mains, sidebar) {
+    setNavbarActive(!1);
+    setNavbar(navbar, mains, sidebar);
+    setSidebar(sidebar)
+}
+export function cleanPages() {
+    document.querySelectorAll('main').forEach(main => main.remove());
+    document.querySelectorAll('.faded-content').forEach(fadedContent => fadedContent.remove())
+}
+
+const wasSidebarActive = getSidebarActive();
+const isFirstVisit = !localStorage.getItem("firstVisit");
+if (isFirstVisit)
+    localStorage.setItem("firstVisit", "1");
+
+export function createPages(contents) {
+    const numberOfPages = contents.length;
+    if (numberOfPages <= 0) return;
+    for (let id = 0; id < numberOfPages; id++) {
+        const mainElement = document.createElement('main');
+        const mainContainer = document.createElement('div');
+        mainContainer.classList.add('main-container');
+        mainElement.appendChild(mainContainer);
+        document.body.appendChild(mainElement)
+    }
+    const fadedContent = document.createElement('div');
+    fadedContent.classList.add('faded-content');
+    const firstText = document.createElement('div');
+    firstText.classList.add('first-text');
+    const h1Element = document.createElement('h1');
+    h1Element.setAttribute('translate', 'no');
+    h1Element.innerHTML = 'DeepAny.<span class="text-gradient" translate="no">AI</span>';
+    const h2Element = document.createElement('h2');
+    h2Element.classList.add('text-gradient');
+    h2Element.setAttribute('translate', 'no');
+    h2Element.textContent = 'bring your imagination come to life.';
+    const offsetText = document.createElement('div');
+    offsetText.classList.add('offset-text');
+    for (let j = 0; j < 3; j++) {
+        const offsetH1 = document.createElement('h1');
+        offsetH1.classList.add('offset');
+        offsetH1.setAttribute('translate', 'no');
+        offsetH1.innerHTML = 'deepany.a<span class="no-spacing" translate="no">i</span>';
+        offsetText.appendChild(offsetH1)
+    }
+    firstText.appendChild(h1Element);
+    firstText.appendChild(h2Element);
+    firstText.appendChild(offsetText);
+    fadedContent.appendChild(firstText);
+    document.body.appendChild(fadedContent)
+}
+export function clamp(value, min, max) {
+    return Math.max(min, Math.min(value, max))
+}
+export function setupMainSize(mainQuery) {
+    if (!mainQuery || !mainQuery.length)
+        return;
+    mainQuery.forEach((main, id) => {
+        main.style.display = 'grid';
+        main.style.top = `${id * getWindowHeight() + getNavbarHeight()}px`;
+        main.style.height = `${getWindowHeight() - getNavbarHeight()}px`;
+        main.style.width = `${getWindowWidth()}px`
+    })
+}
+const swipeThreshold = 50;
+export function loadScrollingAndMain(navbar, mainQuery, sidebar, hamburgerMenu, setUser, setAuthentication, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot) {
+    if (!mainQuery || !mainQuery.length) return;
+    let scrolling = !1;
+    let touchStartY = 0;
+    let touchEndY = 0;
+    let touchStartTime = 0;
+    let scrollAttemptedOnce = !1;
+    let lastScrollTime = 0;
+    let lastScrollDirection = '';
+
+    function getCurrentMainElement() {
+        const currentIndex = getCurrentMain();
+        return mainQuery[currentIndex]
+    }
+
+    function showMain(id, transitionDuration = 250) {
+        if (mainQuery.length > 1 && id >= 0 && id < mainQuery.length && !scrolling) {
+            if (sidebarActive && getScreenMode() !== ScreenMode.PC) return;
+            scrolling = !0;
+            const wentDown = id >= getCurrentMain();
+            setCurrentMain(id);
+            if (wentDown) {
+                removeNavbar(navbar, mainQuery, sidebar)
+            } else {
+                showNavbar(navbar, mainQuery, sidebar)
+            }
+            setTimeout(() => {
+                scrolling = !1
+            }, transitionDuration)
+        }
+    }
+    const handleKeydown = (event) => {
+        if (!scrolling) {
+            if (event.key === 'ArrowDown' || event.key === 'ArrowRight') {
+                event.preventDefault();
+                handleScroll('down')
+            } else if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') {
+                event.preventDefault();
+                handleScroll('up')
+            }
+        }
+    };
+    const handleWheel = (event) => {
+        if (event.ctrlKey)
+            return;
+        handleScroll(event.deltaY > 0 ? 'down' : 'up')
+    };
+    const handleScroll = (direction) => {
+        const currentTime = Date.now();
+        const currentMainElement = getCurrentMainElement();
+        if (!currentMainElement) return;
+        const atTop = currentMainElement.scrollTop === 0;
+        const atBottom = currentMainElement.scrollTop + currentMainElement.clientHeight >= currentMainElement.scrollHeight;
+        const isMainScrollable = currentMainElement.scrollHeight > currentMainElement.clientHeight;
+        if (scrollAttemptedOnce && (currentTime - lastScrollTime < 500 / 2)) {
+            return
+        }
+        lastScrollTime = currentTime;
+        if (scrollAttemptedOnce && direction !== lastScrollDirection) {
+            scrollAttemptedOnce = !1
+        }
+        lastScrollDirection = direction;
+        if (!isMainScrollable) {
+            if (direction === 'down') {
+                showMain(getCurrentMain() + 1)
+            } else {
+                showMain(getCurrentMain() - 1)
+            }
+            return
+        }
+        if (atTop || atBottom) {
+            if (scrollAttemptedOnce) {
+                if (direction === 'down') {
+                    showMain(getCurrentMain() + 1)
+                } else {
+                    showMain(getCurrentMain() - 1)
+                }
+                scrollAttemptedOnce = !1
+            } else {
+                scrollAttemptedOnce = !0
+            }
+        }
+    };
+    const handleEvent = (e) => {
+        if (!e) return;
+        const {
+            clientY,
+            clientX
+        } = e.type === 'touchstart' ? e.touches[0] : e;
+        if (clientY > navbar.offsetHeight) {
+            if (!clientX) return showSidebar(sidebar, hamburgerMenu, setUser, setAuthentication, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
+            if (e.type === 'click' && clientX > sidebar.offsetWidth && !e.target.closest('a')) removeSidebar(sidebar, hamburgerMenu);
+        } else showNavbar(navbar, mainQuery, sidebar)
+    };
+    const handleTouchMove = (event) => {
+        touchEndY = event.changedTouches[0].clientY;
+        handleSwipe()
+    };
+    const handleTouchStart = (event) => {
+        handleEvent(event);
+        touchStartY = event.touches[0].clientY;
+        touchStartTime = Date.now()
+    };
+    const handleSwipe = () => {
+        const touchDistance = touchEndY - touchStartY;
+        const touchDuration = Date.now() - touchStartTime;
+        if (Math.abs(touchDistance) > swipeThreshold && touchDuration < 500) {
+            const direction = touchDistance < 0 ? 'down' : 'up';
+            handleScroll(direction)
+        }
+    };
+    document.addEventListener('keydown', handleKeydown);
+    document.addEventListener('wheel', handleWheel);
+    document.addEventListener('click', handleEvent);
+    document.addEventListener('mousemove', handleEvent);
+    document.addEventListener('touchmove', handleTouchMove);
+    document.addEventListener('touchstart', handleTouchStart);
+    return function cleanup() {
+        document.removeEventListener('keydown', handleKeydown);
+        document.removeEventListener('wheel', handleWheel);
+        document.removeEventListener('click', handleEvent);
+        document.removeEventListener('mousemove', handleEvent);
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('touchstart', handleTouchStart)
+    }
+}
+
+export function updateContent(contents) {
+    const mainContainers = document.querySelectorAll('.main-container');
+    mainContainers.forEach((mainContainer, id) => {
+        if (contents[id]) {
+            mainContainer.innerHTML = '';
+            mainContainer.insertAdjacentHTML('beforeend', contents[id])
+        }
+    })
+}
+
+let mouseX = 0;
+let mouseY = 0;
+
+document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+});
 
 export async function fetchWithRandom(url, options = {}) {
     const randomParam = Math.random().toString(36).substring(2);
@@ -77,6 +515,8 @@ export async function getFirebaseModules(useCache = false) {
         sendEmailVerification,
         sendPasswordResetEmail,
         signInWithPopup,
+        signInWithRedirect,
+        signInWithCredential,
         signInWithEmailAndPassword,
         createUserWithEmailAndPassword,
         onAuthStateChanged,
@@ -108,6 +548,8 @@ export async function getFirebaseModules(useCache = false) {
         sendEmailVerification,
         sendPasswordResetEmail,
         signInWithPopup,
+        signInWithRedirect,
+        signInWithCredential,
         signInWithEmailAndPassword,
         createUserWithEmailAndPassword,
         onAuthStateChanged,
@@ -251,35 +693,54 @@ export function setUser(userDoc) {
         } else {
             credits.textContent = 'No Credits';
         }
-        if (userDoc.deadline) {
-            const deadline = new Date(userDoc.deadline.seconds * 1000 + (userDoc.deadline.nanoseconds || 0) / 1000000);
+
+        const deadlines = [userDoc.deadline, userDoc.deadlineDF, userDoc.deadlineDV, userDoc.deadlineDA, userDoc.deadlineDN].filter(Boolean);
+
+        if (deadlines.length) {
+            const getDeadlineDate = d => new Date(d.seconds * 1000 + (d.nanoseconds || 0) / 1000000);
             const now = new Date();
-            const timeDiff = deadline.getTime() - now.getTime();
-            if (timeDiff > 0) {
+
+            let maxDeadline = null;
+            let maxTimeDiff = -Infinity;
+
+            for (const d of deadlines) {
+                const deadlineDate = getDeadlineDate(d);
+                const timeDiff = deadlineDate.getTime() - now.getTime();
+                if (timeDiff > maxTimeDiff) {
+                    maxTimeDiff = timeDiff;
+                    maxDeadline = deadlineDate;
+                }
+            }
+
+            if (maxTimeDiff > 0) {
                 const minuteInMs = 1000 * 60;
                 const hourInMs = minuteInMs * 60;
                 const dayInMs = hourInMs * 24;
                 const yearInMs = dayInMs * 365;
                 const monthInMs = dayInMs * 30;
-                const years = Math.floor(timeDiff / yearInMs);
-                const months = Math.floor((timeDiff % yearInMs) / monthInMs);
-                const days = Math.floor((timeDiff % monthInMs) / dayInMs);
-                const hours = Math.floor((timeDiff % dayInMs) / hourInMs);
-                const minutes = Math.floor((timeDiff % hourInMs) / minuteInMs);
+
+                const years = Math.floor(maxTimeDiff / yearInMs);
+                const months = Math.floor((maxTimeDiff % yearInMs) / monthInMs);
+                const days = Math.floor((maxTimeDiff % monthInMs) / dayInMs);
+                const hours = Math.floor((maxTimeDiff % dayInMs) / hourInMs);
+                const minutes = Math.floor((maxTimeDiff % hourInMs) / minuteInMs);
+
                 let remainingTime = '';
                 if (years > 5) {
-                    remainingTime = 'lifetime'
+                    remainingTime = 'lifetime';
                 } else {
                     if (years > 0) remainingTime += `${years} year${years > 1 ? 's' : ''} `;
                     if (months > 0) remainingTime += `${months} month${months > 1 ? 's' : ''} `;
                     if (days > 0) remainingTime += `${days} day${days > 1 ? 's' : ''} `;
                     if (days === 0 && hours > 0) remainingTime += `${hours} hour${hours > 1 ? 's' : ''} `;
                     if (days === 0 && hours === 0 && minutes > 0) remainingTime += `${minutes} minute${minutes > 1 ? 's' : ''}`;
-                    remainingTime = remainingTime.trim() + ' remaining'
+                    remainingTime = remainingTime.trim() + ' remaining';
                 }
-                credits.textContent += ` (${remainingTime})`
+
+                credits.textContent += ` (${remainingTime})`;
             }
         }
+
     }
     const usernames = document.getElementsByClassName('username');
     for (let username of usernames) {
@@ -315,6 +776,9 @@ export function retrieveImageFromURL(photoURL, callback, retries = 2, delay = 10
 }
 export function handleImageUpload(imgElementId, storageKey) {
     const imgElement = document.getElementById(imgElementId);
+    if (!imgElement)
+        return;
+
     imgElement.addEventListener('click', function () {
         const inputElement = document.createElement("input");
         inputElement.type = "file";
@@ -361,6 +825,7 @@ async function fetchWithTimeout(url, timeout, controller) {
 }
 export async function getUserInternetProtocol() {
     const urls = [
+        'https://api.ipapi.is/',
         'https://ipapi.is/json/',
         'https://ipinfo.io/json',
         'https://api64.ipify.org?format=json',
@@ -426,28 +891,32 @@ export async function createStaticIdentifier(jsonData) {
         return null
     }
 }
-export function getPageName() {
-    const url = window.location.pathname;
-    const pathArray = url.split('/');
-    return pathArray[pathArray.length - 1] || 'default'
-}
-export const pageName = getPageName();
 
-function documentID() {
+export function serverID() {
     switch (pageName) {
         case 'face-swap':
-            return 'serverAdress-DF';
+            return 'DF';
         case 'inpaint':
-            return 'serverAdress-DN';
+            return 'DN';
         case 'art-generator':
-            return 'serverAdress-DA';
+            return 'DA';
+        case 'video-generator':
+            return 'DV';
         default:
             return null
     }
 }
+export function documentID() {
+    const serverId = serverID();
+    if (!serverId)
+        return null;
+
+    return 'serverAdress-' + serverId;
+}
+
 export async function fetchServerAddresses(snapshotPromise, keepSlowServers = true, serverType = null) {
     const ttl = 1 * 60 * 60 * 1000;
-    const cacheKey = `${pageName}-serverAddresses`;
+    const cacheKey = `${pageName}-serverAddresses-${version}`;
 
     let cachedAddresses = getCache(cacheKey, ttl);
     if (cachedAddresses &&
@@ -480,7 +949,7 @@ export async function fetchServerAddresses(snapshotPromise, keepSlowServers = tr
 }
 export async function fetchServerAddress(snapshotPromise, fieldId) {
     const ttl = 1 * 60 * 60 * 1000;
-    const cacheKey = `serverAddress-${fieldId}`;
+    const cacheKey = `serverAddress-${fieldId}-${version}`;
     const cachedAddress = getCache(cacheKey, ttl);
 
     if (cachedAddress) {
@@ -523,22 +992,12 @@ export async function fetchConversionRates() {
         }
     }
 }
-export function generateUID() {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789%^&*()_-+=';
-    let uniqueId = '';
-    for (let i = 0; i < 24; i++) {
-        const randomIndex = Math.floor(Math.random() * characters.length);
-        uniqueId += characters.charAt(randomIndex);
-    }
-    return uniqueId;
-}
-
 function checkIfCameFromAd() {
     const urlParams = new URLSearchParams(window.location.search);
     const adParams = [
         'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
         'gclid', 'fbclid', 'gad_source', 'gbraid', 'utm_id', 'adgroup', 'ref', 'affid',
-        'ttclid', 'li_fat_id', 'wbraid', 'ads'
+        'ttclid', 'li_fat_id', 'wbraid', 'ads', 'via'
     ];
 
     const adData = [];
@@ -562,6 +1021,7 @@ function isValidString(value) {
 
 export async function ensureCameFromAd() {
     const userDoc = await getUserDoc();
+
     let cameFromAd = localStorage.getItem('cameFromAd');
     if (!cameFromAd || cameFromAd === 'false' || !isValidString(cameFromAd)) 
         cameFromAd = await loadEvercookieCameFromAd(userDoc);
@@ -571,7 +1031,7 @@ export async function ensureCameFromAd() {
 
     const userData = await getUserData();
     if (!userData || !userData.uid) return;
-    if (!userDoc || userDoc.cameFromAd)  return;
+    if (!userDoc || userDoc.cameFromAd) return;
     
     const serverDocSnapshot = await getDocSnapshot('servers', '3050-1');
     const serverAddressAPI = await fetchServerAddress(serverDocSnapshot, 'API');
@@ -590,9 +1050,10 @@ export async function ensureCameFromAd() {
         await setCurrentUserDoc(getDocSnapshot);
 }
 async function loadEvercookieCameFromAd(userDoc) {
-    localStorage.setItem('cameFromAd', checkIfCameFromAd());
-    if (!userDoc)
+    if (userDoc)
         return;
+
+    localStorage.setItem('cameFromAd', checkIfCameFromAd());
 
     try {
         await loadJQueryAndEvercookie();
@@ -633,18 +1094,27 @@ export async function ensureUniqueId() {
         try {
             storedUniqueId = JSON.parse(storedUniqueId);
         } catch (e) {
+            console.error('Error parsing storedUniqueId:', e);
             storedUniqueId = null;
         }
     }
 
-    if (storedUniqueId && storedUniqueId.length > 0)
+    if (storedUniqueId && storedUniqueId.length > 0) {
         uniqueIdArray = normalizeUniqueId(storedUniqueId);
+    }
+
+    window.addEventListener('storage', (event) => {
+        if (event.key === 'userUniqueBrowserId' && event.newValue === null) {
+            localStorage.setItem('userUniqueBrowserId', JSON.stringify(uniqueIdArray));
+        }
+    });
 
     if (!uniqueIdArray || uniqueIdArray.length <= 0 || uniqueIdArray.some(id => id.length !== 24)) {
         uniqueIdArray = await loadEvercookieUserUniqueBrowserId();
 
-        if (storedUniqueId && storedUniqueId.length > 0)
+        if (storedUniqueId && storedUniqueId.length > 0) {
             uniqueIdArray = normalizeUniqueId(storedUniqueId);
+        }
 
         try {
             const userData = await getUserData();
@@ -673,17 +1143,28 @@ export async function ensureUniqueId() {
             }
 
             await setCurrentUserDoc(getDocSnapshot);
-        } catch (error) { }
-
-        return uniqueIdArray;
+        } catch (error) {
+            console.error('Error in ensureUniqueId:', error);
+        }
     }
 
     return uniqueIdArray;
 }
 
+export function generateUID() {
+    //console.log('generateUID called');
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789%^&*()_-+=';
+    let uniqueId = '';
+    for (let i = 0; i < 24; i++) {
+        const randomIndex = Math.floor(Math.random() * characters.length);
+        uniqueId += characters.charAt(randomIndex);
+    }
+    return uniqueId;
+}
 
 async function loadEvercookieUserUniqueBrowserId() {
     const generatedId = generateUID();
+
     await loadJQueryAndEvercookie();
     const ec = new evercookie();
 
@@ -697,6 +1178,7 @@ async function loadEvercookieUserUniqueBrowserId() {
                 try {
                     storedUniqueId = JSON.parse(storedUniqueId);
                 } catch (e) {
+                    console.error('Error parsing storedUniqueId:', e);
                     storedUniqueId = null;
                 }
             }
@@ -715,26 +1197,38 @@ async function loadEvercookieUserUniqueBrowserId() {
 
             try {
                 const userDoc = await getUserDoc();
-                const newUniqueId = userDoc && userDoc.uniqueId && (
-                    (Array.isArray(userDoc.uniqueId) ? userDoc.uniqueId.length !== 0 : userDoc.uniqueId.length === 24)
-                )
-                    ? (Array.isArray(userDoc.uniqueId) ? userDoc.uniqueId : [userDoc.uniqueId])
-                    : generatedId;
+
+                let newUniqueId;
+
+                if (userDoc && userDoc.uniqueId) {
+                    if (Array.isArray(userDoc.uniqueId)) {
+                        newUniqueId = userDoc.uniqueId.length !== 0 ? userDoc.uniqueId : generatedId;
+                    } else if (userDoc.uniqueId.length === 24) {
+                        newUniqueId = [userDoc.uniqueId];
+                    } else {
+                        newUniqueId = Array.isArray(generatedId) ? generatedId : [generatedId];
+                    }
+                } else {
+                    newUniqueId = Array.isArray(generatedId) ? generatedId : [generatedId];
+                }
+
+                if (!newUniqueId || !newUniqueId.length) {
+                    newUniqueId = Array.isArray(generatedId) ? generatedId : [generatedId];
+                }
 
                 if (newUniqueId) {
                     let uniqueIdArray = normalizeUniqueId(newUniqueId);
                     if (uniqueIdArray && Array.isArray(uniqueIdArray) && uniqueIdArray.length > 0) {
                         storeUniqueId(uniqueIdArray);
                         resolve(uniqueIdArray);
-                    }
-                    else {
+                    } else {
                         resolve(null);
                     }
-                }
-                else {
+                } else {
                     resolve(null);
                 }
             } catch (error) {
+                console.error('Error in loadEvercookieUserUniqueBrowserId:', error);
                 resolve(null);
             }
         });
@@ -744,7 +1238,7 @@ async function loadEvercookieUserUniqueBrowserId() {
 function loadEvercookieScript() {
     return new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = `/libraries/evercookie/evercookie3.js?v=${version}`;
+        script.src = `/libraries/evercookie/evercookie.js?v=${version}`;
         script.onload = () => {
             resolve();
         };
@@ -861,7 +1355,6 @@ function configureGtag() {
     isGtagConfigured = true;
 }
 
-
 function createNotificationsContainer() {
     let container = document.getElementById('notification');
     if (!container) {
@@ -926,25 +1419,104 @@ export function showNotification(message, featureChange, type) {
         }, waitTime)
     }, 250);
 }
-export const openDB = (dataBaseIndexName, dataBaseObjectStoreName) => {
+export const openDB = (databaseName, dataBaseObjectStoreName) => {
     return new Promise((resolve, reject) => {
-        const request = indexedDB.open(dataBaseIndexName, 1);
+        // Preliminary check: is IndexedDB available?
+        if (!window.indexedDB) {
+            return reject(
+                "IndexedDB is not supported or has been disabled (this may be due to incognito mode or a browser extension)."
+            );
+        }
+
+        // Optionally check storage quota
+        if (navigator.storage && navigator.storage.estimate) {
+            navigator.storage.estimate().then(({ usage, quota }) => {
+                if (usage && quota && usage / quota > 0.95) {
+                    console.warn(
+                        "Warning: Your storage usage is nearing the quota. Database operations might fail."
+                    );
+                }
+            });
+        }
+
+        // Open the database
+        const request = indexedDB.open(databaseName, 1);
+
         request.onupgradeneeded = (event) => {
             const db = event.target.result;
-            db.createObjectStore(dataBaseObjectStoreName, {
-                keyPath: 'id',
-                autoIncrement: !0
-            })
+            // Create the object store only if it does not exist
+            if (!db.objectStoreNames.contains(dataBaseObjectStoreName)) {
+                db.createObjectStore(dataBaseObjectStoreName, {
+                    keyPath: "id",
+                    autoIncrement: true,
+                });
+            }
         };
+
         request.onsuccess = (event) => {
-            const db = event.target.result;
-            resolve(db)
+            resolve(event.target.result);
         };
+
         request.onerror = (event) => {
-            reject(`Error opening database: ${event.target.error}`)
-        }
-    })
+            const error = event.target.error;
+            console.error("Error opening DB:", error);
+
+            // Check for corrupted database error message
+            if (
+                error.message &&
+                error.message.includes("Internal error opening backing store")
+            ) {
+                const shouldClear = confirm(
+                    "The database appears to be corrupted. Would you like to clear the stored data and try again?"
+                );
+                if (shouldClear) {
+                    // Delete the corrupted database
+                    const deleteRequest = indexedDB.deleteDatabase(databaseName);
+                    deleteRequest.onsuccess = () => {
+                        console.log("Corrupted database deleted. Retrying...");
+                        // Retry opening the database
+                        const retryRequest = indexedDB.open(databaseName, 1);
+                        retryRequest.onupgradeneeded = (event) => {
+                            const db = event.target.result;
+                            db.createObjectStore(dataBaseObjectStoreName, {
+                                keyPath: "id",
+                                autoIncrement: true,
+                            });
+                        };
+                        retryRequest.onsuccess = (event) => {
+                            resolve(event.target.result);
+                        };
+                        retryRequest.onerror = (event) => {
+                            reject(
+                                `Error reopening database after deletion: ${event.target.error}`
+                            );
+                        };
+                    };
+                    deleteRequest.onerror = (event) => {
+                        reject(
+                            `Error deleting corrupted database: ${event.target.error}`
+                        );
+                    };
+                } else {
+                    reject("Database is corrupted and the user opted not to clear it.");
+                }
+            }
+            // Check for quota exceeded errors
+            else if (error.name === "QuotaExceededError") {
+                reject("Storage quota exceeded. Please clear some space and try again.");
+            }
+            // Check for security errors (which may be caused by incognito mode or cross-origin issues)
+            else if (error.name === "SecurityError") {
+                reject(
+                    "Security error: IndexedDB might be disabled due to incognito mode, cross-origin restrictions, or browser settings."
+                );
+            } else {
+                reject(`Error opening database: ${error.message || error}`);
+            }
+        };
+    });
 };
+
 export const countInDB = (db) => {
     return new Promise((resolve, reject) => {
         const transaction = db.transaction([db.objectStoreNames[0]], 'readonly');
@@ -1064,113 +1636,154 @@ export async function checkServerQueue(server, getSecond = false) {
         return Infinity;
     }
 }
-export function calculateMetadata(element, callback) {
-    if (!(element instanceof HTMLVideoElement || element instanceof HTMLImageElement)) {
-        alert('Element is not a video or image.');
-        return;
-    }
-
-    if (element.getAttribute('data-fps') > 0) 
-        return;
-
-    if (element instanceof HTMLVideoElement) {
-        let lastMediaTime = 0;
-        let lastFrameNum = 0;
-        const fpsBuffer = [];
-        const BUFFER_SIZE = 30;
-        let frameNotSeeked = true;
-        let lastFps = 0;
-        let stableFrameCount = 0;
-        const STABLE_THRESHOLD = 30;
-        let callbackId = null;
-        function getFpsAverage() {
-            if (fpsBuffer.length === 0) return 0;
-            const averageInterval = fpsBuffer.reduce((a, b) => a + b, 0) / fpsBuffer.length;
-            return Math.round(1 / averageInterval);
+export function calculateMetadata(element, metadataCallback) {
+    return new Promise((resolve, reject) => {
+        if (!(element instanceof HTMLVideoElement || element instanceof HTMLImageElement)) {
+            reject(new Error('Element is not a video or image.'));
+            return;
         }
-        function calculateFps(metadata) {
-            const mediaTimeDiff = Math.abs(metadata.mediaTime - lastMediaTime);
-            const frameNumDiff = metadata.presentedFrames - lastFrameNum;
-            if (frameNumDiff > 0 && mediaTimeDiff > 0) {
-                const frameDuration = mediaTimeDiff / frameNumDiff;
-                if (element.playbackRate === 1 && frameNotSeeked) {
-                    if (fpsBuffer.length >= BUFFER_SIZE) {
-                        fpsBuffer.shift();
-                    }
-                    fpsBuffer.push(frameDuration);
+
+        function getVideoIdentifier(videoElement) {
+            return videoElement.getAttribute('timestamp') + "_" + videoElement.getAttribute('id');
+        }
+
+        if (element instanceof HTMLVideoElement) {
+            const videoIdentifier = getVideoIdentifier(element);
+            const localStorageKey = videoIdentifier ? videoIdentifier + '_fps' : null;
+
+            // Use stored FPS if available.
+            if (localStorageKey) {
+                const storedFps = localStorage.getItem(localStorageKey);
+                if (storedFps && parseInt(storedFps, 10) > 0) {
+                    element.setAttribute('data-fps', storedFps);
+                    metadataCallback(parseInt(storedFps, 10), element.duration);
+                    resolve(parseInt(storedFps, 10));
+                    return;
                 }
             }
-            lastMediaTime = metadata.mediaTime;
-            lastFrameNum = metadata.presentedFrames;
-            frameNotSeeked = true;
-        }
-        function ticker(_, metadata) {
-            calculateFps(metadata);
-            const fps = getFpsAverage();
-            if (fps === lastFps && fps !== 0) {
-                stableFrameCount++;
-            } else {
-                stableFrameCount = 0;
-            }
-            lastFps = fps;
-            const data = {
-                fps,
-                resolution: {
-                    width: element.videoWidth,
-                    height: element.videoHeight
-                },
-                duration: element.duration,
-                currentTime: element.currentTime,
-                playbackRate: element.playbackRate,
-                volume: element.volume,
-                muted: element.muted,
-                paused: element.paused,
-                ended: element.ended,
-                buffered: element.buffered,
-                seekable: element.seekable,
-                networkState: element.networkState,
-                readyState: element.readyState,
-                src: element.src,
-                mediaTime: metadata.mediaTime,
-                presentedFrames: metadata.presentedFrames
-            };
-            callback(data);
-            if (fps > 0) 
-                element.setAttribute('data-fps', fps);
-            
-            if (stableFrameCount >= STABLE_THRESHOLD) 
-                return;
 
-            callbackId = element.requestVideoFrameCallback(ticker);
+            if (element.getAttribute('data-fps') > 0) {
+                const fpsVal = parseInt(element.getAttribute('data-fps'), 10);
+                if (localStorageKey) {
+                    localStorage.setItem(localStorageKey, fpsVal);
+                }
+                metadataCallback(fpsVal, element.duration);
+                resolve(fpsVal);
+                return;
+            }
+
+            let lastMediaTime = 0;
+            let lastFrameNum = 0;
+            const fpsBuffer = [];
+            const BUFFER_SIZE = 30;
+            let frameNotSeeked = true;
+            let lastFps = 0;
+            let stableFrameCount = 0;
+            const STABLE_THRESHOLD = 30;
+            let callbackId = null;
+
+            function getFpsAverage() {
+                if (fpsBuffer.length === 0) return 0;
+                const averageInterval = fpsBuffer.reduce((a, b) => a + b, 0) / fpsBuffer.length;
+                return Math.round(1 / averageInterval);
+            }
+
+            function calculateFps(metadata) {
+                const mediaTimeDiff = Math.abs(metadata.mediaTime - lastMediaTime);
+                const frameNumDiff = metadata.presentedFrames - lastFrameNum;
+                if (frameNumDiff > 0 && mediaTimeDiff > 0) {
+                    const frameDuration = mediaTimeDiff / frameNumDiff;
+                    if (element.playbackRate === 1 && frameNotSeeked) {
+                        if (fpsBuffer.length >= BUFFER_SIZE) {
+                            fpsBuffer.shift();
+                        }
+                        fpsBuffer.push(frameDuration);
+                    }
+                }
+                lastMediaTime = metadata.mediaTime;
+                lastFrameNum = metadata.presentedFrames;
+                frameNotSeeked = true;
+            }
+
+            function ticker(_, metadata) {
+                calculateFps(metadata);
+                const fps = getFpsAverage();
+                if (fps > 0) {
+                    element.setAttribute('data-fps', fps);
+                    metadataCallback(fps, element.duration);
+                }
+                if (fps === lastFps && fps !== 0) {
+                    stableFrameCount++;
+                } else {
+                    stableFrameCount = 0;
+                }
+                lastFps = fps;
+                if (stableFrameCount >= STABLE_THRESHOLD) {
+                    if (localStorageKey) {
+                        localStorage.setItem(localStorageKey, fps);
+                    }
+                    resolve(fps);
+                    return;
+                }
+                callbackId = element.requestVideoFrameCallback(ticker);
+            }
+
+            function cleanup() {
+                if (callbackId) {
+                    element.cancelVideoFrameCallback(callbackId);
+                }
+                element.removeEventListener('seeked', onSeek);
+                element.onloadedmetadata = null;
+                element.onerror = null;
+            }
+
+            function onSeek() {
+                if (element.getAttribute('data-fps') > 0) return;
+                fpsBuffer.length = 0;
+                stableFrameCount = 0;
+                frameNotSeeked = false;
+            }
+
+            element.addEventListener('seeked', onSeek);
+
+            element.onloadedmetadata = function () {
+                if (element.getAttribute('data-fps') > 0) {
+                    const fpsVal = parseInt(element.getAttribute('data-fps'), 10);
+                    if (localStorageKey) {
+                        localStorage.setItem(localStorageKey, fpsVal);
+                    }
+                    metadataCallback(fpsVal, element.duration);
+                    resolve(fpsVal);
+                    return;
+                }
+                callbackId = element.requestVideoFrameCallback(ticker);
+                element.play().catch(error =>
+                    reject(new Error('Playback failed: ' + error.message))
+                );
+            };
+
+            element.onerror = function () {
+                cleanup();
+                reject(new Error('An error occurred during video playback.'));
+            };
+        } else if (element instanceof HTMLImageElement) {
+            element.onload = function () {
+                const result = {
+                    resolution: {
+                        width: element.naturalWidth,
+                        height: element.naturalHeight
+                    },
+                    src: element.src,
+                };
+                if (metadataCallback)
+                    metadataCallback(result);
+                resolve(result);
+            };
+            element.onerror = function () {
+                reject(new Error('An error occurred while loading the image.'));
+            };
         }
-        element.addEventListener('seeked', function () {
-            fpsBuffer.length = 0;
-            stableFrameCount = 0;
-            frameNotSeeked = false;
-        });
-        element.onloadedmetadata = function () {
-            callbackId = element.requestVideoFrameCallback(ticker);
-            element.play().catch(error => {
-                alert('Playback failed: ' + error.message);
-            });
-        };
-        element.onerror = function () {
-            alert('An error occurred during video playback.');
-        };
-    } else if (element instanceof HTMLImageElement) {
-        element.onload = function () {
-            callback({
-                resolution: {
-                    width: element.naturalWidth,
-                    height: element.naturalHeight
-                },
-                src: element.src,
-            });
-        };
-        element.onerror = function () {
-            alert('An error occurred while loading the image.');
-        };
-    }
+    });
 }
 export async function customFetch(url, options, onProgress) {
     if (typeof onProgress !== 'function') return fetchWithRandom(url, options);
@@ -1203,6 +1816,597 @@ export async function customFetch(url, options, onProgress) {
         xhr.send(options.body)
     })
 }
+
+async function displayStoredData(element, dataBaseObjectStoreName) {
+    if (pageName !== 'face-swap' && pageName !== 'video-generator')
+        return;
+
+    if (!element) {
+        const existingTimeline = document.querySelector(`.${dataBaseObjectStoreName}_timelineContainer`);
+        if (existingTimeline)
+            existingTimeline.remove();
+
+        [`${dataBaseObjectStoreName}_leftClampHandle`, `${dataBaseObjectStoreName}_midHandle`, `${dataBaseObjectStoreName}_rightClampHandle`].forEach((handle) => {
+            const existingHandle = document.querySelector(`[data-frame][data-handle="${handle}"]`);
+            if (existingHandle) {
+                existingHandle.remove();
+            }
+        });
+
+        const beforeInputInit = document.getElementById(`${dataBaseObjectStoreName}_beforeInit`);
+        if (beforeInputInit) 
+            beforeInputInit.style.display = 'flex';
+
+        const afterInitContainer = document.getElementById(`${dataBaseObjectStoreName}_afterInit`);
+        if (afterInitContainer) {
+            afterInitContainer.innerHTML = '';
+            afterInitContainer.style.display = 'none';
+        }
+        return;
+    }
+
+    // Assume these are defined somewhere:
+    const videoElement = element.querySelector('video');
+    const imgElement = element.querySelector('img');
+    const targetElement = videoElement || imgElement;
+    const isVideo = !!videoElement;
+    let fps = 0;
+    if (isVideo)
+        fps = videoElement.getAttribute('data-fps');
+    let container, fgClone, bgClone;
+    function createClonedInput(maxRetries = 3, retryDelay = 1000) {
+        let retries = 0;
+
+        function attemptInputLoad() {
+            container = document.createElement('div');
+            container.style.position = 'relative';
+            container.style.width = '100%';
+            container.style.height = '100%';
+            container.style.overflow = 'hidden';
+
+            // Create foreground clone (object-fit: contain)
+            fgClone = targetElement.cloneNode(true);
+            fgClone.style.position = 'absolute';
+            fgClone.style.top = '0';
+            fgClone.style.left = '0';
+            fgClone.style.width = '100%';
+            fgClone.style.height = '100%';
+            fgClone.style.objectFit = 'contain';
+            fgClone.style.display = 'block';
+            fgClone.style.borderRadius = 'var(--border-radius)';
+            fgClone.style.zIndex = '2';
+            if (isVideo) {
+                fgClone.controls = false;
+                fgClone.autoplay = false;
+                fgClone.loop = false;
+                fgClone.muted = false;
+                fgClone.playsInline = true;
+                fgClone.addEventListener('error', handleError);
+                fgClone.pause();
+                fgClone.setAttribute('query', `${dataBaseObjectStoreName}_videoContainer`);
+            } else {
+                fgClone.setAttribute('query', `${dataBaseObjectStoreName}_imgContainer`);
+            }
+
+            // Create background clone (blurred fill)
+            bgClone = targetElement.cloneNode(true);
+            bgClone.style.position = 'absolute';
+            bgClone.style.top = '0';
+            bgClone.style.left = '0';
+            bgClone.style.width = '100%';
+            bgClone.style.height = '100%';
+            bgClone.style.objectFit = 'cover';
+            bgClone.style.filter = 'blur(20px)';
+            bgClone.style.transform = 'scale(1.1)';
+            bgClone.style.zIndex = '1';
+            if (isVideo) {
+                bgClone.controls = false;
+                bgClone.autoplay = false;
+                bgClone.loop = false;
+                bgClone.muted = false;
+                bgClone.playsInline = true;
+                bgClone.addEventListener('error', handleError);
+                bgClone.pause();
+            }
+
+            container.appendChild(bgClone);
+            container.appendChild(fgClone);
+
+            if (isVideo) {
+                const isPlaying = video =>
+                    !!(video.currentTime > 0 && !video.paused && !video.ended && video.readyState >= 2);
+
+                if (isPlaying(fgClone)) {
+                    bgClone.currentTime = fgClone.currentTime;
+                    bgClone.play();
+                } else {
+                    bgClone.pause();
+                }
+
+                fgClone.addEventListener('play', () => {
+                    bgClone.currentTime = fgClone.currentTime;
+                    bgClone.play();
+                });
+
+                fgClone.addEventListener('pause', () => {
+                    bgClone.pause();
+                });
+
+                fgClone.addEventListener('seeking', () => {
+                    bgClone.currentTime = fgClone.currentTime;
+                });
+
+                fgClone.addEventListener('timeupdate', () => {
+                    const timeDifference = Math.abs(fgClone.currentTime - bgClone.currentTime);
+                    if (timeDifference > 0.1) {
+                        bgClone.currentTime = fgClone.currentTime;
+                    }
+                });
+            }
+        }
+
+        function handleError() {
+            if (retries < maxRetries) {
+                retries++;
+                showNotification(
+                    `Media could not be loaded. Retrying... (${retries}/${maxRetries})`,
+                    'Multi Face Swap',
+                    'default'
+                );
+                setTimeout(attemptInputLoad, retryDelay);
+            } else {
+                showNotification(
+                    'Failed to load media after multiple attempts.',
+                    'Multi Face Swap',
+                    'error'
+                );
+            }
+        }
+
+        attemptInputLoad();
+        return container;
+    }
+
+    async function replaceInput() {
+        const existingTimeline = document.querySelector(`.${dataBaseObjectStoreName}_timelineContainer`);
+        if (existingTimeline) 
+            existingTimeline.remove();
+        
+        // Remove clamp handles
+        [`${dataBaseObjectStoreName}_leftClampHandle`, `${dataBaseObjectStoreName}_midHandle`, `${dataBaseObjectStoreName}_rightClampHandle`].forEach((handle) => {
+            const existingHandle = document.querySelector(`[data-frame][data-handle="${handle}"]`);
+            if (existingHandle) {
+                existingHandle.remove();
+            }
+        });
+
+        const beforeInputInit = document.getElementById(`${dataBaseObjectStoreName}_beforeInit`);
+        if (beforeInputInit) 
+            beforeInputInit.style.display = 'none';
+        
+        // Create a new cloned input container
+        container = createClonedInput();
+
+        const afterInitContainer = document.getElementById(`${dataBaseObjectStoreName}_afterInit`);
+        if (afterInitContainer) {
+            afterInitContainer.innerHTML = '';
+            afterInitContainer.appendChild(container);
+            afterInitContainer.style.display = 'flex';
+        }
+    }
+
+    async function initInput() {
+        fgClone.addEventListener('error', () => {
+            alert(isVideo ? 'Video failed to load.' : 'Image failed to load.');
+        });
+
+        if (isVideo) {
+            function updateSlider(video) {
+                const updateInterval = setInterval(() => {
+                    if (video.paused || video.ended) {
+                        clearInterval(updateInterval);
+                        return;
+                    }
+                }, 1000 / fps);
+            }
+
+            let isPlaying = false;
+            fgClone.addEventListener('click', () => {
+                if (isPlaying) {
+                    fgClone.pause();
+                } else {
+                    fgClone.play();
+                    updateSlider(fgClone);
+                }
+                isPlaying = !isPlaying;
+            });
+        }
+    }
+
+    // Replace the input and initialize the clones.
+    await replaceInput();
+    await initInput();
+
+    // If this is a video, create the timeline with a draggable handle.
+    if (isVideo) {
+        function generateTimeline() {
+            // Helper: format seconds to mm:ss
+            function formatTime(seconds) {
+                const m = Math.floor(seconds / 60).toString().padStart(2, "0");
+                const s = Math.floor(seconds % 60).toString().padStart(2, "0");
+                return `${m}:${s}`;
+            }
+
+            // Use a default frame rate if fps is not defined.
+            const frameRate = typeof fps !== "undefined" ? fps : 30;
+
+            // Create timeline container
+            const timelineContainer = document.createElement("div");
+            timelineContainer.classList.add(`${dataBaseObjectStoreName}_timelineContainer`);
+            timelineContainer.style.position = "absolute";
+            timelineContainer.style.bottom = "2vh"; // margin from bottom
+            timelineContainer.style.left = "0";
+            timelineContainer.style.width = "calc(100% - 4vh)";
+            timelineContainer.style.height = "4vh";
+            timelineContainer.style.background = "rgba(0, 0, 0, 0.5)";
+            timelineContainer.style.zIndex = "3";
+            timelineContainer.style.overflow = "hidden";
+            timelineContainer.style.border = "var(--border) solid";
+            timelineContainer.style.borderColor = "rgba(var(--white),255)";
+            timelineContainer.style.borderRadius = "4vh";
+            timelineContainer.style.marginLeft = "2vh";
+            timelineContainer.style.marginRight = "2vh";
+            timelineContainer.style.cursor = "pointer";
+            container.appendChild(timelineContainer);
+
+            // Create rail container to hold thumbnails.
+            const rail = document.createElement("div");
+            rail.style.position = "absolute";
+            rail.style.top = "0";
+            rail.style.left = "0";
+            rail.style.width = "100%";
+            rail.style.height = "100%";
+            rail.style.display = "flex";
+            rail.style.justifyContent = "space-between";
+            rail.style.alignItems = "center";
+            rail.style.overflow = "hidden";
+            timelineContainer.appendChild(rail);
+
+            // Create overlay elements for clamped areas.
+            const leftOverlay = document.createElement("div");
+            leftOverlay.style.position = "absolute";
+            leftOverlay.style.top = "0";
+            leftOverlay.style.left = "0";
+            leftOverlay.style.height = "100%";
+            leftOverlay.style.width = "0px"; // updated dynamically
+            leftOverlay.style.pointerEvents = "none";
+            leftOverlay.style.backdropFilter = "blur(5px)";
+            leftOverlay.style.webkitBackdropFilter = "blur(5px)";
+            leftOverlay.style.zIndex = "3.5";
+            leftOverlay.style.borderTopLeftRadius = timelineContainer.style.borderRadius;
+            leftOverlay.style.borderBottomLeftRadius = timelineContainer.style.borderRadius;
+            leftOverlay.style.overflow = "hidden";
+            timelineContainer.appendChild(leftOverlay);
+
+            const rightOverlay = document.createElement("div");
+            rightOverlay.style.position = "absolute";
+            rightOverlay.style.top = "0";
+            rightOverlay.style.right = "0";
+            rightOverlay.style.height = "100%";
+            rightOverlay.style.width = "0px"; // updated dynamically
+            rightOverlay.style.pointerEvents = "none";
+            rightOverlay.style.backdropFilter = "blur(5px)";
+            rightOverlay.style.webkitBackdropFilter = "blur(5px)";
+            rightOverlay.style.zIndex = "3.5";
+            rightOverlay.style.borderTopRightRadius = timelineContainer.style.borderRadius;
+            rightOverlay.style.borderBottomRightRadius = timelineContainer.style.borderRadius;
+            rightOverlay.style.overflow = "hidden";
+            timelineContainer.appendChild(rightOverlay);
+
+            // Helper to create a draggable handle.
+            function createHandle(dataHandle, bgColor) {
+                const handle = document.createElement("div");
+                handle.dataset.handle = dataHandle;
+                handle.style.position = "fixed";
+                handle.style.display = "flex";
+                handle.style.opacity = bgColor === "green" ? "1.0" : "0.0";
+                handle.style.flexDirection = "column";
+                handle.style.alignItems = "center";
+                handle.style.transform = "translate(-50%, -50%)";
+                handle.style.zIndex = "4";
+                handle.style.width = "1vh";
+                handle.style.height = timelineContainer.style.height;
+                handle.style.backgroundColor = bgColor;
+                handle.style.border = "var(--border) solid";
+                handle.style.borderColor = "rgba(var(--white),255)";
+                handle.style.borderRadius = timelineContainer.style.borderRadius;
+                handle.setAttribute("data-frame", "0");
+                handle.setAttribute("tooltip", "");
+                const tooltip = document.createElement("div");
+                tooltip.className = "tooltip tooltip-fast";
+                tooltip.innerText = "00:00 / 00:00";
+                handle.appendChild(tooltip);
+                document.body.appendChild(handle);
+                return handle;
+            }
+
+            // Create handles.
+            const leftClampHandle = createHandle(`${dataBaseObjectStoreName}_leftClampHandle`, "red");
+            const midHandle = createHandle(`${dataBaseObjectStoreName}_midHandle`, "green");
+            const rightClampHandle = createHandle(`${dataBaseObjectStoreName}_rightClampHandle`, "red");
+
+            // Create an offscreen video element (used here only to get videoDuration).
+            const offscreenVideo = document.createElement("video");
+            offscreenVideo.src =
+                fgClone.currentSrc ||
+                (fgClone.querySelector("source") && fgClone.querySelector("source").src);
+            offscreenVideo.muted = true;
+            offscreenVideo.playsInline = true;
+            offscreenVideo.style.display = "none";
+            document.body.appendChild(offscreenVideo);
+
+            let videoDuration = 0;
+
+            // Helpers to update handle frame and tooltip.
+            function updateHandleFrame(handle, time) {
+                const frame = Math.floor(time * frameRate);
+                handle.setAttribute("data-frame", frame);
+            }
+            function updateTooltip(handle, time) {
+                const tooltipEl = handle.querySelector(".tooltip");
+                if (tooltipEl) {
+                    tooltipEl.innerText = `${formatTime(time)} / ${formatTime(videoDuration)}`;
+                    tooltipEl.style.minWidth = `max-content`;
+                }
+            }
+
+            // Update overlays based on clamp handle positions.
+            function updateOverlays() {
+                const rect = timelineContainer.getBoundingClientRect();
+                const leftRect = leftClampHandle.getBoundingClientRect();
+                const leftWidth = leftRect.left - rect.left;
+                leftOverlay.style.width = `${leftWidth}px`;
+                const rightRect = rightClampHandle.getBoundingClientRect();
+                const rightWidth = rect.right - rightRect.left;
+                rightOverlay.style.width = `${rightWidth}px`;
+            }
+
+            // Update handle position based on a mouse event.
+            function updateHandleFromEvent(handle, e) {
+                const containerRect = timelineContainer.getBoundingClientRect();
+                let posX = e.clientX - containerRect.left;
+                posX = Math.max(0, Math.min(posX, containerRect.width)); // keep within container
+
+                // Constrain midHandle between left and right clamps.
+                if (handle === midHandle) {
+                    const leftPos = leftClampHandle.getBoundingClientRect().left - containerRect.left;
+                    const rightPos = rightClampHandle.getBoundingClientRect().left - containerRect.left;
+                    posX = Math.max(leftPos, Math.min(posX, rightPos));
+                }
+                // Prevent left clamp from crossing midHandle.
+                if (handle === leftClampHandle) {
+                    const midPos = midHandle.getBoundingClientRect().left - containerRect.left;
+                    posX = Math.min(posX, midPos);
+                }
+                // Prevent right clamp from crossing midHandle.
+                if (handle === rightClampHandle) {
+                    const midPos = midHandle.getBoundingClientRect().left - containerRect.left;
+                    posX = Math.max(posX, midPos);
+                }
+
+                const newX = containerRect.left + posX;
+                const newY = containerRect.top + containerRect.height / 2;
+                handle.style.left = `${newX}px`;
+                handle.style.top = `${newY}px`;
+
+                const newTime = (posX / containerRect.width) * videoDuration;
+                // Save the time in the handle.
+                handle.currentTime = newTime;
+                updateHandleFrame(handle, newTime);
+                updateTooltip(handle, newTime);
+                if (handle === midHandle) {
+                    fgClone.currentTime = newTime;
+                }
+                updateOverlays();
+            }
+
+
+            // Setup dragging for handles.
+            let draggingHandle = null;
+            [leftClampHandle, midHandle, rightClampHandle].forEach((h) => {
+                h.addEventListener("mousedown", (e) => {
+                    draggingHandle = h;
+                    e.stopPropagation();
+                    e.preventDefault();
+                });
+                h.addEventListener("touchstart", (e) => {
+                    draggingHandle = h;
+                    e.stopPropagation();
+                    e.preventDefault();
+                });
+            });
+            timelineContainer.addEventListener("mousedown", (e) => {
+                if (
+                    e.target !== leftClampHandle &&
+                    e.target !== midHandle &&
+                    e.target !== rightClampHandle
+                ) {
+                    draggingHandle = midHandle;
+                    updateHandleFromEvent(midHandle, e);
+                    e.stopPropagation();
+                    e.preventDefault();
+                }
+            });
+
+            document.addEventListener("mousemove", (e) => {
+                if (!draggingHandle) return;
+                updateHandleFromEvent(draggingHandle, e);
+            });
+            document.addEventListener("touchmove", (e) => {
+                if (!draggingHandle) return;
+                updateHandleFromEvent(draggingHandle, e.touches[0]);
+                e.preventDefault();
+            }, { passive: false });
+            document.addEventListener("mouseup", () => {
+                draggingHandle = null;
+            });
+            document.addEventListener("touchend", () => {
+                draggingHandle = null;
+            });
+
+            // Helper: Capture a thumbnail from a given video element.
+            function captureThumbnailFromVideo(videoEl, time, thumbWidth, thumbHeight) {
+                return new Promise((resolve) => {
+                    function seekHandler() {
+                        const canvas = document.createElement("canvas");
+                        canvas.width = thumbWidth;
+                        canvas.height = thumbHeight;
+                        const ctx = canvas.getContext("2d");
+                        ctx.drawImage(videoEl, 0, 0, thumbWidth, thumbHeight);
+                        videoEl.removeEventListener("seeked", seekHandler);
+                        resolve(canvas.toDataURL());
+                    }
+                    videoEl.addEventListener("seeked", seekHandler);
+                    videoEl.currentTime = time;
+                });
+            }
+
+            // When video metadata is loaded, set up handles and generate thumbnails concurrently.
+            offscreenVideo.addEventListener("loadedmetadata", () => {
+                videoDuration = offscreenVideo.duration;
+                const containerRect = timelineContainer.getBoundingClientRect();
+                const centerY = containerRect.top + containerRect.height / 2;
+
+                // Position handles.
+                leftClampHandle.style.left = `${containerRect.left}px`;
+                leftClampHandle.style.top = `${centerY}px`;
+                updateHandleFrame(leftClampHandle, 0);
+                updateTooltip(leftClampHandle, 0);
+
+                rightClampHandle.style.left = `${containerRect.left + containerRect.width}px`;
+                rightClampHandle.style.top = `${centerY}px`;
+                updateHandleFrame(rightClampHandle, videoDuration);
+                updateTooltip(rightClampHandle, videoDuration);
+
+                midHandle.style.left = `${containerRect.left}px`;
+                midHandle.style.top = `${centerY}px`;
+                updateHandleFrame(midHandle, 0);
+                updateTooltip(midHandle, 0);
+                updateOverlays();
+
+                // --- Improved Thumbnail Generation (Parallel) ---
+                const thumbHeight = containerRect.height;
+                const desiredThumbWidth = thumbHeight; // adjust if needed
+                // Calculate the number of thumbnails based on container width.
+                const thumbCount = Math.ceil(containerRect.width / desiredThumbWidth);
+
+                // Create an array of promises that each generate a thumbnail using its own video clone.
+                const thumbnailPromises = [];
+                for (let i = 0; i < thumbCount; i++) {
+                    const time = (i / thumbCount) * videoDuration;
+                    // Create a separate video element for this thumbnail.
+                    const videoClone = document.createElement("video");
+                    videoClone.src = offscreenVideo.src;
+                    videoClone.muted = true;
+                    videoClone.playsInline = true;
+                    videoClone.style.display = "none";
+                    document.body.appendChild(videoClone);
+
+                    // Wait for the clone to be ready, then capture its thumbnail.
+                    const thumbPromise = new Promise((resolve) => {
+                        videoClone.addEventListener("loadedmetadata", async () => {
+                            const dataURL = await captureThumbnailFromVideo(
+                                videoClone,
+                                time,
+                                desiredThumbWidth,
+                                thumbHeight
+                            );
+                            // Clean up the clone.
+                            document.body.removeChild(videoClone);
+                            resolve({ dataURL, index: i });
+                        }, { once: true });
+                    });
+                    thumbnailPromises.push(thumbPromise);
+                }
+
+                // When all thumbnails are ready, append them to the rail in order.
+                Promise.all(thumbnailPromises).then((results) => {
+                    results.sort((a, b) => a.index - b.index);
+                    for (const result of results) {
+                        const img = document.createElement("img");
+                        img.src = result.dataURL;
+                        img.style.width = `${desiredThumbWidth}px`;
+                        img.style.height = `${thumbHeight}px`;
+                        img.style.objectFit = "cover";
+                        rail.appendChild(img);
+                    }
+                });
+                // -----------------------------------------
+            });
+
+            // Update midHandle position as the video time updates.
+            fgClone.addEventListener("timeupdate", () => {
+                if (videoDuration > 0) {
+                    const containerRect = timelineContainer.getBoundingClientRect();
+                    const centerY = containerRect.top + containerRect.height / 2;
+                    const progress = fgClone.currentTime / videoDuration;
+                    const newLeft = containerRect.left + progress * containerRect.width;
+                    const leftPos = leftClampHandle.getBoundingClientRect().left;
+                    const rightPos = rightClampHandle.getBoundingClientRect().left;
+                    const constrainedLeft = Math.max(leftPos, Math.min(newLeft, rightPos));
+                    midHandle.style.left = `${constrainedLeft}px`;
+                    midHandle.style.top = `${centerY}px`;
+                    const timeFromPos = ((constrainedLeft - containerRect.left) / containerRect.width) * videoDuration;
+                    updateHandleFrame(midHandle, timeFromPos);
+                    updateTooltip(midHandle, timeFromPos);
+                }
+            });
+
+            // Update handle positions on window resize or scroll.
+            // Update the handle positions on window resize/scroll using stored times.
+            function updateHandles() {
+                const containerRect = timelineContainer.getBoundingClientRect();
+                const centerY = containerRect.top + containerRect.height / 2;
+
+                // Use stored time for each handle or default if not set.
+                const leftTime = leftClampHandle.currentTime !== undefined ? leftClampHandle.currentTime : 0;
+                const rightTime = rightClampHandle.currentTime !== undefined ? rightClampHandle.currentTime : videoDuration;
+                const midTime = midHandle.currentTime !== undefined ? midHandle.currentTime : fgClone.currentTime;
+
+                // Calculate new positions.
+                const leftPos = (leftTime / videoDuration) * containerRect.width;
+                const rightPos = (rightTime / videoDuration) * containerRect.width;
+                const midPos = (midTime / videoDuration) * containerRect.width;
+
+                leftClampHandle.style.left = `${containerRect.left + leftPos}px`;
+                leftClampHandle.style.top = `${centerY}px`;
+
+                rightClampHandle.style.left = `${containerRect.left + rightPos}px`;
+                rightClampHandle.style.top = `${centerY}px`;
+
+                midHandle.style.left = `${containerRect.left + midPos}px`;
+                midHandle.style.top = `${centerY}px`;
+
+                updateOverlays();
+            }
+
+            let lastRect = timelineContainer.getBoundingClientRect();
+
+            function checkPosition() {
+                const currentRect = timelineContainer.getBoundingClientRect();
+                if (currentRect.top !== lastRect.top || currentRect.left !== lastRect.left) {
+                    updateHandles(); // call the updater if position has changed
+                    lastRect = currentRect;
+                }
+                requestAnimationFrame(checkPosition);
+            }
+
+            requestAnimationFrame(checkPosition);
+        }
+
+        generateTimeline();
+    }
+}
 export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleDownload, databases) => {
     try {
         let db = openDB(dataBaseIndexName, dataBaseObjectStoreName);
@@ -1212,6 +2416,9 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
             localStorage.setItem(`${pageName}_${dataBaseObjectStoreName}-count`, mediaCount)
         } else mediaCount = parseInt(mediaCount, 10);
         const mediaContainer = document.querySelector(`.${dataBaseObjectStoreName}`);
+        if (!mediaContainer)
+            return;
+
         const fragment = document.createDocumentFragment();
         if (mediaCount > 0) {
             mediaContainer.style.display = mediaCount > 0 ? 'flex' : 'none';
@@ -1241,17 +2448,19 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
                 element.innerHTML = `<initial url="${url}" id="${id}" timestamp="${timestamp}" active="${active}"/></initial><div class="process-text">Initializing</div><div class="delete-icon"></div>`;
                 if (blob && (blob.type.startsWith('video') || blob.type.startsWith('image'))) {
                     const blobUrl = URL.createObjectURL(blob);
-                    if (blob.type.startsWith('video')) {
+                    const isVideo = blob.type.startsWith('video');
+                    if (isVideo) {
                         if (iosMobileCheck())
                             element.innerHTML = `<video timestamp="${timestamp}" id="${id}" preload="auto" autoplay loop muted playsinline disablePictureInPicture><source src="${blobUrl}">Your browser does not support the video tag.</video><div class="delete-icon"></div>`;
                         else
                             element.innerHTML = `<video timestamp="${timestamp}" id="${id}" preload="auto" autoplay loop muted playsinline disablePictureInPicture><source src="${blobUrl}">Your browser does not support the video tag.</video><div class="delete-icon"></div>`;
                         if (dataBaseObjectStoreName === 'inputs') {
-                            element.innerHTML = `<div class="tooltip cursor">Loading...</div>` + element.innerHTML;
+                            element.innerHTML = `<div class="tooltip tooltip-fast cursor">Loading...</div>` + element.innerHTML;
                             const tooltip = element.querySelector('.tooltip');
                             if (tooltip && tooltip.classList.contains('cursor')) {
+                                tooltip.style.display = 'none';
+                                tooltip.style.position = 'fixed';
                                 function updateTooltipPosition(event) {
-                                    tooltip.style.position = 'fixed';
                                     tooltip.style.left = `${event.clientX}px`;
                                     tooltip.style.top = `${event.clientY - 15}px`
                                 }
@@ -1265,35 +2474,50 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
                             const keepFPS = document.getElementById('keepFPS');
                             const fpsSlider = document.getElementById("fps-slider");
                             const removeBanner = document.getElementById("removeBanner");
-                            let lastMetadata = null;
 
-                            function handleMetadataUpdate(metadata) {
-                                lastMetadata = metadata;
+                            function handleMetadataUpdate(dataFps, dataDuration) {
                                 const tooltip = element.querySelector('.tooltip');
-                                if (tooltip && metadata.fps) {
-                                    const fpsSliderValue = !keepFPS.checked ? fpsSlider.value : 60;
-                                    const fps = Math.min(fpsSliderValue, metadata.fps);
-                                    const videoDurationTotalFrames = Math.floor(metadata.duration * fps);
+                                if (tooltip && dataFps) {
+                                    tooltip.style.display = 'flex';
+                                    const fpsSliderValue = keepFPS && !keepFPS.checked ? fpsSlider.value : 60;
+                                    const fps = Math.min(fpsSliderValue, dataFps);
+                                    const videoDurationTotalFrames = Math.floor(dataDuration * fps);
                                     const singleCreditForTotalFrameAmount = 120;
                                     const removeBannerStateMultiplier = removeBanner && removeBanner.checked ? 2 : 1;
-                                    const neededCredits = Math.floor(Math.max(1, videoDurationTotalFrames / singleCreditForTotalFrameAmount) * removeBannerStateMultiplier);
-                                    tooltip.textContent = `${neededCredits} Credits`
+                                    const neededCredits = Math.floor(
+                                        Math.max(1, videoDurationTotalFrames / singleCreditForTotalFrameAmount) *
+                                        removeBannerStateMultiplier
+                                    );
+                                    tooltip.textContent = `${neededCredits} Credits`;
                                 }
-                            } [keepFPS, fpsSlider, removeBanner].forEach(element => {
-                                element.addEventListener('change', () => {
-                                    if (lastMetadata) handleMetadataUpdate(lastMetadata);
-                                })
+                            }
+
+                            const video = element.querySelector('video');
+                            await calculateMetadata(video, handleMetadataUpdate);
+
+                            video.addEventListener('loadedmetadata', async () => {
+                                await calculateMetadata(video, handleMetadataUpdate);
                             });
-                            calculateMetadata(element.querySelector('video'), handleMetadataUpdate)
+
+                            [keepFPS, fpsSlider, removeBanner].forEach(el => {
+                                if (el) {
+                                    el.addEventListener('change', () => {
+                                        const dataFps = video.getAttribute('data-fps');
+                                        const dataDuration = video.getAttribute('data-duration');
+                                        handleMetadataUpdate(dataFps, dataDuration);
+                                    });
+                                }
+                            });
                         }
                     } else if (blob.type.startsWith('image')) {
                         element.innerHTML = `<img url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" src="${blobUrl}" alt="Uploaded Photo"/><div class="delete-icon"></div>`;
                         if (dataBaseObjectStoreName === 'inputs') {
-                            element.innerHTML = `<div class="tooltip cursor">Loading...</div>` + element.innerHTML;
+                            element.innerHTML = `<div class="tooltip tooltip-fast cursor">Loading...</div>` + element.innerHTML;
                             const tooltip = element.querySelector('.tooltip');
                             if (tooltip && tooltip.classList.contains('cursor')) {
+                                tooltip.style.display = 'none';
+                                tooltip.style.position = 'fixed';
                                 function updateTooltipPosition(event) {
-                                    tooltip.style.position = 'fixed';
                                     tooltip.style.left = `${event.clientX}px`;
                                     tooltip.style.top = `${event.clientY - 15}px`
                                 }
@@ -1305,25 +2529,29 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
                                 })
                             }
                             const removeBanner = document.getElementById("removeBanner");
-                            let lastMetadata = null;
-
-                            function handleMetadataUpdate(metadata) {
-                                lastMetadata = metadata;
+                            function handleMetadataUpdate() {
                                 const tooltip = element.querySelector('.tooltip');
                                 if (tooltip) {
-                                    let neededCredits = removeBanner.checked ? 2 : 1;
+                                    tooltip.style.display = 'flex';
+                                    let neededCredits = removeBanner && removeBanner.checked ? 2 : 1;
                                     if (pageName === 'inpaint')
                                         neededCredits += 1;
                                     tooltip.textContent = `${neededCredits} Credits`
                                 }
                             }
-                            removeBanner.addEventListener('change', () => {
-                                if (lastMetadata) handleMetadataUpdate(lastMetadata);
-                            });
-                            calculateMetadata(element.querySelector('img'), handleMetadataUpdate)
+                            handleMetadataUpdate();
+                            if (removeBanner) {
+                                removeBanner.addEventListener('change', () => {
+                                    handleMetadataUpdate();
+                                });
+                            }
+                            calculateMetadata(element.querySelector('img'), null);
                         }
                     }
-                    if (active) element.classList.add('active');
+                    if (active) {
+                        element.classList.add('active');
+                        displayStoredData(element, dataBaseObjectStoreName);
+                    }
                 } else if (url) {
                     element.innerHTML = `<initial url="${url}" id="${id}" timestamp="${timestamp}" active="${active}"/></initial><div class="process-text">Fetching...</div><div class="delete-icon"></div>`;
                     const data = await fetchProcessState(url);
@@ -1418,1458 +2646,389 @@ export const deleteFromDB = async (db, id) => {
         }
     })
 };
-async function loadGoogleAdScript(clientId, userData, userDoc) {
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${clientId}`;
-    script.setAttribute('crossorigin', 'anonymous');
-    document.head.appendChild(script);
 
-    script.onload = function () {
-        /*const fundingChoicesScript = document.createElement('script');
-        fundingChoicesScript.async = true;
-        fundingChoicesScript.src = 'https://fundingchoicesmessages.google.com/i/pub-2374246406180986?ers=1';
-        document.head.appendChild(fundingChoicesScript);
-        fundingChoicesScript.onload = function () {
-            (function () {
-                function signalGooglefcPresent() {
-                    if (!window.frames['googlefcPresent']) {
-                        if (document.body) {
-                            const iframe = document.createElement('iframe');
-                            iframe.style = 'width: 0; height: 0; border: none; z-index: -1000; left: -1000px; top: -1000px;';
-                            iframe.style.display = 'none';
-                            iframe.name = 'googlefcPresent';
-                            document.body.appendChild(iframe);
-                        } else {
-                            setTimeout(signalGooglefcPresent, 0);
-                        }
-                    }
-                }
-                signalGooglefcPresent();
-                (function () {
-                    'use strict';
-
-                    function aa(a) {
-                        var b = 0;
-                        return function () {
-                            return b < a.length ? {
-                                done: !1,
-                                value: a[b++]
-                            } : {
-                                done: !0
-                            }
-                        }
-                    }
-                    var ba = typeof Object.defineProperties == "function" ? Object.defineProperty : function (a, b, c) {
-                        if (a == Array.prototype || a == Object.prototype) return a;
-                        a[b] = c.value;
-                        return a
-                    };
-
-                    function ca(a) {
-                        a = ["object" == typeof globalThis && globalThis, a, "object" == typeof window && window, "object" == typeof self && self, "object" == typeof global && global];
-                        for (var b = 0; b < a.length; ++b) {
-                            var c = a[b];
-                            if (c && c.Math == Math) return c
-                        }
-                        throw Error("Cannot find global object");
-                    }
-                    var da = ca(this);
-
-                    function l(a, b) {
-                        if (b) a: {
-                            var c = da; a = a.split(".");
-                            for (var d = 0; d < a.length - 1; d++) {
-                                var e = a[d];
-                                if (!(e in c)) break a;
-                                c = c[e]
-                            }
-                            a = a[a.length - 1]; d = c[a]; b = b(d); b != d && b != null && ba(c, a, {
-                                configurable: !0,
-                                writable: !0,
-                                value: b
-                            })
-                        }
-                    }
-
-                    function ea(a) {
-                        return a.raw = a
-                    }
-
-                    function n(a) {
-                        var b = typeof Symbol != "undefined" && Symbol.iterator && a[Symbol.iterator];
-                        if (b) return b.call(a);
-                        if (typeof a.length == "number") return {
-                            next: aa(a)
-                        };
-                        throw Error(String(a) + " is not an iterable or ArrayLike");
-                    }
-
-                    function fa(a) {
-                        for (var b, c = []; !(b = a.next()).done;) c.push(b.value);
-                        return c
-                    }
-                    var ha = typeof Object.create == "function" ? Object.create : function (a) {
-                        function b() { }
-                        b.prototype = a;
-                        return new b
-                    },
-                        p;
-                    if (typeof Object.setPrototypeOf == "function") p = Object.setPrototypeOf;
-                    else {
-                        var q;
-                        a: {
-                            var ja = {
-                                a: !0
-                            },
-                                ka = {};
-                            try {
-                                ka.__proto__ = ja;
-                                q = ka.a;
-                                break a
-                            } catch (a) { }
-                            q = !1
-                        }
-                        p = q ? function (a, b) {
-                            a.__proto__ = b;
-                            if (a.__proto__ !== b) throw new TypeError(a + " is not extensible");
-                            return a
-                        } : null
-                    }
-                    var la = p;
-
-                    function t(a, b) {
-                        a.prototype = ha(b.prototype);
-                        a.prototype.constructor = a;
-                        if (la) la(a, b);
-                        else
-                            for (var c in b)
-                                if (c != "prototype")
-                                    if (Object.defineProperties) {
-                                        var d = Object.getOwnPropertyDescriptor(b, c);
-                                        d && Object.defineProperty(a, c, d)
-                                    } else a[c] = b[c];
-                        a.A = b.prototype
-                    }
-
-                    function ma() {
-                        for (var a = Number(this), b = [], c = a; c < arguments.length; c++) b[c - a] = arguments[c];
-                        return b
-                    }
-                    l("Object.is", function (a) {
-                        return a ? a : function (b, c) {
-                            return b === c ? b !== 0 || 1 / b === 1 / c : b !== b && c !== c
-                        }
-                    });
-                    l("Array.prototype.includes", function (a) {
-                        return a ? a : function (b, c) {
-                            var d = this;
-                            d instanceof String && (d = String(d));
-                            var e = d.length;
-                            c = c || 0;
-                            for (c < 0 && (c = Math.max(c + e, 0)); c < e; c++) {
-                                var f = d[c];
-                                if (f === b || Object.is(f, b)) return !0
-                            }
-                            return !1
-                        }
-                    });
-                    l("String.prototype.includes", function (a) {
-                        return a ? a : function (b, c) {
-                            if (this == null) throw new TypeError("The 'this' value for String.prototype.includes must not be null or undefined");
-                            if (b instanceof RegExp) throw new TypeError("First argument to String.prototype.includes must not be a regular expression");
-                            return this.indexOf(b, c || 0) !== -1
-                        }
-                    });
-                    l("Number.MAX_SAFE_INTEGER", function () {
-                        return 9007199254740991
-                    });
-                    l("Number.isFinite", function (a) {
-                        return a ? a : function (b) {
-                            return typeof b !== "number" ? !1 : !isNaN(b) && b !== Infinity && b !== -Infinity
-                        }
-                    });
-                    l("Number.isInteger", function (a) {
-                        return a ? a : function (b) {
-                            return Number.isFinite(b) ? b === Math.floor(b) : !1
-                        }
-                    });
-                    l("Number.isSafeInteger", function (a) {
-                        return a ? a : function (b) {
-                            return Number.isInteger(b) && Math.abs(b) <= Number.MAX_SAFE_INTEGER
-                        }
-                    });
-                    l("Math.trunc", function (a) {
-                        return a ? a : function (b) {
-                            b = Number(b);
-                            if (isNaN(b) || b === Infinity || b === -Infinity || b === 0) return b;
-                            var c = Math.floor(Math.abs(b));
-                            return b < 0 ? -c : c
-                        }
-                    });
-                    var u = this || self;
-
-                    function v(a, b) {
-                        a: {
-                            var c = ["CLOSURE_FLAGS"];
-                            for (var d = u, e = 0; e < c.length; e++)
-                                if (d = d[c[e]], d == null) {
-                                    c = null;
-                                    break a
-                                } c = d
-                        }
-                        a = c && c[a];
-                        return a != null ? a : b
-                    }
-
-                    function w(a) {
-                        return a
-                    };
-
-                    function na(a) {
-                        u.setTimeout(function () {
-                            throw a;
-                        }, 0)
-                    };
-                    var oa = v(610401301, !1),
-                        pa = v(188588736, !0),
-                        qa = v(645172343, v(1, !0));
-                    var x, ra = u.navigator;
-                    x = ra ? ra.userAgentData || null : null;
-
-                    function z(a) {
-                        return oa ? x ? x.brands.some(function (b) {
-                            return (b = b.brand) && b.indexOf(a) != -1
-                        }) : !1 : !1
-                    }
-
-                    function A(a) {
-                        var b;
-                        a: {
-                            if (b = u.navigator)
-                                if (b = b.userAgent) break a; b = ""
-                        }
-                        return b.indexOf(a) != -1
-                    };
-
-                    function B() {
-                        return oa ? !!x && x.brands.length > 0 : !1
-                    }
-
-                    function C() {
-                        return B() ? z("Chromium") : (A("Chrome") || A("CriOS")) && !(B() ? 0 : A("Edge")) || A("Silk")
-                    };
-                    var sa = B() ? !1 : A("Trident") || A("MSIE");
-                    !A("Android") || C();
-                    C();
-                    A("Safari") && (C() || (B() ? 0 : A("Coast")) || (B() ? 0 : A("Opera")) || (B() ? 0 : A("Edge")) || (B() ? z("Microsoft Edge") : A("Edg/")) || B() && z("Opera"));
-                    var ta = {},
-                        D = null;
-                    var ua = typeof Uint8Array !== "undefined",
-                        va = !sa && typeof btoa === "function";
-                    var wa;
-
-                    function E() {
-                        return typeof BigInt === "function"
-                    };
-                    var F = typeof Symbol === "function" && typeof Symbol() === "symbol";
-
-                    function xa(a) {
-                        return typeof Symbol === "function" && typeof Symbol() === "symbol" ? Symbol() : a
-                    }
-                    var G = xa(),
-                        ya = xa("2ex");
-                    var za = F ? function (a, b) {
-                        a[G] |= b
-                    } : function (a, b) {
-                        a.g !== void 0 ? a.g |= b : Object.defineProperties(a, {
-                            g: {
-                                value: b,
-                                configurable: !0,
-                                writable: !0,
-                                enumerable: !1
-                            }
-                        })
-                    },
-                        H = F ? function (a) {
-                            return a[G] | 0
-                        } : function (a) {
-                            return a.g | 0
-                        },
-                        I = F ? function (a) {
-                            return a[G]
-                        } : function (a) {
-                            return a.g
-                        },
-                        J = F ? function (a, b) {
-                            a[G] = b
-                        } : function (a, b) {
-                            a.g !== void 0 ? a.g = b : Object.defineProperties(a, {
-                                g: {
-                                    value: b,
-                                    configurable: !0,
-                                    writable: !0,
-                                    enumerable: !1
-                                }
-                            })
-                        };
-
-                    function Aa(a, b) {
-                        J(b, (a | 0) & -14591)
-                    }
-
-                    function Ba(a, b) {
-                        J(b, (a | 34) & -14557)
-                    };
-                    var K = {},
-                        Ca = {};
-
-                    function Da(a) {
-                        return !(!a || typeof a !== "object" || a.g !== Ca)
-                    }
-
-                    function Ea(a) {
-                        return a !== null && typeof a === "object" && !Array.isArray(a) && a.constructor === Object
-                    }
-
-                    function L(a, b, c) {
-                        if (!Array.isArray(a) || a.length) return !1;
-                        var d = H(a);
-                        if (d & 1) return !0;
-                        if (!(b && (Array.isArray(b) ? b.includes(c) : b.has(c)))) return !1;
-                        J(a, d | 1);
-                        return !0
-                    };
-                    var M = 0,
-                        N = 0;
-
-                    function Fa(a) {
-                        var b = a >>> 0;
-                        M = b;
-                        N = (a - b) / 4294967296 >>> 0
-                    }
-
-                    function Ga(a) {
-                        if (a < 0) {
-                            Fa(-a);
-                            var b = n(Ha(M, N));
-                            a = b.next().value;
-                            b = b.next().value;
-                            M = a >>> 0;
-                            N = b >>> 0
-                        } else Fa(a)
-                    }
-
-                    function Ia(a, b) {
-                        b >>>= 0;
-                        a >>>= 0;
-                        if (b <= 2097151) var c = "" + (4294967296 * b + a);
-                        else E() ? c = "" + (BigInt(b) << BigInt(32) | BigInt(a)) : (c = (a >>> 24 | b << 8) & 16777215, b = b >> 16 & 65535, a = (a & 16777215) + c * 6777216 + b * 6710656, c += b * 8147497, b *= 2, a >= 1E7 && (c += a / 1E7 >>> 0, a %= 1E7), c >= 1E7 && (b += c / 1E7 >>> 0, c %= 1E7), c = b + Ja(c) + Ja(a));
-                        return c
-                    }
-
-                    function Ja(a) {
-                        a = String(a);
-                        return "0000000".slice(a.length) + a
-                    }
-
-                    function Ha(a, b) {
-                        b = ~b;
-                        a ? a = ~a + 1 : b += 1;
-                        return [a, b]
-                    };
-                    var Ka = /^-?([1-9][0-9]*|0)(\.[0-9]+)?$/;
-                    var O;
-
-                    function La(a, b) {
-                        O = b;
-                        a = new a(b);
-                        O = void 0;
-                        return a
-                    }
-
-                    function P(a, b, c) {
-                        a == null && (a = O);
-                        O = void 0;
-                        if (a == null) {
-                            var d = 96;
-                            c ? (a = [c], d |= 512) : a = [];
-                            b && (d = d & -16760833 | (b & 1023) << 14)
-                        } else {
-                            if (!Array.isArray(a)) throw Error("narr");
-                            d = H(a);
-                            if (d & 2048) throw Error("farr");
-                            if (d & 64) return a;
-                            d |= 64;
-                            if (c && (d |= 512, c !== a[0])) throw Error("mid");
-                            a: {
-                                c = a;
-                                var e = c.length;
-                                if (e) {
-                                    var f = e - 1;
-                                    if (Ea(c[f])) {
-                                        d |= 256;
-                                        b = f - (+!!(d & 512) - 1);
-                                        if (b >= 1024) throw Error("pvtlmt");
-                                        d = d & -16760833 | (b & 1023) << 14;
-                                        break a
-                                    }
-                                }
-                                if (b) {
-                                    b = Math.max(b, e - (+!!(d & 512) - 1));
-                                    if (b > 1024) throw Error("spvt");
-                                    d = d & -16760833 | (b & 1023) << 14
-                                }
-                            }
-                        }
-                        J(a, d);
-                        return a
-                    };
-
-                    function Ma(a) {
-                        switch (typeof a) {
-                            case "number":
-                                return isFinite(a) ? a : String(a);
-                            case "boolean":
-                                return a ? 1 : 0;
-                            case "object":
-                                if (a)
-                                    if (Array.isArray(a)) {
-                                        if (L(a, void 0, 0)) return
-                                    } else if (ua && a != null && a instanceof Uint8Array) {
-                                        if (va) {
-                                            for (var b = "", c = 0, d = a.length - 10240; c < d;) b += String.fromCharCode.apply(null, a.subarray(c, c += 10240));
-                                            b += String.fromCharCode.apply(null, c ? a.subarray(c) : a);
-                                            a = btoa(b)
-                                        } else {
-                                            b === void 0 && (b = 0);
-                                            if (!D) {
-                                                D = {};
-                                                c = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split("");
-                                                d = ["+/=", "+/", "-_=", "-_.", "-_"];
-                                                for (var e = 0; e < 5; e++) {
-                                                    var f = c.concat(d[e].split(""));
-                                                    ta[e] = f;
-                                                    for (var g = 0; g < f.length; g++) {
-                                                        var h = f[g];
-                                                        D[h] === void 0 && (D[h] = g)
-                                                    }
-                                                }
-                                            }
-                                            b = ta[b];
-                                            c = Array(Math.floor(a.length / 3));
-                                            d = b[64] || "";
-                                            for (e = f = 0; f < a.length - 2; f += 3) {
-                                                var k = a[f],
-                                                    m = a[f + 1];
-                                                h = a[f + 2];
-                                                g = b[k >> 2];
-                                                k = b[(k & 3) << 4 | m >> 4];
-                                                m = b[(m & 15) << 2 | h >> 6];
-                                                h = b[h & 63];
-                                                c[e++] = g + k + m + h
-                                            }
-                                            g = 0;
-                                            h = d;
-                                            switch (a.length - f) {
-                                                case 2:
-                                                    g = a[f + 1], h = b[(g & 15) << 2] || d;
-                                                case 1:
-                                                    a = a[f], c[e] = b[a >> 2] + b[(a & 3) << 4 | g >> 4] + h + d
-                                            }
-                                            a = c.join("")
-                                        }
-                                        return a
-                                    }
-                        }
-                        return a
-                    };
-
-                    function Na(a, b, c) {
-                        a = Array.prototype.slice.call(a);
-                        var d = a.length,
-                            e = b & 256 ? a[d - 1] : void 0;
-                        d += e ? -1 : 0;
-                        for (b = b & 512 ? 1 : 0; b < d; b++) a[b] = c(a[b]);
-                        if (e) {
-                            b = a[b] = {};
-                            for (var f in e) Object.prototype.hasOwnProperty.call(e, f) && (b[f] = c(e[f]))
-                        }
-                        return a
-                    }
-
-                    function Oa(a, b, c, d, e) {
-                        if (a != null) {
-                            if (Array.isArray(a)) a = L(a, void 0, 0) ? void 0 : e && H(a) & 2 ? a : Pa(a, b, c, d !== void 0, e);
-                            else if (Ea(a)) {
-                                var f = {},
-                                    g;
-                                for (g in a) Object.prototype.hasOwnProperty.call(a, g) && (f[g] = Oa(a[g], b, c, d, e));
-                                a = f
-                            } else a = b(a, d);
-                            return a
-                        }
-                    }
-
-                    function Pa(a, b, c, d, e) {
-                        var f = d || c ? H(a) : 0;
-                        d = d ? !!(f & 32) : void 0;
-                        a = Array.prototype.slice.call(a);
-                        for (var g = 0; g < a.length; g++) a[g] = Oa(a[g], b, c, d, e);
-                        c && c(f, a);
-                        return a
-                    }
-
-                    function Qa(a) {
-                        return a.s === K ? a.toJSON() : Ma(a)
-                    };
-
-                    function Ra(a, b, c) {
-                        c = c === void 0 ? Ba : c;
-                        if (a != null) {
-                            if (ua && a instanceof Uint8Array) return b ? a : new Uint8Array(a);
-                            if (Array.isArray(a)) {
-                                var d = H(a);
-                                if (d & 2) return a;
-                                b && (b = d === 0 || !!(d & 32) && !(d & 64 || !(d & 16)));
-                                return b ? (J(a, (d | 34) & -12293), a) : Pa(a, Ra, d & 4 ? Ba : c, !0, !0)
-                            }
-                            a.s === K && (c = a.h, d = I(c), a = d & 2 ? a : La(a.constructor, Sa(c, d, !0)));
-                            return a
-                        }
-                    }
-
-                    function Sa(a, b, c) {
-                        var d = c || b & 2 ? Ba : Aa,
-                            e = !!(b & 32);
-                        a = Na(a, b, function (f) {
-                            return Ra(f, e, d)
-                        });
-                        za(a, 32 | (c ? 2 : 0));
-                        return a
-                    };
-
-                    function Ta(a, b) {
-                        a = a.h;
-                        return Ua(a, I(a), b)
-                    }
-
-                    function Va(a, b, c, d) {
-                        b = d + (+!!(b & 512) - 1);
-                        if (!(b < 0 || b >= a.length || b >= c)) return a[b]
-                    }
-
-                    function Ua(a, b, c, d) {
-                        if (c === -1) return null;
-                        var e = b >> 14 & 1023 || 536870912;
-                        if (c >= e) {
-                            if (b & 256) return a[a.length - 1][c]
-                        } else {
-                            var f = a.length;
-                            if (d && b & 256 && (d = a[f - 1][c], d != null)) {
-                                if (Va(a, b, e, c) && ya != null) {
-                                    var g;
-                                    a = (g = wa) != null ? g : wa = {};
-                                    g = a[ya] || 0;
-                                    g >= 4 || (a[ya] = g + 1, g = Error(), g.__closure__error__context__984382 || (g.__closure__error__context__984382 = {}), g.__closure__error__context__984382.severity = "incident", na(g))
-                                }
-                                return d
-                            }
-                            return Va(a, b, e, c)
-                        }
-                    }
-
-                    function Wa(a, b, c, d, e) {
-                        var f = b >> 14 & 1023 || 536870912;
-                        if (c >= f || e && !qa) {
-                            var g = b;
-                            if (b & 256) e = a[a.length - 1];
-                            else {
-                                if (d == null) return;
-                                e = a[f + (+!!(b & 512) - 1)] = {};
-                                g |= 256
-                            }
-                            e[c] = d;
-                            c < f && (a[c + (+!!(b & 512) - 1)] = void 0);
-                            g !== b && J(a, g)
-                        } else a[c + (+!!(b & 512) - 1)] = d, b & 256 && (a = a[a.length - 1], c in a && delete a[c])
-                    }
-
-                    function Xa(a, b) {
-                        var c = Ya;
-                        var d = d === void 0 ? !1 : d;
-                        var e = a.h;
-                        var f = I(e),
-                            g = Ua(e, f, b, d);
-                        if (g != null && typeof g === "object" && g.s === K) c = g;
-                        else if (Array.isArray(g)) {
-                            var h = H(g),
-                                k = h;
-                            k === 0 && (k |= f & 32);
-                            k |= f & 2;
-                            k !== h && J(g, k);
-                            c = new c(g)
-                        } else c = void 0;
-                        c !== g && c != null && Wa(e, f, b, c, d);
-                        e = c;
-                        if (e == null) return e;
-                        a = a.h;
-                        f = I(a);
-                        f & 2 || (g = e, c = g.h, h = I(c), g = h & 2 ? La(g.constructor, Sa(c, h, !1)) : g, g !== e && (e = g, Wa(a, f, b, e, d)));
-                        return e
-                    }
-
-                    function Za(a, b) {
-                        a = Ta(a, b);
-                        return a == null || typeof a === "string" ? a : void 0
-                    }
-
-                    function $a(a, b) {
-                        var c = c === void 0 ? 0 : c;
-                        a = Ta(a, b);
-                        if (a != null)
-                            if (b = typeof a, b === "number" ? Number.isFinite(a) : b !== "string" ? 0 : Ka.test(a))
-                                if (typeof a === "number") {
-                                    if (a = Math.trunc(a), !Number.isSafeInteger(a)) {
-                                        Ga(a);
-                                        b = M;
-                                        var d = N;
-                                        if (a = d & 2147483648) b = ~b + 1 >>> 0, d = ~d >>> 0, b == 0 && (d = d + 1 >>> 0);
-                                        b = d * 4294967296 + (b >>> 0);
-                                        a = a ? -b : b
-                                    }
-                                } else if (b = Math.trunc(Number(a)), Number.isSafeInteger(b)) a = String(b);
-                                else {
-                                    if (b = a.indexOf("."), b !== -1 && (a = a.substring(0, b)), !(a[0] === "-" ? a.length < 20 || a.length === 20 && Number(a.substring(0, 7)) > -922337 : a.length < 19 || a.length === 19 && Number(a.substring(0, 6)) < 922337)) {
-                                        if (a.length < 16) Ga(Number(a));
-                                        else if (E()) a = BigInt(a), M = Number(a & BigInt(4294967295)) >>> 0, N = Number(a >> BigInt(32) & BigInt(4294967295));
-                                        else {
-                                            b = +(a[0] === "-");
-                                            N = M = 0;
-                                            d = a.length;
-                                            for (var e = b, f = (d - b) % 6 + b; f <= d; e = f, f += 6) e = Number(a.slice(e, f)), N *= 1E6, M = M * 1E6 + e, M >= 4294967296 && (N += Math.trunc(M / 4294967296), N >>>= 0, M >>>= 0);
-                                            b && (b = n(Ha(M, N)), a = b.next().value, b = b.next().value, M = a, N = b)
-                                        }
-                                        a = M;
-                                        b = N;
-                                        b & 2147483648 ? E() ? a = "" + (BigInt(b | 0) << BigInt(32) | BigInt(a >>> 0)) : (b = n(Ha(a, b)), a = b.next().value, b = b.next().value, a = "-" + Ia(a, b)) : a = Ia(a, b)
-                                    }
-                                } else a = void 0;
-                        return a != null ? a : c
-                    }
-
-                    function R(a, b) {
-                        var c = c === void 0 ? "" : c;
-                        a = Za(a, b);
-                        return a != null ? a : c
-                    };
-                    var S;
-
-                    function T(a, b, c) {
-                        this.h = P(a, b, c)
-                    }
-                    T.prototype.toJSON = function () {
-                        return ab(this)
-                    };
-                    T.prototype.s = K;
-                    T.prototype.toString = function () {
-                        try {
-                            return S = !0, ab(this).toString()
-                        } finally {
-                            S = !1
-                        }
-                    };
-
-                    function ab(a) {
-                        var b = S ? a.h : Pa(a.h, Qa, void 0, void 0, !1);
-                        var c = !S;
-                        var d = pa ? void 0 : a.constructor.v;
-                        var e = I(c ? a.h : b);
-                        if (a = b.length) {
-                            var f = b[a - 1],
-                                g = Ea(f);
-                            g ? a-- : f = void 0;
-                            e = +!!(e & 512) - 1;
-                            var h = b;
-                            if (g) {
-                                b: {
-                                    var k = f;
-                                    var m = {}; g = !1;
-                                    if (k)
-                                        for (var r in k)
-                                            if (Object.prototype.hasOwnProperty.call(k, r))
-                                                if (isNaN(+r)) m[r] = k[r];
-                                                else {
-                                                    var y = k[r];
-                                                    Array.isArray(y) && (L(y, d, +r) || Da(y) && y.size === 0) && (y = null);
-                                                    y == null && (g = !0);
-                                                    y != null && (m[r] = y)
-                                                } if (g) {
-                                                    for (var Q in m) break b;
-                                                    m = null
-                                                } else m = k
-                                }
-                                k = m == null ? f != null : m !== f
-                            }
-                            for (var ia; a > 0; a--) {
-                                Q = a - 1;
-                                r = h[Q];
-                                Q -= e;
-                                if (!(r == null || L(r, d, Q) || Da(r) && r.size === 0)) break;
-                                ia = !0
-                            }
-                            if (h !== b || k || ia) {
-                                if (!c) h = Array.prototype.slice.call(h, 0, a);
-                                else if (ia || k || m) h.length = a;
-                                m && h.push(m)
-                            }
-                            b = h
-                        }
-                        return b
-                    };
-
-                    function bb(a) {
-                        return function (b) {
-                            if (b == null || b == "") b = new a;
-                            else {
-                                b = JSON.parse(b);
-                                if (!Array.isArray(b)) throw Error("dnarr");
-                                za(b, 32);
-                                b = La(a, b)
-                            }
-                            return b
-                        }
-                    };
-
-                    function cb(a) {
-                        this.h = P(a)
-                    }
-                    t(cb, T);
-                    var db = bb(cb);
-                    var U;
-
-                    function V(a) {
-                        this.g = a
-                    }
-                    V.prototype.toString = function () {
-                        return this.g + ""
-                    };
-                    var eb = {};
-
-                    function fb(a) {
-                        if (U === void 0) {
-                            var b = null;
-                            var c = u.trustedTypes;
-                            if (c && c.createPolicy) {
-                                try {
-                                    b = c.createPolicy("goog#html", {
-                                        createHTML: w,
-                                        createScript: w,
-                                        createScriptURL: w
-                                    })
-                                } catch (d) {
-                                    u.console && u.console.error(d.message)
-                                }
-                                U = b
-                            } else U = b
-                        }
-                        a = (b = U) ? b.createScriptURL(a) : a;
-                        return new V(a, eb)
-                    };
-                    function gb(a) {
-                        var b = ma.apply(1, arguments);
-                        if (b.length === 0) return fb(a[0]);
-                        for (var c = a[0], d = 0; d < b.length; d++) c += encodeURIComponent(b[d]) + a[d + 1];
-                        return fb(c)
-                    };
-
-                    function hb(a, b) {
-                        a.src = b instanceof V && b.constructor === V ? b.g : "type_error:TrustedResourceUrl";
-                        var c, d;
-                        (c = (b = (d = (c = (a.ownerDocument && a.ownerDocument.defaultView || window).document).querySelector) == null ? void 0 : d.call(c, "script[nonce]")) ? b.nonce || b.getAttribute("nonce") || "" : "") && a.setAttribute("nonce", c)
-                    };
-
-                    function ib() {
-                        return Math.floor(Math.random() * 2147483648).toString(36) + Math.abs(Math.floor(Math.random() * 2147483648) ^ Date.now()).toString(36)
-                    };
-
-                    function jb(a, b) {
-                        b = String(b);
-                        a.contentType === "application/xhtml+xml" && (b = b.toLowerCase());
-                        return a.createElement(b)
-                    }
-
-                    function kb(a) {
-                        this.g = a || u.document || document
-                    };
-
-                    function lb(a) {
-                        a = a === void 0 ? document : a;
-                        return a.createElement("script")
-                    };
-
-                    function mb(a, b, c, d, e, f) {
-                        try {
-                            var g = a.g,
-                                h = lb(g);
-                            h.async = !0;
-                            hb(h, b);
-                            g.head.appendChild(h);
-                            h.addEventListener("load", function () {
-                                e();
-                                d && g.head.removeChild(h)
-                            });
-                            h.addEventListener("error", function () {
-                                c > 0 ? mb(a, b, c - 1, d, e, f) : (d && g.head.removeChild(h), f())
-                            })
-                        } catch (k) {
-                            f()
-                        }
-                    };
-                    var nb = u.atob("aHR0cHM6Ly93d3cuZ3N0YXRpYy5jb20vaW1hZ2VzL2ljb25zL21hdGVyaWFsL3N5c3RlbS8xeC93YXJuaW5nX2FtYmVyXzI0ZHAucG5n"),
-                        ob = u.atob("WW91IGFyZSBzZWVpbmcgdGhpcyBtZXNzYWdlIGJlY2F1c2UgYWQgb3Igc2NyaXB0IGJsb2NraW5nIHNvZnR3YXJlIGlzIGludGVyZmVyaW5nIHdpdGggdGhpcyBwYWdlLg=="),
-                        pb = u.atob("RGlzYWJsZSBhbnkgYWQgb3Igc2NyaXB0IGJsb2NraW5nIHNvZnR3YXJlLCB0aGVuIHJlbG9hZCB0aGlzIHBhZ2Uu");
-
-                    function qb(a, b, c) {
-                        this.i = a;
-                        this.u = b;
-                        this.o = c;
-                        this.g = null;
-                        this.j = [];
-                        this.m = !1;
-                        this.l = new kb(this.i)
-                    }
-
-                    function rb(a) {
-                        if (a.i.body && !a.m) {
-                            var b = function () {
-                                sb(a);
-                                u.setTimeout(function () {
-                                    tb(a, 3)
-                                }, 50)
-                            };
-                            mb(a.l, a.u, 2, !0, function () {
-                                u[a.o] || b()
-                            }, b);
-                            a.m = !0
-                        }
-                    }
-
-                    function sb(a) {
-                        for (var b = W(1, 5), c = 0; c < b; c++) {
-                            var d = X(a);
-                            a.i.body.appendChild(d);
-                            a.j.push(d)
-                        }
-                        b = X(a);
-                        b.style.bottom = "0";
-                        b.style.left = "0";
-                        b.style.position = "fixed";
-                        b.style.width = W(100, 110).toString() + "%";
-                        b.style.zIndex = W(2147483544, 2147483644).toString();
-                        b.style.backgroundColor = ub(249, 259, 242, 252, 219, 229);
-                        b.style.boxShadow = "0 0 12px #888";
-                        b.style.color = ub(0, 10, 0, 10, 0, 10);
-                        b.style.display = "flex";
-                        b.style.justifyContent = "center";
-                        b.style.fontFamily = "Roboto, Arial";
-                        c = X(a);
-                        c.style.width = W(80, 85).toString() + "%";
-                        c.style.maxWidth = W(750, 775).toString() + "px";
-                        c.style.margin = "24px";
-                        c.style.display = "flex";
-                        c.style.alignItems = "flex-start";
-                        c.style.justifyContent = "center";
-                        d = jb(a.l.g, "IMG");
-                        d.className = ib();
-                        d.src = nb;
-                        d.alt = "Warning icon";
-                        d.style.height = "24px";
-                        d.style.width = "24px";
-                        d.style.paddingRight = "16px";
-                        var e = X(a),
-                            f = X(a);
-                        f.style.fontWeight = "bold";
-                        f.textContent = ob;
-                        var g = X(a);
-                        g.textContent = pb;
-                        Y(a, e, f);
-                        Y(a, e, g);
-                        Y(a, c, d);
-                        Y(a, c, e);
-                        Y(a, b, c);
-                        a.g = b;
-                        a.i.body.appendChild(a.g);
-                        b = W(1, 5);
-                        for (c = 0; c < b; c++) d = X(a), a.i.body.appendChild(d), a.j.push(d)
-                    }
-
-                    function Y(a, b, c) {
-                        for (var d = W(1, 5), e = 0; e < d; e++) {
-                            var f = X(a);
-                            b.appendChild(f)
-                        }
-                        b.appendChild(c);
-                        c = W(1, 5);
-                        for (d = 0; d < c; d++) e = X(a), b.appendChild(e)
-                    }
-
-                    function W(a, b) {
-                        return Math.floor(a + Math.random() * (b - a))
-                    }
-
-                    function ub(a, b, c, d, e, f) {
-                        return "rgb(" + W(Math.max(a, 0), Math.min(b, 255)).toString() + "," + W(Math.max(c, 0), Math.min(d, 255)).toString() + "," + W(Math.max(e, 0), Math.min(f, 255)).toString() + ")"
-                    }
-
-                    function X(a) {
-                        a = jb(a.l.g, "DIV");
-                        a.className = ib();
-                        return a
-                    }
-
-                    function tb(a, b) {
-                        b <= 0 || a.g != null && a.g.offsetHeight !== 0 && a.g.offsetWidth !== 0 || (vb(a), sb(a), u.setTimeout(function () {
-                            tb(a, b - 1)
-                        }, 50))
-                    }
-
-                    function vb(a) {
-                        for (var b = n(a.j), c = b.next(); !c.done; c = b.next())(c = c.value) && c.parentNode && c.parentNode.removeChild(c);
-                        a.j = [];
-                        (b = a.g) && b.parentNode && b.parentNode.removeChild(b);
-                        a.g = null
-                    };
-
-                    function wb(a, b, c, d, e) {
-                        function f(k) {
-                            document.body ? g(document.body) : k > 0 ? u.setTimeout(function () {
-                                f(k - 1)
-                            }, e) : b()
-                        }
-
-                        function g(k) {
-                            k.appendChild(h);
-                            u.setTimeout(function () {
-                                h ? (h.offsetHeight !== 0 && h.offsetWidth !== 0 ? b() : a(), h.parentNode && h.parentNode.removeChild(h)) : a()
-                            }, d)
-                        }
-                        var h = xb(c);
-                        f(3)
-                    }
-
-                    function xb(a) {
-                        var b = document.createElement("div");
-                        b.className = a;
-                        b.style.width = "1px";
-                        b.style.height = "1px";
-                        b.style.position = "absolute";
-                        b.style.left = "-10000px";
-                        b.style.top = "-10000px";
-                        b.style.zIndex = "-10000";
-                        return b
-                    };
-
-                    function Ya(a) {
-                        this.h = P(a)
-                    }
-                    t(Ya, T);
-
-                    function yb(a) {
-                        this.h = P(a)
-                    }
-                    t(yb, T);
-                    var zb = bb(yb);
-
-                    function Ab(a) {
-                        if (!a) return null;
-                        a = Za(a, 4);
-                        var b;
-                        a === null || a === void 0 ? b = null : b = fb(a);
-                        return b
-                    };
-                    var Bb = ea([""]),
-                        Cb = ea([""]);
-
-                    function Db(a, b) {
-                        this.m = a;
-                        this.o = new kb(a.document);
-                        this.g = b;
-                        this.j = R(this.g, 1);
-                        this.u = Ab(Xa(this.g, 2)) || gb(Bb);
-                        this.i = !1;
-                        b = Ab(Xa(this.g, 13)) || gb(Cb);
-                        this.l = new qb(a.document, b, R(this.g, 12))
-                    }
-                    Db.prototype.start = function () {
-                        Eb(this)
-                    };
-
-                    function Eb(a) {
-                        Fb(a);
-                        mb(a.o, a.u, 3, !1, function () {
-                            a: {
-                                var b = a.j;
-                                var c = u.btoa(b);
-                                if (c = u[c]) {
-                                    try {
-                                        var d = db(u.atob(c))
-                                    } catch (e) {
-                                        b = !1;
-                                        break a
-                                    }
-                                    b = b === Za(d, 1)
-                                } else b = !1
-                            }
-                            b ? Z(a, R(a.g, 14)) : (Z(a, R(a.g, 8)), rb(a.l))
-                        }, function () {
-                            wb(function () {
-                                Z(a, R(a.g, 7));
-                                rb(a.l)
-                            }, function () {
-                                return Z(a, R(a.g, 6))
-                            }, R(a.g, 9), $a(a.g, 10), $a(a.g, 11))
-                        })
-                    }
-
-                    function Z(a, b) {
-                        a.i || (a.i = !0, a = new a.m.XMLHttpRequest, a.open("GET", b, !0), a.send())
-                    }
-
-                    function Fb(a) {
-                        var b = u.btoa(a.j);
-                        a.m[b] && Z(a, R(a.g, 5))
-                    };
-                    (function (a, b) {
-                        u[a] = function () {
-                            var c = ma.apply(0, arguments);
-                            u[a] = function () { };
-                            b.call.apply(b, [null].concat(c instanceof Array ? c : fa(n(c))))
-                        }
-                    })("__h82AlnkH6D91__", function (a) {
-                        typeof window.atob === "function" && (new Db(window, zb(window.atob(a)))).start()
-                    });
-                }).call(this);
-                window.__h82AlnkH6D91__("WyJwdWItMjM3NDI0NjQwNjE4MDk4NiIsW251bGwsbnVsbCxudWxsLCJodHRwczovL2Z1bmRpbmdjaG9pY2VzbWVzc2FnZXMuZ29vZ2xlLmNvbS9iL3B1Yi0yMzc0MjQ2NDA2MTgwOTg2Il0sbnVsbCxudWxsLCJodHRwczovL2Z1bmRpbmdjaG9pY2VzbWVzc2FnZXMuZ29vZ2xlLmNvbS9lbC9BR1NLV3hVLXExdmp3cnpMdDBSazdDU3RvcF9rUUFaTEJMemxOQnRHNl9aOVBCTTNKMkdNQmRuQXVLc1dBbzF5Z21kNU5ieVNZa2luRGRqaDdsdXhwMGF4XzdDcF93XHUwMDNkXHUwMDNkP3RlXHUwMDNkVE9LRU5fRVhQT1NFRCIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFVqc1dIZDEzU1JmbHUyT1hpSllDTzcwNG5iSUJrbkpQaTFRZ3c1OHlvdFR2ck43ZVA1RFpsTXZTSWhHa1MtSWtZcFV0US1mcmQ1ckZLTG1WLTA3WjNpSkFcdTAwM2RcdTAwM2Q/YWJcdTAwM2QxXHUwMDI2c2JmXHUwMDNkMSIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFdvbEowRDNNa0dNa3Qzb3hMVmp3Zl9CSklNRGU3QnQzNW5QR2d0SG0zVkEyYV9SUHVZMEQwQzV5d05veGlBcUxhTzNTM2hrd1hLOXhKVktwNTc2S1ppMWdcdTAwM2RcdTAwM2Q/YWJcdTAwM2QyXHUwMDI2c2JmXHUwMDNkMSIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFhGb3FFalR5eFlNR09ZTWUxZzVrWDFDdE0wV1FRT19rQUlyOUczQ0VpUkl4VEktNVQtMl9kZHk4ZTREY1JBbWlNal9IM21XWnUzOG1ZTkFBeDdXVW1nOEFcdTAwM2RcdTAwM2Q/c2JmXHUwMDNkMiIsImRpdi1ncHQtYWQiLDIwLDEwMCwiY0hWaUxUSXpOelF5TkRZME1EWXhPREE1T0RZXHUwMDNkIixbbnVsbCxudWxsLG51bGwsImh0dHBzOi8vd3d3LmdzdGF0aWMuY29tLzBlbW4vZi9wL3B1Yi0yMzc0MjQ2NDA2MTgwOTg2LmpzP3VzcXBcdTAwM2RDQU0iXSwiaHR0cHM6Ly9mdW5kaW5nY2hvaWNlc21lc3NhZ2VzLmdvb2dsZS5jb20vZWwvQUdTS1d4VnE1Mm44YUJweXJXTVFHYmx1RUNlUHdwNjFoOF9BTzE3WFplcFpVVl8zU241ZnE3WGw5TWNkNU9BbDUwUUpIT1FSTDBQMkxneUJnZ2FFZzNfb1djdzJYUVx1MDAzZFx1MDAzZCJd");
-            })();
-        };*/
-
-        function handlePageRefresh() {
-            const firstRefreshDone = localStorage.getItem('firstRefreshDone');
-            if (firstRefreshDone === 'true') {
-                showNotification(`Please wait while we load new ads...`, 'Warning - No User Found', 'warning-important');
+const _0x2c8895 = Math.floor(Math.random() * 0xA) + 0x1;
+const _0x2c8896 = _0x2c8895 <= 1;
+
+async function loadGoogleAdScript(_0x18b7dc, _0xfd495d, _0x12cbf2) {
+    if (wasSidebarActive)
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+    const _0x2e82a2 = document.createElement("script");
+    _0x2e82a2.async = true;
+    _0x2e82a2.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + _0x18b7dc;
+    _0x2e82a2.setAttribute("crossorigin", 'anonymous');
+    document.head.appendChild(_0x2e82a2);
+    _0x2e82a2.onload = function () {
+        function _0x3db7be() {
+            const _0x14e285 = localStorage.getItem("firstRefreshDone");
+            if (_0x14e285 === "true") {
+                showNotification("Please wait while we load new ads...", "Warning - No User Found", "warning-important");
                 setTimeout(() => {
                     localStorage.removeItem('firstRefreshDone');
-                    localStorage.removeItem('watchingAd');
-                    localStorage.removeItem('__lsv__');
-                    localStorage.removeItem('google_adsense_settings');
-                    localStorage.removeItem('google_ama_config');
-                    localStorage.removeItem('offerwallDismissedAt');
+                    localStorage.removeItem("watchingAd");
+                    localStorage.removeItem("__lsv__");
+                    localStorage.removeItem("google_adsense_settings");
+                    localStorage.removeItem("google_ama_config");
+                    localStorage.removeItem("offerwallDismissedAt");
                     location.reload(true);
-                }, 2500);
+                }, 0x9c4);
             }
         }
-
-        handlePageRefresh();
-
-        async function grantCreditsToUser() {
+        _0x3db7be();
+        async function _0xa3b3e0() {
+            let _0x589fef = await getUserDoc();
+            if (!_0x589fef || _0x589fef?.['paid']) {
+                watchRewardedAdsElement.parentElement.remove();
+                return;
+            }
             try {
-                if (typeof userData !== 'object' || !userData?.uid) {
-                    const openSignInContainer = document.getElementById('openSignInContainer');
-                    if (openSignInContainer)
-                        openSignInContainer.click();
-                    showNotification(`Please sign in or create an account to use our AI services with free (daily) trial.`, 'Warning - No User Found', 'warning-important');
+                if (_0x589fef && !_0x589fef.lastAdWatched) {
+                    _0x589fef = await getUserDoc(() => setCurrentUserDoc(getDocSnapshot));
+                }
+                const _0xcfb145 = _0x589fef.lastAdWatched || 0x0;
+                let _0x45bba1 = _0x589fef.adCount || 0x0;
+                const _0xae3469 = new Date().getTime();
+                if (_0xae3469 - _0xcfb145 >= 43200000) {
+                    _0x45bba1 = 0x0;
+                }
+                if (_0x45bba1 >= 0xa && !_0x589fef.admin) {
+                    const _0x5b22b5 = 43200000 - (_0xae3469 - _0xcfb145);
+                    const _0x2cedb3 = Math.floor(_0x5b22b5 / 3600000);
+                    const _0x49d8f5 = Math.ceil(_0x5b22b5 % 3600000 / 60000);
+                    alert("You have already earned your daily reward by watching 10 ads. Please try again in " + _0x2cedb3 + " hours and " + _0x49d8f5 + " minutes.");
                     return;
                 }
-
-                const serverAddressAPI = await fetchServerAddress(getDocSnapshot('servers', '3050-1'), 'API');
-                const response = await fetchWithRandom(`${serverAddressAPI}/earn-ad-reward`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: userData.uid })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Failed to grant credits. HTTP status: ${response.status}`);
+                const _0x24e70c = _0x589fef.rewardCredits || 0x0;
+                if (_0x24e70c >= 0xa && !_0x589fef.admin) {
+                    alert("You have the maximum amount of reward credits. Please spend your reward credits first.");
+                    return;
                 }
-
-                await response.json();
-                const updateUserInformation = document.querySelectorAll('.updateUserInformation');
-                updateUserInformation.forEach(updateUserInformationElement => {
+                if (typeof _0xfd495d !== "object" || !_0xfd495d?.['uid']) {
+                    const _0x3aa8cb = document.getElementById("openSignInContainer");
+                    if (_0x3aa8cb) {
+                        _0x3aa8cb.click();
+                    }
+                    showNotification("Please sign in or create an account to use our AI services with free (daily) trial.", "Warning - No User Found", "warning-important");
+                    return;
+                }
+                const _0x2cd97a = await fetchServerAddress(getDocSnapshot("servers", "3050-1"), "API");
+                const _0x32123b = await fetchWithRandom(_0x2cd97a + "/fetch-google-data", {
+                    'method': 'POST',
+                    'headers': {
+                        'Content-Type': "application/json"
+                    },
+                    'body': JSON.stringify({
+                        'userId': _0xfd495d.uid
+                    })
+                });
+                if (!_0x32123b.ok) {
+                    throw new Error("Failed to grant credits. HTTP status: " + _0x32123b.status);
+                }
+                await _0x32123b.json();
+                const _0x28bf2a = document.querySelectorAll(".updateUserInformation");
+                _0x28bf2a.forEach(_0x4f4967 => {
                     localStorage.setItem('firstRefreshDone', 'true');
                     setTimeout(() => {
-                        updateUserInformationElement.click();
-                    }, 100);
+                        _0x4f4967.click();
+                    }, 0x64);
                 });
-            } catch (error) {
-                console.error('Error granting credits:', error);
+            } catch (_0x31a529) {
+                console.error("Error granting credits:", _0x31a529);
             }
         }
-
-        function addDismissButtonToOfferwall() {
-            const dismissTimestamp = localStorage.getItem('offerwallDismissedAt');
-            const twelveHours = 12 * 60 * 60 * 1000;
-            const shouldRemoveOfferwall = (!userDoc || !userData) ? true : dismissTimestamp && (Date.now() - parseInt(dismissTimestamp, 10)) < twelveHours;
-
-            const observer = new MutationObserver((mutationsList, observer) => {
-                for (const mutation of mutationsList) {
-                    document.querySelectorAll('fencedframe').forEach(frame => frame.remove());
-                    const fencedFrame = document.getElementById('ps_caff');
-                    if (fencedFrame) {
-                        fencedFrame.remove();
+        async function _0x5d1449() {
+            const _0x430ed7 = localStorage.getItem('offerwallDismissedAt');
+            const _0x28d5ae = !_0x12cbf2 || !_0xfd495d ? true : _0x430ed7 && Date.now() - parseInt(_0x430ed7, 0xa) < 43200000;
+            const _0xb220ce = new MutationObserver(async (_0xe77d5d, _0x342926) => {
+                for (const _0x2cf0dc of _0xe77d5d) {
+                    document.querySelectorAll("fencedframe").forEach(_0x2a9f9a => _0x2a9f9a.remove());
+                    const _0x302e65 = document.getElementById("ps_caff");
+                    if (_0x302e65) {
+                        _0x302e65.remove();
                     }
-                    if (mutation.type === 'childList') {
-                        const thankYouElement = [...document.querySelectorAll('.fc-snackbar')].find(element => element.textContent.includes("Thanks for your support!"));
-                        if (thankYouElement && thankYouElement.classList.contains('fade-in')) {
-                            const isVisible = window.getComputedStyle(thankYouElement).display !== 'none';
-                            if (isVisible) {
-                                grantCreditsToUser();
-                                observer.disconnect();
+                    if (_0x2cf0dc.type === 'childList') {
+                        const _0x4b94b3 = [...document.querySelectorAll(".fc-snackbar")].find(_0x4acb24 => _0x4acb24.textContent.includes("Thanks for your support!"));
+                        if (_0x4b94b3 && _0x4b94b3.classList.contains("fade-in")) {
+                            const _0x304b74 = window.getComputedStyle(_0x4b94b3).display !== "none";
+                            if (_0x304b74) {
+                                _0xa3b3e0();
+                                _0x342926.disconnect();
                             }
                         }
                     }
-
-                    if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-                        const element = mutation.target;
-                        if (element.classList.contains('fc-snackbar') && element.textContent.includes("Thanks for your support!")) {
-                            const isVisible = window.getComputedStyle(element).display !== 'none';
-                            if (isVisible) {
-                                grantCreditsToUser();
-                                observer.disconnect();
+                    if (_0x2cf0dc.type === "attributes" && _0x2cf0dc.attributeName === 'style') {
+                        const _0x3caeba = _0x2cf0dc.target;
+                        if (_0x3caeba.classList.contains('fc-snackbar') && _0x3caeba.textContent.includes("Thanks for your support!")) {
+                            const _0x2a964a = window.getComputedStyle(_0x3caeba).display !== "none";
+                            if (_0x2a964a) {
+                                _0xa3b3e0();
+                                _0x342926.disconnect();
                             }
                         }
                     }
-
-                    if (mutation.type === 'characterData') {
-                        const element = mutation.target;
-                        if (element.textContent.includes("Thanks for your support!")) {
-                            const isVisible = window.getComputedStyle(element.parentElement).display !== 'none';
-                            if (isVisible) {
-                                grantCreditsToUser();
-                                observer.disconnect();
+                    if (_0x2cf0dc.type === "characterData") {
+                        const _0x240820 = _0x2cf0dc.target;
+                        if (_0x240820.textContent.includes("Thanks for your support!")) {
+                            const _0xe20bc9 = window.getComputedStyle(_0x240820.parentElement).display !== 'none';
+                            if (_0xe20bc9) {
+                                _0xa3b3e0();
+                                _0x342926.disconnect();
                             }
                         }
                     }
-
-                    document.querySelectorAll('.fc-list-item-button, .fc-rewarded-ad-button').forEach(button => {
-                        button.addEventListener('click', () => {
-                            localStorage.setItem('watchingAd', 'true');
-                            const totalAttempts = 20;
-                            const successChance = 0;
-
-                            const randomNumber = Math.floor(Math.random() * totalAttempts) + 1;
-                            if (randomNumber <= successChance && !document.querySelector('#ins-container') && getScreenMode() === ScreenMode.PHONE && (userDoc.totalAdCount || 0) > 15) {
-                                const fontLink = document.createElement('link');
-                                fontLink.href = 'https://fonts.googleapis.com/css?family=Roboto';
-                                fontLink.rel = 'stylesheet';
-                                document.head.appendChild(fontLink);
-
-                                const style = document.createElement('style');
-                                style.innerHTML = `
-    #ad_position_box {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: transparent;
-        z-index: 2147483648;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-family: 'Roboto', sans-serif;
-    }
-    #ad_content {
-        width: 100%;
-        height: 100%;
-        background-color: transparent;
-        position: relative;
-        box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
-        font-family: 'Roboto', sans-serif;
-    }
-    .toprow {
-        width: 100%;
-        font-family: 'Roboto', sans-serif;
-        display: table;
-        font-size: 18px;
-        height: 0;
-        font-family: 'Roboto', sans-serif;
-    }
-    .btn {
-        display: table;
-        transition: opacity 1s, background .75s;
-        height: 30px;
-        padding-top: 15px;
-        padding-bottom: 15px;
-        background: transparent;
-        padding-right: 0.25em;
-        color: #FFF;
-        cursor: pointer;
-        font-family: 'Roboto', sans-serif;
-    }
-    .countdown-background {
-        border-radius: 1.8em;
-        background: rgba(0, 0, 0, 1);
-        transition: background 0.5s ease;
-        font-family: 'Roboto', sans-serif;
-    }
-    #count-down-text {
-        font-size: 12px;
-        font-family: 'Roboto', sans-serif;
-    }
-    .btn > div {
-        display: table-cell;
-        vertical-align: middle;
-        padding: 0 0.25em;
-        font-family: 'Roboto', sans-serif;
-    }
-    .skip {
-        opacity: 0.95;
-        float: right;
-        font-family: 'Roboto', sans-serif;
-    }
-    .skip svg {
-        height: 1.3em;
-        width: 1.3em;
-        margin-left: -0.3em;
-        margin-right: -0.3em;
-        vertical-align: middle;
-        padding-bottom: 1px;
-        font-family: 'Roboto', sans-serif;
-    }
-    .creative {
-        position: relative;
-        font-family: 'Roboto', sans-serif;
-    }
-    #dismiss-button {
-        padding-left: 0.5em;
-        padding-right: 0.5em;
-    }
-    #close-button {
-        fill: #FFF;
-        font-family: 'Roboto', sans-serif;
-    }
-    #close-button.disabled {
-        fill: #555;
-        font-family: 'Roboto', sans-serif;
-    }
-    .learnMoreButton {
-        font-family: 'Roboto', sans-serif;
-    }
-`;
-                                document.head.appendChild(style);
-
-                                const insContainer = document.createElement('ins');
-                                insContainer.id = 'ins-container';
-                                insContainer.style.cssText = `
-    position: fixed !important;
-    z-index: 2147483648 !important;
-`;
-
-                                const iframeReplacement = document.createElement('div');
-                                iframeReplacement.id = 'aswift_3';
-                                iframeReplacement.style.cssText = `
-    position: absolute !important;
-    width: 100vw !important;
-`;
-
-                                const adContent = document.createElement('div');
-                                adContent.id = 'ad_content';
-                                adContent.style.cssText = `
-    width: 100%;
-    height: 100%;
-    background-color: transparent;
-    position: relative;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
-`;
-
-                                const topRow = document.createElement('div');
-                                topRow.className = 'toprow';
-
-                                const dismissButton = document.createElement('div');
-                                dismissButton.id = 'dismiss-button';
-                                dismissButton.className = 'btn skip';
-                                dismissButton.setAttribute('aria-label', 'Close ad');
-                                dismissButton.setAttribute('role', 'button');
-                                dismissButton.setAttribute('tabindex', '0');
-
-                                const countdownBackground = document.createElement('div');
-                                countdownBackground.className = 'btn countdown-background';
-                                countdownBackground.id = 'count-down-container';
-
-                                const countdown = document.createElement('div');
-                                countdown.id = 'count-down';
-                                const countdownText = document.createElement('div');
-                                countdownText.id = 'count-down-text';
-                                countdownText.innerText = "Tap 'Learn More' 4 times fast";
-                                countdown.appendChild(countdownText);
-
-                                const closeButton = document.createElement('div');
-                                closeButton.id = 'close-button';
-                                closeButton.setAttribute('tabindex', '0');
-                                closeButton.setAttribute('role', 'button');
-                                closeButton.setAttribute('aria-label', 'Close ad');
-                                closeButton.className = 'disabled';
-
-                                const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-                                svg.setAttribute("viewBox", "0 0 48 48");
-                                const path1 = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                                path1.setAttribute("d", "M38 12.83L35.17 10 24 21.17 12.83 10 10 12.83 21.17 24 10 35.17 12.83 38 24 26.83 35.17 38 38 35.17 26.83 24z");
-                                const path2 = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                                path2.setAttribute("d", "M0 0h48v48H0z");
-                                path2.setAttribute("fill", "none");
-
-                                svg.appendChild(path1);
-                                svg.appendChild(path2);
-                                closeButton.appendChild(svg);
-
-                                countdownBackground.appendChild(countdown);
-                                countdownBackground.appendChild(closeButton);
-                                dismissButton.appendChild(countdownBackground);
-                                topRow.appendChild(dismissButton);
-                                adContent.appendChild(topRow);
-
-                                const creativeDiv = document.createElement('div');
-                                creativeDiv.className = 'creative';
-                                creativeDiv.id = 'creative';
-
-                                const learnMoreDiv = document.createElement('div');
-                                learnMoreDiv.style.cssText = `
-    cursor: pointer;
-    position: absolute;
-    z-index: 20;
-    top: 8px;
-    right: 8px;
-    font-size: 12px;
-    background-color: rgb(26, 115, 232);
-    border-radius: 4px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-family: Roboto, sans-serif;
-    justify-content: center;
-    color: rgb(255, 255, 255);
-    height: 36px;
-    padding: 0px 12px;
-`;
-
-                                const learnMoreButton = document.createElement('div');
-                                learnMoreButton.className = 'learnMoreButton';
-                                learnMoreButton.setAttribute('data-ck-tag', 'main-cta');
-                                learnMoreButton.setAttribute('data-ck-navigates', 'true');
-                                learnMoreButton.innerText = 'Learn More';
-                                learnMoreDiv.appendChild(learnMoreButton);
-
-                                if (learnMoreDiv) {
-                                    let tapCount = 0;
-                                    let lastTapTime = 0;
-                                    const tapThreshold = 300;
-                                    const maxTaps = 3;
-
-                                    function resetTapCount() {
-                                        tapCount = 0;
-                                        countdownText.innerText = `Tap 'Learn More' ${maxTaps + 1} times fast`;
+                    document.querySelectorAll(".fc-list-item-button, .fc-rewarded-ad-button").forEach(_0x1e6657 => {
+                        _0x1e6657.addEventListener("click", () => {
+                            localStorage.setItem("watchingAd", "true");
+                            if (_0x2c8896 && !document.querySelector('#ins-container') && getScreenMode() === ScreenMode.PHONE && (_0x12cbf2.totalAdCount || 0x0) > 0xA) {
+                                const _0x3f3bf0 = document.createElement("link");
+                                _0x3f3bf0.href = "https://fonts.googleapis.com/css?family=Roboto";
+                                _0x3f3bf0.rel = 'stylesheet';
+                                document.head.appendChild(_0x3f3bf0);
+                                const _0x2c612b = document.createElement("style");
+                                _0x2c612b.innerHTML = "\n    #ad_position_box {\n        position: fixed;\n        top: 0;\n        left: 0;\n        width: 100vw;\n        height: 100vh;\n        background: transparent;\n        z-index: 2147483648;\n        display: flex;\n        justify-content: center;\n        align-items: center;\n        font-family: 'Roboto', sans-serif;\n    }\n    #ad_content {\n        width: 100%;\n        height: 100%;\n        background-color: transparent;\n        position: relative;\n        box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);\n        font-family: 'Roboto', sans-serif;\n    }\n    .toprow {\n        width: 100%;\n        font-family: 'Roboto', sans-serif;\n        display: table;\n        font-size: 18px;\n        height: 0;\n        font-family: 'Roboto', sans-serif;\n    }\n    .btn {\n        display: table;\n        transition: opacity 1s, background .75s;\n        height: 30px;\n        padding-top: 15px;\n        padding-bottom: 15px;\n        background: transparent;\n        padding-right: 0.25em;\n        color: #FFF;\n        cursor: pointer;\n        font-family: 'Roboto', sans-serif;\n    }\n    .countdown-background {\n        border-radius: 1.8em;\n        background: rgba(0, 0, 0, 1);\n        transition: background 0.5s ease;\n        font-family: 'Roboto', sans-serif;\n    }\n    #count-down-text {\n        font-size: 12px;\n        font-family: 'Roboto', sans-serif;\n    }\n    .btn > div {\n        display: table-cell;\n        vertical-align: middle;\n        padding: 0 0.25em;\n        font-family: 'Roboto', sans-serif;\n    }\n    .skip {\n        opacity: 0.95;\n        float: right;\n        font-family: 'Roboto', sans-serif;\n    }\n    .skip svg {\n        height: 1.3em;\n        width: 1.3em;\n        margin-left: -0.3em;\n        margin-right: -0.3em;\n        vertical-align: middle;\n        padding-bottom: 1px;\n        font-family: 'Roboto', sans-serif;\n    }\n    .creative {\n        position: relative;\n        font-family: 'Roboto', sans-serif;\n    }\n    #dismiss-button {\n        padding-left: 0.5em;\n        padding-right: 0.5em;\n    }\n    #close-button {\n        fill: #FFF;\n        font-family: 'Roboto', sans-serif;\n    }\n    #close-button.disabled {\n        fill: #555;\n        font-family: 'Roboto', sans-serif;\n    }\n    .learnMoreButton {\n        font-family: 'Roboto', sans-serif;\n    }\n";
+                                document.head.appendChild(_0x2c612b);
+                                const _0x3b9fa0 = document.createElement("ins");
+                                _0x3b9fa0.id = 'ins-container';
+                                _0x3b9fa0.style.cssText = "\n    position: fixed !important;\n    z-index: 2147483648 !important;\n";
+                                const _0x1484bd = document.createElement("div");
+                                _0x1484bd.id = 'aswift_3';
+                                _0x1484bd.style.cssText = "\n    position: absolute !important;\n    width: 100vw !important;\n";
+                                const _0x158850 = document.createElement("div");
+                                _0x158850.id = "ad_content";
+                                _0x158850.style.cssText = "\n    width: 100%;\n    height: 100%;\n    background-color: transparent;\n    position: relative;\n    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);\n";
+                                const _0x591279 = document.createElement("div");
+                                _0x591279.className = 'toprow';
+                                const _0x36b3db = document.createElement("div");
+                                _0x36b3db.id = 'dismiss-button';
+                                _0x36b3db.className = "btn skip";
+                                _0x36b3db.setAttribute("aria-label", "Close ad");
+                                _0x36b3db.setAttribute("role", "button");
+                                _0x36b3db.setAttribute("tabindex", '0');
+                                const _0x465af8 = document.createElement("div");
+                                _0x465af8.className = "btn countdown-background";
+                                _0x465af8.id = 'count-down-container';
+                                const _0x5b50f0 = document.createElement("div");
+                                _0x5b50f0.id = 'count-down';
+                                const _0x32908b = document.createElement("div");
+                                _0x32908b.id = "count-down-text";
+                                _0x32908b.innerText = "Tap 'Learn More' 4 times fast";
+                                _0x5b50f0.appendChild(_0x32908b);
+                                const _0x23b0a2 = document.createElement("div");
+                                _0x23b0a2.id = "close-button";
+                                _0x23b0a2.setAttribute("tabindex", '0');
+                                _0x23b0a2.setAttribute('role', 'button');
+                                _0x23b0a2.setAttribute("aria-label", "Close ad");
+                                _0x23b0a2.className = "disabled";
+                                const _0x5f49fe = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                                _0x5f49fe.setAttribute("viewBox", "0 0 48 48");
+                                const _0x4c58b6 = document.createElementNS('http://www.w3.org/2000/svg', "path");
+                                _0x4c58b6.setAttribute('d', "M38 12.83L35.17 10 24 21.17 12.83 10 10 12.83 21.17 24 10 35.17 12.83 38 24 26.83 35.17 38 38 35.17 26.83 24z");
+                                const _0x4fcd93 = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                                _0x4fcd93.setAttribute('d', "M0 0h48v48H0z");
+                                _0x4fcd93.setAttribute("fill", "none");
+                                _0x5f49fe.appendChild(_0x4c58b6);
+                                _0x5f49fe.appendChild(_0x4fcd93);
+                                _0x23b0a2.appendChild(_0x5f49fe);
+                                _0x465af8.appendChild(_0x5b50f0);
+                                _0x465af8.appendChild(_0x23b0a2);
+                                _0x36b3db.appendChild(_0x465af8);
+                                _0x591279.appendChild(_0x36b3db);
+                                _0x158850.appendChild(_0x591279);
+                                const _0x3577d4 = document.createElement('div');
+                                _0x3577d4.className = "creative";
+                                _0x3577d4.id = "creative";
+                                const _0x397dd4 = document.createElement('div');
+                                _0x397dd4.style.cssText = "\n    cursor: pointer;\n    position: absolute;\n    z-index: 20;\n    top: 8px;\n    right: 8px;\n    font-size: 12px;\n    background-color: rgb(26, 115, 232);\n    border-radius: 4px;\n    box-sizing: border-box;\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    font-family: Roboto, sans-serif;\n    justify-content: center;\n    color: rgb(255, 255, 255);\n    height: 36px;\n    padding: 0px 12px;\n";
+                                const _0x59d28e = document.createElement("div");
+                                _0x59d28e.className = "learnMoreButton";
+                                _0x59d28e.setAttribute("data-ck-tag", 'main-cta');
+                                _0x59d28e.setAttribute('data-ck-navigates', "true");
+                                _0x59d28e.innerText = "Learn More";
+                                _0x397dd4.appendChild(_0x59d28e);
+                                if (_0x397dd4) {
+                                    let _0x59b555 = 0x0;
+                                    let _0x18287f = 0x0;
+                                    function _0x2da429() {
+                                        _0x59b555 = 0x0;
+                                        _0x32908b.innerText = "Tap 'Learn More' 4 times fast";
                                     }
-
-                                    const handleTap = () => {
-                                        const currentTime = Date.now();
-
-                                        if (lastTapTime === 0 || currentTime - lastTapTime <= tapThreshold) {
-                                            tapCount++;
-                                            countdownText.innerText = maxTaps - tapCount + 1 === 1 ? `Tap 'Learn More' ${maxTaps - tapCount + 1} times fast - Open ad for reward!` : `Tap 'Learn More' ${maxTaps - tapCount + 1} times fast`;
+                                    const _0x5ca293 = () => {
+                                        const _0x398dbe = Date.now();
+                                        if (_0x18287f === 0x0 || _0x398dbe - _0x18287f <= 0x12c) {
+                                            _0x59b555++;
+                                            _0x32908b.innerText = 0x3 - _0x59b555 + 0x1 === 0x1 ? "Tap 'Learn More' " + (0x3 - _0x59b555 + 0x1) + " times fast - Open ad for reward!" : "Tap 'Learn More' " + (0x3 - _0x59b555 + 0x1) + " times fast";
                                         } else {
-                                            resetTapCount();
-                                            countdownText.innerText = `Missed tap by ${currentTime - lastTapTime}ms. Tap 'Learn More' ${maxTaps - tapCount + 1} times fast`;
+                                            _0x2da429();
+                                            _0x32908b.innerText = "Missed tap by " + (_0x398dbe - _0x18287f) + "ms. Tap 'Learn More' " + (0x3 - _0x59b555 + 0x1) + " times fast";
                                         }
-
-                                        lastTapTime = currentTime;
-
-                                        if (tapCount >= maxTaps) {
-                                            learnMoreDiv.remove();
-                                            if (insContainer) {
+                                        _0x18287f = _0x398dbe;
+                                        if (_0x59b555 >= 0x3) {
+                                            _0x397dd4.remove();
+                                            if (_0x3b9fa0) {
                                                 setTimeout(() => {
-                                                    insContainer.remove();
-                                                }, 7500);
+                                                    _0x3b9fa0.remove();
+                                                }, 0x1d4c);
                                             }
                                         }
                                     };
-
-                                    learnMoreDiv.addEventListener('click', (e) => {
-                                        e.preventDefault();
-                                        handleTap();
+                                    _0x397dd4.addEventListener("click", _0x51fe1e => {
+                                        _0x51fe1e.preventDefault();
+                                        _0x5ca293();
                                     });
-
-                                    learnMoreDiv.addEventListener('touchstart', (e) => {
-                                        e.preventDefault();
-                                        handleTap();
+                                    _0x397dd4.addEventListener("touchstart", _0x515613 => {
+                                        _0x515613.preventDefault();
+                                        _0x5ca293();
                                     });
                                 }
-
-                                creativeDiv.appendChild(learnMoreDiv);
-                                adContent.appendChild(creativeDiv);
-                                iframeReplacement.appendChild(adContent);
-                                insContainer.appendChild(iframeReplacement);
-                                document.documentElement.appendChild(insContainer);
+                                _0x3577d4.appendChild(_0x397dd4);
+                                _0x158850.appendChild(_0x3577d4);
+                                _0x1484bd.appendChild(_0x158850);
+                                _0x3b9fa0.appendChild(_0x1484bd);
+                                document.documentElement.appendChild(_0x3b9fa0);
                             }
                         });
                     });
-
-                    const offerwall = document.querySelector('.fc-monetization-dialog.fc-dialog');
-                    if (offerwall) {
-                        if (shouldRemoveOfferwall) {
-                            localStorage.removeItem('watchingAd');
-                            document.querySelector('.fc-message-root').remove();
-                            observer.disconnect();
+                    const _0x2dbcdd = document.querySelector(".fc-monetization-dialog.fc-dialog");
+                    if (_0x2dbcdd) {
+                        let _0x4b2e3f = await getUserDoc();
+                        if (!_0x4b2e3f || _0x4b2e3f?.["paid"]) {
+                            localStorage.removeItem("watchingAd");
+                            document.querySelector(".fc-message-root").remove();
+                            _0x342926.disconnect();
                             return;
                         }
-
-                        if (!document.getElementById('dismiss-button-element')) {
-                            const dismissButton = document.createElement('div');
-                            dismissButton.id = 'dismiss-button-element';
-                            dismissButton.style.cssText = `
-                            position: absolute !important;
-                            top: 10px !important;
-                            right: 10px !important;
-                            cursor: pointer !important;
-                            z-index: 5125125125 !important;
-                        `;
-                            dismissButton.innerHTML = `
-                            <svg viewBox="0 0 48 48" fill="#5F6368" width="24" height="24">
-                                <path d="M38 12.83L35.17 10 24 21.17 12.83 10 10 12.83 21.17 24 10 35.17 12.83 38 24 26.83 35.17 38 38 35.17 26.83 24z"></path>
-                                <path d="M0 0h48v48H0z" fill="none"></path>
-                            </svg>
-                        `;
-
-                            offerwall.querySelector('.fc-dialog-content').prepend(dismissButton);
-
-                            dismissButton.addEventListener('click', () => {
-                                document.querySelector('.fc-message-root').remove();
-                                localStorage.setItem('offerwallDismissedAt', Date.now().toString());
-                            });
+                        if (_0x4b2e3f && !_0x4b2e3f.lastAdWatched) {
+                            _0x4b2e3f = await getUserDoc(() => setCurrentUserDoc(getDocSnapshot));
+                        }
+                        const _0x31eb86 = _0x4b2e3f.lastAdWatched || 0x0;
+                        let _0x10e937 = _0x4b2e3f.adCount || 0x0;
+                        const _0x25a85a = new Date().getTime();
+                        if (_0x25a85a - _0x31eb86 >= 43200000) {
+                            _0x10e937 = 0x0;
+                        }
+                        if (_0x10e937 >= 0xa && !_0x4b2e3f.admin) {
+                            localStorage.removeItem("watchingAd");
+                            document.querySelector(".fc-message-root").remove();
+                            _0x342926.disconnect();
+                            return;
+                        }
+                        const _0x211e78 = _0x4b2e3f.rewardCredits || 0x0;
+                        if (_0x211e78 >= 0xa && !_0x4b2e3f.admin) {
+                            localStorage.removeItem("watchingAd");
+                            document.querySelector(".fc-message-root").remove();
+                            _0x342926.disconnect();
+                            return;
+                        }
+                        if (_0x28d5ae) {
+                            localStorage.removeItem('watchingAd');
+                            document.querySelector(".fc-message-root").remove();
+                            _0x342926.disconnect();
+                            return;
                         }
                     }
                 }
             });
-
-            observer.observe(document, {
-                childList: true,
-                subtree: true,
-                attributes: true,
-                characterData: true,
-                attributeFilter: ['style']
+            _0xb220ce.observe(document, {
+                'childList': true,
+                'subtree': true,
+                'attributes': true,
+                'characterData': true,
+                'attributeFilter': ["style"]
             });
-        }
 
-        addDismissButtonToOfferwall();
+            const observerDismissAd = new MutationObserver(() => {
+                const dialogContent = document.querySelector('.fc-dialog-content');
+                if (dialogContent && !document.getElementById('dismiss-button-element')) {
+                    addDismissButton(dialogContent);
+                }
+                addOverlayClickListener();
+            });
+            observerDismissAd.observe(document.body, { childList: true, subtree: true });
+
+            function addDismissButton(parent) {
+                const btn = document.createElement("div");
+                btn.id = "dismiss-button-element";
+                btn.style.cssText = "position: absolute !important; top: 10px !important; right: 10px !important; cursor: pointer !important; z-index: 9999 !important;";
+                btn.innerHTML = `<svg viewBox="0 0 48 48" fill="#5F6368" width="24" height="24">
+        <path d="M38 12.83L35.17 10 24 21.17 12.83 10 10 12.83 21.17 24 10 35.17 12.83 38 24 26.83 35.17 38 38 35.17 26.83 24z"></path>
+        <path d="M0 0h48v48H0z" fill="none"></path></svg>`;
+                parent.prepend(btn);
+                btn.addEventListener("click", removeOfferWall);
+            }
+
+            function addOverlayClickListener() {
+                const overlay = document.querySelector(".fc-dialog-overlay");
+                if (overlay && !overlay.dataset.listenerAdded) {
+                    overlay.dataset.listenerAdded = "true";
+                    overlay.addEventListener("click", removeOfferWall);
+                }
+            }
+
+            function removeOfferWall() {
+                const root = document.querySelector(".fc-message-root");
+                const dialog = document.querySelector(".fc-monetization-dialog-container");
+                const snackbar = [...document.querySelectorAll(".fc-snackbar")].find(el =>
+                    el.textContent.includes("Thanks for your support!")
+                );
+
+                if (!root) alert("Error: fc-message-root not found");
+                if (!dialog) alert("Error: fc-monetization-dialog-container not found");
+                if (!snackbar) alert("Error: Snackbar with text 'Thanks for your support!' not found");
+
+                root?.remove();
+                dialog?.remove();
+                snackbar?.parentElement?.remove();
+
+                localStorage.setItem("offerwallDismissedAt", Date.now().toString());
+            }
+
+            if (_0x12cbf2 === null || _0x12cbf2?.paid) {
+                function wrapAdElement(node) {
+                    // Check if node isn't already wrapped
+                    if (!node.parentElement || !node.parentElement.classList.contains('adsense-wrapper')) {
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'adsense-wrapper';
+                        node.parentNode.insertBefore(wrapper, node);
+                        wrapper.appendChild(node);
+                    }
+                }
+
+                // Initial scan for existing elements with the specified classes
+                document.querySelectorAll('.adsbygoogle.adsbygoogle-noablate').forEach(wrapAdElement);
+
+                // Set up MutationObserver for elements added in the future
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach(mutation => {
+                        if (mutation.type === 'childList') {
+                            mutation.addedNodes.forEach(node => {
+                                if (node.nodeType === Node.ELEMENT_NODE) {
+                                    // Check for AdSense iFrame
+                                    if (node.tagName === 'IFRAME' && node.src.includes('googleads')) {
+                                        wrapAdElement(node);
+                                    }
+                                    // Check for elements with the specified classes
+                                    if (node.classList && node.classList.contains('adsbygoogle') && node.classList.contains('adsbygoogle-noablate')) {
+                                        wrapAdElement(node);
+                                    }
+                                }
+                            });
+                        }
+                    });
+                });
+
+                observer.observe(document.documentElement, { childList: true, subtree: true });
+            }
+        }
+        _0x5d1449();
     };
 }
 async function handleUserLoggedIn(userData, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getDocSnapshot, getFirebaseModules) {
     if (!userData) 
         return;
     let userDoc = await getUserDoc();
-    if (!userDoc?.paid)
-        loadGoogleAdScript('ca-pub-2374246406180986', userData, userDoc);
+    loadGoogleAdScript('ca-pub-2374246406180986', userData, userDoc);
+
     const openSignInContainer = document.getElementById("openSignInContainer");
     const openSignUpContainer = document.getElementById("openSignUpContainer");
     if (openSignInContainer) openSignInContainer.remove();
@@ -3006,7 +3165,61 @@ async function handleUserLoggedIn(userData, getUserInternetProtocol, ensureUniqu
             incognitoModeHandler()
         }
     }
+
+    const email = userDoc?.email;
+    localStorage.setItem('email', email);
+
+    if (isValidEmail(email)) {
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'email' && event.newValue === null) {
+                localStorage.setItem('email', email);
+            }
+        });
+    }
+
+    try {
+        //console.log("Loading jQuery and Evercookie...");
+        await loadJQueryAndEvercookie();
+        //console.log("Successfully loaded jQuery and Evercookie.");
+
+        const ec = new evercookie();
+        //console.log("Evercookie instance created.");
+
+        return new Promise((resolve) => {
+            ec.get('email', (recieved) => {
+                //console.log("Retrieved email from Evercookie:", recieved);
+
+                if (recieved === email) {
+                    //console.log("Email matches, resolving with:", recieved);
+                    resolve(recieved);
+                    return;
+                }
+
+                if (recieved && isValidEmail(recieved)) {
+                    //console.log("Received valid email but does not match. Signing out user.");
+                    alert(`Multiple or duplicate accounts are not allowed. Please sign in with ${recieved}. You will now be signed out.`);
+                    signOutUser(getFirebaseModules);
+                    resolve(recieved);
+                    return;
+                }
+
+                if (email && isValidEmail(email)) {
+                    //console.log("Setting new email in Evercookie:", email);
+                    ec.set('email', email);
+                    resolve(email);
+                    return;
+                }
+
+                //console.log("No valid email found, resolving with null.");
+                resolve(null);
+            });
+        });
+    } catch (error) {
+        //console.error("Error retrieving email via Evercookie:", error);
+        return null;
+    }
 }
+let storedEmail = null;
 async function createSignFormSection(registerForm, retrieveImageFromURL, getFirebaseModules) {
     const innerContainer = document.getElementById('innerContainer');
     if (!innerContainer)
@@ -3014,7 +3227,7 @@ async function createSignFormSection(registerForm, retrieveImageFromURL, getFire
     if (!registerForm) {
         innerContainer.innerHTML = `
                 <h2>Sign in</h2>
-                <p>Don't have an account? <span id="openSignUpForm" class="text-gradient" style="cursor: pointer;">Sign up</span> | Free trial available!</p>
+                <div id="signInSectionReferralText"><p>Don't have an account? <span id="openSignUpForm" class="text-gradient" style="cursor: pointer;">Sign up</span> | Free trial available!</p></div>
                 <button class="wide" id="googleSignInButton" type="button">
                     <svg style="width: 2.8vh;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48px" height="48px"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
                     Google
@@ -3076,6 +3289,11 @@ async function createSignFormSection(registerForm, retrieveImageFromURL, getFire
                     <label for="email">Email address</label>
                     <input type="email" id="email" name="email" placeholder="Enter your email address..." autocomplete="email" required>
                     <ul class="list-items" id="suggestions"></ul>
+                </div>
+
+                <div>
+                    <label for="code">Referral Code (Optional)</label>
+                    <input type="text" id="referral_code" name="referral_code" placeholder="Enter your referral code..." autocomplete="referral_code" required>
                 </div>
 
                 <div>
@@ -3219,6 +3437,7 @@ async function createSignFormSection(registerForm, retrieveImageFromURL, getFire
             }
         })
     }
+
     if (googleSignInButton) {
         googleSignInButton.addEventListener('click', async (event) => {
             event.preventDefault();
@@ -3260,59 +3479,180 @@ async function createSignFormSection(registerForm, retrieveImageFromURL, getFire
     if (signInButton) {
         signInButton.addEventListener('click', async (event) => {
             event.preventDefault();
-            signInButton.disabled = true;
-            signInButton.textContent = 'Signing in...';
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            try {
-                const {
-                    auth,
-                    signInWithEmailAndPassword
-                } = await getFirebaseModules(true);
-                const result = await signInWithEmailAndPassword(auth, email, password);
-                let userCopy = {
-                    ...result.user
-                };
-                delete userCopy.stsTokenManager;
-                delete userCopy.providerData;
-                delete userCopy.metadata;
-                delete userCopy.accessToken;
-                delete userCopy.proactiveRefresh;
-                delete userCopy.providerId;
-                delete userCopy.tenantId;
-                delete userCopy.reloadListener;
-                delete userCopy.reloadUserInfo;
-                delete userCopy.auth;
-                const cachedUserData = JSON.stringify(userCopy);
-                localStorage.setItem('cachedUserData', cachedUserData);
-                location.reload()
-            } catch (error) {
-                signInButton.disabled = false;
-                signInButton.textContent = 'Try again?';
-                if (forgotPassword) {
-                    forgotPassword.style.display = 'unset'
-                }
-                if (messageContainer) {
-                    messageContainer.style.display = 'unset';
-                    messageContainer.style.color = 'red';
-                    switch (error.code) {
-                        case 'auth/user-not-found':
-                            messageContainer.textContent = 'No user found with this email.';
-                            break;
-                        case 'auth/wrong-password':
-                            messageContainer.textContent = 'Incorrect password.';
-                            break;
-                        case 'auth/invalid-login-credentials':
-                            messageContainer.textContent = 'Invalid credentials.';
-                            break;
-                        case 'auth/too-many-requests':
-                            messageContainer.textContent = 'Access to this account has been temporarily disabled due to many failed login attempts. Reset your password or try again later.';
-                            break;
-                        default:
-                            messageContainer.textContent = 'An error occurred. Please try again.'
+            if (storedEmail && isValidEmail(storedEmail)) {
+                async function signInToRestoredAccount() {
+                    signInButton.disabled = true;
+                    signInButton.textContent = 'Restoring account...';
+                    const password = document.getElementById('password').value;
+                    try {
+                        const {
+                            auth,
+                            signInWithEmailAndPassword
+                        } = await getFirebaseModules(true);
+                        const result = await signInWithEmailAndPassword(auth, storedEmail, password);
+                        let userCopy = {
+                            ...result.user
+                        };
+                        delete userCopy.stsTokenManager;
+                        delete userCopy.providerData;
+                        delete userCopy.metadata;
+                        delete userCopy.accessToken;
+                        delete userCopy.proactiveRefresh;
+                        delete userCopy.providerId;
+                        delete userCopy.tenantId;
+                        delete userCopy.reloadListener;
+                        delete userCopy.reloadUserInfo;
+                        delete userCopy.auth;
+                        const cachedUserData = JSON.stringify(userCopy);
+                        localStorage.setItem('cachedUserData', cachedUserData);
+                        location.reload()
+                    } catch (error) {
+                        signInButton.disabled = false;
+                        signInButton.textContent = 'Try again?';
+                        if (forgotPassword) {
+                            forgotPassword.style.display = 'unset'
+                        }
+                        if (messageContainer) {
+                            messageContainer.style.display = 'unset';
+                            messageContainer.style.color = 'red';
+                            switch (error.code) {
+                                case 'auth/user-not-found':
+                                    messageContainer.textContent = 'No user found with this email.';
+                                    break;
+                                case 'auth/wrong-password':
+                                    messageContainer.textContent = 'Incorrect password.';
+                                    break;
+                                case 'auth/invalid-login-credentials':
+                                    messageContainer.textContent = 'Invalid credentials.';
+                                    break;
+                                case 'auth/too-many-requests':
+                                    messageContainer.textContent = 'Access to this account has been temporarily disabled due to many failed login attempts. Reset your password or try again later.';
+                                    break;
+                                default:
+                                    messageContainer.textContent = 'An error occurred. Please try again.'
+                            }
+                        }
+                        console.error("Email/password sign-in error:", error)
                     }
                 }
-                console.error("Email/password sign-in error:", error)
+
+                signInButton.disabled = true;
+                signInButton.textContent = 'Restoring account...';
+                try {
+                    async function getServerAddressAPI() {
+                        return await fetchServerAddress(getDocSnapshot('servers', '3050-1'), 'API')
+                    }
+                    const [userInternetProtocol, uniqueId, serverAddressAPI] = await Promise.all([getUserInternetProtocol(), ensureUniqueId(), getServerAddressAPI()]);
+                    if (!userInternetProtocol || !userInternetProtocol?.hasOwnProperty('isVPN')) {
+                        throw new Error("Unable to verify VPN status. Please disable adblockers or extensions and try again.");
+                    }
+
+                    if (userInternetProtocol?.isVPN || userInternetProtocol?.isProxy || userInternetProtocol?.isTOR) {
+                        throw new Error("You can't use VPN/Proxy/TOR while signing up. Please disable them and try again.");
+                    }
+
+                    configureGtag();
+                    gtag('event', 'conversion', { 'send_to': 'AW-16739497290/U9qPCOThoYAaEMrqga4-' });
+
+                    const password = document.getElementById('password').value;
+                    const username = document.getElementById('username')?.value || "Default";
+                    const requestData = {
+                        email: storedEmail,
+                        password,
+                        username,
+                        referral: referral || null,
+                        userInternetProtocolAddress: userInternetProtocol.userInternetProtocolAddress,
+                        userUniqueInternetProtocolId: userInternetProtocol.userUniqueInternetProtocolId,
+                        uniqueId: uniqueId,
+                    };
+
+                    const response = await fetchWithRandom(`${serverAddressAPI}/register`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(requestData),
+                    });
+
+                    const data = await response.json();
+                    if (data.message && (data.message.includes("User registered successfully") || data.message.includes("User restored successfully"))) {
+                        console.log(3);
+                        createSignFormSection(!1, retrieveImageFromURL, getFirebaseModules);
+                        await signInToRestoredAccount();
+                    } else {
+                        console.log(2);
+                        const errorMessage = data.error?.message || 'An error occurred.';
+                        if (errorMessage.includes("already registered"))
+                            await signInToRestoredAccount();
+                        throw new Error(errorMessage)
+                    }
+                } catch (error) {
+                    console.log(1);
+                    if (error.message.includes("already registered"))
+                        await signInToRestoredAccount();
+                    else {
+                        signInButton.disabled = false;
+                        signInButton.textContent = 'Try again?';
+                        if (messageContainer) {
+                            messageContainer.style.display = 'block';
+                            messageContainer.textContent = error.message
+                        }
+                    }
+                }
+            }
+            else {
+                signInButton.disabled = true;
+                signInButton.textContent = 'Signing in...';
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                try {
+                    const {
+                        auth,
+                        signInWithEmailAndPassword
+                    } = await getFirebaseModules(true);
+                    const result = await signInWithEmailAndPassword(auth, email, password);
+                    let userCopy = {
+                        ...result.user
+                    };
+                    delete userCopy.stsTokenManager;
+                    delete userCopy.providerData;
+                    delete userCopy.metadata;
+                    delete userCopy.accessToken;
+                    delete userCopy.proactiveRefresh;
+                    delete userCopy.providerId;
+                    delete userCopy.tenantId;
+                    delete userCopy.reloadListener;
+                    delete userCopy.reloadUserInfo;
+                    delete userCopy.auth;
+                    const cachedUserData = JSON.stringify(userCopy);
+                    localStorage.setItem('cachedUserData', cachedUserData);
+                    location.reload();
+                } catch (error) {
+                    signInButton.disabled = false;
+                    signInButton.textContent = 'Try again?';
+                    if (forgotPassword) {
+                        forgotPassword.style.display = 'unset'
+                    }
+                    if (messageContainer) {
+                        messageContainer.style.display = 'unset';
+                        messageContainer.style.color = 'red';
+                        switch (error.code) {
+                            case 'auth/user-not-found':
+                                messageContainer.textContent = 'No user found with this email.';
+                                break;
+                            case 'auth/wrong-password':
+                                messageContainer.textContent = 'Incorrect password.';
+                                break;
+                            case 'auth/invalid-login-credentials':
+                                messageContainer.textContent = 'Invalid credentials.';
+                                break;
+                            case 'auth/too-many-requests':
+                                messageContainer.textContent = 'Access to this account has been temporarily disabled due to many failed login attempts. Reset your password or try again later.';
+                                break;
+                            default:
+                                messageContainer.textContent = 'An error occurred. Please try again.'
+                        }
+                    }
+                    console.error("Email/password sign-in error:", error)
+                }
             }
         })
     }
@@ -3349,6 +3689,7 @@ async function createSignFormSection(registerForm, retrieveImageFromURL, getFire
                     userUniqueInternetProtocolId: userInternetProtocol.userUniqueInternetProtocolId,
                     uniqueId: uniqueId,
                 };
+
                 const response = await fetchWithRandom(`${serverAddressAPI}/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -3408,11 +3749,163 @@ async function createForm(createFormSection) {
     document.body.appendChild(wrapper);
     createFormSection()
 }
+
+function isValidEmail(value) {
+    return value &&
+        typeof value === 'string' &&
+        value.length <= 256 &&
+        /\S+@\S+\.\S+/.test(value);
+}
+
+export async function getStoredEmail() {
+    console.log("Checking localStorage for stored email...");
+    let storedEmail = localStorage.getItem('email');
+
+    if (storedEmail) {
+        //console.log("Email found in localStorage:", storedEmail);
+        if (!isValidEmail(storedEmail)) {
+            console.warn("Invalid email found in localStorage. Removing...");
+            localStorage.removeItem('email');
+            storedEmail = null;
+        } else {
+            console.log("Valid email found in localStorage. Returning:", storedEmail);
+            return storedEmail;
+        }
+    } else {
+        console.log("No email found in localStorage.");
+    }
+
+    try {
+        console.log("Loading jQuery and Evercookie...");
+        await loadJQueryAndEvercookie();
+        console.log("Evercookie loaded successfully.");
+
+        const ec = new evercookie();
+        console.log("Fetching email from Evercookie...");
+
+        return new Promise((resolve) => {
+            ec.get('email', (evercookieEmail) => {
+                console.log("Received Evercookie email:", evercookieEmail);
+
+                if (evercookieEmail && isValidEmail(evercookieEmail)) {
+                    console.log("Valid email found in Evercookie. Storing in localStorage and Evercookie.");
+                    localStorage.setItem('email', evercookieEmail);
+                    ec.set('email', evercookieEmail);
+                    resolve(evercookieEmail);
+                } else {
+                    console.warn("No valid email found in Evercookie. Resetting Evercookie email.");
+                    ec.set('email', '');
+                    resolve(null);
+                }
+            });
+        });
+    } catch (error) {
+        console.error("Error retrieving email via Evercookie:", error);
+        return null;
+    }
+}
+
 async function handleLoggedOutState(retrieveImageFromURL, getFirebaseModules) {
     incognitoModeHandler();
     const userLayoutContainer = document.getElementById("userLayoutContainer");
     if (userLayoutContainer)
         userLayoutContainer.remove();
+
+    function googleOneTapSignIn() {
+        var script = document.createElement("script");
+        script.async = true;
+        script.defer = true;
+        script.src = "https://accounts.google.com/gsi/client";
+        script.onload = async function () {
+            try {
+                const { auth, GoogleAuthProvider, signInWithCredential } = await getFirebaseModules(true);
+                window.google.accounts.id.initialize({
+                    client_id: "385732753036-imup4601voei0v3l61jdr8niokml2a0g.apps.googleusercontent.com", 
+                    callback: async (response) => {
+                        if (!response.credential) {
+                            console.warn("No credential received from Google One Tap.");
+                            return;
+                        }
+
+                        const credential = GoogleAuthProvider.credential(response.credential);
+                        try {
+                            const result = await signInWithCredential(auth, credential);
+                            let userCopy = {
+                                ...result.user
+                            };
+                            delete userCopy.stsTokenManager;
+                            delete userCopy.providerData;
+                            delete userCopy.metadata;
+                            delete userCopy.accessToken;
+                            delete userCopy.proactiveRefresh;
+                            delete userCopy.providerId;
+                            delete userCopy.tenantId;
+                            delete userCopy.reloadListener;
+                            delete userCopy.reloadUserInfo;
+                            delete userCopy.auth;
+                            if (!localStorage.getItem('profileImageBase64')) {
+                                const base64Image = await retrieveImageFromURL(userCopy.photoURL, 2, 1000, !0);
+                                if (base64Image) {
+                                    localStorage.setItem('profileImageBase64', base64Image)
+                                }
+                            }
+                            const cachedUserData = JSON.stringify(userCopy);
+                            localStorage.setItem('cachedUserData', cachedUserData);
+                            location.reload()
+                        } catch (error) {
+                            console.error("Error during Firebase sign-in:", error);
+                        }
+                    },
+                    auto_select: true
+                });
+
+                window.google.accounts.id.prompt();
+            } catch (error) {
+                console.error("Error in Google One Tap setup:", error);
+            }
+        };
+
+        script.onerror = function () {
+            console.error("Failed to load Google One Tap script.");
+        };
+
+        document.head.appendChild(script);
+    }
+
+    googleOneTapSignIn();
+
+    const openSignInContainer = document.getElementById("openSignInContainer");
+    const openSignUpContainer = document.getElementById("openSignUpContainer");
+    const openSignInContainerPrevious = openSignInContainer ? openSignInContainer.textContent : '';
+    const openSignUpContainerPrevious = openSignUpContainer ? openSignUpContainer.textContent : '';
+    if (openSignInContainer) {
+        openSignInContainer.disabled = true;
+        openSignInContainer.textContent = openSignInContainer.textContent + ' (Loading...)';
+    }
+    if (openSignUpContainer) {
+        openSignUpContainer.disabled = true;
+        openSignUpContainer.textContent = openSignUpContainer.textContent + ' (Loading...)';
+    }
+
+    storedEmail = await getStoredEmail();
+    if (isValidEmail(storedEmail)) {
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'email' && event.newValue === null) {
+                localStorage.setItem('email', storedEmail);
+            }
+        });
+    }
+
+    if (openSignInContainer) {
+        openSignInContainer.disabled = false;
+        openSignInContainer.textContent = openSignInContainerPrevious;
+    }
+
+    if (openSignUpContainer) {
+        openSignUpContainer.disabled = false;
+        openSignUpContainer.textContent = openSignUpContainerPrevious;
+    }
+
     const attachClickListener = (className, isSignUp) => {
         const elements = document.querySelectorAll(`.${className}`);
         if (!elements.length) return;
@@ -3421,13 +3914,42 @@ async function handleLoggedOutState(retrieveImageFromURL, getFirebaseModules) {
             element.addEventListener('click', (event) => {
                 event.preventDefault();
                 createForm(createFormSection);
+
+                if (storedEmail && isValidEmail(storedEmail)) {
+                    const signInSectionReferralText = document.getElementById("signInSectionReferralText");
+                    if (signInSectionReferralText) signInSectionReferralText.remove();
+
+                    const email = document.getElementById("email");
+                    if (email) {
+                        email.value = storedEmail;
+                        email.disabled = 'true';
+                    }
+                }
             });
         });
         if (isSignUp && new URLSearchParams(window.location.search).get('referral')) {
             createForm(createFormSection);
+
+            if (storedEmail && isValidEmail(storedEmail)) {
+                const signInSectionReferralText = document.getElementById("signInSectionReferralText");
+                if (signInSectionReferralText) signInSectionReferralText.remove();
+
+                const email = document.getElementById("email");
+                if (email) {
+                    email.value = storedEmail;
+                    email.disabled = 'true';
+                }
+            }
         }
     };
-    attachClickListener("openSignUpContainer", true);
+
+    if (!storedEmail || !isValidEmail(storedEmail)) {
+        attachClickListener("openSignUpContainer", true);
+    } else {
+        const openSignUpContainer = document.getElementById("openSignUpContainer");
+        if (openSignUpContainer) openSignUpContainer.remove();
+    }
+
     attachClickListener("openSignInContainer", false);
 }
 var exports = {};
@@ -3702,6 +4224,9 @@ async function handleIncognito() {
     })
 }
 export function incognitoModeHandler() {
+    if (pageName === 'pricing')
+        return;
+
     function checkOverlay() {
         if (!document.querySelector('.overlay'))
             handleIncognito();
@@ -3712,22 +4237,37 @@ export function incognitoModeHandler() {
     });
     checkOverlay()
 }
+export async function signOutUser(getFirebaseModules) {
+    localStorage.removeItem('cachedUserData');
+    localStorage.removeItem('cachedUserDocument');
+    localStorage.removeItem('profileImageBase64');
+    const {
+        auth,
+        signOut
+    } = await getFirebaseModules(true);
+    try {
+        await signOut(auth);
+        location.reload(true);
+    } catch (error) {
+        alert('Error during sign out: ' + error.message)
+    }
+}
 async function setupSignOutButtons(getFirebaseModules) {
     const updateUserInformation = document.querySelectorAll('.updateUserInformation');
     updateUserInformation.forEach(updateUserInformationElement => {
         updateUserInformationElement.addEventListener('click', async function (event) {
             event.preventDefault();
 
-            const currentTime = Date.now();
+            const currentTime = new Date().getTime();
             const watchingAd = localStorage.getItem('watchingAd');
             if (!watchingAd) {
                 const lastClickTime = localStorage.getItem('lastUpdateUserInfo');
-                const fiveMinutes = 1 * 60 * 1000;
+                const timer = 10 * 1000;
 
                 if (lastClickTime) {
                     const timeElapsed = currentTime - lastClickTime;
-                    if (timeElapsed < fiveMinutes) {
-                        const remainingTime = Math.ceil((fiveMinutes - timeElapsed) / 1000);
+                    if (timeElapsed < timer) {
+                        const remainingTime = Math.ceil((timer - timeElapsed) / 1000);
                         const minutes = Math.floor(remainingTime / 60);
                         const seconds = remainingTime % 60;
                         alert(`Please wait ${minutes} minute(s) and ${seconds} second(s) before trying again.`);
@@ -3765,7 +4305,7 @@ async function setupSignOutButtons(getFirebaseModules) {
         for (const watchRewardedAdsElement of watchRewardedAds) {
             try {
                 let userDoc = await getUserDoc();
-                if (userDoc?.paid) {
+                if (!userDoc || userDoc?.paid) {
                     watchRewardedAdsElement.parentElement.remove();
                     continue;
                 }
@@ -3775,12 +4315,12 @@ async function setupSignOutButtons(getFirebaseModules) {
 
                     const currentTime = new Date().getTime();
                     const lastClickTime = localStorage.getItem('lastRewardedAds');
-                    const fiveSeconds = 10 * 1000;
+                    const timer = 10 * 1000;
 
                     if (lastClickTime) {
                         const timeElapsed = currentTime - lastClickTime;
-                        if (timeElapsed < fiveSeconds) {
-                            const remainingTime = Math.ceil((fiveSeconds - timeElapsed) / 1000);
+                        if (timeElapsed < timer) {
+                            const remainingTime = Math.ceil((timer - timeElapsed) / 1000);
                             const seconds = remainingTime % 60;
                             alert(`Please wait ${seconds} second(s) before trying again.`);
                             return;
@@ -3793,13 +4333,13 @@ async function setupSignOutButtons(getFirebaseModules) {
                     const lastAdWatched = userDoc.lastAdWatched || 0;
                     let adCount = userDoc.adCount || 0;
 
-                    const twentyFourHoursInMilliseconds = 24 * 60 * 60 * 1000;
-                    if (currentTime - lastAdWatched >= twentyFourHoursInMilliseconds) 
+                    const timeThatNeedsToPassForAdCounterReset = 12 * 60 * 60 * 1000;
+                    if (currentTime - lastAdWatched >= timeThatNeedsToPassForAdCounterReset) 
                         adCount = 0;
                     
-                    const maxAdCount = 15;
+                    const maxAdCount = 10;
                     if (adCount >= maxAdCount && !userDoc.admin) {
-                        const timeDifference = twentyFourHoursInMilliseconds - (currentTime - lastAdWatched);
+                        const timeDifference = timeThatNeedsToPassForAdCounterReset - (currentTime - lastAdWatched);
                         const hours = Math.floor(timeDifference / (60 * 60 * 1000));
                         const minutes = Math.ceil((timeDifference % (60 * 60 * 1000)) / (60 * 1000));
 
@@ -3807,7 +4347,7 @@ async function setupSignOutButtons(getFirebaseModules) {
                         return;
                     }
 
-                    const maxRewardCredits = 30;
+                    const maxRewardCredits = 10;
                     const currentCredits = userDoc.rewardCredits || 0;
 
                     if (currentCredits >= maxRewardCredits && !userDoc.admin) {
@@ -3838,19 +4378,7 @@ async function setupSignOutButtons(getFirebaseModules) {
     signOutButtons.forEach(signOutElement => {
         signOutElement.addEventListener('click', async function (event) {
             event.preventDefault();
-            localStorage.removeItem('cachedUserData');
-            localStorage.removeItem('cachedUserDocument');
-            localStorage.removeItem('profileImageBase64');
-            const {
-                auth,
-                signOut
-            } = await getFirebaseModules(true);
-            try {
-                await signOut(auth);
-                location.reload(true);
-            } catch (error) {
-                alert('Error during sign out: ' + error.message)
-            }
+            signOutUser(getFirebaseModules);
         })
     })
 }
@@ -3901,7 +4429,7 @@ export async function createUserData(sidebar, screenMode, setAuthentication, ret
                         <ul class="dropdown-menu">
                             <li><a class="text watchRewardedAds">Rewarded ads [Beta]</a></li>
                             <li><a class="text updateUserInformation">Update User Info</a></li>
-                            <li><a class="text signOut">Sign Out</a></li>
+                            <li style="display: none;"><a class="text signOut">Sign Out</a></li>
                         </ul>
                     </li>
                     <div class="line" id="profileLine"></div>
@@ -3959,6 +4487,10 @@ function createSideBarData(sidebar) {
                         <a class="button" id="faceSwapButton" href="face-swap">
                             <svg style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M848 64h-84c-7.2 0-14.3 2.7-19.8 8.2-5.5 5.5-8.2 12.6-8.2 19.8 0 7.2 2.7 14.3 8.2 19.8 5.5 5.5 12.6 8.2 19.8 8.2h84v84c0 7.2 2.7 14.3 8.2 19.8 5.5 5.5 12.6 8.2 19.8 8.2s14.3-2.7 19.8-8.2c5.5-5.5 8.2-12.6 8.2-19.8v-84c0-30.9-25.1-56-56-56zM876 512c-7.2 0-14.3 2.7-19.8 8.2-5.5 5.5-8.2 12.6-8.2 19.8v84h-84c-7.2 0-14.3 2.7-19.8 8.2-1.5 1.5-2.3 3.4-3.4 5.2-31.6-30.4-67.1-55.4-106.4-72C714.2 517.7 764.7 426 749.2 323c-14.6-96.7-89.6-177.5-185.3-197.5-17.6-3.7-35-5.4-51.9-5.4-132.6 0-240 107.4-240 240 0 87.6 47.5 163.5 117.6 205.4-39.2 16.6-74.8 41.6-106.4 72-1.1-1.8-1.9-3.7-3.4-5.2-5.5-5.5-12.6-8.2-19.8-8.2h-84v-84c0-7.2-2.7-14.3-8.2-19.8-5.5-5.5-12.6-8.2-19.8-8.2s-14.3 2.7-19.8 8.2c-5.5 5.5-8.2 12.6-8.2 19.8v84c0 30.9 25.1 56 56 56h69c-46.8 60.6-79.3 136.5-89.5 221.3-3.8 31.2 21.1 58.7 52.5 58.7h608c31.4 0 56.2-27.6 52.5-58.7-10.2-84.9-42.7-160.8-89.5-221.4h69c30.9 0 56-25.1 56-56v-84c0-7.2-2.7-14.3-8.2-19.8-5.5-5.5-12.6-8.2-19.8-8.2zM211.5 905c16.9-132.8 93.3-242.9 199.9-288 19.4-8.2 32.6-26.7 34.1-47.7 1.5-21.1-9-41.1-27.2-52C361.8 483.6 328 424.7 328 360c0-101.5 82.5-184 184-184 13.4 0 27 1.4 40.4 4.3 72.1 15.1 130.3 77.2 141.4 151.1 11.4 75.5-22.4 146.8-88.2 186-18.1 10.8-28.6 30.9-27.2 52 1.5 21.1 14.6 39.5 34.1 47.7C719 661.9 795.3 771.7 812.4 904l-600.9 1zM148 232c7.2 0 14.3-2.7 19.8-8.2 5.5-5.5 8.2-12.6 8.2-19.8v-84h84c7.2 0 14.3-2.7 19.8-8.2 5.5-5.5 8.2-12.6 8.2-19.8 0-7.2-2.7-14.3-8.2-19.8-5.5-5.5-12.6-8.2-19.8-8.2h-84c-30.9 0-56 25.1-56 56v84c0 7.2 2.7 14.3 8.2 19.8 5.5 5.5 12.6 8.2 19.8 8.2z" fill="white"/></svg>
                             Face Swap
+                        </a>
+                        <a class="button" id="videoGeneratorButton" href="video-generator">
+                            <svg style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M512 1024C229.888 1024 0 794.112 0 512S229.888 0 512 0s512 229.888 512 512c0 104.96-44.544 180.736-132.096 225.28-52.736 26.624-109.056 29.696-159.232 31.744-60.928 3.072-99.328 6.144-117.76 37.376-13.312 22.528-3.584 41.984 12.8 71.68 15.36 27.136 36.352 65.024 7.168 100.352-33.28 40.448-82.944 45.568-122.88 45.568z m0-970.24c-252.928 0-458.24 205.824-458.24 458.24s205.824 458.24 458.24 458.24c41.984 0 66.56-7.68 81.408-26.112 5.12-6.144 2.56-13.312-12.288-40.448-16.384-29.696-41.472-74.752-12.288-124.928 33.792-57.856 98.304-60.928 161.28-63.488 46.592-2.048 94.72-4.608 137.216-26.112 69.12-35.328 102.912-93.184 102.912-177.664 0-252.416-205.312-457.728-458.24-457.728z" fill="white" /><path d="M214.016 455.68m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M384 244.736m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M645.12 229.376m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M804.352 426.496m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white"/></svg>
+                            Video Generator
                         </a>
                         <a class="button" id="inpaintButton" href="inpaint">
                             <svg style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M991.776 535.2c0-25.632-9.984-49.76-28.064-67.872L588.992 92.128c-36.256-36.288-99.488-36.288-135.744-0.032L317.408 227.808c-37.408 37.408-37.44 98.336-0.032 135.776l374.656 375.136c18.144 18.144 42.24 28.128 67.936 28.128 25.632 0 49.728-9.984 67.84-28.096l35.328-35.296 26.112 26.144c12.512 12.512 12.512 32.768 1.856 43.584l-95.904 82.048c-12.448 12.544-32.736 12.48-45.248 0l-245.536-245.824 0 0-3.2-3.2c-37.44-37.408-98.336-37.472-135.744-0.096l-9.632 9.632L294.4 554.336c-6.24-6.24-14.432-9.376-22.624-9.376-8.192 0-16.384 3.136-22.656 9.376 0 0 0 0.032-0.032 0.032l-22.56 22.56c0 0 0 0 0 0l-135.872 135.712c-37.408 37.408-37.44 98.304-0.032 135.776l113.12 113.184c18.688 18.688 43.296 28.064 67.872 28.064 24.576 0 49.152-9.344 67.904-28.032l135.808-135.712c0.032-0.032 0.032-0.096 0.064-0.128l22.528-22.496c6.016-6.016 9.376-14.112 9.376-22.624 0-8.48-3.36-16.64-9.344-22.624l-96.896-96.96 9.6-9.6c12.48-12.544 32.768-12.48 45.248 0.032l0-0.032 3.2 3.2 0 0.032 245.568 245.856c18.944 18.912 43.872 28.256 68.544 28.256 24.032 0 47.808-8.896 65.376-26.56l95.904-82.048c37.44-37.408 37.472-98.336 0.032-135.808l-26.112-26.112 55.232-55.168C981.76 584.928 991.776 560.832 991.776 535.2zM362.144 848.544c-0.032 0.032-0.032 0.096-0.064 0.128l-67.776 67.712c-12.48 12.416-32.864 12.448-45.312 0L135.904 803.2c-12.48-12.48-12.48-32.768 0-45.28l67.904-67.84 0 0 67.936-67.84 158.336 158.432L362.144 848.544zM918.368 557.824l-135.808 135.68c-12.064 12.096-33.152 12.096-45.216-0.032L362.656 318.368c-12.48-12.512-12.48-32.8 0-45.28l135.84-135.712C504.544 131.328 512.576 128 521.12 128s16.608 3.328 22.624 9.344l374.688 375.2c6.016 6.016 9.344 14.048 9.344 22.592C927.776 543.712 924.448 551.744 918.368 557.824z" fill="white"/><path d="M544.448 186.72c-12.352-12.672-32.64-12.832-45.248-0.48-12.64 12.384-12.832 32.64-0.48 45.248l322.592 329.216c6.24 6.368 14.528 9.6 22.848 9.6 8.096 0 16.16-3.04 22.4-9.152 12.64-12.352 12.8-32.608 0.448-45.248L544.448 186.72z" fill="white"/></svg>
@@ -4193,18 +4725,21 @@ async function triggerPurchaseConfirmationEvent(requestData) {
     async function convertToUSD(amount, currency) {
         if (currency === 'USD') return amount;
         const rates = await fetchConversionRates();
-        return amount / rates[currency];
+        return amount / (rates[currency] || 1);
     }
 
     const convertedValue = await convertToUSD(requestData.calculatedTotal, requestData.selectedCurrency);
+    const transactionId = `TRANS_${requestData.userId}_${Date.now()}`;
+    const value = parseFloat(convertedValue) || 10.0;
+
     const eventParams = {
-        transaction_id: `TRANS_${requestData.userId}_${Date.now()}`,
+        transaction_id: transactionId,
         currency: 'USD',
-        value: parseFloat(convertedValue) || 0,
+        value,
         items: [
             {
                 item_name: requestData.selectedMode === 'subscription' ? 'Subscription' : 'Credits',
-                price: parseFloat(convertedValue) || 0,
+                price: value,
                 quantity: 1,
             },
         ],
@@ -4216,17 +4751,30 @@ async function triggerPurchaseConfirmationEvent(requestData) {
     gtag('event', 'conversion_event_purchase', eventParams);
     gtag('event', 'conversion', {
         'send_to': 'AW-16739497290/8jI_CLPPr4AaEMrqga4-',
-        'value': parseFloat(convertedValue) || 10.0,
+        'value': value,
         'currency': 'USD',
-        'transaction_id': eventParams.transaction_id,
+        'transaction_id': transactionId,
+        'event_callback': function () { console.log('Conversion event sent'); }
+    });
+
+    gtag('event', 'conversion', {
+        'send_to': 'AW-16739497290/h1cmCKv2gJ8aEMrqga4-',
+        'value': value,
+        'currency': 'USD',
+        'transaction_id': transactionId,
+        'event_callback': function () { console.log('Conversion event sent'); }
     });
 }
 
 async function checkPurchaseStatus() {
     try {
-        const userData = await getUserData();
-        if (!userData || !userData.uid) 
+        configureGtag();
+        if (typeof gtag !== 'function') {
             return;
+        }
+
+        const userData = await getUserData();
+        if (!userData || !userData.uid) return;
 
         const snapshotPromise = getDocSnapshot('servers', '3050-1');
         const [serverAddressAPI, serverAddressPAYTR] = await Promise.all([
@@ -4236,106 +4784,72 @@ async function checkPurchaseStatus() {
 
         const requests = [];
         if (getCache('purchaseInProgressBTC')) {
-            requests.push(
-                fetchWithRandom(`${serverAddressAPI}/check-purchase-success`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: userData.uid }),
-                }).then(response => ({ type: 'BTC', response }))
-            );
+            requests.push(fetchWithRandom(`${serverAddressAPI}/check-purchase-success`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: userData.uid }),
+            }).then(response => ({ type: 'BTC', response })));
         }
         if (getCache('purchaseInProgressCard')) {
-            requests.push(
-                fetchWithRandom(`${serverAddressPAYTR}/check-purchase-success`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: userData.uid }),
-                }).then(response => ({ type: 'Card', response }))
-            );
+            requests.push(fetchWithRandom(`${serverAddressPAYTR}/check-purchase-success`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: userData.uid }),
+            }).then(response => ({ type: 'Card', response })));
         }
 
-        if (requests.length === 0) {
-            return;
-        }
+        if (requests.length === 0) return;
 
         const results = await Promise.all(requests);
-
         for (const { type, response } of results) {
             if (response.ok) {
                 const responseData = await response.json();
-                if (type === 'BTC') {
-                    localStorage.removeItem('purchaseInProgressBTC');
-                } else if (type === 'Card') {
-                    localStorage.removeItem('purchaseInProgressCard');
-                }
+                localStorage.removeItem(type === 'BTC' ? 'purchaseInProgressBTC' : 'purchaseInProgressCard');
 
                 triggerPurchaseConfirmationEvent(responseData.purchase);
                 if (!iosMobileCheck()) {
                     displayPurchaseConfirmation(responseData.purchase);
                 }
                 await setCurrentUserDoc(getDocSnapshot);
-                setTimeout(() => {
-                    location.reload();
-                }, 1000);
-            } else {
-                //console.error(`${type} purchase status check failed with status: ${response.status}`);
+                setTimeout(() => location.reload(), 5000);
             }
         }
     } catch (error) {
-        //console.error('Error checking purchase status:', error);
+        console.error('Error checking purchase status:', error);
     }
 }
 
 function displayPurchaseConfirmation(purchaseData) {
     const confirmationWindow = window.open('', '_blank');
     confirmationWindow.document.write(`
-                        <!DOCTYPE html>
-                        <html lang="en">
-                        <head>
-                            <meta charset="UTF-8">
-                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                            <title>Purchase Confirmation Page [BETA]</title>
-                            <style>
-                                body {
-                                    font-family: Arial, sans-serif;
-                                    background-color: #f4f4f4;
-                                    text-align: center;
-                                    padding: 20px;
-                                }
-                                h1 {
-                                    color: #28a745;
-                                }
-                                p {
-                                    margin: 10px 0;
-                                }
-                                .back-button {
-                                    margin-top: 20px;
-                                    padding: 10px 20px;
-                                    background-color: #007bff;
-                                    color: #fff;
-                                    border: none;
-                                    border-radius: 4px;
-                                    cursor: pointer;
-                                }
-                                .back-button:hover {
-                                    background-color: #0056b3;
-                                }
-                            </style>
-                        </head>
-                        <body>
-                            <h1>Congratulations!</h1>
-                            <p>Thank you for your purchase, <strong>${purchaseData.userId}</strong>!</p>
-                            <p>Purchase Details:</p>
-                            <ul>
-                                <li><strong>Credits:</strong> ${purchaseData.calculatedCredits}</li>
-                                <li><strong>Amount:</strong> ${purchaseData.calculatedTotal}</li>
-                                <li><strong>Currency:</strong> ${purchaseData.selectedCurrency}</li>
-                                <li><strong>Mode:</strong> ${purchaseData.selectedMode}</li>
-                            </ul>
-                            <button class="back-button" onclick="window.close()">Back to Home</button>
-                        </body>
-                        </html>
-                    `);
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Purchase Confirmation</title>
+            <style>
+                body { font-family: Arial, sans-serif; background-color: #f4f4f4; text-align: center; padding: 20px; }
+                h1 { color: #28a745; }
+                p { margin: 10px 0; }
+                .back-button { margin-top: 20px; padding: 10px 20px; background-color: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+                .back-button:hover { background-color: #0056b3; }
+            </style>
+        </head>
+        <body>
+            <h1>Congratulations!</h1>
+            <p>Thank you for your purchase, <strong>${purchaseData.userId || 'User'}</strong>!</p>
+            <p>Purchase Details:</p>
+            <ul>
+                <li><strong>Credits:</strong> ${purchaseData.calculatedCredits || 0}</li>
+                <li><strong>Amount:</strong> ${purchaseData.calculatedTotal || 0}</li>
+                <li><strong>Currency:</strong> ${purchaseData.selectedCurrency || 'USD'}</li>
+                <li><strong>Mode:</strong> ${purchaseData.selectedMode || 'N/A'}</li>
+            </ul>
+            <button class="back-button" onclick="window.close()">Back to Home</button>
+        <script src="scripts/autoTranslate.js"></script></body>
+        </html>
+    `);
 }
 
 export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, setAuthentication, updateMainContent, savePageState = null) {
@@ -4435,6 +4949,7 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
                 navContainer.insertAdjacentHTML('beforeend', `
 			        <div id="menu-container" style="display: flex;gap: 2vw;">
 				        <div class="indicator" style="margin-bottom: 0;">
+					        <button class="toggleTranslation" id="toggleTranslation" translate="no"><svg style="margin: 0;" fill="white" width="24" height="24" viewBox="0 0 24 24" focusable="false" class="ep0rzf NMm5M"><path d="M12.87 15.07l-2.54-2.51.03-.03A17.52 17.52 0 0 0 14.07 6H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"></path></svg></button>
 					        <button class="zoom-minus" translate="no">-</button>
 					        <button class="zoom-plus" translate="no">+</button>
 				        </div>
@@ -4485,6 +5000,7 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
 							<a class="text" href="#">Services</a>
 							<ul class="dropdown-menu">
 								<li><a class="text" href="face-swap">Face Swap</a></li>
+								<li><a class="text" href="video-generator">Video Generator</a></li>
 								<li><a class="text" href="inpaint">Cloth Inpainting</a></li>
 								<li><a class="text" href="art-generator">Art Generator</a></li>
 							</ul>
@@ -4500,9 +5016,16 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
 						<li><a class="text" href="pricing">Pricing</a></li>
 					</ul>
 					<div class="nav-links" style="display: flex;justify-content: center;gap: calc(1vh * var(--scale-factor-h));">
+			            <div id="menu-container" style="display: flex;gap: 2vw;">
+				            <div class="indicator" style="margin-bottom: 0;">
+                                <button style="height: calc(6vh* var(--scale-factor-h));" class="toggleTranslation" id="toggleTranslation" translate="no">
+                                    <svg style="margin: 0;" fill="white" width="24" height="24" viewBox="0 0 24 24" focusable="false" class="ep0rzf NMm5M"><path d="M12.87 15.07l-2.54-2.51.03-.03A17.52 17.52 0 0 0 14.07 6H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"></path></svg>
+                                </button>
+					        </div>
+					    </div>
 						<button class="openSignUpContainer" id="openSignUpContainer">Sign Up</button>
 						<button class="important openSignInContainer" id="openSignInContainer">Sign In</button>
-						<li id="userLayoutContainer">
+						<li id="userLayoutContainer" style="padding-left: 0;">
 							<a id="userLayout" style="display: flex;gap: calc(1vh * var(--scale-factor-h));align-items: center;">
 								<img alt="Profile Image" class="profile-image" style="width: calc((6vh* var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w)));height: calc((6vh* var(--scale-factor-h) + 14vw / 2 * var(--scale-factor-w)));">
 								<div>
@@ -4515,7 +5038,7 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
 								<li><a class="text" href="profile">Profile</a></li>
                                 <li><a class="text watchRewardedAds">Rewarded ads [Beta]</a></li>
                                 <li><a class="text updateUserInformation">Update User Info</a></li>
-								<li><a class="text signOut">Sign Out</a></li>
+								<li style="display: none;"><a class="text signOut">Sign Out</a></li>
 							</ul>
 						</li>
 					</div>
@@ -4607,7 +5130,44 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
         });
     });
 
-    setTimeout(() => {
+    const links = document.querySelectorAll('a[href]');
+    if (links.length) 
+        links.forEach(link => observer.observe(link));
+
+    function loadTrackingScripts() {
+        const head = document.head || document.getElementsByTagName('head')[0];
+        const body = document.body || document.getElementsByTagName('body')[0];
+
+        /*var script = document.createElement('script');
+        script.async = true;
+        script.type = 'text/javascript';
+        script.src = 'https://www.clickcease.com/monitor/stat.js';
+        head.appendChild(script);
+
+        var noscript = document.createElement('noscript');
+        var link = document.createElement('a');
+        link.href = 'https://www.clickcease.com';
+        link.rel = 'nofollow';
+        var img = document.createElement('img');
+        img.src = 'https://monitor.clickcease.com/stats/stats.aspx';
+        img.alt = 'ClickCease';
+        link.appendChild(img);
+        noscript.appendChild(link);
+        body.appendChild(noscript);*/
+
+        /*if (!document.querySelector('script[src*="googletagmanager.com/gtm.js"]')) {
+            const scriptGTM = document.createElement('script');
+            scriptGTM.async = true;
+            scriptGTM.src = 'gtm.js';
+            head.insertBefore(scriptGTM, head.firstChild);
+        }
+
+        if (!document.querySelector('noscript[src*="googletagmanager.com/ns.html"]')) {
+            const noscriptGTM = document.createElement('noscript');
+            noscriptGTM.innerHTML = `<iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PB7JLCC7" height="0" width="0" style="display:none;visibility:hidden"></iframe>`;
+            body.insertBefore(noscriptGTM, body.firstChild);
+        }*/
+
         if (!document.querySelector('script[src*="gtag/js"]')) {
             let storedConsent;
             try {
@@ -4633,421 +5193,119 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
             const scriptGA = document.createElement('script');
             scriptGA.async = true;
             scriptGA.src = "https://www.googletagmanager.com/gtag/js?id=G-5C9P4GHHQ6";
-            document.head.appendChild(scriptGA);
+            head.appendChild(scriptGA);
 
             scriptGA.onload = function () {
                 configureGtag();
                 gtag('event', 'conversion', { 'send_to': 'AW-16739497290/lxH_CN3FrIAaEMrqga4-' });
             };
         }
-    }, 500);
+    }
+    if (isFirstVisit || !wasSidebarActive) {
+        loadTrackingScripts();
+    } else {
+        setTimeout(loadTrackingScripts, 500);
+    }
     checkPurchaseStatus();
     setInterval(() => {
         checkPurchaseStatus();
-    }, 10000);
-    pageUpdated = !0
-}
-let currentMain = 0;
-let windowHeight = window.innerHeight;
-let windowWidth = window.innerWidth;
-let aspectRatio = windowHeight / windowWidth;
-let sidebarActive = !0;
-let navbarActive = !0;
-let actualNavbarHeight = 0;
-let navbarHeight = 0;
-export function dispatchEvent(event) {
-    window.dispatchEvent(new Event(event))
-}
-export function getScreenMode() {
-    const aspectRatio = getAspectRatio();
-    if (aspectRatio < 4 / 5) return ScreenMode.PHONE;
-    if (aspectRatio <= 4 / 3) return ScreenMode.PC;
-    return ScreenMode.PC
-}
-export function getCurrentMain() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const pageParam = urlParams.get('page');
-    window.history.replaceState(null, '', `${window.location.pathname}`);
+    }, 30000); const styles = getComputedStyle(document.documentElement);
+    const dashLength = styles.getPropertyValue('--dash-length').trim();
+    const dashGap = styles.getPropertyValue('--dash-gap').trim();
+    const strokeWidth = styles.getPropertyValue('--dash-stroke-width').trim();
+    const strokeColor = styles.getPropertyValue('--dash-stroke-color').trim();
+    const strokeHoverColor = styles.getPropertyValue('--dash-stroke-hover-color').trim();
+    const dashOffset = styles.getPropertyValue('--dash-offset').trim();
+    const borderRadiusValue = styles.getPropertyValue('--border-radius').trim();
+    let borderRadius;
 
-    if (pageParam !== null) {
-        localStorage.setItem(`${pageName}_currentMain`, pageParam);
-        currentMain = parseInt(pageParam, 10);
-    } else {
-        const localStorageValue = localStorage.getItem(`${pageName}_currentMain`);
-        if (localStorageValue !== null) {
-            currentMain = parseInt(localStorageValue, 10);
-        }
-    }
-    return currentMain;
-}
-export function setCurrentMain(value) {
-    currentMain = value;
-    localStorage.setItem(`${pageName}_currentMain`, currentMain.toString());
-    const urlParams = new URLSearchParams(window.location.search);
-    urlParams.delete(`${pageName}_currentMain`);
-    urlParams.set('page', currentMain.toString()); 
-    window.history.replaceState(null, '', `${window.location.pathname}`);
-}
-export function setWindowHeight(value) {
-    windowHeight = value
-}
-export function getWindowHeight() {
-    return windowHeight
-}
-export function setWindowWidth(value) {
-    windowWidth = value
-}
-export function getWindowWidth() {
-    return windowWidth
-}
-export function setAspectRatio() {
-    if (windowHeight != window.innerHeight || windowWidth != window.innerWidth || aspectRatio != window.innerWidth / window.innerHeight) {
-        setWindowHeight(window.innerHeight);
-        setWindowWidth(window.innerWidth);
-        aspectRatio = getWindowWidth() / getWindowHeight()
-    }
-}
-export function getAspectRatio() {
-    setAspectRatio();
-    return aspectRatio
-}
-export function setSidebarActive(value) {
-    sidebarActive = value
-}
-export function getSidebarActive() {
-    return sidebarActive
-}
-export function setNavbarActive(value) {
-    navbarActive = value;
-    localStorage.setItem(`${pageName}_navbarActive`, navbarActive.toString());
-}
-export function getNavbarActive() {
-    const storedValue = localStorage.getItem(`${pageName}_navbarActive`);
-    if (storedValue !== null) {
-        navbarActive = storedValue !== 'false';
-    }
-    return navbarActive;
-}
-export function setActualNavbarHeight(value) {
-    actualNavbarHeight = value
-}
-export function getActualNavbarHeight() {
-    return actualNavbarHeight
-}
-export function setNavbarHeight(value) {
-    navbarHeight = value
-}
-export function getNavbarHeight() {
-    return navbarHeight
-}
-export function setSidebar(sidebar) {
-    const type = getScreenMode() !== 1 ? 2 : 0;
-    if (type === 2) {
-        if (getSidebarActive()) {
-            sidebar.style.right = '0';
-            sidebar.style.left = '0';
-            sidebar.style.top = navbarHeight + "px";
-            return
-        }
-        if (sidebar) {
-            sidebar.style.right = '0';
-            sidebar.style.left = '0';
-            sidebar.style.top = -getWindowHeight() + "px"
-        }
-    } else if (type === 1) {
-        if (getSidebarActive()) {
-            sidebar.style.right = '0';
-            return
-        }
-        if (sidebar)
-            sidebar.style.right = -sidebar.offsetWidth + "px"
-    } else if (type === 0) {
-        if (getSidebarActive()) {
-            sidebar.style.left = '0';
-            return
-        }
-        if (sidebar)
-            sidebar.style.left = -sidebar.offsetWidth + 'px'
-    }
-}
-export function moveMains(mains, currentMain) {
-    if (mains && mains.length > 0) {
-        mains.forEach((main, i) => {
-            const offset = (i - Math.min(mains.length - 1, currentMain)) * getWindowHeight();
-            main.style.top = `${offset + getNavbarHeight()}px`;
-            main.style.height = `${getWindowHeight() - getNavbarHeight()}px`;
-            main.style.width = `${getWindowWidth()}px`
-        })
-    }
-}
-export function reconstructMainStyles() {
-    let mains = document.querySelectorAll('main');
-    if (mains && mains.length > 0) {
-        mains.forEach((main, i) => {
-            main.style.display = 'grid';
-            main.style.top = `${i * getWindowHeight() + getNavbarHeight()}px`;
-            main.style.height = `${getWindowHeight() - getNavbarHeight()}px`;
-            main.style.width = `${getWindowWidth()}px`
-        })
-    }
-}
-export function setNavbar(navbar, mains, sidebar) {
-    setActualNavbarHeight(navbar ? navbar.offsetHeight : 0);
-    setNavbarHeight(getNavbarActive() ? navbar.offsetHeight : 0);
-    moveMains(mains, currentMain);
-    if (getNavbarActive()) {
-        navbar.style.top = '0';
-        if (sidebar) {
-            if (getScreenMode() === ScreenMode.PC)
-                sidebar.style.top = `${getNavbarHeight()}px`;
-            sidebar.style.height = `${getWindowHeight() - getNavbarHeight()}px`
+    if (borderRadiusValue.startsWith('calc')) {
+        const match = borderRadiusValue.match(/calc\(([\d.]+)vh \* ([\d.]+)\)/);
+        if (match) {
+            const baseValue = parseFloat(match[1]);
+            const multiplier = parseFloat(match[2]);
+            const oneVhInPixels = window.innerHeight * 0.01;
+            const basePixels = baseValue * oneVhInPixels;
+            borderRadius = basePixels * multiplier;
+        } else {
+            borderRadius = 0;
         }
     } else {
-        if (navbar) {
-            navbar.style.top = -navbar.offsetHeight + "px"
-        }
-        if (sidebar) {
-            sidebar.style.top = `${getNavbarHeight()}px`;
-            sidebar.style.height = '100vh'
-        }
+        borderRadius = parseFloat(borderRadiusValue);
     }
-}
-let previousScreenMode = 0;
-export function showSidebar(sidebar, hamburgerMenu, setUser = null, setAuthentication = null, retrieveImageFromURL = null, getUserInternetProtocol = null, ensureUniqueId = null, fetchServerAddress = null, getFirebaseModules = null, getDocSnapshot = null) {
-    setSidebarActive(sidebar);
-    setSidebar(sidebar);
-    if (hamburgerMenu)
-        hamburgerMenu.classList.add('open');
-    localStorage.removeItem('sidebarState');
 
-    function loadSideBar() {
-        const screenMode = getScreenMode();
-        const shouldUpdate = previousScreenMode !== screenMode;
-        previousScreenMode = screenMode;
-        if (!shouldUpdate)
-            return;
-        createUserData(sidebar, screenMode, setAuthentication, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
-        createSideBarData(sidebar);
-        ['exploreButton', 'profileButton', 'premiumButton', 'faceSwapButton', 'inpaintButton', 'artGeneratorButton', 'userLayout', 'faqLink', 'policiesLink', 'guidelinesLink', 'contactUsLink'].forEach(id => {
-            const element = document.getElementById(id);
-            if (element) {
-                element.addEventListener('click', () => localStorage.setItem('sidebarState', 'removeSidebar'))
-            }
+    // Build the default SVG using the original strokeColor.
+    const svgDefault = `<svg width='100%' height='100%' xmlns='http://www.w3.org/2000/svg'>
+  <rect width='100%' height='100%' fill='transparent'
+        rx='${borderRadius + 1}' ry='${borderRadius + 1}'
+        stroke='${strokeColor}' stroke-width='${strokeWidth}'
+        stroke-dasharray='${dashLength},${dashGap}' 
+        stroke-dashoffset='${dashOffset}' stroke-linecap='square'/>
+</svg>`;
+    const encodedSVGDefault = `url("data:image/svg+xml,${encodeURIComponent(svgDefault)}")`;
+
+    // Build the hover SVG using white for the stroke.
+    const svgHover = `<svg width='100%' height='100%' xmlns='http://www.w3.org/2000/svg'>
+  <rect width='100%' height='100%' fill='transparent'
+        rx='${borderRadius + 1}' ry='${borderRadius + 1}'
+        stroke='${strokeHoverColor}' stroke-width='${strokeWidth}'
+        stroke-dasharray='${dashLength},${dashGap}' 
+        stroke-dashoffset='${dashOffset}' stroke-linecap='square'/>
+</svg>`;
+    const encodedSVGHover = `url("data:image/svg+xml,${encodeURIComponent(svgHover)}")`;
+
+    // Apply the backgrounds.
+    document.querySelectorAll('.card-dash-outline').forEach(el => {
+        // Set the default background on the element.
+        el.style.position = 'relative';
+        el.style.background = 'transparent';
+
+        // Create the overlay for the hover state.
+        const overlay1 = document.createElement('div');
+        overlay1.style.position = 'absolute';
+        overlay1.style.top = '0';
+        overlay1.style.left = '0';
+        overlay1.style.width = '100%';
+        overlay1.style.height = '100%';
+        overlay1.style.pointerEvents = 'none';
+        overlay1.style.zIndex = '2';
+        overlay1.style.background = `linear-gradient(0, transparent, transparent) padding-box, ${encodedSVGHover} border-box`;
+        overlay1.style.opacity = '0';
+        overlay1.style.transition = 'unset'; //'opacity var(--transition-duration-1)';
+        el.appendChild(overlay1);
+
+        // Fade the overlay in/out on mouse enter/leave.
+        el.addEventListener('mouseenter', () => {
+            overlay1.style.opacity = '1';
         });
-        if (setUser && screenMode === ScreenMode.PHONE)
-            setUser();
-    }
-    loadSideBar();
-    if (!window.hasResizeEventListener) {
-        window.addEventListener('resize', loadSideBar);
-        window.hasResizeEventListener = !0
-    }
-}
-export function showNavbar(navbar, mains, sidebar) {
-    setNavbarActive(navbar);
-    setNavbar(navbar, mains, sidebar);
-    setSidebar(sidebar)
-}
-export function removeSidebar(sidebar, hamburgerMenu) {
-    setSidebarActive(!1);
-    setSidebar(sidebar);
-    if (hamburgerMenu)
-        hamburgerMenu.classList.remove('open');
-    localStorage.setItem('sidebarState', 'keepSideBar')
-}
-export function removeNavbar(navbar, mains, sidebar) {
-    setNavbarActive(!1);
-    setNavbar(navbar, mains, sidebar);
-    setSidebar(sidebar)
-}
-export function cleanPages() {
-    document.querySelectorAll('main').forEach(main => main.remove());
-    document.querySelectorAll('.faded-content').forEach(fadedContent => fadedContent.remove())
-}
-export function createPages(contents) {
-    const numberOfPages = contents.length;
-    if (numberOfPages <= 0) return;
-    for (let id = 0; id < numberOfPages; id++) {
-        const mainElement = document.createElement('main');
-        const mainContainer = document.createElement('div');
-        mainContainer.classList.add('main-container');
-        mainElement.appendChild(mainContainer);
-        document.body.appendChild(mainElement)
-    }
-    const fadedContent = document.createElement('div');
-    fadedContent.classList.add('faded-content');
-    const firstText = document.createElement('div');
-    firstText.classList.add('first-text');
-    const h1Element = document.createElement('h1');
-    h1Element.setAttribute('translate', 'no');
-    h1Element.innerHTML = 'DeepAny.<span class="text-gradient" translate="no">AI</span>';
-    const h2Element = document.createElement('h2');
-    h2Element.classList.add('text-gradient');
-    h2Element.setAttribute('translate', 'no');
-    h2Element.textContent = 'bring your imagination come to life.';
-    const offsetText = document.createElement('div');
-    offsetText.classList.add('offset-text');
-    for (let j = 0; j < 3; j++) {
-        const offsetH1 = document.createElement('h1');
-        offsetH1.classList.add('offset');
-        offsetH1.setAttribute('translate', 'no');
-        offsetH1.innerHTML = 'deepany.a<span class="no-spacing" translate="no">i</span>';
-        offsetText.appendChild(offsetH1)
-    }
-    firstText.appendChild(h1Element);
-    firstText.appendChild(h2Element);
-    firstText.appendChild(offsetText);
-    fadedContent.appendChild(firstText);
-    document.body.appendChild(fadedContent)
-}
-export function clamp(value, min, max) {
-    return Math.max(min, Math.min(value, max))
-}
-export function setupMainSize(mainQuery) {
-    if (!mainQuery || !mainQuery.length)
-        return;
-    mainQuery.forEach((main, id) => {
-        main.style.display = 'grid';
-        main.style.top = `${id * getWindowHeight() + getNavbarHeight()}px`;
-        main.style.height = `${getWindowHeight() - getNavbarHeight()}px`;
-        main.style.width = `${getWindowWidth()}px`
-    })
-}
-const swipeThreshold = 50;
-export function loadScrollingAndMain(navbar, mainQuery, sidebar, hamburgerMenu, setUser, setAuthentication, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot) {
-    if (!mainQuery || !mainQuery.length) return;
-    let scrolling = !1;
-    let touchStartY = 0;
-    let touchEndY = 0;
-    let touchStartTime = 0;
-    let scrollAttemptedOnce = !1;
-    let lastScrollTime = 0;
-    let lastScrollDirection = '';
+        el.addEventListener('mouseleave', () => {
+            overlay1.style.opacity = '0';
+        });
 
-    function getCurrentMainElement() {
-        const currentIndex = getCurrentMain();
-        return mainQuery[currentIndex]
-    }
+        // Create the overlay for the hover state.
+        const overlay2 = document.createElement('div');
+        overlay2.style.position = 'absolute';
+        overlay2.style.top = '0';
+        overlay2.style.left = '0';
+        overlay2.style.width = '100%';
+        overlay2.style.height = '100%';
+        overlay2.style.pointerEvents = 'none';
+        overlay2.style.zIndex = '1';
+        overlay2.style.background = `linear-gradient(0, transparent, transparent) padding-box, ${encodedSVGDefault} border-box`;
+        overlay2.style.opacity = '1';
+        overlay2.style.transition = 'opacity var(--transition-duration-1)';
+        el.appendChild(overlay2);
 
-    function showMain(id, transitionDuration = 250) {
-        if (mainQuery.length > 1 && id >= 0 && id < mainQuery.length && !scrolling) {
-            if (sidebarActive && getScreenMode() !== ScreenMode.PC) return;
-            scrolling = !0;
-            const wentDown = id >= getCurrentMain();
-            setCurrentMain(id);
-            if (wentDown) {
-                removeNavbar(navbar, mainQuery, sidebar)
-            } else {
-                showNavbar(navbar, mainQuery, sidebar)
-            }
-            setTimeout(() => {
-                scrolling = !1
-            }, transitionDuration)
-        }
-    }
-    const handleKeydown = (event) => {
-        if (!scrolling) {
-            if (event.key === 'ArrowDown' || event.key === 'ArrowRight') {
-                event.preventDefault();
-                handleScroll('down')
-            } else if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') {
-                event.preventDefault();
-                handleScroll('up')
-            }
-        }
-    };
-    const handleWheel = (event) => {
-        if (event.ctrlKey)
-            return;
-        handleScroll(event.deltaY > 0 ? 'down' : 'up')
-    };
-    const handleScroll = (direction) => {
-        const currentTime = Date.now();
-        const currentMainElement = getCurrentMainElement();
-        if (!currentMainElement) return;
-        const atTop = currentMainElement.scrollTop === 0;
-        const atBottom = currentMainElement.scrollTop + currentMainElement.clientHeight >= currentMainElement.scrollHeight;
-        const isMainScrollable = currentMainElement.scrollHeight > currentMainElement.clientHeight;
-        if (scrollAttemptedOnce && (currentTime - lastScrollTime < 500 / 2)) {
-            return
-        }
-        lastScrollTime = currentTime;
-        if (scrollAttemptedOnce && direction !== lastScrollDirection) {
-            scrollAttemptedOnce = !1
-        }
-        lastScrollDirection = direction;
-        if (!isMainScrollable) {
-            if (direction === 'down') {
-                showMain(getCurrentMain() + 1)
-            } else {
-                showMain(getCurrentMain() - 1)
-            }
-            return
-        }
-        if (atTop || atBottom) {
-            if (scrollAttemptedOnce) {
-                if (direction === 'down') {
-                    showMain(getCurrentMain() + 1)
-                } else {
-                    showMain(getCurrentMain() - 1)
-                }
-                scrollAttemptedOnce = !1
-            } else {
-                scrollAttemptedOnce = !0
-            }
-        }
-    };
-    const handleEvent = (e) => {
-        if (!e) return;
-        const {
-            clientY,
-            clientX
-        } = e.type === 'touchstart' ? e.touches[0] : e;
-        if (clientY > navbar.offsetHeight) {
-            if (!clientX) return showSidebar(sidebar, hamburgerMenu, setUser, setAuthentication, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
-            if (e.type === 'click' && clientX > sidebar.offsetWidth && !e.target.closest('a')) removeSidebar(sidebar, hamburgerMenu);
-        } else showNavbar(navbar, mainQuery, sidebar)
-    };
-    const handleTouchMove = (event) => {
-        touchEndY = event.changedTouches[0].clientY;
-        handleSwipe()
-    };
-    const handleTouchStart = (event) => {
-        handleEvent(event);
-        touchStartY = event.touches[0].clientY;
-        touchStartTime = Date.now()
-    };
-    const handleSwipe = () => {
-        const touchDistance = touchEndY - touchStartY;
-        const touchDuration = Date.now() - touchStartTime;
-        if (Math.abs(touchDistance) > swipeThreshold && touchDuration < 500) {
-            const direction = touchDistance < 0 ? 'down' : 'up';
-            handleScroll(direction)
-        }
-    };
-    document.addEventListener('keydown', handleKeydown);
-    document.addEventListener('wheel', handleWheel);
-    document.addEventListener('click', handleEvent);
-    document.addEventListener('mousemove', handleEvent);
-    document.addEventListener('touchmove', handleTouchMove);
-    document.addEventListener('touchstart', handleTouchStart);
-    return function cleanup() {
-        document.removeEventListener('keydown', handleKeydown);
-        document.removeEventListener('wheel', handleWheel);
-        document.removeEventListener('click', handleEvent);
-        document.removeEventListener('mousemove', handleEvent);
-        document.removeEventListener('touchmove', handleTouchMove);
-        document.removeEventListener('touchstart', handleTouchStart)
-    }
-}
-export function updateContent(contents) {
-    const mainContainers = document.querySelectorAll('.main-container');
-    mainContainers.forEach((mainContainer, id) => {
-        if (contents[id]) {
-            mainContainer.innerHTML = '';
-            mainContainer.insertAdjacentHTML('beforeend', contents[id])
-        }
-    })
+        // Fade the overlay in/out on mouse enter/leave.
+        el.addEventListener('mouseenter', () => {
+            overlay2.style.opacity = '1';
+        });
+        el.addEventListener('mouseleave', () => {
+            overlay2.style.opacity = '1';
+        });
+    });
+
+    pageUpdated = !0
 }
 
 function loadSizeCache() {
@@ -5201,10 +5459,10 @@ export function showZoomIndicator(event, scaleFactorHeight, scaleFactorWidth) {
     messageElement.innerText = `${Math.round(scaleFactorHeight * 100)}%`
 }
 export function setMaxWidth() {
-    const backgroundDotContainer = document.querySelector('.background-dot-container-content');
     const multibox = document.querySelector('.multibox');
     const multiboxText = document.querySelectorAll('.multibox-text');
     const arrowDwn = document.querySelector('.arrow-dwn');
+    const backgroundDotContainer = multibox ? multibox.closest('.background-dot-container-content') : null;
     if (backgroundDotContainer && multibox && multiboxText && arrowDwn) {
         const containerWidth = backgroundDotContainer.offsetWidth;
         const containerStyle = getComputedStyle(backgroundDotContainer);
@@ -5243,9 +5501,9 @@ export const getAbortController = () => {
 export const resetAbortController = () => {
     abortController = null
 };
-export function deleteDownloadData(id) {
-    localStorage.removeItem(`${pageName}_${pageName}_downloadedBytes_${id}`);
-    localStorage.removeItem(`${pageName}_${pageName}_totalBytes_${id}`);
+export function deleteDownloadData(timestamp, id) {
+    localStorage.removeItem(`${pageName}_${timestamp}_downloadedBytes_${id}`);
+    localStorage.removeItem(`${pageName}_${timestamp}_totalBytes_${id}`);
     const activeDataContainer = document.querySelector(".outputs .data-container.active");
     const dataContainerActive = activeDataContainer ? activeDataContainer : null;
     const downloadOutput = document.getElementById('downloadOutput');
@@ -5288,7 +5546,7 @@ export const handleDownload = async ({
     element.querySelector('.delete-icon').addEventListener('click', async () => {
         setDownloadCancelled(!0);
         await updateChunksInDB(db, url, []);
-        deleteDownloadData(id)
+        deleteDownloadData(timestamp, id)
     });
     if (!(id in progressMap)) {
         progressMap[id] = 0
@@ -5316,8 +5574,8 @@ export const handleDownload = async ({
     const {
         signal
     } = abortController;
-    let downloadedBytes = parseInt(localStorage.getItem(`${pageName}_${pageName}_downloadedBytes_${id}`)) || 0;
-    let totalBytes = parseInt(localStorage.getItem(`${pageName}_${pageName}_totalBytes_${id}`)) || 0;
+    let downloadedBytes = parseInt(localStorage.getItem(`${pageName}_${timestamp}_downloadedBytes_${id}`)) || 0;
+    let totalBytes = parseInt(localStorage.getItem(`${pageName}_${timestamp}_totalBytes_${id}`)) || 0;
     const previousData = await getFromDB(db);
     const entry = previousData.find(item => parseInt(item.id) === parseInt(id));
     const chunks = entry ? entry.chunks : [];
@@ -5332,12 +5590,12 @@ export const handleDownload = async ({
             });
             if (![200, 206, 416].includes(res.status)) {
                 await updateChunksInDB(db, url, []);
-                deleteDownloadData(id);
+                deleteDownloadData(timestamp, id);
                 throw new Error('Server does not support resumable downloads.')
             }
             const contentLength = res.headers.get('Content-Range')?.split('/')[1] || res.headers.get('Content-Length');
             totalBytes ||= parseInt(contentLength);
-            localStorage.setItem(`${pageName}_${pageName}_totalBytes_${id}`, totalBytes);
+            localStorage.setItem(`${pageName}_${timestamp}_totalBytes_${id}`, totalBytes);
             const reader = res.body.getReader();
             const contentType = res.headers.get('Content-Type');
             let lastSavedProgress = 0;
@@ -5358,7 +5616,7 @@ export const handleDownload = async ({
                 lastProgress = (downloadedBytes / totalBytes) * 100;
                 if (Math.floor(lastProgress) % 1 === 0 && Math.floor(lastProgress) > lastSavedProgress) {
                     await updateChunksInDB(db, url, chunks);
-                    localStorage.setItem(`${pageName}_${pageName}_downloadedBytes_${id}`, downloadedBytes);
+                    localStorage.setItem(`${pageName}_${timestamp}_downloadedBytes_${id}`, downloadedBytes);
                     lastSavedProgress = Math.floor(lastProgress);
                     progressMap[id] = lastProgress
                 }
@@ -5372,7 +5630,7 @@ export const handleDownload = async ({
             if (Math.abs(blob.size - totalBytes) > totalBytes * 0.01) {
                 alert(`Warning: The downloaded file size (${blob.size} bytes) differs significantly from expected size (${totalBytes} bytes).`);
                 await updateChunksInDB(db, url, []);
-                deleteDownloadData(id);
+                deleteDownloadData(timestamp, id);
                 break
             }
             if (active && !element.classList.contains('active'))
@@ -5397,6 +5655,7 @@ export const handleDownload = async ({
                 }
             }
             element.classList.add('active');
+            displayStoredData(element, 'outputs');
             if (id) {
                 await updateActiveState(db, id, !0).catch(err => {
                     alert(`Update failed for id ${id}: ${err}`)
@@ -5405,12 +5664,12 @@ export const handleDownload = async ({
             if (blob.size === 0) {
                 alert('Warning: Media not displayable');
                 await updateChunksInDB(db, url, []);
-                deleteDownloadData(id);
+                deleteDownloadData(timestamp, id);
                 break
             }
             setDownloadCancelled(!0);
             await Promise.all([updateInDB(db, url, blob), saveCountIndex(databases)]);
-            deleteDownloadData(id);
+            deleteDownloadData(timestamp, id);
             setFetchableServerAdresses((await fetchServerAddresses(getDocsSnapshot('servers'))).reverse());
             return
         } catch (error) {
@@ -5422,83 +5681,114 @@ export const handleDownload = async ({
         }
     }
 };
-export const handleDelete = async (dbName, storeName, parent, databases) => {
+export const handleDelete = async (dataBaseIndexName, dataBaseObjectStoreName, parent, container, databases) => {
     try {
+        // --- Primary Method: Use element attributes ---
         const element = parent.querySelector('img, video, initial');
-        const domIndex = parseInt(element.getAttribute('id'));
-        const db = await openDB(dbName, storeName);
+
+        // Extract values from element attributes
+        const domIndex = parseInt(element?.getAttribute('id'));
+        const timestamp = element?.getAttribute('timestamp');
+        const id = element?.getAttribute('id');
+
+        // Open the DB and get all items
+        const db = await openDB(dataBaseIndexName, dataBaseObjectStoreName);
         const items = await getFromDB(db);
-        let itemToDelete = items.find(item => item.id === domIndex);
+
+        // Try to find the item using the element's ID attribute
+        let itemToDelete = element ? items.find(item => item.id === domIndex) : null;
+
+        // If not found, attempt removal of associated localStorage keys
+        // and try to find the item using its timestamp
         if (!itemToDelete) {
-            const domTimestamp = parseInt(element.getAttribute('timestamp'));
-            const timestamp = element?.getAttribute('timestamp');
-            const id = element?.getAttribute('id');
-            const referencePosition = `${timestamp}_${id}_position`;
-            const referenceRace = `${timestamp}_${id}_race`;
-            const referenceGender = `${timestamp}_${id}_gender`;
-            const trackFace = `${timestamp}_${id}_track`;
-            const referenceFrame = `${timestamp}_${id}_frame`;
-            localStorage.removeItem(referencePosition);
-            localStorage.removeItem(referenceRace);
-            localStorage.removeItem(referenceGender);
-            localStorage.removeItem(trackFace);
-            localStorage.removeItem(referenceFrame);
-            itemToDelete = items.find(item => item.timestamp === domTimestamp)
+            const domTimestamp = parseInt(timestamp);
+            const keys = [
+                `${timestamp}_${id}_position`,
+                `${timestamp}_${id}_race`,
+                `${timestamp}_${id}_gender`,
+                `${timestamp}_${id}_track`,
+                `${timestamp}_${id}_frame`,
+                `${timestamp}_${id}_fps`,
+                `canvas_${id}`
+            ];
+            keys.forEach(key => localStorage.removeItem(key));
+            itemToDelete = items.find(item => item.timestamp === domTimestamp);
         }
+
+        // --- Fallback Method: Use DOM ordering ---
+        // If still not found and we are in the 'outputs' store, use the order of .data-container elements.
+        if (!itemToDelete && dataBaseObjectStoreName === 'outputs' && container) {
+            const containers = Array.from(container.querySelectorAll('.data-container'));
+            const fallbackIndex = containers.indexOf(parent);
+            if (fallbackIndex !== -1) {
+                // Sort items by timestamp (oldest first)
+                items.sort((a, b) => a.timestamp - b.timestamp);
+                // Since the newest file is first in the outputs list, map it to the last item in DB
+                const dbIndex = items.length - 1 - fallbackIndex;
+                itemToDelete = items[dbIndex];
+            }
+        }
+
         if (itemToDelete) {
+            if (itemToDelete.active) {
+                displayStoredData(null, dataBaseObjectStoreName);
+            }
+
             await deleteFromDB(db, itemToDelete.id);
             await saveCountIndex(databases);
-            parent.remove()
+            parent.remove();
         } else {
-            throw new Error('Item to delete not found.')
+            throw new Error('Item to delete not found.');
         }
     } catch (error) {
-        alert('Error during delete operation: ' + error.message)
+        alert('Error during delete operation: ' + error.message);
     }
 };
-export const handleFileContainerEvents = async (event, dbName, storeName, container, databases) => {
+
+export const handleFileContainerEvents = async (event, dataBaseIndexName, dataBaseObjectStoreName, container, databases) => {
     const parent = event.target.closest('.data-container');
     if (!parent) return;
 
     if (event.target.classList.contains('delete-icon')) {
-        return await handleDelete(dbName, storeName, parent, databases);
+        // Pass the container to enable the fallback DOM-ordering method.
+        return await handleDelete(dataBaseIndexName, dataBaseObjectStoreName, parent, container, databases);
     }
 
-    if (storeName === 'outputs') {
+    if (dataBaseObjectStoreName === 'outputs') {
         const viewOutput = document.getElementById('viewOutput');
-        if (viewOutput) viewOutput.disabled = !1;
+        if (viewOutput) viewOutput.disabled = false;
 
         const downloadOutput = document.getElementById('downloadOutput');
-        if (downloadOutput) downloadOutput.disabled = !1;
+        if (downloadOutput) downloadOutput.disabled = false;
     }
 
     const element = parent.querySelector('img, video, initial');
 
     if (!iosMobileCheck()) {
-        if (storeName === 'inputs' && element.tagName.toLowerCase() === 'video') {
+        if (dataBaseObjectStoreName === 'inputs' && element.tagName.toLowerCase() === 'video') {
             //await showFrameSelector(element);
         }
     }
 
-    if (parent.classList.contains("active"))
-        return;
+    if (parent.classList.contains("active")) return;
 
-    const db = openDB(dbName, storeName);
+    const db = await openDB(dataBaseIndexName, dataBaseObjectStoreName);
     for (const activeElement of container.querySelectorAll(".data-container.active")) {
         activeElement.classList.remove("active");
-        const element = activeElement.querySelector('img, video, initial');
-        const domIndex = parseInt(element.getAttribute('id'));
-        if (!isNaN(domIndex)) {
-            await updateActiveState(await db, domIndex, !1);
+        const el = activeElement.querySelector('img, video, initial');
+        const activeDomIndex = parseInt(el.getAttribute('id'));
+        if (!isNaN(activeDomIndex)) {
+            await updateActiveState(db, activeDomIndex, false);
         } else {
             alert(`Invalid id for active photo: ${activeElement}`);
         }
     }
 
-    const domIndex = parseInt(element.getAttribute('id'));
-    if (!isNaN(domIndex)) {
+    const currentDomIndex = parseInt(element.getAttribute('id'));
+    if (!isNaN(currentDomIndex)) {
         parent.classList.add("active");
-        await updateActiveState(await db, domIndex, !0);
+        await updateActiveState(db, currentDomIndex, true);
+        await displayStoredData(parent, dataBaseObjectStoreName);
     } else {
         alert(`The provided ID for the parent photo "${parent}" is invalid. Please check the ID and try again.`);
     }
@@ -5704,7 +5994,7 @@ export async function showFrameSelector(element) {
             clonedInput.style.width = '100%';
             clonedInput.style.borderRadius = 'var(--border-radius)';
             clonedInput.style.height = getScreenMode() === 1 ? '60vh' : '60vh';
-            clonedInput.style.objectFit = getScreenMode() === 1 ? 'cover' : 'contain';
+            clonedInput.style.objectFit = getScreenMode() === 1 ? 'contain' : 'contain';
             clonedInput.style.position = 'relative';
             if (isVideo) {
                 clonedInput.controls = false;
@@ -6128,7 +6418,7 @@ export async function showFrameSelector(element) {
                         imgElement.src = imageObjectURL;
                         imgElement.style.width = '100%';
                         imgElement.style.height = getScreenMode() === 1 ? '60vh' : '60vh';
-                        imgElement.style.objectFit = getScreenMode() === 1 ? 'cover' : 'contain';
+                        imgElement.style.objectFit = getScreenMode() === 1 ? 'contain' : 'contain';
                         imgElement.style.borderRadius = 'var(--border-radius)';
 
                         const outputContainer = wrapper.querySelector('[query="outputContainer"]');
@@ -6168,6 +6458,1316 @@ export async function showFrameSelector(element) {
 
     multipleFacesBtn.addEventListener('click', async () => {
         await startProcess();
+    });
+}
+
+export async function showCanvas(imgElement) {
+    // Wrap the whole logic in a promise.
+    return new Promise(async (resolve) => {
+        if (document.getElementById('wrapper')) return;
+
+        const wrapper = document.createElement('div');
+        wrapper.id = 'wrapper';
+        wrapper.style.alignItems = 'unset';
+        wrapper.innerHTML = `
+    <div class="background-container" style="display: flex; flex-direction: column;">
+        <div class="background-container" style="width: 100%;">
+            <p class="background-dot-container-option" canvas-mode="canvasMode" translate="yes">Canvas</p>
+            <p class="background-dot-container-option" canvas-mode="fillingMode" translate="yes">Fill</p>
+            <p class="background-dot-container-option" canvas-mode="colorMatching" translate="yes">Segmentation</p>
+        </div>
+
+        <a class="background-dot-container">
+            <div class="background-dot-container-content" style="padding: 0;">
+                <div id="innerContainer" class="background-container" style="display: contents;">
+                    <div id="mainContainerCanvas" style="position: relative;">
+                        <div class="loading-screen" id="initialLoadingSpinner" style="position: absolute; z-index: 99999;"></div>
+                        
+                        <div id="imgContainerWrapper" style="position: relative;">
+                            <img query="imgContainer" style="display: none;">
+                            <canvas id="maskCanvas" style="position: absolute; top: 0; left: 0; z-index: 40; cursor: none;"></canvas>
+                        </div>
+
+                        <input type="range" min="0" max="200" value="20" id="brushRange"
+                            style="position: absolute; top: 1vh; left: 1vh; width: 40%; z-index: 50;">
+                        <input type="range" min="0" max="360" value="0" id="colorRange"
+                            style="position: absolute; top: 3vh; left: 1vh; width: 40%; z-index: 50;">
+                        <input type="color" id="colorPicker" style="display: none;" readonly>
+                    </div>
+                    <button class="close-button"
+                        style="position: absolute; top: 1vh; right: 1vh; cursor: pointer; width: 4vh; height: 4vh; padding: 0; margin: 0; z-index: 99999;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round"
+                            style="margin: 0; width: 3.5vh;"
+                            class="lucide lucide-x">
+                            <path d="M18 6 6 18"></path>
+                            <path d="m6 6 12 12"></path>
+                        </svg>
+                    </button>
+                    <button class="ctrl-z-button" style="position: absolute;top: 1vh;right: 6vh;cursor: pointer;width: 4vh;height: 4vh;padding: 0;z-index: 99999;">
+                        <svg style="margin: 0; width: 2.75vh;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="white" version="1.1" viewBox="0 0 489.533 489.533" xml:space="preserve"><g><path d="M268.175,488.161c98.2-11,176.9-89.5,188.1-187.7c14.7-128.4-85.1-237.7-210.2-239.1v-57.6c0-3.2-4-4.9-6.7-2.9   l-118.6,87.1c-2,1.5-2,4.4,0,5.9l118.6,87.1c2.7,2,6.7,0.2,6.7-2.9v-57.5c87.9,1.4,158.3,76.2,152.3,165.6   c-5.1,76.9-67.8,139.3-144.7,144.2c-81.5,5.2-150.8-53-163.2-130c-2.3-14.3-14.8-24.7-29.2-24.7c-17.9,0-31.9,15.9-29.1,33.6   C49.575,418.961,150.875,501.261,268.175,488.161z"/></g></svg>
+                    </button>
+                    <button class="clear-button" style="position: absolute;top: 1vh;right: 11vh;cursor: pointer;width: 4vh;height: 4vh;padding: 0;z-index: 99999;">
+                        <svg style="margin: 0; width: 3.4vh;" xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 32 32" id="icon">
+                          <defs>
+                            <style>
+                              .cls-1 {
+                                fill: none;
+                              }
+                            </style>
+                          </defs>
+                          <title>clean</title>
+                          <rect x="20" y="18" width="6" height="2" transform="translate(46 38) rotate(-180)"/>
+                          <rect x="24" y="26" width="6" height="2" transform="translate(54 54) rotate(-180)"/>
+                          <rect x="22" y="22" width="6" height="2" transform="translate(50 46) rotate(-180)"/>
+                          <path d="M17.0029,20a4.8952,4.8952,0,0,0-2.4044-4.1729L22,3,20.2691,2,12.6933,15.126A5.6988,5.6988,0,0,0,7.45,16.6289C3.7064,20.24,3.9963,28.6821,4.01,29.04a1,1,0,0,0,1,.96H20.0012a1,1,0,0,0,.6-1.8C17.0615,25.5439,17.0029,20.0537,17.0029,20ZM11.93,16.9971A3.11,3.11,0,0,1,15.0041,20c0,.0381.0019.208.0168.4688L9.1215,17.8452A3.8,3.8,0,0,1,11.93,16.9971ZM15.4494,28A5.2,5.2,0,0,1,14,25H12a6.4993,6.4993,0,0,0,.9684,3H10.7451A16.6166,16.6166,0,0,1,10,24H8a17.3424,17.3424,0,0,0,.6652,4H6c.031-1.8364.29-5.8921,1.8027-8.5527l7.533,3.35A13.0253,13.0253,0,0,0,17.5968,28Z"/>
+                          <rect id="_Transparent_Rectangle_" data-name="&lt;Transparent Rectangle&gt;" class="cls-1" width="32" height="32"/>
+                        </svg>
+                    </button>
+                    <button class="save-button" style="position: absolute;top: 1vh;right: 16vh;cursor: pointer;width: 4vh;height: 4vh;padding: 0;z-index: 99999;">
+                        <svg style="margin: 0; width: 2.75vh;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="white" version="1.1" id="Layer_1" viewBox="0 0 512 512" xml:space="preserve"><g><g><path d="M440.125,0H0v512h512V71.875L440.125,0z M281.6,31.347h31.347v94.041H281.6V31.347z M136.359,31.347h113.894v125.388    h94.041V31.347h32.392v156.735H136.359V31.347z M417.959,480.653H94.041V344.816h323.918V480.653z M417.959,313.469H94.041    v-31.347h323.918V313.469z M480.653,480.653h-31.347V250.775H62.694v229.878H31.347V31.347h73.665v188.082h303.02V31.347h19.108    l53.512,53.512V480.653z"/></g></g></svg>
+                    </button>
+                </div>
+            </div>
+        </a>
+
+        <a class="background-dot-container">
+            <div class="background-dot-container-content">
+                <div id="innerContainer" class="background-container" style="display: contents;">
+                    <div style="display: flex; flex-direction: column; justify-content: space-around; gap: 1vh;">
+                         <div style="display: flex;flex-direction: row;justify-content: space-around;gap: calc(1.5vh* var(--scale-factor-h));">
+                            <button class="wide" id="startProcessCanvas">Save Canvas & Start Process</button>
+                         </div>
+                         <div id="colorMatchingSettings" style="display: flex !important; flex-direction: column !important; justify-content: space-around !important; gap: 1vh; !important">
+                             <div class="line"></div>
+                             <div>
+                                <!-- Updated combobox HTML -->
+                                <div id="objectDetectionMethodComboBox" class="combobox" tooltip style="gap: 1vh;">
+                                  <!-- Updated tooltip text -->
+                                  <div class="tooltip">Select the object detection method (only one can be active at a time).</div>
+                                  <!-- This span will display the currently selected method -->
+                                  <span class="combobox-text" title="Object detection">HSV Thresholding</span>
+                                  <span class="arrow-dwn"></span>
+                                  <ul class="list-items">
+                                    <li class="item">
+                                      <label class="checkbox" tooltip>
+                                        <input type="checkbox" id="0_stateObjectDetection">
+                                        <span>HSV Thresholding</span>
+                                      </label>
+                                    </li>
+                                    <li class="item">
+                                      <label class="checkbox" tooltip>
+                                        <input type="checkbox" id="1_stateObjectDetection">
+                                        <span>RBG sorting</span>
+                                      </label>
+                                    </li>
+                                    <li class="item">
+                                      <label class="checkbox" tooltip>
+                                        <input type="checkbox" id="2_stateObjectDetection">
+                                        <span>Edge Detection</span>
+                                      </label>
+                                    </li>
+                                    <li class="item">
+                                      <label class="checkbox" tooltip>
+                                        <input type="checkbox" id="3_stateObjectDetection">
+                                        <span>Hybrid</span>
+                                      </label>
+                                    </li>
+                                  </ul>
+                                </div>
+                            </div>
+                            <div style="display: flex;gap: 1vh;">
+                                <label class="checkbox" style="display: flex; align-items: center; gap: calc(1vh); justify-content: space-between;">
+                                    <div style="display: flex; flex-direction: row; gap: calc(1vh); width: 100%; align-items: center;">
+                                        <input type="range" min="1" max="100" step="1" value="25" class="slider" id="tolerance-slider">
+                                        <div class="slider-value" id="tolerance-value">25% Tolerance</div>
+                                    </div>
+                                </label>
+                            </div>
+                            <div>
+                                <label class="checkbox" style="display: flex; align-items: center; gap: calc(1vh); justify-content: space-between;">
+                                    <div style="display: flex; flex-direction: row; gap: calc(1vh); width: 100%; align-items: center;">
+                                        <input type="range" min="0" max="100" step="5" value="5" class="slider" id="optimization-slider">
+                                        <div class="slider-value" id="optimization-value">10% Dilation</div>
+                                    </div>
+                                </label>
+                            </div>
+                            <div style="display: none;">
+                                <label class="checkbox" style="display: flex; align-items: center; gap: calc(1vh); justify-content: space-between;">
+                                    <div style="display: flex; flex-direction: row; gap: calc(1vh); width: 100%; align-items: center;">
+                                        <input type="range" min="0" max="100" step="5" value="25" class="slider" id="accumulation-slider">
+                                        <div class="slider-value" id="accumulation-value">25% Accumulation</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+`;
+
+        const id = imgElement.getAttribute('id');
+        let clonedInput;
+
+        // Global variables for object detection
+        let offscreenCanvas, offscreenCtx; // used to hold the image pixel data
+        let detectionOverlay, detectionCtx;  // used for drawing the detected object
+
+        // --- Drawing state ---
+        const undoStack = [];
+        const redoStack = [];
+        let drawing = false, isErasing = false;
+        let lastX = 0, lastY = 0;
+        let firstX = 0, firstY = 0;
+        let path = [];
+
+        let cachedImageData = null;
+
+        let loadingSpinner = document.createElement('div');
+        loadingSpinner.className = 'loading-screen';
+        loadingSpinner.style.position = 'absolute';
+        loadingSpinner.style.display = "none";
+
+        let inputContainer = wrapper.querySelector('[query="imgContainer"]');
+        inputContainer.style.filter = 'brightness(100%)';
+        inputContainer.parentElement.appendChild(loadingSpinner);
+
+        let imageData;
+
+        // Create a custom cursor element for the brush.
+        const customCursor = document.createElement('div');
+        customCursor.id = 'customCursor';
+        customCursor.style.position = 'fixed';
+        customCursor.style.pointerEvents = 'none';
+        customCursor.style.borderRadius = '50%';
+        customCursor.style.border = '2px solid #fff';
+        customCursor.style.width = '20px';
+        customCursor.style.height = '20px';
+        customCursor.style.zIndex = '999999';
+        customCursor.style.display = 'none';
+        document.body.appendChild(customCursor);
+
+        // Initialize the cursor position
+        function setCustomCursorPosition(x, y) {
+            customCursor.style.left = `${x - customCursor.offsetWidth / 2}px`;
+            customCursor.style.top = `${y - customCursor.offsetHeight / 2}px`;
+        }
+
+        function createClonedInput() {
+            clonedInput = imgElement.cloneNode(true);
+            clonedInput.style.width = '100%';
+            clonedInput.style.borderRadius = 'var(--border-radius)';
+            clonedInput.style.objectFit = getScreenMode() === 1 ? 'contain' : 'contain';
+            clonedInput.style.position = 'relative';
+            clonedInput.setAttribute('query', 'imgContainer');
+            document.body.appendChild(clonedInput);
+            return clonedInput;
+        }
+
+        async function replaceInput() {
+            clonedInput = createClonedInput();
+            const imgContainerWrapper = wrapper.querySelector('#imgContainerWrapper');
+            const inputContainer = imgContainerWrapper.querySelector('[query="imgContainer"]');
+            inputContainer.style.display = 'none';
+            clonedInput.style.display = 'block';
+            imgContainerWrapper.replaceChild(clonedInput, inputContainer);
+            if (document.body.contains(clonedInput)) {
+                document.body.removeChild(clonedInput);
+            }
+        }
+
+        async function initInput() {
+            clonedInput.addEventListener('load', () => {
+                const loadingSpinner = wrapper.querySelector('#initialLoadingSpinner');
+                if (loadingSpinner) {
+                    loadingSpinner.remove();
+                } else {
+                    alert('Loading screen element not found in wrapper.');
+                }
+
+                const mainContainerCanvas = document.getElementById('mainContainerCanvas');
+                const { width, height } = mainContainerCanvas.getBoundingClientRect();
+
+                const imgContainerWrapper = document.getElementById('imgContainerWrapper');
+                imgContainerWrapper.style.width = `${width}px`;
+                imgContainerWrapper.style.height = `${height}px`;
+
+                const canvas = document.getElementById('maskCanvas');
+                canvas.style.width = `${width}px`;
+                canvas.style.height = `${height}px`;
+
+                canvas.width = width;
+                canvas.height = height;
+
+                setCustomCursorPosition(mouseX, mouseY);
+                customCursor.style.display = 'block';
+                undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+
+                offscreenCanvas = document.createElement('canvas');
+                offscreenCanvas.width = clonedInput.clientWidth;
+                offscreenCanvas.height = clonedInput.clientHeight;
+                offscreenCtx = offscreenCanvas.getContext('2d');
+                offscreenCtx.drawImage(clonedInput, 0, 0, offscreenCanvas.width, offscreenCanvas.height);
+
+                detectionOverlay = document.createElement('canvas');
+                detectionOverlay.id = 'detectionOverlay';
+                detectionOverlay.style.position = 'absolute';
+                detectionOverlay.style.top = '0';
+                detectionOverlay.style.left = '0';
+                detectionOverlay.width = canvas.width;
+                detectionOverlay.height = canvas.height;
+                detectionOverlay.style.pointerEvents = 'none';
+                detectionOverlay.style.zIndex = '30';
+                imgContainerWrapper.appendChild(detectionOverlay);
+                detectionCtx = detectionOverlay.getContext('2d');
+            });
+
+            clonedInput.addEventListener('error', () => {
+                alert('Image failed to load.');
+            });
+
+            document.body.appendChild(wrapper);
+        }
+
+        await replaceInput();
+        await initInput();
+
+        showNotification(`Draw on the object you want to change.`, 'Canvas', 'information');
+
+        const brushRangeInput = document.getElementById("brushRange"),
+            colorRangeInput = document.getElementById("colorRange"),
+            colorPickerInput = document.getElementById("colorPicker"),
+            canvas = document.getElementById("maskCanvas"),
+            ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+        setTimeout(async () => {
+            const savedCanvasData = localStorage.getItem(`canvas_${id}`);
+            if (savedCanvasData) {
+                const img = new Image();
+                await new Promise((resolve, reject) => {
+                    img.onload = () => {
+                        const mainContainerCanvas = document.getElementById('mainContainerCanvas');
+                        const { width, height } = mainContainerCanvas.getBoundingClientRect();
+
+                        const imgContainerWrapper = document.getElementById('imgContainerWrapper');
+                        imgContainerWrapper.style.width = `${width}px`;
+                        imgContainerWrapper.style.height = `${height}px`;
+
+                        const canvas = document.getElementById('maskCanvas');
+                        canvas.style.width = `${width}px`;
+                        canvas.style.height = `${height}px`;
+
+                        canvas.width = width;
+                        canvas.height = height;
+
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, 0);
+                        resolve();
+                    };
+
+                    img.onerror = (error) => {
+                        reject(`Error loading image: ${error}`);
+                    };
+
+                    img.src = savedCanvasData;
+                });
+            }
+        }, 0);
+
+        const hslToRgb = (h, s, l) => {
+            const c = (1 - Math.abs(2 * l - 1)) * s,
+                x = c * (1 - Math.abs((h / 60) % 2 - 1)),
+                m = l - c / 2;
+            let [r, g, b] =
+                h < 60 ? [c, x, 0] :
+                    h < 120 ? [x, c, 0] :
+                        h < 180 ? [0, c, x] :
+                            h < 240 ? [0, x, c] :
+                                h < 300 ? [x, 0, c] : [c, 0, x];
+            return [Math.round((r + m) * 255),
+            Math.round((g + m) * 255),
+            Math.round((b + m) * 255)];
+        };
+
+        const rgbToHex = ([r, g, b]) =>
+            `#${((1 << 24) + (r << 16) + (g << 8) + b)
+                .toString(16)
+                .slice(1)}`;
+
+        const getComplementaryColor = hue => {
+            const compHue = (parseInt(hue, 10) + 180) % 360;
+            return rgbToHex(hslToRgb(compHue, 1, 0.5));
+        };
+
+        function isCanvasEmpty(canvas) {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const pixels = imageData.data;
+
+            for (let i = 0; i < pixels.length; i += 4) {
+                if (pixels[i] !== 0 || pixels[i + 1] !== 0 || pixels[i + 2] !== 0 || pixels[i + 3] !== 0) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function saveCanvas(canvas) {
+            const dataUrl = canvas.toDataURL('image/png');
+            const dataSize = (dataUrl.length * 3 / 4) - (dataUrl.indexOf('base64,') + 7);
+            const sizeInBytes = dataSize;
+            const MAX_SIZE_LS = 5 * 1024 * 1024;
+
+            // Check if the size exceeds the 5MB limit
+            if (sizeInBytes > MAX_SIZE_LS) {
+                alert('Canvas data exceeds 5MB size limit and cannot be saved.');
+                return; // Do not save the canvas
+            }
+
+            const imgContainerId = imgElement ? imgElement.getAttribute('id') : null;
+            if (!imgContainerId) return;
+
+            // Store the canvas data URL in localStorage
+            try {
+                localStorage.setItem(`canvas_${imgContainerId}`, dataUrl);
+                showNotification(`Your canvas has been saved.`, 'Canvas Update', 'default');
+                console.log(`Canvas for ${imgContainerId} saved successfully.`);
+            } catch (e) {
+                console.error('Failed to save canvas to localStorage:', e);
+            }
+        }
+
+        // Load settings from localStorage and update UI elements.
+        function loadSettings() {
+            const settingsStr = localStorage.getItem("objectDetectionSettings");
+            let settings = {};
+            if (settingsStr) {
+                try {
+                    settings = JSON.parse(settingsStr);
+                } catch (e) {
+                    console.error("Error parsing settings", e);
+                    settings = {};
+                }
+            }
+
+            // Set the detection method (if saved)
+            if (settings.detectionMethod !== undefined) {
+                const methodId = settings.detectionMethod + "_stateObjectDetection";
+                const checkbox = document.getElementById(methodId);
+                if (checkbox) {
+                    checkbox.checked = true;
+                    // Update the combobox text with the method's name.
+                    const methodName = checkbox.parentElement.querySelector("span").textContent;
+                    const comboboxText = document.querySelector("#objectDetectionMethodComboBox .combobox-text");
+                    if (comboboxText) {
+                        comboboxText.textContent = methodName;
+                    }
+                }
+            }
+
+            // Set the slider values and update the display texts.
+            const tolSlider = document.getElementById("tolerance-slider");
+            if (tolSlider && settings.tolerance !== undefined) {
+                tolSlider.value = settings.tolerance;
+                const tolDisplay = document.getElementById("tolerance-value");
+                if (tolDisplay) {
+                    tolDisplay.textContent = settings.tolerance + "% Tolerance";
+                }
+            }
+
+            const accumSlider = document.getElementById("accumulation-slider");
+            if (accumSlider && settings.accumulation !== undefined) {
+                accumSlider.value = settings.accumulation;
+                const accumDisplay = document.getElementById("accumulation-value");
+                if (accumDisplay) {
+                    accumDisplay.textContent = settings.accumulation + "% Accumulation";
+                }
+            }
+
+            const dilationSlider = document.getElementById("optimization-slider");
+            if (dilationSlider && settings.dilation !== undefined) {
+                dilationSlider.value = settings.dilation;
+                const dilationDisplay = document.getElementById("optimization-value");
+                if (dilationDisplay) {
+                    dilationDisplay.textContent = settings.dilation + "% Dilation";
+                }
+            }
+
+            if (localStorage.getItem("brushSize")) {
+                brushRangeInput.value = localStorage.getItem("brushSize");
+                brushRangeInput.dispatchEvent(new Event("input"));
+            }
+            if (localStorage.getItem("colorHue")) {
+                colorRangeInput.value = localStorage.getItem("colorHue");
+                colorRangeInput.dispatchEvent(new Event("input"));
+            }
+            if (localStorage.getItem("colorPicker")) {
+                colorPickerInput.value = localStorage.getItem("colorPicker");
+            }
+
+            const hue = colorRangeInput.value;
+            customCursor.style.borderColor = getComplementaryColor(hue);
+
+            const diameter = parseInt(brushRangeInput.value, 10);
+            customCursor.style.width = `${diameter}px`;
+            customCursor.style.height = `${diameter}px`;
+        }
+
+        // Save the current settings into localStorage.
+        function saveSettings() {
+            const settings = {};
+
+            // Save the currently selected detection method.
+            const checkboxes = document.querySelectorAll('#objectDetectionMethodComboBox input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    // Extract the number from an id like "0_stateObjectDetection"
+                    const match = checkbox.id.match(/^(\d+)/);
+                    if (match) {
+                        settings.detectionMethod = parseInt(match[1], 10);
+                    }
+                }
+            });
+
+            // Save slider values.
+            const tolSlider = document.getElementById("tolerance-slider");
+            if (tolSlider) {
+                settings.tolerance = tolSlider.value;
+            }
+            const accumSlider = document.getElementById("accumulation-slider");
+            if (accumSlider) {
+                settings.accumulation = accumSlider.value;
+            }
+            const dilationSlider = document.getElementById("optimization-slider");
+            if (dilationSlider) {
+                settings.dilation = dilationSlider.value;
+            }
+
+            localStorage.setItem("brushSize", brushRangeInput.value);
+            localStorage.setItem("colorHue", colorRangeInput.value);
+            localStorage.setItem("colorPicker", colorPickerInput.value);
+            localStorage.setItem("objectDetectionSettings", JSON.stringify(settings));
+        }
+
+        // First, load any stored settings.
+        loadSettings();
+
+        // --- Slider Event Listeners ---
+        const tolSlider = document.getElementById("tolerance-slider");
+        if (tolSlider) {
+            tolSlider.addEventListener("input", function () {
+                const tolDisplay = document.getElementById("tolerance-value");
+                if (tolDisplay) {
+                    tolDisplay.textContent = tolSlider.value + "% Tolerance";
+                }
+                saveSettings();
+                // Simulate a mousemove event
+                //canvas.dispatchEvent(new Event('mousemove'));
+            });
+        }
+
+        const accumSlider = document.getElementById("accumulation-slider");
+        if (accumSlider) {
+            accumSlider.addEventListener("input", function () {
+                const accumDisplay = document.getElementById("accumulation-value");
+                if (accumDisplay) {
+                    accumDisplay.textContent = accumSlider.value + "% Accumulation";
+                }
+                saveSettings();
+                // Simulate a mousemove event
+                //canvas.dispatchEvent(new Event('mousemove'));
+            });
+        }
+
+        const dilationSlider = document.getElementById("optimization-slider");
+        if (dilationSlider) {
+            dilationSlider.addEventListener("input", function () {
+                const dilationDisplay = document.getElementById("optimization-value");
+                if (dilationDisplay) {
+                    dilationDisplay.textContent = dilationSlider.value + "% Dilation";
+                }
+                saveSettings();
+                // Simulate a mousemove event
+                //canvas.dispatchEvent(new Event('mousemove'));
+            });
+        }
+
+        // --- Object Detection Method Combobox ---
+        const comboBox = document.getElementById("objectDetectionMethodComboBox");
+        const comboboxText = comboBox.querySelector(".combobox-text");
+        const checkboxes = comboBox.querySelectorAll("input[type='checkbox']");
+
+        // Function to uncheck all except the selected one.
+        function clearOtherCheckboxes(selected) {
+            checkboxes.forEach(box => {
+                if (box !== selected) {
+                    box.checked = false;
+                }
+            });
+        }
+
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener("change", function () {
+                if (checkbox.checked) {
+                    clearOtherCheckboxes(checkbox);
+                    // Update combobox text with the selected method's name.
+                    const methodName = checkbox.parentNode.querySelector("span").textContent;
+                    comboboxText.textContent = methodName;
+                } else {
+                    // If no checkbox is selected, reset the text.
+                    let anyChecked = Array.from(checkboxes).some(box => box.checked);
+                    if (!anyChecked) {
+                        comboboxText.textContent = "HSV Thresholding";
+                    }
+                }
+                saveSettings();
+                // Simulate a mousemove event
+                //canvas.dispatchEvent(new Event('mousemove'));
+            });
+        });
+
+        const isClosedShape = (start, end) => {
+            if (!start || !end) return false;
+            const dx = end.x - start.x, dy = end.y - start.y;
+            return Math.hypot(dx, dy) <= 10;
+        };
+
+        const colorMatchingSettings = document.getElementById('colorMatchingSettings');
+        const savedCanvasMode = localStorage.getItem('selectedCanvasMode');
+        const canvasModeSelector = document.querySelector(`.background-dot-container-option[canvas-mode="${savedCanvasMode}"].selected`);
+        let selectedCanvasMode = savedCanvasMode || (canvasModeSelector ? savedCanvasMode : 'canvasMode');
+        colorMatchingSettings.style.display = selectedCanvasMode === "colorMatching" ? "flex" : "none";
+
+        const canvasOptions = document.querySelectorAll(".background-dot-container-option[canvas-mode]");
+        [...canvasOptions].forEach(option => {
+            if (option.getAttribute("canvas-mode") === selectedCanvasMode) {
+                // Remove "selected" class from all options
+                canvasOptions.forEach(opt => opt.classList.remove("selected"));
+                // Add "selected" class to clicked option
+                option.classList.add("selected");
+                // Update selectedCanvasMode
+                selectedCanvasMode = option.getAttribute("canvas-mode");
+                colorMatchingSettings.style.display = selectedCanvasMode === "colorMatching" ? "flex" : "none";
+
+                // Save the selected mode to localStorage
+                localStorage.setItem('selectedCanvasMode', selectedCanvasMode);
+
+                // Clear the detection context if available
+                if (detectionCtx) {
+                    detectionCtx.clearRect(0, 0, detectionOverlay.width, detectionOverlay.height);
+                }
+            }
+
+            option.addEventListener('click', () => {
+                if (option.getAttribute("canvas-mode") !== selectedCanvasMode) {
+                    // Remove "selected" class from all options
+                    canvasOptions.forEach(opt => opt.classList.remove("selected"));
+                    // Add "selected" class to clicked option
+                    option.classList.add("selected");
+                    // Update selectedCanvasMode
+                    selectedCanvasMode = option.getAttribute("canvas-mode");
+                    colorMatchingSettings.style.display = selectedCanvasMode === "colorMatching" ? "flex" : "none";
+
+                    // Save the selected mode to localStorage
+                    localStorage.setItem('selectedCanvasMode', selectedCanvasMode);
+
+                    // Clear the detection context if available
+                    if (detectionCtx) {
+                        detectionCtx.clearRect(0, 0, detectionOverlay.width, detectionOverlay.height);
+                    }
+                }
+            });
+        });
+
+        // Set the initial selected mode if none is selected
+        if (![...canvasOptions].some(opt => opt.classList.contains("selected")) && canvasOptions.length) {
+            canvasOptions[0].classList.add("selected");
+            selectedCanvasMode = canvasOptions[0].getAttribute("canvas-mode");
+            colorMatchingSettings.style.display = selectedCanvasMode === "colorMatching" ? "flex" : "none";
+            // Save the initial selected mode
+            localStorage.setItem('selectedCanvasMode', selectedCanvasMode);
+        }
+
+        colorRangeInput.addEventListener("input", function () {
+            const hue = this.value;
+            colorPickerInput.value = rgbToHex(hslToRgb(hue, 1, 0.5));
+            customCursor.style.borderColor = getComplementaryColor(hue);
+            saveSettings();
+        });
+
+        brushRangeInput.addEventListener("input", function () {
+            const diameter = parseInt(this.value, 10);
+            customCursor.style.width = `${diameter}px`;
+            customCursor.style.height = `${diameter}px`;
+            saveSettings();
+        });
+
+        function getCachedImageData() {
+            if (!offscreenCanvas || !offscreenCtx) {
+                console.error('Offscreen canvas or context not initialized');
+                return [];
+            }
+
+            if (!cachedImageData) {
+                const imgData = offscreenCtx.getImageData(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+                cachedImageData = imgData.data;
+            }
+
+            return cachedImageData;
+        }
+
+        function getColorOrder(rgb) {
+            const { r, g, b } = rgb;
+            if (r >= g && g >= b) return "rgb";
+            if (r >= b && b >= g) return "rbg";
+            if (g >= r && r >= b) return "grb";
+            if (g >= b && b >= r) return "gbr";
+            if (b >= r && r >= g) return "brg";
+            if (b >= g && g >= r) return "bgr";
+            return "";
+        }
+
+        function getPixelRGB(x, y) {
+            const index = (y * offscreenCanvas.width + x) * 4;
+            return {
+                r: imageData[index],
+                g: imageData[index + 1],
+                b: imageData[index + 2]
+            };
+        }
+
+        function getAverageSurroundingRGB(x, y, depth, visitedPixels = new Set()) {
+            let totalR = 0, totalG = 0, totalB = 0, totalWeight = 0;
+            if (depth > 0) {
+                for (let d = 1; d <= depth; d++) {
+                    const weight = 1 / d;
+                    for (let i = -d; i <= d; i++) {
+                        for (let j = -d; j <= d; j++) {
+                            if (Math.abs(i) !== d && Math.abs(j) !== d) continue;
+                            let nx = x + i, ny = y + j;
+                            if (nx < 0 || nx >= offscreenCanvas.width || ny < 0 || ny >= offscreenCanvas.height) continue;
+                            const key = `${nx},${ny}`;
+                            if (visitedPixels.has(key)) continue;
+                            visitedPixels.add(key);
+                            const rgb = getPixelRGB(nx, ny);
+                            totalR += rgb.r * weight;
+                            totalG += rgb.g * weight;
+                            totalB += rgb.b * weight;
+                            totalWeight += weight;
+                        }
+                    }
+                }
+            } else {
+                const key = `${x},${y}`;
+                if (visitedPixels.has(key)) return { r: 0, g: 0, b: 0 };
+                visitedPixels.add(key);
+                return getPixelRGB(x, y);
+            }
+            if (totalWeight) {
+                return {
+                    r: totalR / totalWeight,
+                    g: totalG / totalWeight,
+                    b: totalB / totalWeight
+                };
+            }
+            return { r: 0, g: 0, b: 0 };
+        }
+
+        function hexToRGB(hex) {
+            hex = hex.replace(/^#/, '');
+            if (hex.length === 3) {
+                hex = hex.split('').map(c => c + c).join('');
+            }
+            return {
+                r: parseInt(hex.substring(0, 2), 16),
+                g: parseInt(hex.substring(2, 4), 16),
+                b: parseInt(hex.substring(4, 6), 16),
+            };
+        }
+
+        function rgbToHsv(r, g, b) {
+            r /= 255; g /= 255; b /= 255;
+            let max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h, s, v = max;
+            let d = max - min;
+            s = max === 0 ? 0 : d / max;
+            if (max === min) {
+                h = 0; // achromatic
+            } else {
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                h *= 60;
+            }
+            return { h, s, v };
+        }
+
+        function computeEdgeMap() {
+            const width = offscreenCanvas.width;
+            const height = offscreenCanvas.height;
+            const edgeMap = new Float32Array(width * height);
+            const gxKernel = [-1, 0, 1, -2, 0, 2, -1, 0, 1];
+            const gyKernel = [-1, -2, -1, 0, 0, 0, 1, 2, 1];
+            for (let y = 1; y < height - 1; y++) {
+                for (let x = 1; x < width - 1; x++) {
+                    let gx = 0, gy = 0, k = 0;
+                    for (let j = -1; j <= 1; j++) {
+                        for (let i = -1; i <= 1; i++) {
+                            const pixel = getPixelRGB(x + i, y + j);
+                            const lum = 0.299 * pixel.r + 0.587 * pixel.g + 0.114 * pixel.b;
+                            gx += gxKernel[k] * lum;
+                            gy += gyKernel[k] * lum;
+                            k++;
+                        }
+                    }
+                    edgeMap[y * width + x] = Math.sqrt(gx * gx + gy * gy);
+                }
+            }
+            return edgeMap;
+        }
+
+        let isDetecting = false;
+
+        function detectObjectRGBColorSorting(canvasX, canvasY, skipLevel) {
+            if (isDetecting) return [];
+            isDetecting = true;
+            if (!offscreenCanvas || !offscreenCtx) { isDetecting = false; return []; }
+            imageData = getCachedImageData();
+            const scaleX = offscreenCanvas.width / canvas.width;
+            const scaleY = offscreenCanvas.height / canvas.height;
+            const startX = Math.floor(canvasX * scaleX);
+            const startY = Math.floor(canvasY * scaleY);
+            const skipOffset = skipLevel + 1;
+            let visitedPixels = new Set();
+            const accumulatePixelAmount = parseInt(accumSlider.value / 3.125, 10);
+            const runNonAvg = true;
+            const startRGBNonAvg = runNonAvg ? getAverageSurroundingRGB(startX, startY, 0, visitedPixels) : { r: 0, g: 0, b: 0 };
+            const startRGBAvg = accumulatePixelAmount === 0 ? { r: 0, g: 0, b: 0 } : getAverageSurroundingRGB(startX, startY, accumulatePixelAmount, visitedPixels);
+            const tolerance = tolSlider.value / 100;
+            const visited = new Uint8Array(offscreenCanvas.width * offscreenCanvas.height);
+            const samplePixels = [];
+            const queue = [[startX, startY]];
+            visited[startY * offscreenCanvas.width + startX] = 1;
+            const startOrderAvg = getColorOrder(startRGBAvg);
+            const startOrderNonAvg = getColorOrder(startRGBNonAvg);
+            while (queue.length) {
+                const [x, y] = queue.shift();
+                const neighbors = [
+                    [x - skipOffset, y],
+                    [x + skipOffset, y],
+                    [x, y - skipOffset],
+                    [x, y + skipOffset]
+                ];
+                for (const [nx, ny] of neighbors) {
+                    if (nx < 0 || nx >= offscreenCanvas.width || ny < 0 || ny >= offscreenCanvas.height) continue;
+                    const idx = ny * offscreenCanvas.width + nx;
+                    if (visited[idx]) continue;
+                    visitedPixels = new Set();
+                    const rgbNonAvg = runNonAvg ? getAverageSurroundingRGB(nx, ny, 0, visitedPixels) : { r: 0, g: 0, b: 0 };
+                    const rgbAvg = accumulatePixelAmount === 0 ? { r: 0, g: 0, b: 0 } : getAverageSurroundingRGB(nx, ny, accumulatePixelAmount, visitedPixels);
+                    if ((runNonAvg ? getColorOrder(rgbNonAvg) !== startOrderNonAvg : true) &&
+                        (accumulatePixelAmount !== 0 ? getColorOrder(rgbAvg) !== startOrderAvg : true))
+                        continue;
+                    const ratioRNonAvg = startRGBNonAvg.r / rgbNonAvg.r;
+                    const ratioGNonAvg = startRGBNonAvg.g / rgbNonAvg.g;
+                    const ratioBNonAvg = startRGBNonAvg.b / rgbNonAvg.b;
+                    const maxRatioNonAvg = Math.max(ratioRNonAvg, ratioGNonAvg, ratioBNonAvg);
+                    const minRatioNonAvg = Math.min(ratioRNonAvg, ratioGNonAvg, ratioBNonAvg);
+                    const ratioRAvg = startRGBAvg.r / rgbAvg.r;
+                    const ratioGAvg = startRGBAvg.g / rgbAvg.g;
+                    const ratioBAvg = startRGBAvg.b / rgbAvg.b;
+                    const maxRatioAvg = Math.max(ratioRAvg, ratioGAvg, ratioBAvg);
+                    const minRatioAvg = Math.min(ratioRAvg, ratioGAvg, ratioBAvg);
+                    if ((accumulatePixelAmount !== 0 && Math.abs(maxRatioAvg - minRatioAvg) <= tolerance) ||
+                        (runNonAvg && Math.abs(maxRatioNonAvg - minRatioNonAvg) <= tolerance)) {
+                        visited[idx] = 1;
+                        queue.push([nx, ny]);
+                        samplePixels.push({ x: nx, y: ny });
+                    }
+                }
+            }
+            isDetecting = false;
+            return samplePixels;
+        }
+
+        function detectObjectHSV(canvasX, canvasY, skipLevel) {
+            if (isDetecting) return [];
+            isDetecting = true;
+            if (!offscreenCanvas || !offscreenCtx) { isDetecting = false; return []; }
+            imageData = getCachedImageData();
+            const scaleX = offscreenCanvas.width / canvas.width;
+            const scaleY = offscreenCanvas.height / canvas.height;
+            const startX = Math.floor(canvasX * scaleX);
+            const startY = Math.floor(canvasY * scaleY);
+            const skipOffset = skipLevel + 1;
+            const refColor = getPixelRGB(startX, startY);
+            const refHSV = rgbToHsv(refColor.r, refColor.g, refColor.b);
+            const hueTolerance = tolSlider.value; // degrees
+            const satTolerance = tolSlider.value / 150; // fraction
+            const valTolerance = tolSlider.value / 150; // fraction
+            const visited = new Uint8Array(offscreenCanvas.width * offscreenCanvas.height);
+            const samplePixels = [];
+            const queue = [[startX, startY]];
+            visited[startY * offscreenCanvas.width + startX] = 1;
+            while (queue.length) {
+                const [x, y] = queue.shift();
+                samplePixels.push({ x, y });
+                const neighbors = [
+                    [x - skipOffset, y],
+                    [x + skipOffset, y],
+                    [x, y - skipOffset],
+                    [x, y + skipOffset]
+                ];
+                for (const [nx, ny] of neighbors) {
+                    if (nx < 0 || nx >= offscreenCanvas.width || ny < 0 || ny >= offscreenCanvas.height) continue;
+                    const idx = ny * offscreenCanvas.width + nx;
+                    if (visited[idx]) continue;
+                    const currColor = getPixelRGB(nx, ny);
+                    const currHSV = rgbToHsv(currColor.r, currColor.g, currColor.b);
+                    let hueDiff = Math.abs(refHSV.h - currHSV.h);
+                    if (hueDiff > 180) hueDiff = 360 - hueDiff;
+                    const satDiff = Math.abs(refHSV.s - currHSV.s);
+                    const valDiff = Math.abs(refHSV.v - currHSV.v);
+                    if (hueDiff <= hueTolerance && satDiff <= satTolerance && valDiff <= valTolerance) {
+                        visited[idx] = 1;
+                        queue.push([nx, ny]);
+                    }
+                }
+            }
+            isDetecting = false;
+            return samplePixels;
+        }
+
+        function detectObjectEdgeDetection(canvasX, canvasY, skipLevel) {
+            if (isDetecting) return [];
+            isDetecting = true;
+            if (!offscreenCanvas || !offscreenCtx) { isDetecting = false; return []; }
+            imageData = getCachedImageData();
+            const width = offscreenCanvas.width, height = offscreenCanvas.height;
+            const scaleX = width / canvas.width, scaleY = height / canvas.height;
+            const startX = Math.floor(canvasX * scaleX), startY = Math.floor(canvasY * scaleY);
+            const skipOffset = skipLevel + 1;
+            const edgeMap = computeEdgeMap();
+            const edgeThreshold = tolSlider.value;
+            const visited = new Uint8Array(width * height);
+            const samplePixels = [];
+            const queue = [[startX, startY]];
+            visited[startY * width + startX] = 1;
+            while (queue.length) {
+                const [x, y] = queue.shift();
+                if (edgeMap[y * width + x] < edgeThreshold) {
+                    samplePixels.push({ x, y });
+                    const neighbors = [
+                        [x - skipOffset, y],
+                        [x + skipOffset, y],
+                        [x, y - skipOffset],
+                        [x, y + skipOffset]
+                    ];
+                    for (const [nx, ny] of neighbors) {
+                        if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
+                        const idx = ny * width + nx;
+                        if (visited[idx]) continue;
+                        if (edgeMap[idx] < edgeThreshold) {
+                            visited[idx] = 1;
+                            queue.push([nx, ny]);
+                        }
+                    }
+                }
+            }
+            isDetecting = false;
+            return samplePixels;
+        }
+
+        function detectObject(state, canvasX, canvasY, skipLevel) {
+            switch (state) {
+                case 1:
+                    return detectObjectRGBColorSorting(canvasX, canvasY, skipLevel);
+                case 2:
+                    return detectObjectEdgeDetection(canvasX, canvasY, skipLevel);
+                default:
+                    return detectObjectHSV(canvasX, canvasY, skipLevel);
+            }
+        }
+
+        const getDiameter = () => parseInt(brushRangeInput.value, 10);
+        const drawDot = (x, y) => {
+            ctx.beginPath();
+            ctx.arc(x, y, getDiameter() / 2, 0, Math.PI * 2);
+            ctx.fillStyle = colorPickerInput.value || "#FF0000";
+            ctx.fill();
+        };
+
+        const eraseDot = (x, y) => {
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.beginPath();
+            ctx.arc(x, y, getDiameter() / 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalCompositeOperation = 'source-over';
+        };
+
+        const drawLine = (x1, y1, x2, y2, action) => {
+            const steps = Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1));
+            for (let i = 0; i <= steps; i++) {
+                const x = x1 + ((x2 - x1) * i) / steps;
+                const y = y1 + ((y2 - y1) * i) / steps;
+                action(x, y);
+            }
+        };
+
+        const fillPath = (clearPath = false) => {
+            if (!path.length) return;
+            ctx.beginPath();
+            ctx.moveTo(path[0].x, path[0].y);
+            path.forEach(point => ctx.lineTo(point.x, point.y));
+            ctx.closePath();
+            ctx.fillStyle = colorPickerInput.value || "#FF0000";
+            ctx.fill();
+            if (clearPath) path = [];
+        };
+
+        const saveState = () => {
+            undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+            redoStack.length = 0;
+        };
+
+        canvas.addEventListener('mousedown', e => {
+            const rect = canvas.getBoundingClientRect();
+            const canvasX = e.clientX - rect.left;
+            const canvasY = e.clientY - rect.top;
+            lastX = canvasX;
+            lastY = canvasY;
+            firstX = canvasX;
+            firstY = canvasY;
+            path = [{ x: canvasX, y: canvasY }];
+            drawing = true;
+            setCustomCursorPosition(e.clientX, e.clientY);
+            isErasing = (e.button === 2);
+            if (selectedCanvasMode !== 'colorMatching') {
+                isErasing ? eraseDot(canvasX, canvasY) : drawDot(canvasX, canvasY);
+            }
+
+            if (!isErasing && selectedCanvasMode === 'fillingMode') {
+                // Draw a marker for the first point (e.g., a slightly larger red dot)
+                ctx.beginPath();
+                ctx.arc(canvasX, canvasY, 6, 0, 2 * Math.PI); // Adjust radius as needed
+                ctx.fillStyle = customCursor.style.borderColor || 'red'; // Change color for visibility
+                ctx.fill();
+            }
+        });
+
+        const handleDrawing = (clientX, clientY) => {
+            const rect = canvas.getBoundingClientRect();
+            const canvasX = clientX - rect.left;
+            const canvasY = clientY - rect.top;
+            path.push({ x: canvasX, y: canvasY });
+            if (isErasing) {
+                drawLine(lastX, lastY, canvasX, canvasY, eraseDot);
+            } else {
+                if (selectedCanvasMode === 'fillingMode' && isClosedShape(path[0], { x: canvasX, y: canvasY })) {
+                    fillPath(false);
+                }
+                if (selectedCanvasMode !== 'colorMatching') {
+                    drawLine(lastX, lastY, canvasX, canvasY, drawDot);
+                }
+            }
+            lastX = canvasX;
+            lastY = canvasY;
+        };
+
+        let mouseMoveTimeout;
+
+        canvas.addEventListener('mousemove', e => {
+            setCustomCursorPosition(e.clientX, e.clientY);
+
+            if (drawing && selectedCanvasMode !== 'colorMatching') {
+                handleDrawing(e.clientX, e.clientY);
+            }
+
+            // Re-draw the marker on top
+            if (selectedCanvasMode === 'fillingMode' && firstX && firstY) {
+                ctx.beginPath();
+                ctx.arc(firstX, firstY, 6, 0, 2 * Math.PI); // Keep marker at the start point
+                ctx.fillStyle = customCursor.style.borderColor || 'red';
+                ctx.fill();
+            }
+
+            if (selectedCanvasMode === 'colorMatching') {
+                loadingSpinner.style.display = 'block';
+                inputContainer.style.filter = 'brightness(50%)';
+            }
+
+            clearTimeout(mouseMoveTimeout);
+            mouseMoveTimeout = setTimeout(() => {
+                detectedObject(e);
+            }, 50); // Adjust delay as needed
+        });
+
+        let processedPoints = [];
+
+        function detectedObject(e) {
+            if (selectedCanvasMode === 'colorMatching') {
+                const rect = canvas.getBoundingClientRect();
+                const canvasX = e.clientX - rect.left;
+                const canvasY = e.clientY - rect.top;
+
+                function getSelectedState() {
+                    const checkboxes = document.querySelectorAll('#objectDetectionMethodComboBox input[type="checkbox"]');
+                    let selectedNumber = null;
+
+                    checkboxes.forEach(checkbox => {
+                        if (checkbox.checked) {
+                            const parts = checkbox.id.split('_');
+                            selectedNumber = parseInt(parts[0], 10);
+                        }
+                    });
+
+                    return selectedNumber !== null ? selectedNumber : 0;
+                }
+
+                const selectedState = getSelectedState();
+                const skipLevel = parseInt(dilationSlider.value / 3.125, 10);
+                const detectedPoints = detectObject(selectedState, canvasX, canvasY, skipLevel);
+                processedPoints = []; // Reset processed points
+
+                if (detectedPoints.length) {
+                    const originalPixels = new Set(detectedPoints.map(p => `${p.x},${p.y}`));
+                    const dilateAmount = skipLevel * parseInt(1 + (brushRangeInput.value / 100));
+                    const scaleX = offscreenCanvas.width / canvas.width;
+                    const scaleY = offscreenCanvas.height / canvas.height;
+
+                    if (detectionCtx) {
+                        detectionCtx.clearRect(0, 0, detectionOverlay.width, detectionOverlay.height);
+                        const imageData = detectionCtx.createImageData(detectionOverlay.width, detectionOverlay.height);
+                        const data = imageData.data;
+
+                        const processPixel = (x, y) => {
+                            if (x >= 0 && x < canvas.width && y >= 0 && y < canvas.height) {
+                                const dispX = Math.floor(x / scaleX);
+                                const dispY = Math.floor(y / scaleY);
+                                const index = (dispY * detectionOverlay.width + dispX) * 4;
+
+                                const isOriginal = originalPixels.has(`${x},${y}`);
+                                data[index] = 255;
+                                data[index + 1] = 0;
+                                data[index + 2] = 0;
+                                data[index + 3] = isOriginal ? 255 : 128;
+
+                                processedPoints.push({ x, y }); // Save exact points
+                            }
+                        };
+
+                        detectedPoints.forEach(p => {
+                            if (dilateAmount === 0) {
+                                processPixel(p.x, p.y);
+                            } else {
+                                for (let dx = -dilateAmount - 1; dx <= dilateAmount + 1; dx++) {
+                                    for (let dy = -dilateAmount - 1; dy <= dilateAmount + 1; dy++) {
+                                        processPixel(p.x + dx, p.y + dy);
+                                    }
+                                }
+                            }
+                        });
+
+                        detectionCtx.putImageData(imageData, 0, 0);
+                    }
+                }
+
+                loadingSpinner.style.display = 'none';
+                inputContainer.style.display = 'block';
+                inputContainer.style.filter = 'brightness(100%)';
+            }
+        }
+
+        const finishDrawing = (e) => {
+            if (!drawing) return;
+
+            if (selectedCanvasMode === 'fillingMode' && isClosedShape(path[0], path[path.length - 1])) {
+                fillPath(true);
+            }
+
+            if (selectedCanvasMode === 'colorMatching' && processedPoints.length) {
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+
+                processedPoints.forEach(p => {
+                    if (p.x >= 0 && p.x < canvas.width && p.y >= 0 && p.y < canvas.height) {
+                        const index = (p.y * canvas.width + p.x) * 4;
+                        const color = hexToRGB(colorPickerInput.value || "#FF0000");
+
+                        data[index] = color.r;
+                        data[index + 1] = color.g;
+                        data[index + 2] = color.b;
+                        data[index + 3] = 255;
+                    }
+                });
+
+                ctx.putImageData(imageData, 0, 0);
+            }
+
+            saveState();
+            drawing = false;
+            firstX = null;
+            firstY = null;
+        };
+
+        canvas.addEventListener('mouseup', finishDrawing);
+        canvas.addEventListener('mouseout', finishDrawing);
+
+        const getTouchPos = (touch) => {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: touch.clientX - rect.left,
+                y: touch.clientY - rect.top
+            };
+        };
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const { x, y } = getTouchPos(touch);
+            lastX = x;
+            lastY = y;
+            firstX = x;
+            firstY = y;
+            path = [{ x, y }];
+            drawing = true;
+            setCustomCursorPosition(touch.clientX, touch.clientY);
+            isErasing = false; // No right-click on touchscreens
+            if (selectedCanvasMode !== 'colorMatching') {
+                drawDot(x, y);
+            }
+
+            if (selectedCanvasMode === 'colorMatching') {
+                loadingSpinner.style.display = 'block';
+                inputContainer.style.filter = 'brightness(50%)';
+            }
+
+            detectedObject(touch);
+        });
+
+        let lastDetectionTime = 0;
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            setCustomCursorPosition(touch.clientX, touch.clientY);
+
+            const now = Date.now();
+            if (now - lastDetectionTime >= 25) {
+                lastDetectionTime = now;
+                detectedObject(touch);
+            }
+
+            if (!drawing) return;
+
+            if (selectedCanvasMode !== 'colorMatching') {
+                handleDrawing(touch.clientX, touch.clientY);
+            }
+
+            // Re-draw the marker on top
+            if (selectedCanvasMode === 'fillingMode') {
+                ctx.beginPath();
+                ctx.arc(firstX, firstY, 6, 0, 2 * Math.PI); // Keep marker at the start point
+                ctx.fillStyle = customCursor.style.borderColor || 'red';
+                ctx.fill();
+            }
+        });
+
+
+        canvas.addEventListener('touchend', finishDrawing);
+        canvas.addEventListener('touchcancel', finishDrawing);
+        canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+        canvas.addEventListener('wheel', e => {
+            e.preventDefault();
+            const sensitivity = 5;
+            let newSize = Math.max(1, Math.min(200, parseInt(brushRangeInput.value, 10) - Math.sign(e.deltaY) * sensitivity));
+            brushRangeInput.value = newSize;
+            customCursor.style.width = `${newSize}px`;
+            customCursor.style.height = `${newSize}px`;
+            customCursor.style.left = `${e.clientX - newSize / 2}px`;
+            customCursor.style.top = `${e.clientY - newSize / 2}px`;
+            detectedObject(e);
+        }, { passive: false });
+
+        const clearButton = document.querySelector('.clear-button');
+        const saveButton = document.querySelector('.save-button');
+        const ctrlZButton = document.querySelector('.ctrl-z-button');
+
+        clearButton.addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            showNotification(`Your canvas has been cleared.`, 'Canvas Update', 'default');
+        });
+
+        saveButton.addEventListener('click', () => {
+            saveCanvas(canvas);
+        });
+
+        ctrlZButton.addEventListener('click', () => {
+            if (undoStack.length > 1) {
+                redoStack.push(undoStack.pop());
+                ctx.putImageData(undoStack[undoStack.length - 1], 0, 0);
+                showNotification(`Undo successful.`, 'Canvas Update', 'default');
+            }
+            else {
+                showNotification(`No undo found.`, 'Canvas Update', 'Canvas Alert');
+            }
+        });
+
+        document.addEventListener('keydown', e => {
+            if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+            if (e.ctrlKey && e.key.toLowerCase() === 'z') {
+                e.preventDefault();
+                if (undoStack.length > 1) {
+                    redoStack.push(undoStack.pop());
+                    ctx.putImageData(undoStack[undoStack.length - 1], 0, 0);
+                }
+            } else if (e.ctrlKey && e.key.toLowerCase() === 'y') {
+                e.preventDefault();
+                if (redoStack.length) {
+                    const state = redoStack.pop();
+                    undoStack.push(state);
+                    ctx.putImageData(state, 0, 0);
+                }
+            }
+        });
+
+        const closeButton = wrapper.querySelector('.close-button');
+        const startProcessButton = document.getElementById('startProcessCanvas');
+
+        startProcessButton.addEventListener('click', () => {
+            saveCanvas(canvas);
+            document.body.removeChild(wrapper);
+            document.body.removeChild(customCursor);
+            resolve({ canvas, ctx, image: localStorage.getItem(`canvas_${id}`) }); 
+        });
+
+        closeButton.addEventListener('click', () => {
+            document.body.removeChild(wrapper);
+            document.body.removeChild(customCursor);
+            showNotification(`Process cancelled.`, 'Canvas Alert', 'warning');
+            resolve({ didFail: 'true' }); 
+
+        });
+
+        wrapper.addEventListener('mousedown', (event) => {
+            if (event.target === wrapper) {
+                if (!isCanvasEmpty(canvas)) {
+                    saveCanvas(canvas);
+                    document.body.removeChild(wrapper);
+                    document.body.removeChild(customCursor);
+                    resolve({ canvas, ctx, image: localStorage.getItem(`canvas_${id}`) }); 
+                } else {
+                    showNotification(`No drawing detected.`, 'Canvas Alert', 'warning');
+                    resolve({ didFail: 'true' }); 
+                }
+            }
+        });
     });
 }
 
@@ -6284,11 +7884,12 @@ export const handleUpload = async (event, dataBaseIndexName, dataBaseObjectStore
             if (isVideo) {
                 element.innerHTML = `<video timestamp="${timestamp}" id="${id}" playsinline preload="auto" disablePictureInPicture loop muted autoplay><source src="${blobUrl}">Your browser does not support the video tag.</video><div class="delete-icon"></div>`;
                 if (dataBaseObjectStoreName === 'inputs') {
-                    element.innerHTML = `<div class="tooltip cursor">Loading...</div>` + element.innerHTML;
+                    element.innerHTML = `<div class="tooltip tooltip-fast cursor">Loading...</div>` + element.innerHTML;
                     const tooltip = element.querySelector('.tooltip');
                     if (tooltip && tooltip.classList.contains('cursor')) {
+                        tooltip.style.display = 'none';
+                        tooltip.style.position = 'fixed';
                         function updateTooltipPosition(event) {
-                            tooltip.style.position = 'fixed';
                             tooltip.style.left = `${event.clientX}px`;
                             tooltip.style.top = `${event.clientY - 15}px`
                         }
@@ -6302,35 +7903,49 @@ export const handleUpload = async (event, dataBaseIndexName, dataBaseObjectStore
                     const keepFPS = document.getElementById('keepFPS');
                     const fpsSlider = document.getElementById("fps-slider");
                     const removeBanner = document.getElementById("removeBanner");
-                    let lastMetadata = null;
 
-                    function handleMetadataUpdate(metadata) {
-                        lastMetadata = metadata;
+                    function handleMetadataUpdate(dataFps, dataDuration) {
                         const tooltip = element.querySelector('.tooltip');
-                        if (tooltip && metadata.fps) {
-                            const fpsSliderValue = !keepFPS.checked ? fpsSlider.value : 60;
-                            const fps = Math.min(fpsSliderValue, metadata.fps);
-                            const videoDurationTotalFrames = Math.floor(metadata.duration * fps);
+                        if (tooltip && dataFps) {
+                            tooltip.style.display = 'flex';
+                            const fpsSliderValue = keepFPS && !keepFPS.checked ? fpsSlider.value : 60;
+                            const fps = Math.min(fpsSliderValue, dataFps);
+                            const videoDurationTotalFrames = Math.floor(dataDuration * fps);
                             const singleCreditForTotalFrameAmount = 120;
                             const removeBannerStateMultiplier = removeBanner && removeBanner.checked ? 2 : 1;
-                            const neededCredits = Math.floor(Math.max(1, videoDurationTotalFrames / singleCreditForTotalFrameAmount) * removeBannerStateMultiplier);
-                            tooltip.textContent = `${neededCredits} Credits`
+                            const neededCredits = Math.floor(
+                                Math.max(1, videoDurationTotalFrames / singleCreditForTotalFrameAmount) *
+                                removeBannerStateMultiplier
+                            );
+                            tooltip.textContent = `${neededCredits} Credits`;
                         }
-                    } [keepFPS, fpsSlider, removeBanner].forEach(element => {
-                        element.addEventListener('change', () => {
-                            if (lastMetadata) handleMetadataUpdate(lastMetadata);
-                        })
+                    }
+
+                    const video = element.querySelector('video');
+                    calculateMetadata(video, handleMetadataUpdate);
+
+                    video.addEventListener('loadedmetadata', async () => {
+                        await calculateMetadata(video, handleMetadataUpdate);
                     });
-                    calculateMetadata(element.querySelector('video'), handleMetadataUpdate)
+
+                    [keepFPS, fpsSlider, removeBanner].forEach(el => {
+                        if (el) {
+                            el.addEventListener('change', () => {
+                                const dataFps = video.getAttribute('data-fps');
+                                handleMetadataUpdate(dataFps, video.duration);
+                            });
+                        }
+                    });
                 }
             } else {
                 element.innerHTML = `<img timestamp="${timestamp}" id="${id}" src="${blobUrl}" alt="Uploaded Photo"/><div class="delete-icon"></div>`;
                 if (dataBaseObjectStoreName === 'inputs') {
-                    element.innerHTML = `<div class="tooltip cursor">Loading...</div>` + element.innerHTML;
+                    element.innerHTML = `<div class="tooltip tooltip-fast cursor">Loading...</div>` + element.innerHTML;
                     const tooltip = element.querySelector('.tooltip');
                     if (tooltip && tooltip.classList.contains('cursor')) {
+                        tooltip.style.display = 'none';
+                        tooltip.style.position = 'fixed';
                         function updateTooltipPosition(event) {
-                            tooltip.style.position = 'fixed';
                             tooltip.style.left = `${event.clientX}px`;
                             tooltip.style.top = `${event.clientY - 15}px`
                         }
@@ -6342,28 +7957,31 @@ export const handleUpload = async (event, dataBaseIndexName, dataBaseObjectStore
                         })
                     }
                     const removeBanner = document.getElementById("removeBanner");
-                    let lastMetadata = null;
 
-                    function handleMetadataUpdate(metadata) {
-                        lastMetadata = metadata;
+                    function handleMetadataUpdate() {
                         const tooltip = element.querySelector('.tooltip');
                         if (tooltip) {
-                            const neededCredits = removeBanner.checked ? 2 : 1;
+                            tooltip.style.display = 'flex';
+                            let neededCredits = removeBanner && removeBanner.checked ? 2 : 1;
                             if (pageName === 'inpaint')
                                 neededCredits += 1;
                             tooltip.textContent = `${neededCredits} Credits`
                         }
                     }
-                    removeBanner.addEventListener('change', () => {
-                        if (lastMetadata) handleMetadataUpdate(lastMetadata);
-                    });
-                    calculateMetadata(element.querySelector('img'), handleMetadataUpdate)
+                    handleMetadataUpdate();
+                    if (removeBanner) {
+                        removeBanner.addEventListener('change', () => {
+                            handleMetadataUpdate();
+                        });
+                    }
+                    calculateMetadata(element.querySelector('img'), null)
                 }
             }
             fragment.appendChild(element);
             if (id === newMedia[newMedia.length - 1].id) {
                 element.classList.add('active');
                 if (id) {
+                    displayStoredData(element, dataBaseObjectStoreName);
                     await updateActiveState(db, id, !0).catch(err => {
                         alert(`Update failed for id ${id}: ${err}`)
                     })
@@ -6408,40 +8026,74 @@ export const setupFileUpload = ({
     changeHandler
 }) => {
     const input = document.getElementById(inputId);
-    const button = document.getElementById(buttonId);
+    const buttons = document.getElementsByClassName(buttonId); // Get all buttons with the same class
     const modal = document.getElementById(`upload-options-modal-${inputId}`);
-    if (!input || !button || !modal) return;
+    if (!input || !buttons.length || !modal) return;
 
-    button.addEventListener('click', (event) => {
-        event.stopPropagation();
-        modal.classList.toggle('hidden');
+    // Loop over each button and attach the event listener
+    [...buttons].forEach((button) => {
+        button.addEventListener('click', (event) => {
+            event.stopPropagation();
+            modal.classList.toggle('hidden');
 
-        if (!modal.classList.contains('hidden')) {
-            const modalWidth = modal.offsetWidth;
-            const modalHeight = modal.offsetHeight;
-            const left = event.clientX - modalWidth / 2;
-            const top = event.clientY - modalHeight / 4;
-            modal.style.position = 'fixed';
-            modal.style.left = `${left}px`;
-            modal.style.top = `${top}px`;
-        }
+            if (!modal.classList.contains('hidden')) {
+                const modalWidth = modal.offsetWidth;
+                const modalHeight = modal.offsetHeight;
+                let left = event.clientX - modalWidth / 2;
+                let top = event.clientY - modalHeight / 4;
+
+                // Ensure modal stays within viewport
+                const maxLeft = window.innerWidth - modalWidth;
+                const maxTop = window.innerHeight - modalHeight;
+                left = Math.min(Math.max(0, left), maxLeft);
+                top = Math.min(Math.max(0, top), maxTop);
+
+                modal.style.position = 'fixed';
+                modal.style.left = `${left}px`;
+                modal.style.top = `${top}px`;
+            }
+        });
+
+        button.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            button.classList.add('dragover');
+        });
+
+        button.addEventListener('dragleave', () => {
+            button.classList.remove('dragover');
+        });
+
+        button.addEventListener('drop', async (event) => {
+            event.preventDefault();
+            button.classList.remove('dragover');
+
+            const files = event.dataTransfer.files;
+            if (files.length > 0) {
+                const mockEvent = { target: { files } };
+                await changeHandler(mockEvent, dataBaseIndexName, dataBaseObjectStoreName, databases);
+            }
+        });
     });
 
+    // Event listener for clicking inside modal to prevent propagation
     modal.addEventListener('click', (e) => {
         e.stopPropagation();
     });
 
+    // Hide modal when clicking outside
     document.addEventListener('click', () => {
         if (!modal.classList.contains('hidden')) {
             modal.classList.add('hidden');
         }
     });
 
+    // Device upload button
     document.getElementById(`upload-device-${inputId}`).addEventListener('click', () => {
         input.click();
-        document.getElementById(`upload-options-modal-${inputId}`).classList.add('hidden');
+        modal.classList.add('hidden');
     });
 
+    // Link upload button: reveal link input field
     document.getElementById(`upload-link-${inputId}`).addEventListener('click', () => {
         const linkInput = document.getElementById(`link-upload-${inputId}`);
         linkInput.classList.remove('hidden');
@@ -6449,6 +8101,7 @@ export const setupFileUpload = ({
         linkInput.focus();
     });
 
+    // Handle URL submission for upload on Enter key press
     document.getElementById(`upload-link-${inputId}`).addEventListener('keypress', async (event) => {
         if (event.key === 'Enter') {
             const url = event.target.value.trim();
@@ -6458,38 +8111,18 @@ export const setupFileUpload = ({
             }
 
             try {
-
+                // Handle file fetch or processing logic here
             } catch (error) {
                 alert(`Failed to fetch or process the file: ${error.message}`);
             }
         }
     });
 
+    // File input change handler
     input.addEventListener('change', async (event) => {
         await changeHandler(event, dataBaseIndexName, dataBaseObjectStoreName, databases);
     });
-
-    button.addEventListener('dragover', (event) => {
-        event.preventDefault();
-        button.classList.add('dragover');
-    });
-
-    button.addEventListener('dragleave', () => {
-        button.classList.remove('dragover');
-    });
-
-    button.addEventListener('drop', async (event) => {
-        event.preventDefault();
-        button.classList.remove('dragover');
-
-        const files = event.dataTransfer.files;
-        if (files.length > 0) {
-            const mockEvent = { target: { files } };
-            await changeHandler(mockEvent, dataBaseIndexName, dataBaseObjectStoreName, databases);
-        }
-    });
 };
-
 export async function setClientStatus(message) {
     const outputs = document.querySelector('.outputs');
     if (outputs && outputs.firstChild) {
@@ -6598,7 +8231,8 @@ export async function checkServerStatus(databases, userId) {
         handleUserRequest(serverWithUserRequest, databases, userId);
     } else {
         const startProcessBtn = document.getElementById('startProcessBtn');
-        startProcessBtn.disabled = !1;
+        if (startProcessBtn)
+            startProcessBtn.disabled = !1;
         if (downloadFile) {
             const db = await openDB(`outputDB-${pageName}`, 'outputs');
             const outputs = (await getFromDB(db)).reverse();
@@ -6618,29 +8252,37 @@ function has24HoursPassed(lastCreditEarned, currentTime) {
     return currentTime - lastCreditEarned >= 24 * 60 * 60 * 1000;
 }
 
-export async function hasSubscriptionPlan() {
-    const userDoc = await getUserDoc();
-    if (!userDoc || !userDoc.deadline)
-        return false;
+export function getCheckedCheckboxIdFromCombobox(comboboxId, callback) {
+    const container = document.getElementById(comboboxId);
+    if (!container) return callback;
 
-    const deadline = new Date(userDoc.deadline.seconds * 1000 + (userDoc.deadline.nanoseconds || 0) / 1000000);
+    const checkedItem = container.querySelector('li.item.checked');
+    if (!checkedItem) return callback;
+
+    const checkbox = checkedItem.querySelector('input[type="checkbox"]');
+    return checkbox ? checkbox.id : callback;
+} 
+
+export function hasSubscriptionPlan(userDoc) {
+    const deadlines = [userDoc.deadline, userDoc.deadlineDF, userDoc.deadlineDV, userDoc.deadlineDA, userDoc.deadlineDN].filter(Boolean);
     const now = new Date();
-    const timeDiff = deadline.getTime() - now.getTime();
-    return timeDiff > 0;
+
+    for (const d of deadlines) {
+        const deadline = new Date(d.seconds * 1000 + (d.nanoseconds || 0) / 1000000);
+        if (deadline.getTime() > now.getTime()) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 async function showDailyCredits() {
     const userDoc = await getUserDoc();
-    if (document.getElementById('wrapper') || !userDoc || userDoc.dailyCredits >= 10) return;
+    if (document.getElementById('wrapper') || !userDoc || userDoc.dailyCredits > 5) return;
 
-    if (userDoc.deadline) {
-        const deadline = new Date(userDoc.deadline.seconds * 1000 + (userDoc.deadline.nanoseconds || 0) / 1000000);
-        const now = new Date();
-        const timeDiff = deadline.getTime() - now.getTime();
-        if (timeDiff > 0) {
-            return;
-        }
-    }
+    if (hasSubscriptionPlan(userDoc))
+        return;
 
     const serverAddressAPI = await fetchServerAddress(getDocSnapshot('servers', '3050-1'), 'API');
     let lastCancellationTime = localStorage.getItem('lastCancellation') || 0;
@@ -6733,6 +8375,7 @@ async function showDailyCredits() {
 
     const userData = await getUserData();
     if (!userData) {
+        wrapper.remove();
         return;
     }
 
@@ -6759,7 +8402,14 @@ async function showDailyCredits() {
 
     const linkElement = document.getElementById('referralLink');
     if (linkElement && userDoc.referral) {
-        linkElement.value = `https://deepany.ai/?referral=${encodeURIComponent(userDoc.referral)}`;
+        wrapper.remove();
+        return;
+    }
+
+    linkElement.value = `https://deepany.ai/?referral=${encodeURIComponent(userDoc.referral)}`;
+    if (!linkElement.value) {
+        wrapper.remove();
+        return;
     }
 
     const referralCredits = document.getElementById('redeemReferralCredits');
@@ -6829,7 +8479,7 @@ async function showDailyCredits() {
     await checkDailyCredit();
     localStorage.setItem('lastCancellation', currentTime);
 
-    const MINUTES_MS = 1 * 60 * 1000;
+    const MINUTES_MS = 30 * 1000;
 
     function canClickAgain(buttonKey) {
         const lastClicked = localStorage.getItem(buttonKey);
@@ -6912,7 +8562,7 @@ async function showDailyCredits() {
 
             if (potentialGain < maxCredits) {
                 infoMessage.style.display = 'unset';
-                infoMessage.textContent = `Claiming now will only give extra ${potentialGain}. To claim all 10, spend your remaining ${currentCredits} daily credits first. Do you still want to proceed?`;
+                infoMessage.textContent = `Daily credits won't stack up. To claim all, spend your remaining ${currentCredits} daily credits first. Do you still want to proceed?`;
                 infoMessage.style.color = 'white';
                 dailyCredits.innerHTML = `${svg} Yes, Proceed!`;
                 return;
@@ -6963,7 +8613,6 @@ export function updateDownloadFile(newValue, databases, userId) {
     downloadFile = newValue;
     setDynamicInterval(databases, userId)
 }
-
 function calculateNewTime(remainingTime, queueAmount) {
     if (!remainingTime) {
         return '00:00'
@@ -7002,6 +8651,9 @@ export function handleUserRequest(serverData, databases, userId) {
 }
 export function getSelectedInputId(checkboxes) {
     for (let checkbox of checkboxes) {
+        if (!checkbox)
+            return null;
+
         if (checkbox.checked) {
             return checkbox.id
         }
@@ -7062,25 +8714,64 @@ export function createSectionAndElements() {
             const sliderInput = container.querySelector("input[type='range']");
 
             if (btnText) btnText.innerText = title;
-
-            const toggleOpen = (event) => {
-                event.stopPropagation();
-                const isCurrentlyOpen = container.classList.contains("open");
-
-                document.querySelectorAll(`${containerSelector}.open`).forEach(openContainer => {
-                    const otherListItems = openContainer.querySelector(options.listItemsSelector || ".list-items");
-                    if (otherListItems) otherListItems.style.display = "none";
-                    openContainer.classList.remove("open");
+            if (container.classList.contains("searchable")) {
+                let searchInput = document.createElement("input");
+                searchInput.type = "text";
+                searchInput.classList.add("search-input");
+                searchInput.placeholder = "Search...";
+                listItems.insertBefore(searchInput, listItems.firstChild);
+                searchInput.addEventListener("pointerdown", (event) => {
+                    event.stopPropagation();
                 });
 
-                container.classList.toggle("open", !isCurrentlyOpen);
-                listItems.style.display = !isCurrentlyOpen ? "flex" : "none";
-            };
+                const normalizeText = (text) => {
+                    const normalized = text
+                        .replace(/([a-z])([A-Z])/g, '$1 $2')
+                        .toLowerCase()
+                        .replace(/ya/g, "") // remove "ya"
+                        .replace(/[^a-z0-9\s]/g, "")
+                        .replace(/\s+/g, " ")
+                        .trim();
 
-            if (container) container.addEventListener("click", toggleOpen);
+                    console.log(`Normalized "${text}" -> "${normalized}"`);
+                    return normalized;
+                };
+
+                searchInput.addEventListener("input", (e) => {
+                    const searchTerm = normalizeText(e.target.value);
+                    const searchWords = searchTerm.split(" ").filter(word => word);
+                    const matchingItems = [];
+
+                    items.forEach(item => {
+                        const label = item.querySelector("label span");
+                        const normalizedItemText = label ? normalizeText(label.textContent) : "";
+                        const allWordsMatch = searchWords.every(word => normalizedItemText.includes(word));
+
+                        if (allWordsMatch) {
+                            item.style.display = "flex";
+                            const matchIndex = Math.min(...searchWords.map(word => normalizedItemText.indexOf(word)).filter(i => i !== -1));
+                            console.log(`Match found at index ${matchIndex}`);
+                            matchingItems.push({ item, index: matchIndex });
+                        } else {
+                            item.style.display = "none";
+                        }
+                    });
+
+                    matchingItems.sort((a, b) => a.index - b.index);
+                    Array.from(listItems.children).forEach(child => {
+                        if (!child.classList.contains("search-input")) {
+                            listItems.removeChild(child);
+                        }
+                    });
+
+                    matchingItems.forEach(match => {
+                        listItems.appendChild(match.item);
+                    });
+                });
+            }
 
             if (sliderInput) {
-                sliderInput.addEventListener("click", (event) => {
+                sliderInput.addEventListener("pointerdown", (event) => {
                     event.stopPropagation();
                 });
             }
@@ -7091,45 +8782,45 @@ export function createSectionAndElements() {
                     if (checkbox.checked) {
                         items.forEach(i => {
                             const cb = i.querySelector('input[type="checkbox"]');
-                            cb.checked = !1;
-                            i.classList.remove("checked")
+                            cb.checked = false;
+                            i.classList.remove("checked");
                         });
                         if (sliderInput)
                             sliderInput.parentElement.style.display = 'flex';
-                        checkbox.checked = !0;
+                        checkbox.checked = true;
                         item.classList.add("checked");
-                        btnText.innerText = title + ": " + checkbox.parentElement.querySelector('span').textContent.trim()
+                        btnText.innerText = title + ": " + checkbox.parentElement.querySelector('span').textContent.trim();
                     } else {
                         const anyChecked = [...items].some(i => i.querySelector('input[type="checkbox"]').checked);
                         if (!anyChecked) {
                             btnText.innerText = title + ": " + (defaultTitle ? defaultTitle : "Not Specified");
                             if (sliderInput)
-                                sliderInput.parentElement.style.display = 'none'
+                                sliderInput.parentElement.style.display = 'none';
                         }
-                        item.classList.remove("checked")
+                        item.classList.remove("checked");
                     }
                     checkbox.addEventListener("change", () => {
                         if (checkbox.checked) {
                             items.forEach(i => {
                                 const cb = i.querySelector('input[type="checkbox"]');
-                                cb.checked = !1;
-                                i.classList.remove("checked")
+                                cb.checked = false;
+                                i.classList.remove("checked");
                             });
                             if (sliderInput)
                                 sliderInput.parentElement.style.display = 'flex';
-                            checkbox.checked = !0;
+                            checkbox.checked = true;
                             item.classList.add("checked");
-                            btnText.innerText = title + ": " + checkbox.parentElement.querySelector('span').textContent.trim()
+                            btnText.innerText = title + ": " + checkbox.parentElement.querySelector('span').textContent.trim();
                         } else {
                             const anyChecked = [...items].some(i => i.querySelector('input[type="checkbox"]').checked);
                             if (!anyChecked) {
                                 btnText.innerText = title + ": " + (defaultTitle ? defaultTitle : "Not Specified");
                                 if (sliderInput)
-                                    sliderInput.parentElement.style.display = 'none'
+                                    sliderInput.parentElement.style.display = 'none';
                             }
-                            item.classList.remove("checked")
+                            item.classList.remove("checked");
                         }
-                    })
+                    });
                 });
             }
             else if (options.selectBtnSelector === '.multibox') {
@@ -7138,7 +8829,7 @@ export function createSectionAndElements() {
                     const checkedItems = container.querySelectorAll(".item.checked input[type='checkbox']");
                     const selectedNames = Array.from(checkedItems).map(checkbox => {
                         const label = checkbox.parentElement.querySelector('span');
-                        return label ? label.textContent.trim() : ''
+                        return label ? label.textContent.trim() : '';
                     }).filter(name => name !== '');
                     btnText.innerText = selectedNames.length > 0 ? selectedNames.join(', ') : btnText.getAttribute("title");
                     checkbox.addEventListener("change", () => {
@@ -7146,10 +8837,10 @@ export function createSectionAndElements() {
                         const checkedItems = container.querySelectorAll(".item.checked input[type='checkbox']");
                         const selectedNames = Array.from(checkedItems).map(checkbox => {
                             const label = checkbox.parentElement.querySelector('span');
-                            return label ? label.textContent.trim() : ''
+                            return label ? label.textContent.trim() : '';
                         }).filter(name => name !== '');
-                        btnText.innerText = selectedNames.length > 0 ? selectedNames.join(', ') : btnText.getAttribute("title")
-                    })
+                        btnText.innerText = selectedNames.length > 0 ? selectedNames.join(', ') : btnText.getAttribute("title");
+                    });
                 });
             } else {
                 items.forEach(item => {
@@ -7157,45 +8848,45 @@ export function createSectionAndElements() {
                     if (checkbox.checked) {
                         items.forEach(i => {
                             const cb = i.querySelector('input[type="checkbox"]');
-                            cb.checked = !1;
-                            i.classList.remove("checked")
+                            cb.checked = false;
+                            i.classList.remove("checked");
                         });
                         if (sliderInput)
                             sliderInput.parentElement.style.display = 'flex';
-                        checkbox.checked = !0;
+                        checkbox.checked = true;
                         item.classList.add("checked");
-                        btnText.innerText = title + ": " + checkbox.parentElement.querySelector('span').textContent.trim()
+                        btnText.innerText = title + ": " + checkbox.parentElement.querySelector('span').textContent.trim();
                     } else {
                         const anyChecked = [...items].some(i => i.querySelector('input[type="checkbox"]').checked);
                         if (!anyChecked) {
                             btnText.innerText = title + ": " + (defaultTitle ? defaultTitle : "Default");
                             if (sliderInput)
-                                sliderInput.parentElement.style.display = 'none'
+                                sliderInput.parentElement.style.display = 'none';
                         }
-                        item.classList.remove("checked")
+                        item.classList.remove("checked");
                     }
                     checkbox.addEventListener("change", () => {
                         if (checkbox.checked) {
                             items.forEach(i => {
                                 const cb = i.querySelector('input[type="checkbox"]');
-                                cb.checked = !1;
-                                i.classList.remove("checked")
+                                cb.checked = false;
+                                i.classList.remove("checked");
                             });
                             if (sliderInput)
                                 sliderInput.parentElement.style.display = 'flex';
-                            checkbox.checked = !0;
+                            checkbox.checked = true;
                             item.classList.add("checked");
-                            btnText.innerText = title + ": " + checkbox.parentElement.querySelector('span').textContent.trim()
+                            btnText.innerText = title + ": " + checkbox.parentElement.querySelector('span').textContent.trim();
                         } else {
                             const anyChecked = [...items].some(i => i.querySelector('input[type="checkbox"]').checked);
                             if (!anyChecked) {
                                 btnText.innerText = title + ": " + (defaultTitle ? defaultTitle : "Default");
                                 if (sliderInput)
-                                    sliderInput.parentElement.style.display = 'none'
+                                    sliderInput.parentElement.style.display = 'none';
                             }
-                            item.classList.remove("checked")
+                            item.classList.remove("checked");
                         }
-                    })
+                    });
                 });
             }
 
@@ -7205,6 +8896,41 @@ export function createSectionAndElements() {
             listItems?.addEventListener("mouseleave", () => {
                 if (tooltip) tooltip.style.display = "flex";
             });
+
+            const toggleOpen = (event) => {
+                event.stopPropagation();
+                const isCurrentlyOpen = container.classList.contains("open");
+
+                if (isCurrentlyOpen) {
+                    if (!listItems.contains(event.target)) {
+                        container.classList.remove("open");
+                        listItems.style.display = "none";
+                    }
+                    return;
+                }
+
+                document.querySelectorAll(`${containerSelector}.open`).forEach(openContainer => {
+                    const otherListItems = openContainer.querySelector(options.listItemsSelector || ".list-items");
+                    if (otherListItems) otherListItems.style.display = "none";
+                    openContainer.classList.remove("open");
+                });
+
+                container.classList.add("open");
+                listItems.style.display = "flex";
+            };
+
+            if (container) {
+                container.addEventListener("pointerdown", toggleOpen);
+            }
+
+            const closeOnOutsideClick = (event) => {
+                if (!container.contains(event.target)) {
+                    container.classList.remove("open");
+                    listItems.style.display = "none";
+                }
+            };
+
+            document.addEventListener("pointerdown", closeOnOutsideClick);
         });
     };
 
@@ -7271,11 +8997,11 @@ export function createSectionAndElements() {
         const arrowDown = rectangle.querySelector('.arrow-dwn');
         const sliderInput = rectangle.querySelector('input[type="range"]');
         if (sliderInput) {
-            sliderInput.addEventListener("click", (event) => {
+            sliderInput.addEventListener("pointerdown", (event) => {
                 event.stopPropagation()
             })
         }
-        arrowDown.addEventListener("click", (event) => {
+        arrowDown.addEventListener("pointerdown", (event) => {
             event.stopPropagation();
             rectangles.forEach(cbx => {
                 if (cbx !== rectangle) {
@@ -7340,23 +9066,6 @@ export function createSectionAndElements() {
             tooltip.style.display = "flex"
         })
     });
-    document.addEventListener("click", () => {
-        const multiboxes = document.querySelectorAll(".multibox");
-        multiboxes.forEach(box => {
-            box.classList.remove("open");
-            box.querySelector(".list-items").style.display = "none"
-        });
-        const comboboxes = document.querySelectorAll(".combobox");
-        comboboxes.forEach(combobox => {
-            combobox.querySelector(".list-items").style.display = "none";
-            combobox.classList.remove("open")
-        });
-        const rectangles = document.querySelectorAll(".rectangle");
-        rectangles.forEach(rectangle => {
-            rectangle.querySelector(".list-items").style.display = "none";
-            rectangle.classList.remove("open")
-        });
-    })
 }
 const isBlobSupported = () => {
     try {
@@ -7413,6 +9122,27 @@ Please try updating your browser or using a different one to ensure compatibilit
         return null;
     }
 };
+export const processBase64ToFile = (base64, fileName = "image.png") => {
+    try {
+        if (!base64 || !base64.startsWith("data:image")) {
+            throw new Error(`Invalid or missing canvas data for ID: ${imgContainerId}`);
+        }
+
+        const byteString = atob(base64.split(",")[1]);
+        const mimeType = base64.split(",")[0].split(":")[1].split(";")[0];
+        const byteArray = new Uint8Array(byteString.length);
+
+        for (let i = 0; i < byteString.length; i++) {
+            byteArray[i] = byteString.charCodeAt(i);
+        }
+
+        return new File([byteArray], fileName, { type: mimeType });
+    } catch (error) {
+        console.error(`Error processing canvas to file: ${error.message}`);
+        alert(`Error processing canvas to file: ${error.message}`);
+        return null;
+    }
+};
 export async function fetchUploadedChunks(serverAddress, fileName) {
     try {
         const response = await fetchWithRandom(`${serverAddress}/uploaded-chunks?fileName=${fileName}`);
@@ -7455,7 +9185,8 @@ export async function cancelProcess(showAlertion) {
                     if (showAlertion && response.ok) {
                         await response.json();
                         const startProcessBtn = document.getElementById('startProcessBtn');
-                        startProcessBtn.disabled = !1;
+                        if (startProcessBtn)
+                            startProcessBtn.disabled = !1;
                         setClientStatus('Request got cancelled')
                     }
                 } catch (error) {

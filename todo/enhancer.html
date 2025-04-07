@@ -31,7 +31,7 @@
             top: 50%;
             left: 50%;
             border: 3px solid #f3f3f3;
-            border-top: 3px solid #ff7300;
+            border-top: 3px solid #ff7300; z-index: 999999;
             border-radius: 50%;
             width: 50px !important;
             height: 50px !important;
@@ -52,11 +52,11 @@
     <link rel="shortcut icon" href="/.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="stylesheet" href="css/styles.css?v=1.1.1.2.7.6">
+    <link rel="stylesheet" href="css/styles.css?v=1.1.1.3.6.7">
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = new URLSearchParams(window.location.search).get('referral') || '1.1.1.2.7.6';
+        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '1.1.1.3.6.7';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -134,7 +134,7 @@
                                                                                                         <div class="features-witdh">
                                                                                                             <div style="display: flex;justify-content: space-between;">
                                                                                                                 <div style="display: flex;flex-direction: column;align-items: center;">
-                                                                                                                    <div class="circular-button" id="circular-button-face-upload" title="Upload face" tooltip>
+                                                                                                                    <div class="circular-button circular-button-face-upload" title="Upload face" tooltip>
                                                                                                                         <div class="tooltip">Add and choose the new face image to apply to the video or image input.</div>
                                                                                                                     </div>
                                                                                                                     <div class="background-container hidden" style="flex-direction: column;align-items: stretch;" id="upload-options-modal-face-upload">
@@ -154,7 +154,7 @@
                                                                                                                     <div class="faces"></div>
                                                                                                                 </div>
                                                                                                                 <div style="display: flex;flex-direction: column;align-items: center;">
-                                                                                                                    <div class="circular-button" id="circular-button-input-upload" title="Upload input" tooltip>
+                                                                                                                    <div class="circular-button circular-button-input-upload" title="Upload input" tooltip>
                                                                                                                         <div class="tooltip">Add and choose the video or image where the face swap will occur.</div>
                                                                                                                     </div>
                                                                                                                     <div class="background-container hidden" style="flex-direction: column;align-items: stretch;" id="upload-options-modal-input-upload">
@@ -416,7 +416,7 @@
                                                                                                                 <div class="line"></div>
                                                                                                             <div style="display: flex;gap: calc(1.5vh* var(--scale-factor-h));">
                                                                                                                 <button class="wide" id="startProcessBtn">Start Process</button>
-                                                                                                                <button class="wide" id="cancellProcessBtn" >Cancel Process</button>
+                                                                                                                <button class="wide" id="cancelProcessBtn" >Cancel Process</button>
                                                                                                             </div>
                                                                                                         </div>
                                                                                                     </div>
@@ -871,14 +871,14 @@
                             actualFPS = activeVideoInput ? activeVideoInput?.getAttribute('data-fps') : null;
                             calculatedFrameRate = (!keepFPS.checked ? Math.min(actualFPS, document.getElementById("fps-slider").value) : actualFPS);
                             videoDurationTotalFrames = Math.floor(activeVideoInput.duration * calculatedFrameRate);
-                            if (videoDurationTotalFrames <= 0 && !hasSubscriptionPlan()) {
+                            if (videoDurationTotalFrames <= 0 && !hasSubscriptionPlan(userDoc)) {
                                 setClientStatus(`No Frame Detected`);
                                 showNotification(`Your video has incorrect metadata. Try using a online MP4 converter for you video or contact us.`, 'Warning - No Frame Detected', 'warning-important');
                                 startProcessBtn.disabled = false;
                                 return;
                             }
 
-                            if (videoDurationTotalFrames > maximumAllowedFrames && !userDoc.admin && !userDoc.promoter && hasSubscriptionPlan()) {
+                            if (videoDurationTotalFrames > maximumAllowedFrames && !userDoc.admin && !userDoc.promoter && hasSubscriptionPlan(userDoc)) {
                                 setClientStatus(`Exceeding Frame Limit ${maximumAllowedFrames}`);
 
                                 const message = !keepFPS.checked
@@ -1325,8 +1325,8 @@
                     await startProcess();
                 });
 
-                const cancellProcessBtn = document.getElementById('cancellProcessBtn');
-                cancellProcessBtn.addEventListener('click', async () => {
+                const cancelProcessBtn = document.getElementById('cancelProcessBtn');
+                cancelProcessBtn.addEventListener('click', async () => {
                     await cancelProcess(true);
                 });
 
@@ -1639,5 +1639,5 @@
             window.addEventListener('resize', sizeBasedElements);
         });
     </script>
-</body>
+<script src="scripts/autoTranslate.js"></script></body>
 </html>

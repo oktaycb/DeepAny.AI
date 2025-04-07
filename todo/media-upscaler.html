@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en" style="background: rgba(24, 24, 24, 1);" class="loading-screen">
 <head>
-    <title>AI Image & Video Upscaler: Face Enhancement & Resolution | Free & Online</title>
+    <title>AI Upscaler: The Best, Image & Video, Face Enhancement</title>
     <link rel="canonical" href="https://deepany.ai/face-swap">
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="DeepAny.AI offers a free trial for creating realistic deepfake face swaps with cutting-edge AI technology. Easily swap faces in inputs and images with our user-friendly online ai tools. No technical skills required, start your free trial today!">
-    <meta name="keywords" content="ai, deepany, face swap, free bodyswap, online photo editing, video face swap, gif swap, deepfake, AI face changer, image manipulation, AI-powered tools">
+    <meta name="description" content="DeepAny.AI offers a free trial for AI-powered image and video upscaling with advanced face enhancement. Instantly boost resolution, sharpen details, and enhance faces in photos and videos online—no technical skills required! Try it now.">
+    <meta name="keywords" content="ai, deepany, image upscaler, video upscaler, ai face enhancer, photo resolution booster, HD image enhancement, AI-powered tools, video quality improver, online upscaling, AI sharpener, super resolution AI, image restoration, AI video enhancer">
     <meta name="apple-mobile-web-app-title" content="AI Face Swap" />
 
     <meta property="og:type" content="website">
@@ -15,14 +15,14 @@
     <meta property="og:locale" content="en_US">
     <meta property="og:site_name" content="DeepAny.AI">
     <meta property="og:title" content="DeepAny.AI | Face Swap">
-    <meta property="og:description" content="DeepAny.AI offers a free trial for creating realistic deepfake face swaps with cutting-edge AI technology!">
+    <meta property="og:description" content="DeepAny.AI offers a free trial for AI-powered image and video upscaling with advanced face enhancement!">
     <meta property="og:image" content="https://deepany.ai/assets/brand.png">
     <meta property="og:image:alt" content="DeepAny.AI | Brand Logo">
 
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://deepany.ai">
     <meta property="twitter:title" content="DeepAny.AI | Face Swap">
-    <meta property="twitter:description" content="DeepAny.AI offers a free trial for creating realistic deepfake face swaps with cutting-edge AI technology!">
+    <meta property="twitter:description" content="DeepAny.AI offers a free trial for AI-powered image and video upscaling with advanced face enhancement!">
     <meta property="twitter:image" content="https://deepany.ai/assets/brand.png">
 
     <style id="loading-stylesheet">
@@ -32,6 +32,7 @@
             left: 50%;
             border: 3px solid #f3f3f3;
             border-top: 3px solid #ff7300;
+            z-index: 999999;
             border-radius: 50%;
             width: 50px !important;
             height: 50px !important;
@@ -134,7 +135,7 @@
                                                                                                         <div class="features-witdh">
                                                                                                             <div style="display: flex;justify-content: space-between;">
                                                                                                                 <div style="display: flex;flex-direction: column;align-items: center;">
-                                                                                                                    <div class="circular-button" id="circular-button-face-upload" title="Upload face" tooltip>
+                                                                                                                    <div class="circular-button circular-button-face-upload" title="Upload face" tooltip>
                                                                                                                         <div class="tooltip">Add and choose the new face image to apply to the video or image input.</div>
                                                                                                                     </div>
                                                                                                                     <div class="background-container hidden" style="flex-direction: column;align-items: stretch;" id="upload-options-modal-face-upload">
@@ -154,7 +155,7 @@
                                                                                                                     <div class="faces"></div>
                                                                                                                 </div>
                                                                                                                 <div style="display: flex;flex-direction: column;align-items: center;">
-                                                                                                                    <div class="circular-button" id="circular-button-input-upload" title="Upload input" tooltip>
+                                                                                                                    <div class="circular-button circular-button-input-upload" title="Upload input" tooltip>
                                                                                                                         <div class="tooltip">Add and choose the video or image where the face swap will occur.</div>
                                                                                                                     </div>
                                                                                                                     <div class="background-container hidden" style="flex-direction: column;align-items: stretch;" id="upload-options-modal-input-upload">
@@ -416,7 +417,7 @@
                                                                                                                 <div class="line"></div>
                                                                                                             <div style="display: flex;gap: calc(1.5vh* var(--scale-factor-h));">
                                                                                                                 <button class="wide" id="startProcessBtn">Start Process</button>
-                                                                                                                <button class="wide" id="cancellProcessBtn" >Cancel Process</button>
+                                                                                                                <button class="wide" id="cancelProcessBtn" >Cancel Process</button>
                                                                                                             </div>
                                                                                                         </div>
                                                                                                     </div>
@@ -1325,8 +1326,8 @@
                     await startProcess();
                 });
 
-                const cancellProcessBtn = document.getElementById('cancellProcessBtn');
-                cancellProcessBtn.addEventListener('click', async () => {
+                const cancelProcessBtn = document.getElementById('cancelProcessBtn');
+                cancelProcessBtn.addEventListener('click', async () => {
                     await cancelProcess(true);
                 });
 
@@ -1639,5 +1640,5 @@
             window.addEventListener('resize', sizeBasedElements);
         });
     </script>
-</body>
+<script src="scripts/autoTranslate.js"></script></body>
 </html>

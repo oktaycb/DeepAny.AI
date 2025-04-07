@@ -1,0 +1,6 @@
+# robots.txt file for DeepAny.AI
+# Created in the the year 2024
+
+User-agent: *
+Disallow: /admin/
+Disallow: /api/

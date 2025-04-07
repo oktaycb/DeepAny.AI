@@ -34,6 +34,7 @@
             left: 50%;
             border: 3px solid #f3f3f3;
             border-top: 3px solid #ff7300;
+            z-index: 999999;
             border-radius: 50%;
             width: 50px !important;
             height: 50px !important;
@@ -78,7 +79,38 @@
     <link rel="shortcut icon" href="/.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="stylesheet" href="css/styles.css?v=1.1.1.2.7.6">
+    <script>
+        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '1.1.1.5.0.8';
+        const url = window.location.origin + window.location.pathname;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            (async function () {
+                const storedVersion = localStorage.getItem('version');
+                const urlParamsVersion = new URLSearchParams(window.location.search).get('version');
+                const version = urlParamsVersion || storedVersion || '1.1.1.5.0.8';
+
+                try {
+                    const randomParam = `nocache=${Math.random()}`;
+                    const versionUrl = `${window.location.origin}/version?${randomParam}`;
+                    const response = await fetch(versionUrl, { cache: "no-store" });
+                    const newVersion = (await response.text()).trim();
+                    localStorage.setItem('version', newVersion);
+
+                    if (!urlParamsVersion && newVersion !== version) {
+                        location.reload(true);
+                    }
+                } catch (error) {
+                    console.error("Error checking for updates:", error);
+                }
+            })();
+        });
+
+        // Create and insert the stylesheet link with the version parameter
+        const linkEl = document.createElement('link');
+        linkEl.rel = 'stylesheet';
+        linkEl.href = `css/styles.css?v=${version}`;
+        document.head.appendChild(linkEl);
+    </script>
     <style>
         .main-container {
             display: grid;
@@ -593,7 +625,7 @@
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = new URLSearchParams(window.location.search).get('referral') || '1.1.1.2.7.6';
+        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '1.1.1.5.0.8';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -601,7 +633,7 @@
 
         document.addEventListener('DOMContentLoaded', async function () {
             const functions = await loadModule('./scripts/functions.js');
-            const { fetchWithRandom, setUser, setAuthentication, getFirebaseModules, getDocSnapshot, loadPageContent, retrieveImages, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, getSizeCache, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol } = functions;
+            const { getUserDoc, fetchWithRandom, setUser, setAuthentication, getFirebaseModules, getDocSnapshot, loadPageContent, retrieveImages, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, getSizeCache, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol } = functions;
 
             let sizeCache = [];
 
@@ -620,102 +652,137 @@
                 if (screenMode !== 1) {
                     pageContent.push(
                         `
-                                                <div class="start-content" id="hover-div">
-                                                    <p class="subtext">Discover the leading AI platform since 2023, renowned for its ease and excellence.</p>
-                                                    <h1 class="text-gradient" id="dynamic-text">AI-Powered Services</h1>
-                                                    <ul class="styled-list">
-                                                        <li><strong>Daily Free Trial:</strong> <span>Experience our full-featured services without cost.</span></li>
-                                                        <li><strong>Security & Support:</strong> <span>Your data is protected, with 24/7 support available.</span></li>
-                                                        <li><strong>High Ratings:</strong> <span>Trusted by users with a 4.9 rating on<span>&nbsp;</span><a class="trusted-link" href="https://www.trustpilot.com/review/bodyswap.me" target="_blank" rel="noopener noreferrer">Trustpilot</a>.</li>
-                                                        <li><strong>Cost-Effective:</strong> <span>Only 1 credit permage & frframepan></li>
-                                                        <li><strong>Fast Processing:</strong> <span>RTX 4090 GPUs in our servers for optimal performance.</span></li>
-                                                        <li><strong>Pricing:</strong> <span>Dynamic plans tailored to every budget.</span></li>
-                                                    </ul>
-                                                    <p class="subtext" style="padding-bottom: 0.5vh;">Unlock the potential of AI for your projects with our reliable and affordable services.</p>
-                                                    <div class="button-container">
-                                                        <button class="openSignUpContainer">Try Now</button>
-                                                        <a class="button important" href="pricing">Purchase</a>
-                                                   </div>
-                                            </div>
-                                            <div class="card-container">
-                                                <div class="background"></div>
-                                                <a href="face-swap" class="card">
-                                                    <div class="card-content">
-                                                        <div class="card-title">Face Swap</div>
-                                                        <div class="card-link">Try Face Swap</div>
-                                                    </div>
-                                                </a>
-                                                <a href="inpaint" class="card">
-                                                    <div class="card-content">
-                                                        <div class="card-title">Cloth Inpainting</div>
-                                                        <div class="card-link">Try Inpaint</div>
-                                                    </div>
-                                                </a>
-                                                <a href="art-generator" class="card">
-                                                    <div class="card-content">
-                                                        <div  class="card-title">Art Generator</div>
-                                                        <div class="card-link">Create Art</div>
-                                                    </div>
-                                                </a>
-                                            </div>
-                                        `);
+                                                                                <div class="start-content" id="hover-div">
+                                                                                    <p class="subtext">Discover the leading AI platform since 2023, renowned for its ease and excellence.</p>
+                                                                                    <h1 class="text-gradient" id="dynamic-text">AI-Powered Services</h1>
+                                                                                    <ul class="styled-list">
+                                                                                        <li><strong>Daily Free Trial:</strong> <span>Experience our full-featured services without cost.</span></li>
+                                                                                        <li><strong>Security & Support:</strong> <span>Your data is protected, with 24/7 support available.</span></li>
+                                                                                        <li><strong>High Ratings:</strong> <span>Trusted by users with a 4.9 rating on<span>&nbsp;</span><a class="trusted-link" href="https://www.trustpilot.com/review/bodyswap.me" target="_blank" rel="noopener noreferrer">Trustpilot</a>.</li>
+                                                                                        <li><strong>Cost-Effective:</strong> <span>Only 1 credit per image & 120 frames.</li>
+                                                                                        <li><strong>Fast Processing:</strong> <span>RTX 4090 GPUs in our servers for optimal performance.</span></li>
+                                                                                        <li><strong>Pricing:</strong> <span>Dynamic plans tailored to every budget.</span></li>
+                                                                                    </ul>
+                                                                                    <p class="subtext" style="padding-bottom: 0.5vh;">Unlock the potential of AI for your projects with our reliable and affordable services.</p>
+                                                                                    <div class="button-container">
+                                                                                        <button id="callOutText" class="openSignInContainer">Try Now</button>
+                                                                                        <a class="button important" href="pricing">Purchase</a>
+                                                                                   </div>
+                                                                            </div>
+                                                                            <div class="card-container card-container-small">
+                                                                                <div class="background"></div>
+                                                                                <a href="face-swap" class="card">
+                                                                                    <div class="card-content card-content-small">
+                                                                                        <div class="card-title">Face Swap</div>
+                                                                                        <div class="card-link">Try Face Swap</div>
+                                                                                    </div>
+                                                                                </a>
+                                                                                <a href="video-generator" class="card">
+                                                                                    <div class="card-content card-content-small">
+                                                                                        <div  class="card-title">Video Generator</div>
+                                                                                        <div class="card-link">Create Video</div>
+                                                                                    </div>
+                                                                                </a>
+                                                                                <a href="inpaint" class="card">
+                                                                                    <div class="card-content card-content-small">
+                                                                                        <div class="card-title">Cloth Inpainting</div>
+                                                                                        <div class="card-link">Try Inpaint</div>
+                                                                                    </div>
+                                                                                </a>
+                                                                                <a href="art-generator" class="card">
+                                                                                    <div class="card-content card-content-small">
+                                                                                        <div  class="card-title">Art Generator</div>
+                                                                                        <div class="card-link">Create Art</div>
+                                                                                    </div>
+                                                                                </a>
+                                                                                <a href="media-upscaler" class="card disabled">
+                                                                                    <div class="card-content card-content-small disabled">
+                                                                                        <div  class="card-title disabled">Media Upscaler</div>
+                                                                                        <div class="card-link disabled">Try Upscaler</div>
+                                                                                    </div>
+                                                                                </a>
+                                                                            </div>
+                                                                        `);
                 } else {
                     pageContent.push(
                         `
-                                            <div class="start-content-container">
-                                                <div class="start-content" id="hover-div">
-                                                    <p class="subtext">Discover the leading AI platform since 2023, renowned for its ease and excellence.</p>
-                                                    <h2 class="text-gradient" id="dynamic-text">AI-Powered Services</h2>
-                                                    <ul class="styled-list">
-                                                        <li><strong>Daily Free Trial:</strong> <span>Experience our full-featured services without cost.</span></li>
-                                                        <li><strong>Security & Support:</strong> <span>Your data is protected, with 24/7 support available.</span></li>
-                                                        <li><strong>High Ratings:</strong> <span>Trusted by users with a 4.9 rating on</span><span>&nbsp;</span><a class="trusted-link" href="https://www.trustpilot.com/review/bodyswap.me" target="_blank" rel="noopener noreferrer">Trustpilot</a>.</li>
-                                                        <li><strong>Cost-Effective:</strong> <span>1 credit for 2 seconds of face swap or image processes.</span></span></li>
-                                                        <li><strong>Fast Processing:</strong> <span>RTX 4090 GPUs in our servers for optimal performance.</span></li>
-                                                        <li><strong>Pricing:</strong> <span>Dynamic plans tailored to every budget.</span></li>
-                                                    </ul>
-                                                    <p class="subtext" style="padding-bottom: 0.5vh;">Unlock the potential of AI for your projects with our reliable and affordable services.</p>
-                                                    <div class="button-container">
-                                                        <button class="openSignUpContainer">Try Now</button>
-                                                        <a class="button important" href="pricing">Purchase</a>
-                                                    </div>
-                                                </div>
-                                                <div class="end-content">
-                                                    <img src="${getImageSrc('resize-large')}" id="resize-large" loading="eager" alt="Wide Image Example">
-                                                    <img src="${getImageSrc('resize-middle')}" id="resize-middle" loading="eager" alt="Medium Image Example">
-                                                    <img src="${getImageSrc('resize-long')}" id="resize-long" loading="eager" alt="Long Image Example">
-                                                </div>
-                                            </div>
-                                            <div class="card-container">
-                                                <div class="background"></div>
-                                                <a href="face-swap" class="card">
-                                                    <div class="card-content">
-                                                        <div>
-                                                            <div class="card-title">Face Swap</div>
-                                                            <div class="card-description">Swap faces in your inputs with ease.</div>
-                                                        </div>
-                                                        <div class="card-link">Try Face Swap</div>
-                                                    </div>
-                                                </a>
-                                                <a href="inpaint" class="card">
-                                                    <div class="card-content">
-                                                        <div>
-                                                            <div class="card-title">Cloth Inpainting</div>
-                                                            <div class="card-description">Remove, add or change elements in your images.</div>
-                                                        </div>
-                                                        <div class="card-link">Try Inpaint</div>
-                                                    </div>
-                                                </a>
-                                                <a href="art-generator" class="card">
-                                                    <div class="card-content">
-                                                        <div>
-                                                            <div class="card-title">Art Generator</div>
-                                                            <div class="card-description">Create stunning digital artworks.</div>
-                                                        </div>
-                                                        <div class="card-link">Create Art</div>
-                                                    </div>
-                                                </a>
-                                            </div>`);
+                                                                            <div class="start-content-container">
+                                                                                <div class="start-content" id="hover-div">
+                                                                                    <p class="subtext">Discover the leading AI platform since 2023, renowned for its ease and excellence.</p>
+                                                                                    <h2 class="text-gradient" id="dynamic-text">AI-Powered Services</h2>
+                                                                                    <ul class="styled-list">
+                                                                                        <li><strong>Daily Free Trial:</strong> <span>Experience our full-featured services without cost.</span></li>
+                                                                                        <li><strong>Security & Support:</strong> <span>Your data is protected, with 24/7 support available.</span></li>
+                                                                                        <li><strong>High Ratings:</strong> <span>Trusted by users with a 4.9 rating on</span><span>&nbsp;</span><a class="trusted-link" href="https://www.trustpilot.com/review/bodyswap.me" target="_blank" rel="noopener noreferrer">Trustpilot</a>.</li>
+                                                                                        <li><strong>Cost-Effective:</strong> <span>1 credit for 2 seconds of face swap or image processes.</span></span></li>
+                                                                                        <li><strong>Fast Processing:</strong> <span>RTX 4090 GPUs in our servers for optimal performance.</span></li>
+                                                                                        <li><strong>Pricing:</strong> <span>Dynamic plans tailored to every budget.</span></li>
+                                                                                    </ul>
+                                                                                    <p class="subtext" style="padding-bottom: 0.5vh;">Unlock the potential of AI for your projects with our reliable and affordable services.</p>
+                                                                                    <div class="button-container">
+                                                                                        <button id="callOutText" class="openSignInContainer">Try Now</button>
+                                                                                        <a class="button important" href="pricing">Purchase</a>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div class="end-content">
+                                                                                    <img src="${getImageSrc('resize-large')}" id="resize-large" loading="eager" alt="Wide Image Example">
+                                                                                    <img src="${getImageSrc('resize-middle')}" id="resize-middle" loading="eager" alt="Medium Image Example">
+                                                                                    <img src="${getImageSrc('resize-long')}" id="resize-long" loading="eager" alt="Long Image Example">
+                                                                                </div>
+                                                                            </div>
+                                                                            <div style="display: flex;align-items: center;gap: var(--card-gap);">
+                                                                                <button id="button-left" style="width: 4vh; height: 4vh;">&lt;</button>
+                                                                                <div class="card-container card-container-small">
+                                                                                    <div class="background"></div>
+                                                                                    <a href="face-swap" class="card">
+                                                                                        <div class="card-content card-content-small">
+                                                                                            <div>
+                                                                                                <div class="card-title">Face Swap</div>
+                                                                                                <div class="card-description">Swap faces in your inputs with ease.</div>
+                                                                                            </div>
+                                                                                            <div class="card-link">Try Face Swap</div>
+                                                                                        </div>
+                                                                                    </a>
+                                                                                    <a href="video-generator" class="card">
+                                                                                        <div class="card-content card-content-small">
+                                                                                            <div>
+                                                                                                <div class="card-title">Video Generator</div>
+                                                                                                <div class="card-description">Create stunning digital videos.</div>
+                                                                                            </div>
+                                                                                            <div class="card-link">Create Video</div>
+                                                                                        </div>
+                                                                                    </a>
+                                                                                    <a href="inpaint" class="card">
+                                                                                        <div class="card-content card-content-small">
+                                                                                            <div>
+                                                                                                <div class="card-title">Cloth Inpainting</div>
+                                                                                                <div class="card-description">Remove, add or change elements in your images.</div>
+                                                                                            </div>
+                                                                                            <div class="card-link">Try Inpaint</div>
+                                                                                        </div>
+                                                                                    </a>
+                                                                                    <a href="art-generator" class="card">
+                                                                                        <div class="card-content card-content-small">
+                                                                                            <div>
+                                                                                                <div class="card-title">Art Generator</div>
+                                                                                                <div class="card-description">Create stunning digital artworks.</div>
+                                                                                            </div>
+                                                                                            <div class="card-link">Create Art</div>
+                                                                                        </div>
+                                                                                    </a>
+                                                                                    <a href="media-upscaler" class="card disabled">
+                                                                                        <div class="card-content card-content-small disabled">
+                                                                                            <div>
+                                                                                                <div class="card-title disabled">Media Upscaler</div>
+                                                                                                <div class="card-description disabled">Enhance your media files with ease.</div>
+                                                                                            </div>
+                                                                                            <div class="card-link disabled">Try Upscaler</div>
+                                                                                        </div>
+                                                                                    </a>
+                                                                                </div>
+                                                                                <button id="button-right" style="width: 4vh; height: 4vh;">&gt;</button>
+                                                                            </div>
+                                                                            `);
                 }
             }
 
@@ -732,6 +799,74 @@
                     retrieveImages('resize-long');
                     retrieveImages('resize-large');
                 }
+
+                const button = document.getElementById("callOutText");
+
+                let userDoc = await getUserDoc();
+                if (!userDoc) {
+                    button.textContent = "Try Now";
+                    button.removeAttribute("data-link");
+                }
+                else {
+                    const defaultText = "Try Now";
+                    const options = [
+                        { text: "Swap Faces", link: "/face-swap" },
+                        { text: "Create Video", link: "/video-generator" },
+                        { text: "Inpaint Now", link: "/inpaint" },
+                        { text: "Create Art", link: "/art-generator" }
+                    ];
+
+                    let index = 0;
+
+                    button.textContent = defaultText;
+
+                    button.addEventListener("mouseenter", function () {
+                        const currentOption = options[index];
+                        button.textContent = currentOption.text;
+                        button.setAttribute("data-link", currentOption.link);
+
+                        index = (index + 1) % options.length; // Cycle through the options
+                    });
+
+                    button.addEventListener("mouseleave", function () {
+                        button.textContent = defaultText;
+                        button.removeAttribute("data-link");
+                    });
+
+                    button.addEventListener("click", function () {
+                        const link = button.getAttribute("data-link");
+                        if (link) {
+                            window.location.href = link;
+                        }
+                    });
+                }
+
+                const container = document.querySelector('.card-container');
+                const leftBtn = document.getElementById('button-left');
+                const rightBtn = document.getElementById('button-right');
+
+                if (container) {
+                    container.addEventListener('wheel', (e) => {
+                        if (e.deltaY !== 0) {
+                            e.preventDefault();
+                            container.scrollBy({ left: -e.deltaY, behavior: 'smooth' });
+                        }
+                    }, { passive: false });
+
+                    const scrollAmount = 400;
+
+                    if (leftBtn) {
+                        leftBtn.addEventListener('click', () => {
+                            container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+                        });
+                    }
+
+                    if (rightBtn) {
+                        rightBtn.addEventListener('click', () => {
+                            container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+                        });
+                    }
+                }
             }
 
             sizeBasedElements();
@@ -739,5 +874,6 @@
             window.addEventListener('resize', sizeBasedElements);
         });
     </script>
+    <script src="scripts/autoTranslate.js"></script>
 </body>
 </html>

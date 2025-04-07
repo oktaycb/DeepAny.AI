@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en" style="background: rgba(24, 24, 24, 1);" class="loading-screen">
+<head>
+    <title>Get Free AI Credits | DeepAny.AI</title>
+    <link rel="canonical" href="https://deepany.ai/free-credits">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Claim free AI credits on DeepAny.AI and explore our powerful AI tools. No payment required – start your free trial today!">
+    <meta name="keywords" content="free AI credits, DeepAny AI, AI tools, AI free trial, AI-powered platform, online AI services, claim free credits">
+    <meta name="apple-mobile-web-app-title" content="Free AI Credits" />
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://deepany.ai/free-credits">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:site_name" content="DeepAny.AI">
+    <meta property="og:title" content="Claim Your Free AI Credits | DeepAny.AI">
+    <meta property="og:description" content="Sign up now and get free AI credits to try out DeepAny.AI's powerful tools. No payment required!">
+    <meta property="og:image" content="https://deepany.ai/assets/free-credits.png">
+    <meta property="og:image:alt" content="DeepAny.AI Free AI Credits">
+
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://deepany.ai/free-credits">
+    <meta property="twitter:title" content="Claim Your Free AI Credits | DeepAny.AI">
+    <meta property="twitter:description" content="Sign up and get free AI credits to explore DeepAny.AI's cutting-edge AI-powered platform. No payment needed!">
+    <meta property="twitter:image" content="https://deepany.ai/assets/free-credits.png">
+
+    <style id="loading-stylesheet">
+        .loading-screen {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #ff7300;
+            z-index: 999999;
+            border-radius: 50%;
+            width: 50px !important;
+            height: 50px !important;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+    </style>
+
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <script>
+        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '1.1.1.5.0.8';
+        const url = window.location.origin + window.location.pathname;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            (async function () {
+                const storedVersion = localStorage.getItem('version');
+                const urlParamsVersion = new URLSearchParams(window.location.search).get('version');
+                const version = urlParamsVersion || storedVersion || '1.1.1.5.0.8';
+
+                try {
+                    const randomParam = `nocache=${Math.random()}`;
+                    const versionUrl = `${window.location.origin}/version?${randomParam}`;
+                    const response = await fetch(versionUrl, { cache: "no-store" });
+                    const newVersion = (await response.text()).trim();
+                    localStorage.setItem('version', newVersion);
+
+                    if (!urlParamsVersion && newVersion !== version) {
+                        location.reload(true);
+                    }
+                } catch (error) {
+                    console.error("Error checking for updates:", error);
+                }
+            })();
+        });
+
+        // Create and insert the stylesheet link with the version parameter
+        const linkEl = document.createElement('link');
+        linkEl.rel = 'stylesheet';
+        linkEl.href = `css/styles.css?v=${version}`;
+        document.head.appendChild(linkEl);
+    </script>
+    <style>
+        :root {
+            --input-size: calc(12vh * var(--scale-factor-h));
+            --input-margin: calc(4vh * var(--scale-factor-h));
+        }
+    </style>
+</head>
+</html>
+<body lang="en">
+    <script type="module" defer>
+        (async function () {
+            const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '1.1.1.5.0.8';
+
+            async function loadModule(url) {
+                return import(`${url}?v=${version}`);
+            }
+
+            document.addEventListener('DOMContentLoaded', async function () {
+                try {
+                    const functions = await loadModule('./scripts/functions.js');
+
+                    const {
+                        setUser,
+                        setAuthentication,
+                        getFirebaseModules,
+                        getDocSnapshot,
+                        getScreenMode,
+                        getCurrentMain,
+                        updateContent,
+                        createPages,
+                        setNavbar,
+                        setSidebar,
+                        showSidebar,
+                        removeSidebar,
+                        getSidebarActive,
+                        moveMains,
+                        setupMainSize,
+                        loadScrollingAndMain,
+                        showZoomIndicator,
+                        setScaleFactors,
+                        clamp,
+                        loadPageContent,
+                        retrieveImageFromURL,
+                        fetchServerAddress,
+                        ensureUniqueId,
+                        getUserInternetProtocol
+                    } = functions;
+
+                    function updateMainContent(screenMode, pageContent) {
+                        pageContent.length = 0;
+                        pageContent.push(`
+                                    <div class="redirect-container" style="text-align: center; padding: 20px; color: white;">
+                                        <h3>Redirecting to <a href="/profile" style="color: #ff7300;">/profile</a> in a second...</h3>
+                                        <p>If the redirect doesn't work, <a href="/profile" style="color: #ff7300;">click here</a>.</p>
+                                    </div>
+                                    `);
+                    }
+
+                    setTimeout(() => {
+                        window.location.href = "/profile";
+                    }, 1000);
+
+                    // Initialize page content
+                    loadPageContent(
+                        setUser,
+                        retrieveImageFromURL,
+                        getUserInternetProtocol,
+                        ensureUniqueId,
+                        fetchServerAddress,
+                        getFirebaseModules,
+                        getDocSnapshot,
+                        getScreenMode,
+                        getCurrentMain,
+                        updateContent,
+                        createPages,
+                        setNavbar,
+                        setSidebar,
+                        showSidebar,
+                        removeSidebar,
+                        getSidebarActive,
+                        moveMains,
+                        setupMainSize,
+                        loadScrollingAndMain,
+                        showZoomIndicator,
+                        setScaleFactors,
+                        clamp,
+                        setAuthentication,
+                        updateMainContent
+                    );
+
+                } catch (error) {
+                    console.error("Error loading script:", error);
+                }
+            });
+        })();
+    </script>
+<script src="scripts/autoTranslate.js"></script></body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en" style="background: rgba(24, 24, 24, 1);" class="loading-screen">
+<head>
+    <title>AI Nudifier: Enhance Images with AI | DeepAny.AI</title>
+    <link rel="canonical" href="https://deepany.ai/nudifier">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="DeepAny.AI's AI Nudifier is a powerful tool for transforming and enhancing images using advanced AI technology. Try it online today!">
+    <meta name="keywords" content="AI nudifier, image enhancement, AI-powered tools, photo editing, online AI editor, advanced image processing, AI image transformation">
+    <meta name="apple-mobile-web-app-title" content="AI Nudifier" />
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://deepany.ai/nudifier">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:site_name" content="DeepAny.AI">
+    <meta property="og:title" content="DeepAny.AI | AI Nudifier">
+    <meta property="og:description" content="Use DeepAny.AI's AI Nudifier for advanced image transformations. Enhance and modify photos instantly with cutting-edge AI!">
+    <meta property="og:image" content="https://deepany.ai/assets/nudifier-preview.png">
+    <meta property="og:image:alt" content="DeepAny.AI AI Nudifier Tool">
+
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://deepany.ai/nudifier">
+    <meta property="twitter:title" content="DeepAny.AI | AI Nudifier">
+    <meta property="twitter:description" content="DeepAny.AI's AI Nudifier enhances and transforms images using artificial intelligence. Try it online today!">
+    <meta property="twitter:image" content="https://deepany.ai/assets/nudifier-preview.png">
+
+    <style id="loading-stylesheet">
+        .loading-screen {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #ff7300;
+            z-index: 999999;
+            border-radius: 50%;
+            width: 50px !important;
+            height: 50px !important;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+    </style>
+
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="stylesheet" href="css/styles.css?v=1.1.1.3.5.7">
+    <style>
+        :root {
+            --input-size: calc(12vh * var(--scale-factor-h));
+            --input-margin: calc(4vh * var(--scale-factor-h));
+        }
+    </style>
+</head>
+</html>
+<body lang="en">
+    <script type="module" defer>
+        (async function () {
+            const version = new URLSearchParams(window.location.search).get('referral') || '1.1.1.3.5.7';
+
+            async function loadModule(url) {
+                return import(`${url}?v=${version}`);
+            }
+
+            document.addEventListener('DOMContentLoaded', async function () {
+                try {
+                    const functions = await loadModule('./scripts/functions.js');
+
+                    const {
+                        setUser,
+                        setAuthentication,
+                        getFirebaseModules,
+                        getDocSnapshot,
+                        getScreenMode,
+                        getCurrentMain,
+                        updateContent,
+                        createPages,
+                        setNavbar,
+                        setSidebar,
+                        showSidebar,
+                        removeSidebar,
+                        getSidebarActive,
+                        moveMains,
+                        setupMainSize,
+                        loadScrollingAndMain,
+                        showZoomIndicator,
+                        setScaleFactors,
+                        clamp,
+                        loadPageContent,
+                        retrieveImageFromURL,
+                        fetchServerAddress,
+                        ensureUniqueId,
+                        getUserInternetProtocol
+                    } = functions;
+
+                    function updateMainContent(screenMode, pageContent) {
+                        pageContent.length = 0;
+                        pageContent.push(`
+                                    <div class="redirect-container" style="text-align: center; padding: 20px; color: white;">
+                                        <h3>Redirecting to <a href="/inpaint" style="color: #ff7300;">/inpaint</a> in a second...</h3>
+                                        <p>If the redirect doesn't work, <a href="/inpaint" style="color: #ff7300;">click here</a>.</p>
+                                    </div>
+                                    `);
+                    }
+
+                    setTimeout(() => {
+                        window.location.href = "/inpaint";
+                    }, 1000);
+
+                    // Initialize page content
+                    loadPageContent(
+                        setUser,
+                        retrieveImageFromURL,
+                        getUserInternetProtocol,
+                        ensureUniqueId,
+                        fetchServerAddress,
+                        getFirebaseModules,
+                        getDocSnapshot,
+                        getScreenMode,
+                        getCurrentMain,
+                        updateContent,
+                        createPages,
+                        setNavbar,
+                        setSidebar,
+                        showSidebar,
+                        removeSidebar,
+                        getSidebarActive,
+                        moveMains,
+                        setupMainSize,
+                        loadScrollingAndMain,
+                        showZoomIndicator,
+                        setScaleFactors,
+                        clamp,
+                        setAuthentication,
+                        updateMainContent
+                    );
+
+                } catch (error) {
+                    console.error("Error loading script:", error);
+                }
+            });
+        })();
+    </script>
+<script src="scripts/autoTranslate.js"></script></body>
+</html>

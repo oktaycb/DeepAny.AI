@@ -17,6 +17,7 @@
             left: 50%;
             border: 3px solid #f3f3f3;
             border-top: 3px solid #ff7300;
+            z-index: 999999;
             border-radius: 50%;
             width: 50px !important;
             height: 50px !important;
@@ -169,12 +170,43 @@
     <link rel="shortcut icon" href="/.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="stylesheet" href="css/styles.css?v=1.1.1.2.7.6">
+    <script>
+        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '1.1.1.5.0.8';
+        const url = window.location.origin + window.location.pathname;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            (async function () {
+                const storedVersion = localStorage.getItem('version');
+                const urlParamsVersion = new URLSearchParams(window.location.search).get('version');
+                const version = urlParamsVersion || storedVersion || '1.1.1.5.0.8';
+
+                try {
+                    const randomParam = `nocache=${Math.random()}`;
+                    const versionUrl = `${window.location.origin}/version?${randomParam}`;
+                    const response = await fetch(versionUrl, { cache: "no-store" });
+                    const newVersion = (await response.text()).trim();
+                    localStorage.setItem('version', newVersion);
+
+                    if (!urlParamsVersion && newVersion !== version) {
+                        location.reload(true);
+                    }
+                } catch (error) {
+                    console.error("Error checking for updates:", error);
+                }
+            })();
+        });
+
+        // Create and insert the stylesheet link with the version parameter
+        const linkEl = document.createElement('link');
+        linkEl.rel = 'stylesheet';
+        linkEl.href = `css/styles.css?v=${version}`;
+        document.head.appendChild(linkEl);
+    </script>
 </head>
 <body lang="en">
     <div id="paymentContainer" style="margin: 0; padding: 0; overflow: hidden; display: none; width: 100%; height: 100vh; position: absolute; z-index: 99999;"></div>
     <script type="module" defer>
-        const version = new URLSearchParams(window.location.search).get('referral') || '1.1.1.2.7.6';
+        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '1.1.1.5.0.8';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -182,92 +214,132 @@
 
         document.addEventListener('DOMContentLoaded', async function () {
             const functions = await loadModule('./scripts/functions.js');
-            const { fetchWithRandom, getUserData, setCache, getCache, getPageName, setUser, setAuthentication, fetchConversionRates, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol } = functions;
+            const { fetchWithRandom, createSectionAndElements, getUserData, setCache, getCache, getPageName, setUser, setAuthentication, fetchConversionRates, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol } = functions;
 
             const pageName = getPageName();
 
             function updateMainContent(screenMode, pageContent) {
                 pageContent.length = 0;
-                pageContent.push(`<div id="baseContainer" class="centered-container long">
-                                                                                                <div style="display: flex;flex-direction: column; gap: calc(2vh* var(--scale-factor-h));">
-                                                                                                                <div class="background-container">
-                                                                                                                    <p class="background-dot-container-option" payment-provider="PAYTR" translate="no">Card</p>
-                                                                                                                    <p class="background-dot-container-option" payment-provider="BTC" translate="no">Coinbase</p>
-                                                                                                                </div>
-
-                                                                                                                <div class="background-container">
-                                                                                                                    <p class="background-dot-container-option" id="credits-mode">Credits</p>
-                                                                                                                    <p class="background-dot-container-option" id="subscription-mode">Subscription</p>
-                                                                                                                    <p class="background-dot-container-option not-available" id="renewal-mode">Renewal</p>
-                                                                                                                </div>
-
-                                                                                                                
-                                                                                                                <div class="background-container">
-                                                                                                                    <p class="background-dot-container-option" data-currency="USD" translate="no">$USD</p>
-                                                                                                                    <p class="background-dot-container-option" data-currency="EUR" translate="no">€EUR</p>
-                                                                                                                    <p class="background-dot-container-option" data-currency="GBP" translate="no">£GBP</p>
-                                                                                                                    <p class="background-dot-container-option" data-currency="TRY" translate="no">₺TRY</p>
-                                                                                                                </div>
-
-
-                                                                                                    <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;height: 100%;">
-                                                                                                        <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
-                                                                                                            <a class="background-dot-container">
-                                                                                                                <div class="background-dot-container-content" style="min-width: calc((50vh* var(--scale-factor-h) + 50vw / 2 * var(--scale-factor-w)));">
-                                                                                                                <div class="background-container" style="grid: unset; display: grid;grid-template-columns: 1fr 1fr;">
-                                                                                                                    <input type="range" id="slider" min="1" max="9" step="1" value="1"></input>
-                                                                                                                    <p class="slider-value">1 day</p>
-                                                                                                                </div>
-                                                                                                                        <div class="line"></div>
-                                                                                                                        <div class="background-dot-container-header">
-                                                                                                                          <p class="plans-name text-gradient" id="plan-name">Starter</p>
-                                                                                                                          <div class="plans-popular" id="popular-tag">
-                                                                                                                            <p class="plans-name text-gradient">Popular</p>
-                                                                                                                          </div>
-                                                                                                                        </div>
-                                                                                                                    <div class="background-dot-container-price">
-                                                                                                                        <h2 id="cost-per-day" translate="no">Loading...</h2>
-                                                                                                                        <h4 id="cost-per-day-unit" style="opacity: 0.5;">/day</h4>
-                                                                                                                    </div>
-                                                                                                                    <div class="background-dot-container-link" id="purchase">Purchase</div>
-                                                                                                                    <div>
-                                                                                                                        <div class="line"></div>
-                                                                                                                        <h4 id="discount-details" style="display: flex;justify-content: space-between;gap: calc(2vh* var(--scale-factor-h));">Loading...</h4>
-                                                                                                                        <p class="discount-details" id="discount">Loading...</p>
-                                                                                                                        <div class="line"></div>
-                                                                                                                        <div style="display: flex;gap: 0.5vh;align-items: center;">
-                                                                                                                            <p class="uppercase text-gradient">Privileges</p>
-                                                                                                                        </div>
-                                                                                                                        <div id="features-list"></div>
-                                                                                                                        <div class="line"></div>
-                                                                                                                        <div style="display: flex;gap: 0.5vh;align-items: center;">
-                                                                                                                            <p class="uppercase text-gradient">Plan Capability</p>
-                                                                                                                            <p id="toggle-description" class="text-gradient" style="cursor: pointer;">+</p>
-                                                                                                                        </div>
-                                                                                                                            <div style="display: grid;grid-template-columns: 1fr auto;align-items: center;gap: 1vh;">
-                                                                                                                                <input type="range" id="fps-slider" min="15" max="60" step="1" value="30">
-                                                                                                                                <p id="fps-value">30 FPS</p>
+                pageContent.push(`<div id="baseContainer" class="centered-container long" style="gap: 0;">
+                                                                                                            <div style="display: flex;flex-direction: column; gap: calc(2vh* var(--scale-factor-h));">
+                                                                                                                            <div class="background-container">
+                                                                                                                                <p class="background-dot-container-option" id="credits-mode">Credits</p>
+                                                                                                                                <p class="background-dot-container-option" id="subscription-mode">Subscription</p>
+                                                                                                                                <p class="background-dot-container-option not-available" id="renewal-mode">Renewal</p>
                                                                                                                             </div>
-                                                                                                                        <ul id="capability-list" style="display: flow;background: transparent;"></ul>
+
+                                                                                                                                  <div>
+                                                                                                                                     <div id="packageSelection" class="combobox" tooltip style="background: #232426;">
+                                                                                                                                         <div class="tooltip" style="width: max-content;" style="width: max-content;">
+                                                                                                                                             Select the service you want to buy.
+                                                                                                                                         </div>
+                                                                                                                                         <span class="combobox-text" style="font-weight: 700;font-size: calc((2.25vh* var(--scale-factor-h)));" title="Subscription Package" default="All in one"></span>
+                                                                                                                                         <span class="arrow-dwn"></span>
+                                                                                                                                         <ul class="list-items">
+                                                                                                                                             <li class="item">
+                                                                                                                                                 <label class="checkbox" tooltip>
+                                                                                                                                                     <input type="checkbox" value="allInOne"><span>All in one</span>
+                                                                                                                                                     <div class="tooltip" style="width: max-content;">You can use every product with this plan.</div>
+                                                                                                                                                 </label>
+                                                                                                                                             </li>
+                                                                                                                                             <li class="item">
+                                                                                                                                                 <label class="checkbox" tooltip>
+                                                                                                                                                     <input type="checkbox" value="faceSwap"><span>Face Swap</span>
+                                                                                                                                                     <div class="tooltip" style="width: max-content;">You can only use face swap with this plan.</div>
+                                                                                                                                                 </label>
+                                                                                                                                             </li>
+                                                                                                                                             <li class="item">
+                                                                                                                                                 <label class="checkbox" tooltip>
+                                                                                                                                                     <input type="checkbox" value="videoGenerator"><span>Video Generator</span>
+                                                                                                                                                     <div class="tooltip" style="width: max-content;">You can only use video generator with this plan.</div>
+                                                                                                                                                 </label>
+                                                                                                                                             </li>
+                                                                                                                                             <li class="item">
+                                                                                                                                                 <label class="checkbox" tooltip>
+                                                                                                                                                     <input type="checkbox" value="inpaint"><span>Inpainter</span>
+                                                                                                                                                     <div class="tooltip" style="width: max-content;">You can only use inpainter with this plan.</div>
+                                                                                                                                                 </label>
+                                                                                                                                             </li>
+                                                                                                                                             <li class="item">
+                                                                                                                                                 <label class="checkbox" tooltip>
+                                                                                                                                                     <input type="checkbox" value="artGenerator"><span>Art Generator</span>
+                                                                                                                                                     <div class="tooltip" style="width: max-content;">You can only use art generator with this plan.</div>
+                                                                                                                                                 </label>
+                                                                                                                                             </li>
+                                                                                                                                         </ul>
+                                                                                                                                     </div>
+                                                                                                                                 </div>
+
+                                                                                                                            <div class="background-container">
+                                                                                                                                <p class="background-dot-container-option" payment-provider="PAYTR" translate="no">Card</p>
+                                                                                                                                <p class="background-dot-container-option" payment-provider="BTC" translate="no">Coinbase</p>
+                                                                                                                            </div>
+
+
+                                                                                                                            <div class="background-container">
+                                                                                                                                <p class="background-dot-container-option" data-currency="USD" translate="no">$USD</p>
+                                                                                                                                <p class="background-dot-container-option" data-currency="EUR" translate="no">€EUR</p>
+                                                                                                                                <p class="background-dot-container-option" data-currency="GBP" translate="no">£GBP</p>
+                                                                                                                                <p class="background-dot-container-option" data-currency="TRY" translate="no">₺TRY</p>
+                                                                                                                            </div>
+
+                                                                                                                <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;height: 100%;">
+                                                                                                                    <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
+                                                                                                                        <a class="background-dot-container">
+                                                                                                                            <div class="background-dot-container-content" style="min-width: calc((50vh* var(--scale-factor-h) + 50vw / 2 * var(--scale-factor-w)));">
+                                                                                                                                <div class="background-container" style="grid: unset; display: grid;grid-template-columns: 1fr 1fr;">
+                                                                                                                                    <input type="range" id="slider" min="1" max="9" step="1" value="1"></input>
+                                                                                                                                    <p class="slider-value">1 day</p>
+                                                                                                                                </div>
+
+                                                                                                                                    <div class="line"></div>
+                                                                                                                                    <div class="background-dot-container-header">
+                                                                                                                                      <p class="plans-name text-gradient" id="plan-name">Starter</p>
+                                                                                                                                      <div class="plans-popular" id="popular-tag">
+                                                                                                                                        <p class="plans-name text-gradient">Popular</p>
+                                                                                                                                      </div>
+                                                                                                                                    </div>
+                                                                                                                                <div class="background-dot-container-price">
+                                                                                                                                    <h2 id="cost-per-day" translate="no">Loading...</h2>
+                                                                                                                                    <h4 id="cost-per-day-unit" style="opacity: 0.5;">/day</h4>
+                                                                                                                                </div>
+                                                                                                                                <div class="background-dot-container-link" id="purchase">Purchase</div>
+                                                                                                                                <div>
+                                                                                                                                    <div class="line"></div>
+                                                                                                                                    <h4 id="discount-details" style="display: flex;justify-content: space-between;gap: calc(2vh* var(--scale-factor-h));">Loading...</h4>
+                                                                                                                                    <p class="discount-details" id="discount">Loading...</p>
+                                                                                                                                    <div class="line"></div>
+                                                                                                                                    <div style="display: flex;gap: 0.5vh;align-items: center;">
+                                                                                                                                        <p class="uppercase text-gradient">Privileges</p>
+                                                                                                                                    </div>
+                                                                                                                                    <div id="features-list"></div>
+                                                                                                                                    <div class="line"></div>
+                                                                                                                                    <div style="display: flex;gap: 0.5vh;align-items: center;">
+                                                                                                                                        <p class="uppercase text-gradient">Plan Capability</p>
+                                                                                                                                        <p id="toggle-description" class="text-gradient" style="cursor: pointer;">+</p>
+                                                                                                                                    </div>
+                                                                                                                                        <div style="display: grid;grid-template-columns: 1fr auto;align-items: center;gap: 1vh;">
+                                                                                                                                            <input type="range" id="fps-slider" min="15" max="60" step="1" value="30">
+                                                                                                                                            <p id="fps-value">30 FPS</p>
+                                                                                                                                        </div>
+                                                                                                                                    <ul id="capability-list" style="display: flow;background: transparent;"></ul>
+                                                                                                                                </div>
+                                                                                                                            </div>
+                                                                                                                        </a>
                                                                                                                     </div>
                                                                                                                 </div>
-                                                                                                            </a>
+                                                                                                            </div>
                                                                                                         </div>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        `);
+                                                                                                    `);
             }
 
             loadPageContent(setUser, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, setAuthentication, updateMainContent);
 
-            let credits = [];
-            let prices = [];
-            let durationsInDays = [];
-            let subprices = [];
-            let discountedSubprices = [];
-            let durations = [];
-            let discount = 0;
+            let pricingData = {}; // To store all pricing plans
+
+            function setPricingData(data) {
+                pricingData = data || [];
+            }
 
             const snapshotPromise = getDocSnapshot('servers', '3050-1');
             const [serverAddressAPI, serverAddressPAYTR] = await Promise.all([
@@ -283,7 +355,7 @@
                     setPricingData(cachedData);
                 } else {
                     try {
-                        const response = await fetchWithRandom(`${serverAddressPAYTR}/get-pricing-2`, {
+                        const response = await fetchWithRandom(`${serverAddressPAYTR}/get-pricing-3`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -308,7 +380,7 @@
 
             async function fetchPricingDataInBackground() {
                 try {
-                    const response = await fetchWithRandom(`${serverAddressPAYTR}/get-pricing-2`, {
+                    const response = await fetchWithRandom(`${serverAddressPAYTR}/get-pricing-3`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -324,16 +396,6 @@
                 } catch (error) {
                     alert('Error while refreshing the pricing data: ' + error.message);
                 }
-            }
-
-            function setPricingData(data) {
-                credits = data.credits || [];
-                prices = data.prices || [];
-                durationsInDays = data.durationsInDays || [];
-                subprices = data.subprices || [];
-                discountedSubprices = data.discountedSubprices || []; // Setting discounted prices
-                durations = data.durations || [];
-                discount = data.discount || 0;
             }
 
             await getPricingData();
@@ -357,12 +419,49 @@
                     toggleDescriptionText: document.getElementById('toggle-description').textContent,
                     fpsSlider: document.getElementById('fps-slider').value,
                     fpsValueDisplay: document.getElementById('fps-value').textContent,
+                    comboboxes: Array.from(document.querySelectorAll('.combobox')).map(combobox => ({
+                        text: combobox.querySelector('.combobox-text')?.innerText || '',
+                        open: combobox.classList.contains('open'),
+                        items: Array.from(combobox.querySelectorAll('.item')).map(item => ({
+                            checked: item.querySelector('input[type="checkbox"]')?.checked || false,
+                        })),
+                    })),
                 };
 
                 localStorage.setItem('pageState', JSON.stringify(state));
             });
 
             const state = JSON.parse(localStorage.getItem('pageState') || '{}');
+
+            const comboboxQuery = document.querySelectorAll('.combobox');
+            comboboxQuery.forEach((combobox, id) => {
+                const btnText = combobox.querySelector('.combobox-text');
+                const items = combobox.querySelectorAll('.item');
+
+                if (state.comboboxes && state.comboboxes[id]) {
+                    if (btnText) btnText.innerText = state.comboboxes[id].text || '';
+
+                    if (state.comboboxes[id].open) {
+                        combobox.classList.add('open');
+                        const listItems = combobox.querySelector('.list-items');
+                        if (listItems) listItems.style.display = 'flex';
+                    } else {
+                        combobox.classList.remove('open');
+                        const listItems = combobox.querySelector('.list-items');
+                        if (listItems) listItems.style.display = 'none';
+                    }
+
+                    state.comboboxes[id].items.forEach((itemState, itemIndex) => {
+                        if (itemIndex < items.length) {
+                            const checkbox = items[itemIndex].querySelector('input[type="checkbox"]');
+                            if (checkbox) {
+                                checkbox.checked = itemState.checked;
+                                items[itemIndex].classList.toggle('checked', checkbox.checked);
+                            }
+                        }
+                    });
+                }
+            });
 
             if (state.selectedMode) {
                 document.querySelectorAll('.background-dot-container-option').forEach(el => el.classList.remove('selected'));
@@ -400,7 +499,8 @@
 
             let isShortDescription = document.getElementById('toggle-description').textContent === "+";
 
-            function updateCapabilityList(price, currencySymbol, isSubscriptionMode = true, credits = 0) {
+            function updateCapabilityList(price, currencySymbol, isSubscriptionMode = true, credits = 0, selectedPackage = "allInOne") {
+                console.log(selectedPackage);
                 const capabilityListElement = document.getElementById("capability-list");
                 capabilityListElement.innerHTML = "";
 
@@ -423,44 +523,94 @@
                     const inpaintPrice = formatPrice(price, creditPerInpaint, currencySymbol);
                     const artPrice = formatPrice(price, creditPerArtGeneration, currencySymbol);
 
-                    return {
-                        faceSwap: {
-                            name: "Video Swap",
-                            formula: credits => shortDescription
-                                ? `${Math.floor((credits * SingleCreditForTotalFrameAmount) / (FPS * seconds))} mins`
-                                : `${creditVideo} credit (${creditVideoPrice})/${creditPerTotalFrames} fps (${Math.floor((credits * SingleCreditForTotalFrameAmount) / (FPS * seconds))} mins)`
-                        },
-                        imageSwap: {
-                            name: "Image Swap",
-                            formula: credits => shortDescription
-                                ? `${Math.floor(credits)} process`
-                                : `1 cred (${currencySymbol}${price})/image (${Math.floor(credits)})`
-                        },
-                        inpaint: {
-                            name: "Clothing Inpaint",
-                            formula: credits => shortDescription
-                                ? `${Math.floor(credits / creditPerInpaint)} process`
-                                : `${creditPerInpaint} creds (${inpaintPrice})/inpaint (${Math.floor(credits / creditPerInpaint)})`
-                        },
-                        artGeneration: {
-                            name: "Art Generator",
-                            formula: credits => shortDescription
-                                ? `${Math.floor(credits)} process`
-                                : `${creditPerArtGeneration} cred (${artPrice})/art (${Math.floor(credits)})`
-                        }
-                    };
+                    if (selectedPackage === 'allInOne') {
+                        return {
+                            faceSwap: {
+                                name: "Video Face Swap",
+                                formula: credits => shortDescription
+                                    ? `${Math.floor((credits * SingleCreditForTotalFrameAmount) / (FPS * seconds))} mins`
+                                    : `${creditVideo} credit (${creditVideoPrice})/${creditPerTotalFrames} fps (${Math.floor((credits * SingleCreditForTotalFrameAmount) / (FPS * seconds))} mins)`
+                            },
+                            imageSwap: {
+                                name: "Image Face Swap",
+                                formula: credits => shortDescription
+                                    ? `${Math.floor(credits)} process`
+                                    : `1 cred (${currencySymbol}${price})/image (${Math.floor(credits)})`
+                            },
+                            videoGenerator: {
+                                name: "Video Generator",
+                                formula: credits => shortDescription
+                                    ? `${Math.floor((credits * SingleCreditForTotalFrameAmount) / (FPS * seconds))} mins`
+                                    : `${creditVideo} credit (${creditVideoPrice})/${creditPerTotalFrames} fps (${Math.floor((credits * SingleCreditForTotalFrameAmount) / (FPS * seconds))} mins)`
+                            },
+                            inpaint: {
+                                name: "Inpaint",
+                                formula: credits => shortDescription
+                                    ? `${Math.floor(credits / creditPerInpaint)} process`
+                                    : `${creditPerInpaint} creds (${inpaintPrice})/inpaint (${Math.floor(credits / creditPerInpaint)})`
+                            },
+                            artGeneration: {
+                                name: "Art Generator",
+                                formula: credits => shortDescription
+                                    ? `${Math.floor(credits)} process`
+                                    : `${creditPerArtGeneration} cred (${artPrice})/art (${Math.floor(credits)})`
+                            }
+                        };
+                    }
+                    else if (selectedPackage === 'faceSwap') {
+                        return {
+                            faceSwap: {
+                                name: "Video Face Swap",
+                                formula: credits => shortDescription
+                                    ? `${Math.floor((credits * SingleCreditForTotalFrameAmount) / (FPS * seconds))} mins`
+                                    : `${creditVideo} credit (${creditVideoPrice})/${creditPerTotalFrames} fps (${Math.floor((credits * SingleCreditForTotalFrameAmount) / (FPS * seconds))} mins)`
+                            },
+                            imageSwap: {
+                                name: "Image Face Swap",
+                                formula: credits => shortDescription
+                                    ? `${Math.floor(credits)} process`
+                                    : `1 cred (${currencySymbol}${price})/image (${Math.floor(credits)})`
+                            },
+                        };
+                    }
+                    else if (selectedPackage === 'videoGenerator') {
+                        return {
+                            videoGenerator: {
+                                name: "Video Generator",
+                                formula: credits => shortDescription
+                                    ? `${Math.floor((credits * SingleCreditForTotalFrameAmount) / (FPS * seconds))} mins`
+                                    : `${creditVideo} credit (${creditVideoPrice})/${creditPerTotalFrames} fps (${Math.floor((credits * SingleCreditForTotalFrameAmount) / (FPS * seconds))} mins)`
+                            },
+                        };
+                    }
+                    else if (selectedPackage === 'artGenerator') {
+                        return {
+                            artGeneration: {
+                                name: "Art Generator",
+                                formula: credits => shortDescription
+                                    ? `${Math.floor(credits)} process`
+                                    : `${creditPerArtGeneration} cred (${artPrice})/art (${Math.floor(credits)})`
+                            }
+                        };
+                    }
+                    else if (selectedPackage === 'inpaint') {
+                        return {
+                            inpaint: {
+                                name: "Inpaint",
+                                formula: credits => shortDescription
+                                    ? `${Math.floor(credits / creditPerInpaint)} process`
+                                    : `${creditPerInpaint} creds (${inpaintPrice})/inpaint (${Math.floor(credits / creditPerInpaint)})`
+                            },
+                        };
+                    }
                 };
 
                 const capabilities = getCapabilities(!isSubscriptionMode ? isShortDescription : false, price, currencySymbol);
 
                 if (isSubscriptionMode) {
-                    capabilityListElement.innerHTML = `
-                                                <li class="capability">${capabilities.faceSwap.name}: Unlimited</li>
-                                                ${Object.values(capabilities).map(capability =>
-                        capability.name !== capabilities.faceSwap.name
-                            ? `<li class="capability">${capability.name}: Unlimited</li>`
-                            : ''
-                    ).join('')}`;
+                    capabilityListElement.innerHTML = Object.values(capabilities).map(capability =>
+                        `<li class="capability">${capability.name}: Unlimited</li>`
+                    ).join('');
                 } else {
                     capabilityListElement.innerHTML = Object.values(capabilities).map(capability =>
                         `<li class="capability">${capability.name}: ${capability.formula(credits)}</li>`
@@ -498,10 +648,25 @@
                 });
             }
 
-            function calculatePrice(value) { return prices[value - 1]; }
-            function calculateDiscountSubPrice(value) { return discountedSubprices[value - 1]; }
-            function calculateSubPrice(value) { return subprices[value - 1]; }
-            function calculateCredit(value) { return credits[value - 1]; }
+            function getSelectedPlan() {
+                const container = document.getElementById('packageSelection');
+                if (!container) return 'allInOne';
+
+                const checkedItem = container.querySelector('li.item.checked');
+                if (!checkedItem) return 'allInOne';
+
+                const checkbox = checkedItem.querySelector('input[type="checkbox"]');
+                return checkbox ? checkbox.value : 'allInOne';
+            }
+
+            function getPricing() {
+                return pricingData[getSelectedPlan()];
+            }
+
+            function calculatePrice(value) { return getPricing().prices[value - 1]; }
+            function calculateDiscountSubPrice(value) { return getPricing().discountedSubprices[value - 1]; }
+            function calculateSubPrice(value) { return getPricing().subprices[value - 1]; }
+            function calculateCredit(value) { return getPricing().credits[value - 1]; }
 
             function updatePlan(plan) {
                 document.getElementById('plan-name').textContent = plan.name;
@@ -581,6 +746,8 @@
             const DISCOUNT = 1;
 
             async function createPayment() {
+                createSectionAndElements();
+
                 const ScreenMode = Object.freeze({
                     PHONE: 3,
                     PC: 1,
@@ -643,6 +810,15 @@
                     }
                 }
 
+                if (!Array.from(currencyOptions).some(option => option.classList.contains("selected"))) {
+                    if (Array.from(currencyOptions).length > 0) {
+                        const firstCurrencyOption = Array.from(currencyOptions)[0];
+                        firstCurrencyOption.classList.add("selected");
+                        selectedCurrency = firstCurrencyOption.getAttribute("data-currency");
+                        updatePrices();
+                    }
+                }
+
                 if (!Array.from(paymentProviderOptions).some(option => option.classList.contains("selected"))) {
                     if (Array.from(paymentProviderOptions).length > 0) {
                         const firstPaymentProviderOption = Array.from(paymentProviderOptions)[0];
@@ -655,6 +831,9 @@
                 function updatePrices() {
                     updateSliderRange();
                     const isCreditsMode = creditsMode.classList.contains("selected");
+                    const packageSelection = document.getElementById('packageSelection');
+                    packageSelection.parentElement.style.display = !isCreditsMode ? 'unset' : 'none';
+
                     let currencySymbol = getCurrencySymbol(selectedCurrency);
 
                     updateFeatureList(isCreditsMode);
@@ -685,6 +864,7 @@
                         };
 
                         function updateVariables() {
+                            const selectedPackage = getSelectedPlan();
                             const selectedCurrencyElement = document.querySelector('.background-dot-container-option.selected[data-currency]');
                             selectedCurrency = selectedCurrencyElement ? selectedCurrencyElement.getAttribute('data-currency') : 'USD';
 
@@ -734,37 +914,37 @@
                                 discountDetailsElement.style.display = 'flex';
                                 discountDetailsElement.style.gap = 'calc(2vh* var(--scale-factor-h))';
                                 discountDetailsElement.innerHTML = `
-                                                <div style="display: ruby;">
-                                                    Discounted:
-                                                    <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
-                                                    <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency)}</span>
-                                                    <!--<small style="opacity: 0.5;line-height: calc((1vh* 1.5* var(--scale-factor-h)));">(+${taxAmt}%)</small>-->
-                                                </div>
+                                                            <div style="display: ruby;">
+                                                                Discounted:
+                                                                <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
+                                                                <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency)}</span>
+                                                                <!--<small style="opacity: 0.5;line-height: calc((1vh* 1.5* var(--scale-factor-h)));">(+${taxAmt}%)</small>-->
+                                                            </div>
 
-                                                <div class="plans-popular" id="popular-tag" style="display: flex;">
-                                                    <p class="plans-name text-gradient">OFF -${((1 - (price[DISCOUNT] / price[ACTUAL])) * 100).toFixed(0) }%</p>
-                                                </div>
-                                            `;
+                                                            <div class="plans-popular" id="popular-tag" style="display: flex;">
+                                                                <p class="plans-name text-gradient">OFF -${((1 - (price[DISCOUNT] / price[ACTUAL])) * 100).toFixed(0)}%</p>
+                                                            </div>
+                                                        `;
 
                                 discountDisplay = `
-                                                <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency)}</span>
-                                                <span >${currencySymbol}${formatNumber(h1PriceAmount[DISCOUNT], selectedCurrency)}</span>
-                                            `;
+                                                            <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency)}</span>
+                                                            <span >${currencySymbol}${formatNumber(h1PriceAmount[DISCOUNT], selectedCurrency)}</span>
+                                                        `;
                             }
                             else {
                                 discountDetailsElement.style.display = 'ruby';
                                 discountDetailsElement.style.gap = 'unset';
                                 discountDetailsElement.innerHTML = `
-                                                Total Price:
-                                                <div style="display: ruby;">
-                                                    <span>${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
-                                                    <!--<small style="opacity: 0.5;line-height: calc((1vh* 1.5* var(--scale-factor-h)));">(+${taxAmt}%)</small>-->
-                                                <div>
-                                            `;
+                                                            Total Price:
+                                                            <div style="display: ruby;">
+                                                                <span>${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
+                                                                <!--<small style="opacity: 0.5;line-height: calc((1vh* 1.5* var(--scale-factor-h)));">(+${taxAmt}%)</small>-->
+                                                            <div>
+                                                        `;
 
                                 discountDisplay = `
-                                                <span >${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency)}</span>
-                                            `;
+                                                            <span >${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency)}</span>
+                                                        `;
                             }
 
                             updateDisplay(discountDisplay, '/credit');
@@ -780,6 +960,7 @@
                         };
 
                         function updateVariables() {
+                            const selectedPackage = getSelectedPlan();
                             const selectedCurrencyElement = document.querySelector('.background-dot-container-option.selected[data-currency]');
                             selectedCurrency = selectedCurrencyElement ? selectedCurrencyElement.getAttribute('data-currency') : 'USD';
 
@@ -793,7 +974,7 @@
                             value = sliderElement.value;
                             updatePlan(plans[value] || plans['default']);
 
-                            const durationDays = durationsInDays[value - 1];
+                            const durationDays = getPricing().durationsInDays[value - 1];
                             price[ACTUAL] = calculateSubPrice(value);
                             priceInSelectedCurrency[ACTUAL] = convertCurrency(price[ACTUAL]);
                             h1PriceAmount[ACTUAL] = durationDays > 0 ? price[ACTUAL] / durationDays : null;
@@ -806,7 +987,7 @@
 
                             fpsSlider.style.display = 'none';
                             fpsValueDisplay.style.display = 'none';
-                            updateCapabilityList(formatNumber(h1PriceAmount[ACTUAL], selectedCurrency), currencySymbol);
+                            updateCapabilityList(formatNumber(h1PriceAmount[ACTUAL], selectedCurrency), currencySymbol, true, 0, selectedPackage);
 
                             isShortDescription = true;
                             toggleDescriptionButton.style.display = "none";
@@ -816,30 +997,30 @@
                                 discountDetailsElement.style.display = 'flex';
                                 discountDetailsElement.style.gap = 'calc(2vh* var(--scale-factor-h))';
                                 discountDetailsElement.innerHTML = `
-                                                 <div style="display: ruby;">
-                                                     Discounted:
-                                                     <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
-                                                     <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency)}</span>
-                                                     <!--<small style="opacity: 0.5;line-height: calc((1vh* 1.5* var(--scale-factor-h)));">(+${taxAmt}%)</small>-->
-                                                 </div>
+                                                             <div style="display: ruby;">
+                                                                 Discounted:
+                                                                 <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
+                                                                 <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency)}</span>
+                                                                 <!--<small style="opacity: 0.5;line-height: calc((1vh* 1.5* var(--scale-factor-h)));">(+${taxAmt}%)</small>-->
+                                                             </div>
 
-                                                 <div class="plans-popular" id="popular-tag" style="display: flex;">
-                                                     <p class="plans-name text-gradient">OFF -${((1 - (price[DISCOUNT] / price[ACTUAL])) * 100).toFixed(0)}%</p>
-                                                 </div>
-                                             `;
+                                                             <div class="plans-popular" id="popular-tag" style="display: flex;">
+                                                                 <p class="plans-name text-gradient">OFF -${((1 - (price[DISCOUNT] / price[ACTUAL])) * 100).toFixed(0)}%</p>
+                                                             </div>
+                                                         `;
 
                                 let discountDisplay = '';
 
                                 if (priceInSelectedCurrency[ACTUAL] !== priceInSelectedCurrency[DISCOUNT]) {
                                     discountDisplay = `
-                                                    <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
-                                                    <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency)}</span>
-                                                `;
+                                                                <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
+                                                                <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency)}</span>
+                                                            `;
                                 }
                                 else {
                                     discountDisplay = `
-                                                    <span>${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
-                                                `;
+                                                                <span>${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
+                                                            `;
                                 }
 
                                 updateDisplay(discountDisplay, '');
@@ -850,37 +1031,37 @@
                                     discountDetailsElement.style.display = 'flex';
                                     discountDetailsElement.style.gap = 'calc(2vh* var(--scale-factor-h))';
                                     discountDetailsElement.innerHTML = `
-                                                        <div style="display: ruby;">
-                                                            Discounted:
-                                                            <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
-                                                            <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency)}</span>
-                                                            <!--<small style="opacity: 0.5;line-height: calc((1vh* 1.5* var(--scale-factor-h)));">(+${taxAmt}%)</small>-->
-                                                        </div>
-                                                        
-                                                        <div class="plans-popular" id="popular-tag" style="display: flex;">
-                                                            <p class="plans-name text-gradient">OFF -${((1 - (price[DISCOUNT] / price[ACTUAL])) * 100).toFixed(0) }%</p>
-                                                        </div>
-                                                `;
+                                                                    <div style="display: ruby;">
+                                                                        Discounted:
+                                                                        <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
+                                                                        <span >${currencySymbol}${formatNumber(priceInSelectedCurrency[DISCOUNT], selectedCurrency)}</span>
+                                                                        <!--<small style="opacity: 0.5;line-height: calc((1vh* 1.5* var(--scale-factor-h)));">(+${taxAmt}%)</small>-->
+                                                                    </div>
+
+                                                                    <div class="plans-popular" id="popular-tag" style="display: flex;">
+                                                                        <p class="plans-name text-gradient">OFF -${((1 - (price[DISCOUNT] / price[ACTUAL])) * 100).toFixed(0)}%</p>
+                                                                    </div>
+                                                            `;
 
                                     discountDisplay = `
-                                                    <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency)}</span>
-                                                    <span >${currencySymbol}${formatNumber(h1PriceAmount[DISCOUNT], selectedCurrency)}</span>
-                                                `;
+                                                                <span style="text-decoration: line-through;font-weight: 400;">${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency)}</span>
+                                                                <span >${currencySymbol}${formatNumber(h1PriceAmount[DISCOUNT], selectedCurrency)}</span>
+                                                            `;
                                 }
                                 else {
                                     discountDetailsElement.style.display = 'ruby';
                                     discountDetailsElement.style.gap = 'unset';
                                     discountDetailsElement.innerHTML = `
-                                                    Total Price:
-                                                    <div style="display: ruby;">
-                                                        <span>${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
-                                                        <!--<small style="opacity: 0.5;line-height: calc((1vh* 1.5* var(--scale-factor-h)));">(+${taxAmt}%)</small>-->
-                                                    <div>
-                                                `;
+                                                                Total Price:
+                                                                <div style="display: ruby;">
+                                                                    <span>${currencySymbol}${formatNumber(priceInSelectedCurrency[ACTUAL], selectedCurrency)}</span>
+                                                                    <!--<small style="opacity: 0.5;line-height: calc((1vh* 1.5* var(--scale-factor-h)));">(+${taxAmt}%)</small>-->
+                                                                <div>
+                                                            `;
 
                                     discountDisplay = `
-                                                    <span >${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency)}</span>
-                                                `;
+                                                                <span >${currencySymbol}${formatNumber(h1PriceAmount[ACTUAL], selectedCurrency)}</span>
+                                                            `;
                                 }
 
                                 updateDisplay(discountDisplay, '/day');
@@ -895,8 +1076,8 @@
 
                 function updateSliderRange() {
                     if (creditsMode.classList.contains("selected"))
-                        sliderElement.max = credits.length;
-                    else sliderElement.max = durations.length;
+                        sliderElement.max = getPricing().credits.length;
+                    else sliderElement.max = getPricing().durations.length;
 
                     if (sliderElement.value > sliderElement.max)
                         sliderElement.value = sliderElement.max;
@@ -908,7 +1089,7 @@
                         const creditAmount = calculateCredit(value);
                         sliderElement.nextElementSibling.textContent = `${creditAmount} credit${creditAmount > 1 ? 's' : ''}`;
                     } else {
-                        const selectedDuration = durations[value - 1];
+                        const selectedDuration = getPricing().durations[value - 1];
                         sliderElement.nextElementSibling.textContent = selectedDuration;
                     }
 
@@ -929,8 +1110,15 @@
                     }
                 });
 
+                if (!localStorage.getItem('selectedMode')) {
+                    creditsMode.classList.add("selected");
+                    currentMode = 'credits-mode';
+                    updateSliderRange();
+                    updateSliderValue();
+                    localStorage.setItem('selectedMode', 'true');
+                }
+
                 creditsMode.addEventListener('click', () => {
-                    
                     if (currentMode !== 'credits-mode') {
                         creditsMode.classList.add("selected");
                         subscriptionMode.classList.remove("selected");
@@ -942,6 +1130,13 @@
 
                 updateSliderRange();
                 updateSliderValue();
+
+                document.querySelectorAll('#packageSelection li.item input[type="checkbox"]').forEach(input => {
+                    input.addEventListener('change', () => {
+                        updatePrices();
+                    });
+                });
+
 
                 purchase.addEventListener('click', async () => { await handleBuyNow(); });
 
@@ -958,11 +1153,12 @@
                         userEmail: userData.email,
                         selectedCurrency,
                         sliderElement: sliderElement.value,
+                        selectedPackage: getSelectedPlan(),
                         selectedMode,
                     };
 
                     const isBTC = selectedPaymentProvider === 'BTC';
-                    const serverPath = isBTC ? '/create-charge-new-2' : '/create-charge-2';
+                    const serverPath = '/create-charge';
                     const response = await fetchWithRandom(`${isBTC ? serverAddressAPI : serverAddressPAYTR}${serverPath}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -978,6 +1174,24 @@
                 }
 
                 function handleSuccess(requestData, responseData, isBTC) {
+                    gtag('event', 'conversion_event_purchase_started', {
+                        'value': calculatePrice(requestData.sliderElement),
+                        'currency': requestData.selectedCurrency,
+                        'transaction_id': 'TRANS_' + Date.now(),
+                        'selected_mode': requestData.selectedMode,
+                        'user_id': requestData.userId,
+                        'user_email': requestData.userEmail
+                    });
+
+                    gtag('event', 'conversion', {
+                        'send_to': 'AW-16739497290/1Eg0CIaP86EaEMrqga4-',
+                        'value': calculatePrice(requestData.sliderElement),
+                        'currency': requestData.selectedCurrency,
+                        'event_callback': function () {
+                            console.log('Conversion event sent');
+                        }
+                    });
+
                     if (isBTC) {
                         window.open(responseData.data.hosted_url, '_blank');
                         setCache('purchaseInProgressBTC', 'true', 1 * 24 * 60 * 60 * 1000);
@@ -1000,12 +1214,12 @@
                     return;
 
                 createPayment();
-
-                window.addEventListener('resize', sizeBasedElements);
             }
 
             sizeBasedElements();
+
+            window.addEventListener('resize', sizeBasedElements);
         });
     </script>
-</body>
+<script src="scripts/autoTranslate.js"></script></body>
 </html>

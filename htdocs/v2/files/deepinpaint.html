@@ -1,0 +1,4182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/4.5.0/css/swiper.min.css">
+
+    <title>DeepInpaint | BodySwap.me (DeepAny.AI)</title>
+    <meta name="title" content="BodySwap.me (DeepAny.AI) | DeepInpaint">
+    <meta name="description" content="This is our inpainting page which allows you to remove or change the current input!..">
+  
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://bodyswap.me">
+    <meta property="og:title" content="BodySwap.me (DeepAny.AI) | DeepInpaint">
+    <meta property="og:description" content="This is our inpainting page which allows you to remove or change the current input!..">
+    <meta property="og:image" content="https://bodyswap.me/files/assets/meta/background-wide.png">
+  
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://bodyswap.me">
+    <meta property="twitter:title" content="BodySwap.me (DeepAny.AI) | DeepInpaint">
+    <meta property="twitter:description" content="This is our inpainting page which allows you to remove or change the current input!..">
+		
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+	<link rel="manifest" href="assets/site.webmanifest">
+	
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/4.5.0/js/swiper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fingerprintjs2@2.1.0/dist/fingerprint2.min.js"></script>
+	
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-auth.js"></script>
+	
+	<script async src="https://fundingchoicesmessages.google.com/i/pub-2374246406180986?ers=1" nonce="usrhmUNMfjwqnwYPHoi0fQ"></script><script nonce="usrhmUNMfjwqnwYPHoi0fQ">(function() {function signalGooglefcPresent() {if (!window.frames['googlefcPresent']) {if (document.body) {const iframe = document.createElement('iframe'); iframe.style = 'width: 0; height: 0; border: none; z-index: -1000; left: -1000px; top: -1000px;'; iframe.style.display = 'none'; iframe.name = 'googlefcPresent'; document.body.appendChild(iframe);} else {setTimeout(signalGooglefcPresent, 0);}}}signalGooglefcPresent();})();</script>
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-PK4MEBN2XY"></script>
+	<script>
+	  window.dataLayer = window.dataLayer || [];
+	  function gtag(){dataLayer.push(arguments);}
+	  gtag('js', new Date());
+
+	  gtag('config', 'G-PK4MEBN2XY');
+	</script>
+	
+    <script type="module" src="scripts-17/firebase-config.js"></script>
+    <script type="module" src="scripts-17/firebase-auth.js"></script>
+    <script type="module" src="scripts-17/background-animation.js"></script>
+	
+    <link rel="stylesheet" href="styles-17/main.css">
+    <link rel="stylesheet" href="styles-17/background.css">
+    <link rel="stylesheet" href="styles-17/products.css">
+	<style>
+        .elements-container {
+			background-color: var(--background-color);
+            width: 600px;
+            margin: 0 auto; /* Center the container horizontally */
+            margin-top: 20px;
+			box-shadow: 0px var(--card-main-box-shadow-1-y) var(--card-main-box-shadow-1-blur) var(--card-main-box-shadow-1), 0px var(--card-main-box-shadow-2-y) var(--card-main-box-shadow-2-blur) var(--card-main-box-shadow-2), 0 0 0 1px var(--card-main-border-color);
+			padding: 8px 16px 16px 16px;
+			border-radius: 15px;
+			position: relative;
+			transition: box-shadow 0.25s;
+			box-sizing: border-box;
+			flex: 1;
+        }
+		
+		.advanced-settings-container {
+          margin-top: 10px;
+          margin-bottom: 10px;
+		  max-width: -webkit-fill-available;
+		  overflow: hidden; /* Hide overflowing content */
+		  transition: max-height 0.3s ease-in-out; /* Add transition for smooth animation */
+		}
+
+		.advanced-settings-container.collapsed {
+		  max-height: 68px; /* Adjust height as needed */
+		}
+
+		/* Style for each rectangle section */
+		.rectangle {
+			width: 240px;
+			height: 60px;
+			margin: 10px;
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			border-radius: 10px;
+			overflow: hidden;
+			box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+			transition: transform 0.2s;
+			position: relative;
+			background-color: var(--even-darker-grey-color);
+			color: var(--grey-color); /* Text color on hover or when selected */
+		}
+		
+		/* Style for the container holding the rectangles */
+		.rectangle-container {
+			display: flex;
+			justify-content: center;
+			max-height: 120px;
+		}
+
+		/* Style for the selected rectangle section */
+		.rectangle.selected {
+			border: 2px solid #ff6f61; /* Transparent border to maintain rectangle shape */
+			box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1), 0 0 10px rgba(0, 0, 0, 0.2);
+		}
+
+		.rectangle::before {
+			content: "";
+			position: absolute;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			left: 0;
+			background: linear-gradient(to right, #ff6f61, #6b7ffc); /* Border gradient color */
+			z-index: -1;
+			border-radius: 10px;
+			opacity: 0; /* Initially hidden */
+			transition: opacity 0.3s, transform 0.3s; /* Add opacity and transform transition */
+		}
+
+		/* Hover effect for the rectangle */
+		.rectangle:hover,
+		.rectangle.selected {
+			transform: scale(1.08);
+			border: 2px solid transparent; /* Transparent border to maintain rectangle shape */
+			box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1), 0 0 10px rgba(0, 0, 0, 0.2);
+		}
+
+		/* Hover gradient effect for the rectangle */
+		.rectangle:hover::before,
+		.rectangle.selected::before {
+			opacity: 1; /* Make the gradient border visible when hovered or selected */
+			transform: scale(1.08); /* Scale the gradient border along with the rectangle */
+		}
+
+		/* Style for the images inside the rectangles */
+		.rectangle img {
+			width: 30%;
+			height: 100%;
+			object-fit: cover;
+			border-radius: 10px;
+		}
+
+		/* Style for the text inside the rectangles */
+		.rectangle .text {
+			flex: 1;
+			text-align: center;
+			font-weight: bold;
+			transition: color 0.3s, background 0.3s; /* Add a transition for text color change */
+		}
+
+		/* Gradient border style for selected rectangles */
+		.rectangle.selected::before {
+			opacity: 1; /* Make the gradient border visible when selected */
+		}
+
+		/* Selected text color */
+		.rectangle.selected .text {
+			background: linear-gradient(to right, #ff6f61, #6b7ffc); /* Text gradient background */
+			-webkit-background-clip: text;
+			background-clip: text;
+			color: transparent;
+		}
+
+		/* Hover effect for the text */
+		.rectangle:hover .text,
+		.rectangle.selected .text {
+			color: white; /* Text color on hover or when selected */
+		}
+		
+		/* Updated Styles */
+		#configuration {
+			text-align: center;
+			margin: 20px;
+		}
+		
+		.text-rectangle {
+			width: 240px;
+			height: 60px;
+			margin: 10px;
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			border-radius: 10px;
+			overflow: hidden;
+			box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+			transition: transform 0.2s;
+			position: relative;
+			background-color: var(--even-darker-grey-color);
+			color: var(--grey-color); /* Text color on hover or when selected */
+			flex-wrap: wrap;
+		}
+
+		.text-rectangle .icon {
+			color: var(--lighter-grey-color);
+			text-shadow: none; /* Initial shadow value */
+			transition: color 0.3s, transform 0.3s, text-shadow 0.3s; /* Add transitions for color, transform, and text-shadow */
+			font-size: 36px;
+			margin-left: 10px;
+		}
+
+		.text-rectangle .text {
+			font-size: 16px;
+			font-weight: bold;
+		}
+
+		/* Style for the selected rectangle section */
+		.text-rectangle.selected {
+			border: 2px solid #ff6f61; /* Transparent border to maintain rectangle shape */
+			box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1), 0 0 10px rgba(0, 0, 0, 0.2);
+		}
+
+		.text-rectangle::before {
+			content: "";
+			position: absolute;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			left: 0;
+			background: linear-gradient(to right, #ff6f61, #6b7ffc); /* Border gradient color */
+			z-index: -1;
+			border-radius: 10px;
+			opacity: 0; /* Initially hidden */
+			transition: opacity 0.3s, transform 0.3s; /* Add opacity and transform transition */
+		}
+
+		/* Hover effect for the rectangle */
+		.text-rectangle:hover,
+		.text-rectangle.selected {
+			transform: scale(1.08);
+			border: 2px solid transparent; /* Transparent border to maintain rectangle shape */
+			box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1), 0 0 10px rgba(0, 0, 0, 0.2);
+		}
+
+		/* Hover gradient effect for the rectangle */
+		.text-rectangle:hover::before,
+		.text-rectangle.selected::before {
+			opacity: 1; /* Make the gradient border visible when hovered or selected */
+			transform: scale(1.08); /* Scale the gradient border along with the rectangle */
+		}
+
+		/* Style for the text inside the rectangles */
+		.text-rectangle .text {
+			flex: 1;
+			text-align: center;
+			font-weight: bold;
+			transition: color 0.3s, background 0.3s; /* Add a transition for text color change */
+		}
+
+		/* Gradient border style for selected rectangles */
+		.text-rectangle.selected::before {
+			opacity: 1; /* Make the gradient border visible when selected */
+		}
+
+		/* Selected text color */
+		.text-rectangle.selected .text {
+			background: linear-gradient(to right, #ff6f61, #6b7ffc); /* Text gradient background */
+			-webkit-background-clip: text;
+			background-clip: text;
+			color: transparent;
+		}
+
+		/* Hover effect for the text */
+		.text-rectangle:hover .text,
+		.text-rectangle.selected .text {
+			color: white; /* Text color on hover or when selected */
+		}
+
+		/* Media query for smaller screens (phones) */
+		@media (max-width: 768px) {
+			.text-rectangle {
+				width: calc(50% - 20px);
+				height: auto;
+				flex-basis: calc(50% - 20px);
+				margin: 10px;
+				max-width: 240px; /* Set a maximum width for the rectangles to prevent them from overflowing */
+			}
+
+			.text-rectangle .text {
+				display: none;
+			}
+
+			/* Ensure items that go out of the screen wrap to the next row */
+			.text-rectangle {
+				flex-wrap: wrap;
+			}
+		}
+
+		/* Updated Styles for the orientation container */
+		.orientation-container {
+			text-align: center;
+			margin: 20px;
+		}
+
+		/* Updated Styles for the orientation header */
+		.orientation-container h2 {
+			font-size: 24px;
+			margin-bottom: 20px;
+		}
+
+		/* Styles for the container for centering */
+		.orientation-center {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		/* Style for the orientation box (common styles for all orientations) */
+		.orientation-box {
+			margin-bottom: 20px;
+			cursor: pointer;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			border: 2px solid #4CAF50;
+			position: relative;
+			border-radius: 10px;
+			background-color: var(--even-darker-grey-color);
+			transition: all 0.3s;
+			width: 150px;
+			height: 150px;
+		}
+
+		/* Hover effect for the orientation box */
+		.orientation-box:hover {
+			transform: scale(1.05); /* Slightly enlarge on hover */
+		}
+
+		/* Style for the orientation box (landscape) */
+		.orientation-box.original {
+			border: 2px solid red;
+			width: 100px;
+			height: 100px;
+			transition: all 0.3s; /* Apply transitions to all properties */
+		}
+
+		/* Hover effect for the landscape orientation */
+		.orientation-box.original:hover {
+			border-color: red; /* Change border color on hover */
+		}
+
+		/* Style for the orientation box (portrait) */
+		.orientation-box.automatic {
+			border: 2px solid green;
+			width: 180px;
+			height: 180px;
+			transition: all 0.3s;
+		}
+
+		/* Hover effect for the portrait orientation */
+		.orientation-box.automatic:hover {
+			border-color: green;
+		}
+
+		/* Styles for the quality slider container */
+		.slider-container {
+			text-align: center;
+			margin: -5px;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			color: var(--lighter-grey-color);
+			transition: color 0.3s, transform 0.3s, text-shadow 0.3s;
+			position: relative;
+		}
+
+		/* Styles for the quality slider label */
+		.slider-container label {
+			font-size: 18px;
+			margin-bottom: 10px;
+		}
+
+		/* Styles for the slider value box */
+		.slider-value {
+			position: absolute;
+			top: -30px; /* Adjust this value based on your design */
+			background: #3498db;
+			border-radius: 5px;
+			padding: 5px;
+			color: white;
+			font-weight: bold;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+		}
+		
+		/* Styles for the quality slider */
+		.slider {
+			width: 80%;
+			height: 10px;
+			background: linear-gradient(to right, #3498db, #ccc);
+			border-radius: 5px;
+			outline: none;
+			opacity: 0.8;
+			transition: opacity 0.2s;
+		}
+
+		/* Styles for the quality slider thumb (handle) */
+		.slider::-webkit-slider-thumb {
+			appearance: none;
+			width: 20px;
+			height: 20px;
+			border-radius: 50%;
+			background: #3498db;
+			cursor: pointer;
+		}
+
+		/* Styles for the quality box */
+		.quality-box {
+			width: 60px;
+			height: 30px;
+			background: #3498db; /* Match the slider's color */
+			border-radius: 5px;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			color: white;
+			font-weight: bold;
+			margin-top: 10px;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Add a subtle box shadow */
+		}
+		
+        /* Media Query for Smaller Screens */
+        @media (max-width: 768px) {
+			.elements-container {
+				max-width: 100%;
+                width: 100%;
+				font-size: 15px;
+			}
+			
+			.information-box {
+				max-width: 100%;
+                width: 80%;
+				font-size: 15px;
+			}
+			
+			.rectangle {
+				width: 100%;
+				height: 100%;
+			}
+			
+			.text-rectangle {
+				width: 100%;
+				height: 25%;
+			}
+        }
+		
+		/* Define the default text properties */
+		h1, h2, h3, h4, h5, h6, span, label, p, ul, li, button, a, i, input, figure, pre, p {
+			color: var(--lighter-grey-color);
+			text-shadow: none; /* Initial shadow value */
+			transition: color 0.3s, transform 0.3s, text-shadow 0.3s; /* Add transitions for color, transform, and text-shadow */
+		}
+
+		/* Define the text properties for the hover state */
+		h1:hover, h2:hover, h3:hover, h4:hover, h5:hover, h6:hover, span:hover, label:hover, p:hover, ul:hover, li:hover, button:hover, a:hover, i:hover, input:hover, figure:hover, pre:hover, p:hover {
+			color: var(--white-color);
+			transform: scale(1.01); /* Slightly bigger scale value on hover */
+			text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2); /* Shadow on hover */
+		}
+		
+		textarea {
+			width: 100%;
+			padding: 10px;
+			border: 1px solid var(--dark-grey-color);
+			border-radius: 5px;
+			background-color: var(--even-darker-grey-color);
+			color: var(--lighter-grey-color); /* Text color */
+			resize: vertical;
+			box-sizing: border-box;
+			overflow-y: hidden;
+			transition: transform 0.3s ease, box-shadow 0.3s ease;
+			margin-top: 10px;
+			position: relative;
+			outline: none;
+		}
+
+		textarea::placeholder {
+			color: var(--lighter-grey-color); /* Placeholder text color */
+		}
+
+        textarea::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            border: 1px solid transparent;
+            border-radius: 5px;
+            transition: border-color 0.3s ease; /* Add border-color transition */
+            pointer-events: none;
+        }
+
+        textarea:focus {
+            border-color: var(--light-grey-color);
+        }
+
+        textarea:hover {
+            transform: scale(1.004);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-top: 10px;
+            background: linear-gradient(45deg, blue, red);
+            background-size: 200% 200%;
+            transition: background 0.6s ease, transform 0.6s ease, box-shadow 0.6s ease;
+            border: 2px solid #0056b3;
+			color: white;
+        }
+
+        button:hover {
+            background-position: 100%;
+            transform: scale(1.01);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+			color: white;
+        }
+
+        .hint-tabs {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            padding: 0;
+            flex-wrap: wrap; /* Allow tabs to wrap to the next line on smaller screens */
+        }
+
+        .hint-tabs li {
+            margin: 5px 10px;
+            position: relative; /* Add position relative to create a stacking context */
+        }
+
+        .hint-tabs a {
+            text-decoration: none;
+            color: #777;
+            font-weight: bold;
+            position: relative;
+            transition: color 0.3s;
+        }
+
+        .hint-tabs a:hover {
+            color: var(--lighter-grey-color);
+        }
+
+        .hint-tabs a::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(45deg, blue, red); /* Gradient background like the button */
+            background-size: 200% 200%;
+            transition: background 0.3s ease-in-out, transform 0.3s; /* Add background and transform transition */
+            transform: scaleX(0); /* Start with zero width */
+            transform-origin: center; /* Animate from right to left */
+        }
+
+        .hint-tabs a:hover::before {
+            transform: scaleX(1); /* Expand the underline on hover */
+            background-position: 100%;
+        }
+
+        .hint-tabs a.active {
+            color: var(--white-color); /* Text color when active */
+        }
+
+        .hint-tabs a.active::before {
+            transform: scaleX(1); /* Expand the underline when active */
+            background-position: 100%;
+        }
+		
+		.separator {
+			width: 80%;
+			margin: 20px auto;
+			background: linear-gradient(45deg, var(--light-grey-color), violet);
+			background-size: 200% 200%;
+			height: 2px;
+			transition: background 0.3s ease-in-out, height 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+			box-shadow: 0 0 10px rgba(148, 0, 211, 0.7); /* Add a purple glow */
+		}
+
+		.separator:hover {
+			background-position: 100%;
+			box-shadow: 0 0 20px var(--feel-color); /* Increase the glow on hover */
+		}
+		
+        label[for="positive-prompt"] {
+            display: block;
+            text-align: left;
+            font-weight: bold;
+        }
+		
+        label[for="negative-prompt"] {
+            display: block;
+            text-align: left;
+            font-weight: bold;
+        }
+		
+		/* Style for boxes */
+		.small-boxes {
+			display: none; /* Hide by default */
+			flex-wrap: wrap; /* Allow the boxes to wrap to the next line */
+			justify-content: center;
+			margin: 20px 0;
+		}
+
+		.small-box {
+			padding: 5px 10px;
+			border: 1px solid #ccc;
+			border-radius: 5px;
+			cursor: pointer;
+			transition: background 0.3s, color 0.3s, transform 0.3s; /* Add 'transform' property to the transition */
+			margin: 5px; /* Add some space between boxes */
+			color: var(--lighter-grey-color);
+			background-color: var(--even-darker-grey-color);
+			transform: scale(1); /* Initial scale value */
+			z-index: 1;
+		}
+
+		.settings-container {
+		  display: none;
+		  background-color: #f0f0f0;
+		  border: 1px solid #ccc;
+		  padding: 16px; /* Increased padding for a bigger box */
+		  position: absolute;
+		  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add a subtle box shadow */
+		  border-radius: 5px; /* Rounded corners */
+		  max-width: 300px; /* Limit the maximum width of the container */
+		  bottom: -60px; /* Move it to a specific position */
+		  left: 50%; /* Center horizontally */
+		  transform: translate(-50%, -50%); /* Center the container precisely */
+		  z-index: 2;
+		  opacity: 1;
+		  visibility: visible;
+		}
+		
+		.small-box:hover {
+			background: linear-gradient(45deg, blue, red);
+			background-size: 200% 200%;
+			color: rgba(242, 242, 242, 1);
+			transform: scale(1.05); /* Scale up on hover */
+		}
+
+		/* Style for the active small box */
+		.small-box.favorite {
+			background: linear-gradient(45deg, rgba(255, 223, 0, 1), transparent);
+			background-size: 200% 200%;
+			color: #fff;
+		}
+
+		/* Style for the active small box */
+		.small-box.active {
+			background: linear-gradient(45deg, blue, red);
+			background-size: 200% 200%;
+			color: #fff;
+		}
+
+		.custom-box {
+			background-image: linear-gradient(to bottom, #33334b, #33334b), linear-gradient(135deg, #ff2a87, #ff9d2e);
+			background-clip: padding-box, border-box;
+			background-origin: padding-box, border-box;
+		}
+
+		.size-selected {
+			/* Add your size-selected styles here */
+		}
+		
+		.photo-container {
+			text-align: center;
+			overflow: hidden; /* Prevent faces from overflowing the container */
+		}
+
+		.scroll-container {
+			display: flex;
+			overflow-y: auto; /* Prevent faces from overflowing the container */
+			overflow-x: hidden; /* Prevent faces from overflowing the container */
+		}
+
+		.faces {
+			display: flex;
+			flex-wrap: wrap;
+			padding-bottom: 5px; /* Add padding to move scroll 5px from the bottom */
+			max-height: 200px;
+			overflow-y: auto;
+			border-radius: 5px;
+			margin-top: 10px;
+		}
+
+		.outputs {
+			display: flex;
+			flex-wrap: wrap;
+			padding-bottom: 5px; /* Add padding to move scroll 5px from the bottom */
+			max-height: 200px;
+			overflow-y: auto;
+			border-radius: 5px;
+			margin-top: 10px;
+		}
+
+		.process-text {
+			text-align: center; /* Center the text */
+			margin-top: 40px;
+			color: var(--even-lighter-grey-color);
+			text-shadow: none; /* Initial shadow value */
+			transition: color 0.3s, transform 0.3s, text-shadow 0.3s; /* Add transitions for color, transform, and text-shadow */
+		}
+		
+		.photo {
+			width: 100px;
+			height: 100px;
+			background-size: cover;
+			background-position: center;
+			border-radius: 50%;
+			margin-right: 10px;
+			position: relative;
+			cursor: pointer;
+			margin: 5px 5px;
+			transition: transform 0.2s, box-shadow 0.2s;
+			display: inline-block;
+			vertical-align: top;
+			backdrop-filter: blur(5px);
+			background-color: grey;
+			opacity: 0.4;
+			box-shadow: 0 0 10px rgba(199, 40, 229, 0.2); /* Add shadow effect on hover */
+		}
+
+		.photo.active {
+			border: 2px solid #007bff; /* Add border to indicate active photo */
+			opacity: 1.0;
+		}
+
+		.photo:hover {
+			transform: scale(1.05);
+			box-shadow: 0 0 10px rgba(199, 40, 229, 0.6); /* Add shadow effect on hover */
+			filter: brightness(80%);
+			opacity: 1.0;
+		}
+
+		.photo.active {
+			border: 2px solid #007bff; /* Add border to indicate active photo */
+			filter: grayscale(0%); /* Remove grayscale effect for active faces */
+			opacity: 1.0;
+		}
+
+		.photo.active:hover {
+			transform: scale(1.05);
+			box-shadow: 0 0 10px rgba(199, 40, 229, 0.6); /* Add shadow effect on hover for active faces */
+			opacity: 1.0;
+		}
+
+		// .photo.active .delete-icon {
+			// display: none; /* Hide delete icon for active faces */
+		// }
+
+		// .photo.active .delete-icon:hover {
+			// background-color: #fff; /* Change delete icon background color on hover for active faces */
+		// }
+		
+		.delete-icon {
+			position: absolute;
+			top: 5px;
+			right: 5px;
+			background-color: #fff;
+			border: 1px solid #ccc;
+			border-radius: 50%;
+			width: 20px;
+			height: 20px;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			cursor: pointer;
+			transition: background-color 0.2s;
+		}
+
+		.delete-icon::before {
+			content: "X";
+			display: block;
+			color: black;
+			font-size: 12px;
+			text-align: center;
+			line-height: 20px; /* Adjust line-height to vertically center the "X" */
+		}
+
+		.delete-icon:hover {
+			background-color: #ff6b6b; /* Change delete icon background color on hover */
+		}
+
+		.delete-icon:hover::before {
+			color: white; /* Change the color of the "X" on hover */
+		}
+
+		.circular-button {
+			width: 60px;
+			height: 60px;
+			background-color: var(--dark-grey-color);
+			border-radius: 50%;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			margin: 10px auto;
+			cursor: pointer;
+			transition: background 0.6s ease-in-out, transform 0.6s ease-in-out, box-shadow 0.6s ease-in-out, color 0.6s ease-in-out;
+			position: relative; /* Change position to relative */
+		}
+
+		.circular-button .plus {
+			font-size: 24px;
+			color: #fff;
+			transition: color 0.6s ease-in-out;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			flex: 99999;
+		}
+		
+		/* Add a pseudo-element to increase the clickable area for the plus button */
+		.circular-button .plus::before {
+			content: "";
+			position: absolute;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			left: 0;
+			border-radius: 50%;
+		}
+
+		.circular-button:hover {
+			background: linear-gradient(45deg, blue, red); /* Gradient background on hover */
+			animation: pulse 1s infinite; /* Add a pulsating animation */
+			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Shadow effect on hover */
+			color: #fff; /* Change the plus symbol color on hover */
+		}
+
+		@keyframes pulse {
+			0% {
+				transform: scale(1);
+			}
+			50% {
+				transform: scale(1.1);
+			}
+			100% {
+				transform: scale(1);
+			}
+		}
+		
+
+		/* Add styles for the active container with blur effect */
+		.active-container {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			z-index: 999; /* Make the container appear above other content */
+			backdrop-filter: blur(5px); /* Add blur effect to the background */
+			background-color: var(--card-main-background-color); /* Adjust the background color and transparency */
+		}
+		
+		
+		.information-box {
+			background-color: var(--background-color);
+			border: 1px solid var(--darker-grey-color);
+			border-radius: 15px;
+			padding: 20px;
+			text-align: center;
+			max-width: 100%; /* Adjust the width as needed */
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			transform: translate(-50%, -50%);
+			z-index: 1000;
+			transition: border 0.3s ease-in-out;
+		}
+						
+		.information-box:hover {
+			border: 1px solid var(--lighter-grey-color); /* Increase border thickness and change color on hover */
+		}
+
+		.confirmation-text {
+			font-weight: bold;
+			margin-bottom: 10px;
+		}
+
+		.confirmation-button,
+		#currencySelector {
+			padding: 15px;
+			width: 49%;
+			max-width: 100%;
+			color: #fff;
+			border: 2px solid #0056b3; /* Add a border similar to the normal button */
+			border-radius: 20px;
+			cursor: pointer;
+			margin-top: 10px;
+			background: linear-gradient(45deg, blue, red);
+			background-size: 200% 200%;
+			transition: background 0.6s ease, transform 0.6s ease, box-shadow 0.6s ease, color 0.6s ease-in-out;
+			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+		    font-size: 15px;
+		    font-weight: bold;
+		}
+
+		.confirmation-button:hover,
+		#currencySelector:hover	{
+			background: linear-gradient(45deg, blue, red);
+			background-position: 100%;
+			transform: scale(1.01);
+			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+			border: 2px solid #0056b3;
+		}
+		
+		.confirmation-button:focus,
+		#currencySelector:focus {
+			outline: none; /* Remove the default focus outline */
+			box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Add a subtle focus effect */
+		}
+
+		/* Style the confirmation dialog checkbox and label */
+		.information-box label {
+			display: flex;
+			align-items: center;
+			margin-top: 10px;
+			cursor: pointer;
+			padding: 5px; /* Increase clickable area */
+		}
+
+		.information-box label input[type="checkbox"] {
+			appearance: none;
+			width: 16px;
+			height: 16px;
+			border: 2px solid #ccc;
+			border-radius: 3px;
+			margin-right: 8px;
+			cursor: pointer;
+			transition: border-color 0.3s, background-color 0.3s;
+		}
+		
+		.information-box label input[type="checkbox"]:checked {
+			background-color: #007bff; /* Change background color when checked */
+			border: 2px solid #007bff; /* Change border color when checked */
+			transition: border-color 0.3s, background-color 0.3s;
+		}
+
+		.information-box label input[type="checkbox"]:hover {
+			transform: scale(1.1);
+			transition: transform 0.3s;
+		}
+
+		.information-box label input[type="checkbox"]:checked::before {
+			content: "✔"; /* Display a checkmark when checked */
+			display: block;
+			color: #fff; /* Checkmark color */
+			font-size: 12px;
+			text-align: center;
+			line-height: 16px;
+		}
+		
+		.information-box label input[type="checkbox"] {
+			border-radius: 75%; /* Makes the checkbox completely round */
+		}
+		
+		.information-box label:hover {
+			/* Hover effect for the entire label */
+			background-color: rgba(0, 123, 255, 0.1);
+			border-radius: 5px; /* Makes the checkbox completely round */
+		}
+		
+		/* Scale the checkbox when hovered */
+		.information-box label:hover input[type="checkbox"] {
+			transform: scale(1.1); /* Slightly bigger when hovered */
+		}
+
+		.information-box label:hover input[type="checkbox"] {
+			border: 2px solid #007bff;
+		}
+
+		.information-box label:hover input[type="checkbox"]:checked {
+			background-color: #0056b3;
+			border: 2px solid #0056b3;
+		}
+
+		.confirmation-button.cancel,
+		#currencySelector.focus {
+			background-color: #ccc;
+		}
+
+		.confirmation-button.confirm,
+		#currencySelector.confirm {
+			background-color: #007bff;
+		}
+		
+		/* Style the checkbox and label */
+		label.checkbox {
+			display: flex;
+			align-items: center;
+			margin-top: 10px;
+			cursor: pointer;
+			padding: 5px; /* Increase clickable area */
+		}
+
+		label.checkbox input[type="checkbox"] {
+			appearance: none;
+			width: 16px;
+			height: 16px;
+			border: 2px solid #ccc;
+			border-radius: 3px;
+			margin-right: 8px;
+			cursor: pointer;
+			transition: border-color 0.3s, background-color 0.3s, transform 0.3s;
+		}
+
+		label.checkbox input[type="checkbox"]:checked {
+			background-color: #007bff; /* Change background color when checked */
+			border: 2px solid #007bff; /* Change border color when checked */
+		}
+
+		label.checkbox input[type="checkbox"]:hover {
+			transform: scale(1.1); /* Slightly bigger when hovered */
+		}
+
+		label.checkbox input[type="checkbox"]:checked::before {
+			content: "✔"; /* Display a checkmark when checked */
+			display: block;
+			color: #fff; /* Checkmark color */
+			font-size: 12px;
+			text-align: center;
+			line-height: 16px;
+		}
+
+		/* Apply hover effect for the entire label */
+		label.checkbox:hover {
+			background-color: rgba(0, 123, 255, 0.1);
+			border-radius: 5px; /* Makes the checkbox completely round */
+		}
+
+		/* Scale the checkbox when hovered */
+		label.checkbox:hover input[type="checkbox"] {
+			transform: scale(1.1); /* Slightly bigger when hovered */
+		}
+
+		.settings-mark {
+			position: absolute; /* Change position to absolute */
+			bottom: 25%; /* Center vertically */
+			left: 80%; /* Adjust the right position as needed */
+			transform: translateY(-50%); /* Center vertically */
+			font-size: 16px;
+			color: #fff;
+			cursor: pointer;
+			border: 2px solid #fff;
+			border-radius: 50%;
+			width: 24px;
+			height: 24px;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			background-color: grey;
+			transition: background-color 0.3s, color 0.3s, top 0.3s, right 0.3s;
+		}
+
+		.settings-mark:hover {
+			background-color: #fff; /* Change settings mark background color on hover */
+			color: #007bff; /* Change settings mark color on hover */
+		}
+		
+		.question-mark {
+			position: absolute; /* Change position to absolute */
+			bottom: 45%; /* Center vertically */
+			left: 70%; /* Adjust the right position as needed */
+			transform: translateY(-50%); /* Center vertically */
+			font-size: 16px;
+			color: #fff;
+			cursor: pointer;
+			border: 2px solid #fff;
+			border-radius: 50%;
+			width: 24px;
+			height: 24px;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			background-color: grey;
+			transition: background-color 0.3s, color 0.3s, top 0.3s, right 0.3s;
+		}
+
+		.question-mark:hover {
+			background-color: #fff; /* Change question mark background color on hover */
+			color: #007bff; /* Change question mark color on hover */
+		}
+		
+		/* Add styles for the information container */
+		#info-container {
+			display: none;
+			/* Add your styles for the information container background, position, and size */
+		}
+
+		#prompt-container {
+			display: none;
+			/* Add your styles for the information container background, position, and size */
+		}
+		
+		#player {
+		  position: absolute;
+		  top: 0;
+		  right: 0;
+		  flex: 0;
+		}
+		
+		/* Style for the "Close" button in the information container */
+		#close-info {
+			background-color: #ccc;
+			/* Add your button styles */
+		}
+				
+		.lightbox {
+			display: none;
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(0, 0, 0, 0.7);
+			z-index: 1001;
+			flex-direction: column;
+		}
+
+		.lightbox-content {
+			flex-grow: 1; /* Allow the content to take up available space */
+			text-align: center;
+			max-width: 75%;
+			max-height: 75%;
+			overflow: auto;
+			margin: auto; /* Center the content horizontally */
+			z-index: 1001;
+		}
+
+		.lightbox-content img {
+			width: 100%;
+			height: auto;
+			margin-top: 20px;
+			z-index: 1001;
+		}
+
+		.lightbox-buttons {
+			text-align: center;
+			margin-bottom: 75px; /* Adjust the margin-top value as needed */
+		}
+
+		.lightbox-buttons button {
+			max-width: 75%;
+			margin: 5px 0px;
+		}
+
+		.close-lightbox {
+			position: absolute;
+			top: 10px;
+			right: 10px;
+			padding: 10px;
+			cursor: pointer;
+		}
+			
+		.close-lightbox:hover {
+			background-color: #f2f2f2;
+		}
+		
+        .canvas-container {
+            position: relative;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* Style for the slider container */
+        .slider-container-canvas {
+            position: absolute;
+            top: 10px; /* Adjust the top position */
+            right: 20px; /* Adjust the right position, smaller value to move it left */
+            width: 150px; /* Adjust the width as needed */
+        }
+
+        /* Style for the slider */
+        #sizeSlider {
+            width: 100%; /* Make the slider fill the container */
+        }
+
+        /* Style for the color picker container */
+        .color-picker-container {
+            position: absolute;
+            top: 50px; /* Adjust the top position to be below the slider */
+            right: 15px; /* Position it to the right of the image */
+        }
+
+        /* Style for the cursor */
+        canvas.drawing {
+            cursor: crosshair;
+        }
+
+        .custom-slider {
+            /* Define your custom styles here */
+            width: 150px; /* Adjust the width as needed */
+            height: 10px; /* Adjust the height as needed */
+            background-color: #ccc;
+            border: none;
+            outline: none;
+            border-radius: 5px;
+            -webkit-appearance: none; /* Remove default styles in WebKit browsers */
+        }
+
+        .custom-slider::-webkit-slider-thumb {
+            /* Style the slider thumb */
+            width: 20px; /* Adjust the thumb width */
+            height: 20px; /* Make the thumb square by setting the same height and width */
+            background-color: white; /* Set the thumb color to white */
+            border: 2px solid #0078d4; /* Add a 2px border with the desired color */
+            border-radius: 5px; /* Add a small border-radius for a smoother look */
+            -webkit-appearance: none; /* Remove default styles in WebKit browsers */
+        }
+    </style>
+	<script type="module">
+		// Import necessary configs.
+		import { auth, usersRef, paymentsRef, serversRef } from './scripts-17/firebase-config.js';
+		
+		// Function to fetch server addresses from Firestore
+		async function fetchServerAddresses() {
+		  const serversSnapshot = await serversRef.get();
+		  const serverAddresses = serversSnapshot.docs.map((doc) => doc.data()['serverAdress-DN']).filter(Boolean);
+		  return serverAddresses; // ["https://4090-1-DN.bodyswap.me"];
+		}
+
+		// Use the function to dynamically fetch server addresses
+		const allServerAddress = (await fetchServerAddresses()).reverse();
+		console.log('Fetched server addresses:', allServerAddress);
+
+		// Initialize the selected server address
+		let serverAddresses = allServerAddress;
+		
+		// Will Have the const variables here.
+		const MAX_TASK_LIMIT = 10;
+		const STATUS_OK = 200; 
+		const STATUS_CREATED = 201; 
+		const STATUS_BADREQUEST = 400; 
+		const STATUS_UNAUTHORIZED = 401; 
+		const STATUS_FORBIDDEN = 403; 
+		const STATUS_NOTFOUND  = 404; 
+		
+		// The code you provided can be placed here.
+		let userId = 0;
+		let serverAddress = serverAddresses[0];
+		let intervalId = null;
+
+		// This function bypasses the ngrok.
+		function fetchToServer(url, options, onProgress) {
+		  const customHeaders = new Headers({
+			'ngrok-skip-browser-warning': 'true',
+			'bypass-tunnel-reminder': 'true'
+		  });
+
+		  options = options || {}; // Ensure options object exists
+		  options.headers = options.headers || customHeaders;
+	  
+		  if (typeof onProgress !== 'function') {
+			// If onProgress is not a valid callback, use the standard fetch function
+			return fetch(url, options);
+		  }
+	  
+		  return new Promise((resolve, reject) => {
+			const xhr = new XMLHttpRequest();
+			xhr.open(options.method || 'GET', url);
+
+			xhr.upload.onprogress = (event) => {
+			  if (event.lengthComputable) {
+				const progress = (event.loaded / event.total) * 100;
+				// Call the progress callback with the current progress percentage
+				onProgress(progress);
+			  }
+			};
+
+			xhr.onload = () => {
+			  if (xhr.status >= STATUS_OK && xhr.status < STATUS_NOTFOUND) {
+				resolve(new Response(xhr.responseText, { status: xhr.status }));
+			  } else {
+				reject(new Error(`Request failed with status ${xhr.status}`));
+			  }
+			};
+
+			xhr.onerror = () => {
+			  reject(new Error('Request failed'));
+			};
+
+			// Set headers
+			for (const [key, value] of options.headers) {
+			  xhr.setRequestHeader(key, value);
+			}
+
+			// Send the request
+			xhr.send(options.body);
+		  });
+		}
+		
+		const startProcessBtn = document.getElementById('startProcessBtn');
+		const progressBar = document.getElementById('progressBar');
+		const cancelProcessBtn = document.getElementById('cancelProcessBtn');
+		
+		function cancelProcess(showAlertion) {
+		  return new Promise(async (resolve) => {
+			try {
+			  let user;
+
+			  // Check if the userId variable exists
+			  if (userId) {
+				user = { uid: userId }; // Use the provided userId
+			  } else {
+				user = await new Promise((resolve) => {
+				  const unsubscribe = auth.onAuthStateChanged((user) => {
+					unsubscribe(); // Unsubscribe once we have the user object
+					resolve(user);
+				  });
+				});
+			  }
+
+			  // Check if the user is authenticated
+			  if (user) {
+				const userDoc = await usersRef.doc(user.uid).get();
+				const userData = userDoc.data();
+				const userInfo = await getUserInfo(userData);
+				const userIsProcessing = userDoc.data().isProcessing;
+				
+				// Create an array of promises to check the server status
+				const serverPromises = serverAddresses.map(server => {
+					return fetch(`${server}/get-online`)
+						.then(response => {
+							if (response.status === STATUS_NOTFOUND) {
+								console.error(`Server ${server} is offline.`);
+								return { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Unkown" }; // Server is offline
+							} else if (response.status === STATUS_OK) {
+								return response.json();
+							} else {
+								return { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Unkown" }; // Server is offline
+							}
+						})
+						.then(data => ({ queueAmount: data.server, faceDetectionError: data.faceDetectionError, videoUnsupportedTooLongError: data.videoUnsupportedTooLongError, remainingTime: data.remainingTime, elapsedTime: data.elapsedTime, frameCount: data.frameCount, totalFrames: data.totalFrames, requestQueue: data.requestQueue, uniqueId : data.uniqueId, processingAmount: data.processingAmount, SERVER_1: data.SERVER_1 }))
+						.catch(error => {
+							return { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Unkown" }; // Server is offline
+						});
+				});
+
+				// Check server status by awaiting all promises
+				const results = await Promise.all(serverPromises);
+
+				// Find server with user's request in requestQueue
+				const serverWithUserRequest = results.find(serverData => serverData.requestQueue && serverData.requestQueue.includes(userId));
+				
+				if (userIsProcessing || serverWithUserRequest) {
+				  const cancelRequests = serverAddresses.map(async (serverAddress) => {
+					try {
+					  const response = await fetch(`${serverAddress}/cancel-process`, {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ userId: user.uid }), // Use user.uid instead of auth.currentUser.uid
+					  });
+
+					  if (showAlertion) {
+					    if (response.ok) {
+						  clearInterval(intervalId);
+						  setProcessText(document.querySelector('.outputs').firstChild, `Request got cancelled.`);
+						  startProcessBtn.disabled = false;
+						  alert(`Process cancelled successfully on server: ${serverAddress}`);
+					    } else {
+						  console.error(`Failed to cancel process on server ${serverAddress}:`, await response.json());
+					    }
+					  }
+					} catch (error) {
+					  console.error(`Error on server ${serverAddress}:`, error);
+					}
+				  });
+
+				  // Wait for all cancel requests to complete
+				  await Promise.all(cancelRequests);
+				} else {
+				  if (showAlertion) 
+				    alert('User is not processing. No cancellation request sent.');
+				}
+			  }
+			} catch (error) {
+			  console.error('Error checking processes:', error);
+			} finally {
+			  resolve();
+			}
+		  });
+		}
+
+		cancelProcessBtn.addEventListener('click', async () => {
+		  await cancelProcess(true);
+		});
+		
+		function updateProgressBar(progress) {
+		  if (progressBar) {
+		    progressBar.style.display = 'block';
+		    progressBar.style.width = `${progress}%`;
+		  }
+		}
+
+		updateProgressBar(0);
+		
+		function getLowestQueueIndex(queues) {
+		  let lowestIndex = 0;
+		  for (let i = 1; i < queues.length; i++) {
+			if (queues[i] < queues[lowestIndex]) {
+			  lowestIndex = i;
+			}
+		  }
+		  return lowestIndex;
+		}
+		
+		const valueDisplay = document.getElementById("quality-value");
+		{
+			const slider = document.getElementById("quality-slider");
+			const backgroundGradient = document.querySelector(".slider");
+
+			const savedQuality = localStorage.getItem("selectedMaskDilateDN");
+			if (savedQuality) {
+			  slider.value = valueDisplay.textContent = savedQuality;
+			  let fillPercentage = ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
+			  backgroundGradient.style.background = `linear-gradient(to right, #4CAF50 0%, #4CAF50 ${fillPercentage}%, #ccc ${fillPercentage}%, #ccc 100%)`;
+			}
+			
+			valueDisplay.textContent = slider.value;
+			let fillPercentage = ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
+			backgroundGradient.style.background = `linear-gradient(to right, #4CAF50 0%, #4CAF50 ${fillPercentage}%, #ccc ${fillPercentage}%, #ccc 100%)`;
+
+			slider.addEventListener("input", function () {
+				valueDisplay.textContent = slider.value;
+				console.log('Selected Quality:', valueDisplay.textContent);
+				fillPercentage = ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
+				backgroundGradient.style.background = `linear-gradient(to right, #4CAF50 0%, #4CAF50 ${fillPercentage}%, #ccc ${fillPercentage}%, #ccc 100%)`;
+				localStorage.setItem("selectedMaskDilateDN", valueDisplay.textContent);
+			});
+		}
+		
+		let modeSelector = null;
+		let maskSelector = null;
+		let negativeMaskSelector = null;
+		
+		function loadState() {
+		  const selectedRectangleId = localStorage.getItem('selectedRectangleDN');
+		  const selectedMaskDNId = localStorage.getItem('selectedMaskDN');
+		  const selectedNegativeMaskDNId = localStorage.getItem('selectedNegativeMaskDN');
+		  const maskPromptDisplayDN = localStorage.getItem('maskPromptDisplayDN');
+		  const negativeMaskPromptDisplayDN = localStorage.getItem('negativeMaskPromptDisplayDN');
+		  const tabText = localStorage.getItem('tabTextDN');
+		  const tabTextDisplay = localStorage.getItem('tabTextDisplayDN');
+		  const creditsDN = localStorage.getItem('creditsDN');
+		  const removeBannerDN = localStorage.getItem('removeBannerDN');
+		  const keepAspectRatioDN = localStorage.getItem('keepAspectRatioDN');
+		  const poseRecognitionDN = localStorage.getItem('poseRecognitionDN');
+		  const depthRecognitionDN = localStorage.getItem('depthRecognitionDN');
+		  const edgeRecognitionDN = localStorage.getItem('edgeRecognitionDN');
+		  
+		  document.getElementById('mask-prompt').style.display = maskPromptDisplayDN;
+		  document.getElementById('negative-mask-prompt').style.display = negativeMaskPromptDisplayDN;
+		  
+		  if (selectedMaskDNId) {
+		    const selectedRectangle = document.getElementById(selectedMaskDNId);
+		    if (selectedRectangle) {
+		  	  selectedRectangle.classList.add('selected');
+			  maskSelector = selectedRectangle.id;
+		    }
+		  }
+		  
+		  if (selectedNegativeMaskDNId) {
+		    const selectedRectangle = document.getElementById(selectedNegativeMaskDNId);
+		    if (selectedRectangle) {
+		  	  selectedRectangle.classList.add('selected');
+			  negativeMaskSelector = selectedRectangle.id;
+		    }
+		  }
+		  
+		  if (selectedRectangleId) {
+		    const selectedRectangle = document.getElementById(selectedRectangleId);
+		    if (selectedRectangle) {
+		  	  selectedRectangle.classList.add('selected');
+			  modeSelector = selectedRectangle.id;
+		    }
+		  }
+		  
+		  document.getElementById('keepAspectRatio').checked = keepAspectRatioDN === 'true';
+		  document.getElementById('removeBanner').checked = removeBannerDN === 'true';
+		  document.getElementById('poseRecognition').checked = poseRecognitionDN === 'true';
+		  document.getElementById('depthRecognition').checked = depthRecognitionDN === 'true';
+		  document.getElementById('edgeRecognition').checked = edgeRecognitionDN === 'true';
+		  
+		  const credits = document.getElementById('credits');
+		  credits.textContent = Math.max(1, creditsDN);
+	    }
+
+	    loadState();
+		
+		const keepAspectRatioCheckbox = document.getElementById('keepAspectRatio');
+		const removeBannerCheckbox = document.getElementById('removeBanner');
+		const poseRecognitionCheckbox = document.getElementById('poseRecognition');
+		const depthRecognitionCheckbox = document.getElementById('depthRecognition');
+		const edgeRecognitionCheckbox = document.getElementById('edgeRecognition');
+		  
+	    function saveState() {
+		  const removeBanner = removeBannerCheckbox.checked ? true : false;
+		  localStorage.setItem('removeBannerDN', removeBanner);
+		  
+		  const keepAspectRatio = keepAspectRatioCheckbox.checked ? true : false;
+		  localStorage.setItem('keepAspectRatioDN', keepAspectRatio);
+		  
+		  const poseRecognition = poseRecognitionCheckbox.checked ? true : false;
+		  localStorage.setItem('poseRecognitionDN', poseRecognition);
+		  
+		  const depthRecognition = depthRecognitionCheckbox.checked ? true : false;
+		  localStorage.setItem('depthRecognitionDN', depthRecognition);
+		  
+		  const edgeRecognition = edgeRecognitionCheckbox.checked ? true : false;
+		  localStorage.setItem('edgeRecognitionDN', edgeRecognition);
+		  
+		  const modeSelection = document.getElementById('mode-selection');
+		  const selectedMode = modeSelection.querySelector('.selected');
+		  if (selectedMode) {
+		    modeSelector = selectedMode.id;
+		    localStorage.setItem('selectedRectangleDN', modeSelector);
+		  }
+		  
+		  const maskPrompt = document.getElementById('mask-prompt');
+		  const maskSelection = document.getElementById('mask-selection');
+		  const selectedMask = maskSelection.querySelector('.selected');
+		  if (selectedMask) {
+		    maskSelector = selectedMask.id;
+		    localStorage.setItem('selectedMaskDN', maskSelector);
+			
+			maskPrompt.style.display = maskSelector === "prompt" ? 'block': 'none';
+		    localStorage.setItem('maskPromptDisplayDN', maskPrompt.style.display);
+		    localStorage.setItem('imageContainerDisplayDN', imageContainer.style.display);
+		  }
+		  
+		  const negativeMaskPrompt = document.getElementById('negative-mask-prompt');
+		  const negativeMaskSelection = document.getElementById('negative-mask-selection');
+		  const selectedNegativeMask = negativeMaskSelection.querySelector('.selected');
+		  if (selectedNegativeMask) {
+		    negativeMaskSelector = selectedNegativeMask.id;
+			console.log(negativeMaskSelector);
+		    localStorage.setItem('selectedNegativeMaskDN', negativeMaskSelector);
+			
+			negativeMaskPrompt.style.display = negativeMaskSelector === "negative-prompt-rectangle" ? 'block': 'none';
+		    localStorage.setItem('negativeMaskPromptDisplayDN', negativeMaskPrompt.style.display);
+		    localStorage.setItem('imageContainerDisplayDN', imageContainer.style.display);
+		  }
+		  else{
+		    negativeMaskSelector = selectedNegativeMask ? selectedNegativeMask.id : null;
+			console.log(negativeMaskSelector);
+		    localStorage.setItem('selectedNegativeMaskDN', negativeMaskSelector);
+			
+			negativeMaskPrompt.style.display = negativeMaskSelector === "negative-prompt-rectangle" ? 'block': 'none';
+		    localStorage.setItem('negativeMaskPromptDisplayDN', negativeMaskPrompt.style.display);
+		  }
+		  
+		  const credits = document.getElementById('credits');
+		  credits.textContent = 1 + (removeBanner ? 1 : 0) + (poseRecognition ? 0 : 0) + (depthRecognition ? 0 : 0) + (edgeRecognition ? 0 : 0);
+		  localStorage.setItem('creditsDN', credits.textContent);
+	    }
+
+		removeBannerCheckbox.addEventListener("click", (event) => {
+			saveState();
+		});
+		
+		keepAspectRatioCheckbox.addEventListener("click", (event) => {
+			saveState();
+		});
+		
+		poseRecognitionCheckbox.addEventListener("click", (event) => {
+			saveState();
+		});
+		
+		depthRecognitionCheckbox.addEventListener("click", (event) => {
+			saveState();
+		});
+		
+		edgeRecognitionCheckbox.addEventListener("click", (event) => {
+			saveState();
+		});
+		
+		function handleMaskSelection(rectangle) {
+		  const maskSelection = document.getElementById('mask-selection');
+		  const selectedMask = maskSelection.querySelector('.selected');
+
+		  if (selectedMask) {
+			selectedMask.classList.remove('selected');
+		  }
+
+		  rectangle.classList.add('selected');
+		}
+		
+		function handleNegativeMaskSelection(rectangle) {
+		  const negativeMaskSelection = document.getElementById('negative-mask-selection');
+		  const selectedNegativeMask = negativeMaskSelection.querySelector('.selected');
+
+		  if (selectedNegativeMask === rectangle) {
+			rectangle.classList.remove('selected'); // Unselect if already selected
+		  } else {
+			if (selectedNegativeMask) {
+			  selectedNegativeMask.classList.remove('selected');
+			}
+			rectangle.classList.add('selected');
+		  }
+		}
+		
+		function handleSelection(rectangle) {
+		  const selectedSection = document.querySelector('.rectangle.selected');
+
+		  if (selectedSection) {
+			selectedSection.classList.remove('selected');
+		  }
+
+		  rectangle.classList.add('selected');
+		}
+		
+		const rectangles = document.querySelectorAll('.rectangle');
+		rectangles.forEach((rectangle) => {
+			rectangle.addEventListener('click', () => {
+				console.log(rectangle.id);
+				if (rectangle.id === 'anime' || rectangle.id === 'realistic')
+				    handleSelection(rectangle);
+				else { 
+					const imageContainer = document.querySelector('.canvas-container');
+					imageContainer.style.display = 'none';
+					
+					const sliderContainer = document.querySelector('.slider-container');
+					sliderContainer.style.display = 'flex';
+					
+					const activePhotos = document.querySelectorAll('.photo.active');
+					if (rectangle.id === 'canvas' && activePhotos.length > 0) {
+						// Simulate a click event on activePhotos twice
+						activePhotos.forEach(photo => {
+							const parentContainer = photo.closest('.scroll-container');
+							if (parentContainer && parentContainer.querySelector('.faces')) {
+								photo.click(); // Simulate a click action
+								photo.click(); // Simulate another click action
+								imageContainer.style.display = 'block';
+								sliderContainer.style.display = 'none';
+							}
+						});
+					}
+					else {
+						imageContainer.style.display = 'none';
+						sliderContainer.style.display = 'flex';
+					}
+					 
+					if (rectangle.id === 'face' || rectangle.id === 'hair' || rectangle.id === 'negative-prompt-rectangle')
+						handleNegativeMaskSelection(rectangle);
+					else handleMaskSelection(rectangle);
+				}
+				saveState();
+			});
+		});
+		
+		async function getUserInfo(userData) {
+			var userInfo = userData.username;
+			if ((userData.credits || 0) + (userData.dailyCredits || 0) > 0) {
+				userInfo += " | Credits: " + (userData.credits || 0);
+				
+				if ((userData.dailyCredits || 0)) 
+					userInfo += " + " + (userData.dailyCredits || 0);
+			}
+			
+			if (userData.deadline) {
+				const currentDate = new Date();
+				console.log("Current Date:", currentDate);
+
+				const deadlineDate = userData.deadline.toDate();
+				console.log("Converted Deadline Date:", deadlineDate);
+
+				if (deadlineDate >= currentDate) 
+					userInfo += " | Deadline: " + deadlineDate.toLocaleDateString();
+			}
+			
+			return userInfo;
+		}
+
+		async function updateLoggedInMessage(userInfo) {
+			var loggedInMessage = document.getElementById("loggedInMessage");
+			loggedInMessage.style.display = "block";
+			loggedInMessage.innerText = userInfo;
+		}
+
+		function convertToPng(blob) {
+		  return new Promise((resolve, reject) => {
+			const reader = new FileReader();
+
+			reader.onload = function () {
+			  const img = new Image();
+
+			  img.onload = function () {
+				const canvas = document.createElement('canvas');
+				canvas.width = img.width;
+				canvas.height = img.height;
+				const ctx = canvas.getContext('2d');
+				ctx.drawImage(img, 0, 0);
+
+				// Convert the canvas content to a Blob with PNG format
+				canvas.toBlob(
+				  (blob) => {
+					resolve(blob);
+				  },
+				  'image/png',
+				  1
+				);
+			  };
+
+			  img.src = reader.result;
+			};
+
+			reader.readAsDataURL(blob);
+		  });
+		}
+
+		function generateUniqueId() {
+			var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789%^&*()_-+=';
+			var uniqueId = '';
+
+			for (var i = 0; i < 12; i++) {
+				var randomIndex = Math.floor(Math.random() * characters.length);
+				uniqueId += characters.charAt(randomIndex);
+			}
+
+			return uniqueId;
+		}
+		
+		function dataURItoBlob(dataURI) {
+		  // Convert base64/URLEncoded data component to raw binary data
+		  const byteString = atob(dataURI.split(',')[1]);
+
+		  // Separate out the mime component
+		  const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+
+		  // Write the bytes of the string to an ArrayBuffer
+		  const ab = new ArrayBuffer(byteString.length);
+		  const ia = new Uint8Array(ab);
+		  for (let i = 0; i < byteString.length; i++) {
+			ia[i] = byteString.charCodeAt(i);
+		  }
+
+		  // Create a Blob from the ArrayBuffer and mime type
+		  return new Blob([ab], { type: mimeString });
+		}
+		
+		function isFirstTime() {
+			return localStorage.getItem('activatedKeepAspectRatio') === null;
+		}
+
+		function activateOnce() {
+			if (isFirstTime()) {
+				document.getElementById('keepAspectRatio').checked = true;
+				localStorage.setItem('activatedKeepAspectRatio', true);
+			}
+		}
+
+		activateOnce();
+		saveState();
+		
+		startProcessBtn.addEventListener('click', async () => {
+		  try {
+			const positivePrompt = document.getElementById("positive-prompt").value;
+			const negativePrompt = document.getElementById("negative-prompt").value;
+			const negativeMaskPrompt = document.getElementById("negative-mask-prompt").value;
+			const poseRecognitionCheckbox = document.getElementById('poseRecognition');
+			const poseRecognition = poseRecognitionCheckbox.checked ? true : false;
+			const depthRecognitionCheckbox = document.getElementById('depthRecognition');
+			const depthRecognition = depthRecognitionCheckbox.checked ? true : false;
+			const edgeRecognitionCheckbox = document.getElementById('edgeRecognition');
+			const edgeRecognition = edgeRecognitionCheckbox.checked ? true : false;
+			const removeBannerCheckbox = document.getElementById('removeBanner');
+			const removeBanner = removeBannerCheckbox.checked ? true : false;
+			const keepAspectRatioCheckbox = document.getElementById('keepAspectRatio');
+			const keepAspectRatio = keepAspectRatioCheckbox.checked ? true : false;
+  
+			if (auth.currentUser) {
+			  userId = auth.currentUser.uid;
+			  console.log('auth.currentUser.uid:', userId);
+			}
+			
+			handleOutputCreation();
+			
+			const maskPrompt = document.getElementById("mask-prompt").value;
+			if (!maskPrompt && maskSelector === "prompt") {
+			  setClientStatus('Mask Prompt Is Empty');
+			  alert(`Advanced Settings -> Positive Mask -> Prompt, Must Not Be Empty.`);
+			  return;
+			}
+			
+			if (!userId) {
+			  setClientStatus('No ID');
+			  return;
+			}
+			
+			const activePhoto = document.querySelector(".photo.active");
+			if (!activePhoto) {
+			  setClientStatus(`Please select a photo.`);
+			  return;
+			}
+				
+			updateProgressBar(0);
+			setClientStatus('Connecting...');
+			startProcessBtn.disabled = true;
+
+			const storedUniqueId = localStorage.getItem('uniqueUserBrowserProcessId');
+			if (!storedUniqueId) {
+				const newUniqueId = await generateUniqueId();
+				localStorage.setItem('uniqueUserBrowserProcessId', newUniqueId);
+			}
+			
+            let userIpAddress;
+			
+			async function getUserIpAddress() {
+			  const urls = [
+				'https://ipinfo.io/json',
+				'https://api64.ipify.org?format=json'
+			  ];
+			  
+			  for (const url of urls) {
+				try {
+				  const data = await fetchWithTimeout(url, 1000);
+				  userIpAddress = data.ip;
+				  break; // Stop trying if we get a successful response
+				} catch (error) {
+				  console.error(`Error fetching IP address from ${url}:`, error);
+				}
+			  }
+
+			  return userIpAddress;
+			}
+
+			// Grab the IP address.
+			setClientStatus('Grabbing ID...');
+			
+			// Call the function that uses await
+			try {
+				const ipAddress = await getUserIpAddress();
+				console.log('User IP Address:', ipAddress);
+			} catch (error) {
+				console.error('Failed to fetch user IP:', error);
+			}
+			
+			// Use the function to dynamically fetch server addresses
+			const allServerAddress = (await fetchServerAddresses()); //.reverse();
+			serverAddresses = allServerAddress;
+			
+			const serverPromises = serverAddresses.map(server => {
+			  return fetch(`${server}/get-online`)
+				.then(response => {
+				  if (response.status === STATUS_NOTFOUND) {
+				    startProcessBtn.disabled = false;
+					console.error(`Server ${server} is offline.`);
+					return Infinity; // Server is offline
+				  } else if (response.status === STATUS_OK) {
+					return response.json();
+				  } else {
+				    startProcessBtn.disabled = false;
+					console.error(`Error while fetching ${server}: Status ${response.status}`);
+					return Infinity; // Server is offline
+				  }
+				})
+				.then(data => data.server)
+				.catch(error => {
+				  startProcessBtn.disabled = false;
+				  console.error(`Error while fetching ${server}:`, error);
+				  return Infinity; // Server is offline
+				});
+			});
+
+			const results = await Promise.all(serverPromises);
+			if (results.some(queue => queue !== Infinity)) {
+			  const lowestQueueIndex = getLowestQueueIndex(results);
+
+			  if (results[lowestQueueIndex] > -1 && results[lowestQueueIndex] <= MAX_TASK_LIMIT) {
+				serverAddress = serverAddresses[lowestQueueIndex];
+				setClientStatus(`Queue ${results[lowestQueueIndex]}...`);
+				
+				let startTime = null;
+				
+				const drawingCanvas = document.getElementById('drawingCanvas');
+				const canvasDataURL = drawingCanvas.toDataURL('image/png');
+				const canvasBlob = dataURItoBlob(canvasDataURL);
+				const imageMask = new File([canvasBlob], 'drawing.png', { type: 'image/png' });
+
+				const imageURL = activePhoto.style.backgroundImage.replace(/url\(['"](.+)['"]\)/, '$1');
+				const imageResponse = await fetch(imageURL);
+				const imageBlob = await imageResponse.blob();
+				const convertedBlob = await convertToPng(imageBlob);
+				const imageFile = new File([convertedBlob], 'active-photo.png', { type: 'image/png' });
+				
+				const formData = new FormData();
+				formData.append('userId', userId);
+				formData.append('imageFile', imageFile);
+				formData.append('imageMask', imageMask);
+				formData.append('modeSelector', modeSelector);
+				formData.append('removeBanner', removeBanner);
+				formData.append('poseRecognition', poseRecognition);
+				formData.append('depthRecognition', depthRecognition);
+				formData.append('edgeRecognition', edgeRecognition);
+                formData.append('resSelector', keepAspectRatio);
+			    formData.append('positivePrompt', positivePrompt);
+			    formData.append('negativePrompt', negativePrompt);
+				formData.append('userIpAddress', userIpAddress);
+			    formData.append('maskSelector', maskSelector);
+			    formData.append('negativeMaskSelector', negativeMaskSelector);
+			    formData.append('maskPrompt', maskPrompt);
+			    formData.append('negativeMaskPrompt', negativeMaskPrompt);
+				formData.append('dilateAmount', valueDisplay.textContent);
+                formData.append('restoreBodySelector', "False");
+                formData.append('tilingSelector', "False");
+                formData.append('samplerSelector', "2M");
+                formData.append('modelSelector', "Default");
+                formData.append('clotheDetectionSelector', "automatic");
+                formData.append('breastSelector', "automatic");
+                formData.append('genitaliaSelector', "Vagina");
+                formData.append('textPrompt', "");
+			    formData.append('pixelReference', 128);
+			    formData.append('inpaintReferenceMode', "True");
+			    formData.append('keepMode', 0);
+			    formData.append('configScale', 7);
+			    formData.append('denoisingStrenght', 100);
+				formData.append('uniqueUserBrowserProcessId', localStorage.getItem('uniqueUserBrowserProcessId'));
+
+				fetchToServer(`${serverAddress}/start-process`,
+				  {
+					method: 'POST',
+					body: formData,
+				  },
+				  (progress) => {
+					if (!startTime && progress > 0) {
+					  // Record the start time when the first progress event is received
+					  startTime = Date.now();
+					}
+
+					if (startTime) {
+					  // Calculate upload speed in kilobytes per second
+					  const currentTime = Date.now();
+					  const elapsedTimeInSeconds = (currentTime - startTime) / 1000;
+					  const uploadSpeedKBps = progress / elapsedTimeInSeconds / 1024;
+
+					  // Round the upload speed to two decimal places for display
+					  const formattedUploadSpeed = uploadSpeedKBps >= 1024
+						? `${(uploadSpeedKBps / 1024).toFixed(2)} MB/s`
+						: `${uploadSpeedKBps.toFixed(2)} KB/s`;
+
+					  // Log the upload speed and progress percentage with dynamic formatting
+					  console.log(`Upload progress: ${progress.toFixed(2)}%`);
+					  console.log(`Upload speed: ${formattedUploadSpeed}`);
+
+					  // Pass the upload speed to the setServerStatus function
+					  //setServerStatus(`Upload speed is ${formattedUploadSpeed}`);
+					}
+
+					// Calculate and update progress in real-time
+					//updateProgressBar(progress);
+					if (progress < 100)
+					  setClientStatus(`Upload: ${progress}%`);
+					else
+					  setClientStatus(`Queue ${results[lowestQueueIndex]}...`);
+				  }
+				)
+				.then(response => {
+				  if (response.status === STATUS_OK) {
+					  return response.json();
+					} else if (response.status === STATUS_NOTFOUND) {
+					  setClientStatus('Offline');
+					} else {
+					  return response.json().then(data => {
+						throw new Error(data.server);
+					  });
+					}
+				  })
+				  .then(data => {
+					console.log(data.message);
+					const uniqueId = data.uniqueId;
+					intervalId = setInterval(() => {
+					  getCurrentProcessStatus(uniqueId, lowestQueueIndex, serverAddress);
+					}, 500);
+				  })
+				  .catch(error => {
+					startProcessBtn.disabled = false;
+					console.error('Error while starting process:', error);
+					clearInterval(intervalId);
+					setClientStatus(error.message);
+				  });
+			  } else {
+				startProcessBtn.disabled = false;
+				setClientStatus('Reconnecting...');
+				setTimeout(checkServerStatus, 4000);
+				serverAddress = null;
+			  }
+			} else {
+			  startProcessBtn.disabled = false;
+			  setClientStatus('Offline');
+			}
+		  } catch (error) {
+			startProcessBtn.disabled = false;
+			console.error('An error occurred:', error);
+			clearInterval(intervalId);
+			setClientStatus(error.message);
+		  }
+		});
+		
+		// Open the IndexedDB database
+		const openDB = () => {
+		  return new Promise((resolve, reject) => {
+			const request = indexedDB.open('downloadedDNPhotosDB', 1);
+
+			request.onupgradeneeded = (event) => {
+			  const db = event.target.result;
+			  db.createObjectStore('faces', { keyPath: 'id', autoIncrement: true });
+			};
+
+			request.onsuccess = (event) => {
+			  const db = event.target.result;
+			  resolve(db);
+			};
+
+			request.onerror = (event) => {
+			  reject(`Error opening database: ${event.target.error}`);
+			};
+		  });
+		};
+
+		// Function to add a photo to the IndexedDB
+		const addPhotoToDB = (db, base64, uniqueId) => {
+		  return new Promise((resolve, reject) => {
+			const transaction = db.transaction(['faces'], 'readwrite');
+			const objectStore = transaction.objectStore('faces');
+
+			const request = objectStore.add({ base64, uniqueId, timestamp: new Date().getTime() });
+
+			request.onsuccess = () => {
+			  resolve();
+			};
+
+			request.onerror = (event) => {
+			  reject(`Error adding photo to database: ${event.target.error}`);
+			};
+		  });
+		};
+
+		// Function to retrieve all faces from IndexedDB
+		const getPhotosFromDB = (db) => {
+			return new Promise((resolve, reject) => {
+				const transaction = db.transaction(['faces'], 'readonly');
+				const objectStore = transaction.objectStore('faces');
+
+				const request = objectStore.getAll();
+
+				request.onsuccess = (event) => {
+					const faces = event.target.result.map(item => ({ base64: item.base64, uniqueId: item.uniqueId }));
+					resolve(faces);
+				};
+
+				request.onerror = (event) => {
+					reject(`Error retrieving faces from database: ${event.target.error}`);
+				};
+			});
+		};
+
+		// Create a empty photo container.
+		function handleOutputCreation() {
+			const photo = document.createElement('div');
+			photo.className = 'photo';
+			photo.style.backgroundImage = null;
+
+			const processText = document.createElement('div');
+			processText.className = 'process-text';
+
+			// Append the process-text element to the photo container
+			photo.appendChild(processText);
+
+			const downloadedOutputs = document.querySelector('.outputs');
+			downloadedOutputs.insertBefore(photo, downloadedOutputs.firstChild);
+		}
+
+		// Update the text content of the first child in outputs with the provided message.
+		async function setClientStatus(message) {
+			const downloadedOutputs = document.querySelector('.outputs');
+			const firstChild = downloadedOutputs.firstChild;
+
+			if (firstChild) {
+				const processTextElement = firstChild.querySelector('.process-text');
+				if (processTextElement) {
+					// Check if the message is "You are not authenticated"
+					if (message === 'No ID') {
+						// Redirect to register.html after a 5-second countdown
+						let countdown = 3;
+						const countdownInterval = setInterval(async () => { // Mark the arrow function as async
+							if (countdown <= 0) {
+								clearInterval(countdownInterval); // Stop the countdown
+								try {
+									var provider = new firebase.auth.GoogleAuthProvider();
+									const result = await auth.signInWithPopup(provider); // await here is valid now
+									console.log("Google sign-in successful:", result.user);
+									window.location.reload();
+								} catch (error) {
+									console.error("Google sign-in error:", error);
+									window.location.href = 'register.html'; 
+								}
+							} else {
+								processTextElement.textContent = `Redirecting - ${countdown}.`;
+								countdown--;
+							}
+						}, 1000); // Update the countdown every second
+					} else {
+						processTextElement.textContent = message;
+					}
+				}
+			}
+		}
+		
+		// Get the first child of outputs and edit backgroundImage with the downloadURL and add deleteIcon.
+		const createOutputDownloadData = async (uniqueId) => {
+		  try {
+			const db = await openDB();
+			const downloadURL = serverAddress + '/download-image/' + uniqueId;
+
+			setClientStatus('Downloading...');
+
+			const blob = await fetchToServer(downloadURL).then(response => response.blob());
+			const imageBase64 = await new Promise((resolve, reject) => {
+			  const reader = new FileReader();
+			  reader.onload = function (event) {
+				resolve(event.target.result);
+			  };
+			  reader.onerror = function (error) {
+				reject(error);
+			  };
+			  reader.readAsDataURL(blob);
+			});
+
+			setClientStatus('');
+
+			const downloadedOutputs = document.querySelector('.outputs');
+			const firstChild = downloadedOutputs.firstChild;
+
+			if (firstChild) {
+			  firstChild.style.backgroundImage = `url('${imageBase64}')`;
+			  firstChild.dataset.uniqueId = uniqueId; // Set the uniqueId as a data attribute
+
+			  const processText = document.createElement('div');
+			  processText.className = 'process-text';
+			  firstChild.appendChild(processText);
+			 
+			 // Append a delete icon
+			  const deleteIcon = document.createElement('div');
+			  deleteIcon.className = 'delete-icon';
+			  firstChild.appendChild(deleteIcon);
+
+			  // Update the array and IndexedDB with the downloaded photo
+			  await addPhotoToDB(db, imageBase64, uniqueId);
+			}
+		  } catch (error) {
+			console.error('Error downloading the image:', error);
+			setClientStatus('Error');
+		  }
+		};
+
+		let selectedImageInfo = null;
+
+		const downloadedOutputs = document.querySelector('.outputs');
+		downloadedOutputs.addEventListener("click", async function (event) {
+			const clickedDeleteElement = event.target.classList.contains('delete-icon');
+			if (clickedDeleteElement) {
+		      const parentPhoto = event.target.closest('.photo');
+			  if (!parentPhoto)
+				return;
+					
+			    deleteDownloadedOutputs('Are you sure you want to delete this?', async () => {
+				  parentPhoto.remove();
+
+				  const db = await openDB();
+				  await deletePhotoFromDB(db, parentPhoto.style.backgroundImage.slice(4, -1).replace(/['"]+/g, ''));
+				});
+				  
+			  return;
+			}
+			  
+			const clickedPhotoElement = event.target.closest('.photo');
+			if (clickedPhotoElement) {
+				await toggleDownloadedPhotoSelection(event.target);
+					
+				selectedImageInfo = null;
+					
+				const uniqueId = clickedPhotoElement.dataset.uniqueId;
+				if (!uniqueId) 
+				  return;
+					  
+				selectedImageInfo = { uniqueId, element: clickedPhotoElement };
+				
+				console.log("click");
+				const disableLightbox = document.getElementById('removePreview');
+				if (!disableLightbox.checked) {
+					const lightboxImage = document.getElementById("lightbox-image");
+					lightboxImage.src = event.target.style.backgroundImage.slice(5, -2);
+					
+					const lightboxPhoto = document.getElementById("lightbox-photo");
+					lightboxPhoto.style.display = "flex";
+				}
+				
+				const downloadButton = document.getElementById('downloadButton');
+				downloadButton.dataset.downloadClientURL = event.target.style.backgroundImage.slice(5, -2);
+				downloadButton.dataset.uniqueId = event.target.dataset.uniqueId;
+				return;
+			}
+		});
+
+		function toggleDownloadedPhotoSelection(photo) {
+			downloadedOutputs.querySelectorAll(".photo.active").forEach((activePhoto) => { activePhoto.classList.remove("active"); });
+			photo.classList.add("active");
+		}
+
+		const fetchOutput = document.getElementById('fetchOutput');
+		fetchOutput.addEventListener('click', async () => {
+			if (selectedImageInfo) {
+				try {
+					await handleSelectedOutputDownload(selectedImageInfo);
+				} catch (error) {
+					console.error('Error fetching and displaying image:', error);
+				}
+			} else {
+				console.error('No image selected.');
+			}
+		});
+
+		const fetchOutputSeleted = document.getElementById('fetchOutputSeleted');
+		fetchOutputSeleted.addEventListener('click', async () => {
+			if (selectedImageInfo) {
+				try {
+					await handleSelectedOutputDownload(selectedImageInfo);
+				} catch (error) {
+					console.error('Error fetching and displaying image:', error);
+				}
+			} else {
+				console.error('No image selected.');
+			}
+		});
+		
+		const updatePhotoInDB = (db, uniqueId, base64) => {
+			return new Promise((resolve, reject) => {
+				const transaction = db.transaction(['faces'], 'readwrite');
+				const objectStore = transaction.objectStore('faces');
+
+				const request = objectStore.openCursor();
+				request.onsuccess = (event) => {
+					const cursor = event.target.result;
+					if (cursor) {
+						const storedRecord = cursor.value;
+						if (storedRecord.uniqueId === uniqueId) {
+							storedRecord.base64 = base64;
+
+							const updateRequest = cursor.update(storedRecord);
+							updateRequest.onsuccess = () => {
+								resolve();
+							};
+
+							updateRequest.onerror = (event) => {
+								reject(`Error updating photo in database: ${event.target.error}`);
+							};
+						} else {
+							cursor.continue(); // Move to the next item
+						}
+					} else {
+						// No existing record with the provided uniqueId, handle accordingly
+						console.error(`No record found with uniqueId: ${uniqueId}`);
+						reject(`No record found with uniqueId: ${uniqueId}`);
+					}
+				};
+
+				request.onerror = (event) => {
+					console.error(`Error opening cursor in database: ${event.target.error}`);
+					reject(`Error opening cursor in database: ${event.target.error}`);
+				};
+			});
+		};
+
+		const handleSelectedOutputDownload = async (selectedImageInfo) => {
+			if (selectedImageInfo) {
+				const { uniqueId, element } = selectedImageInfo;
+				if (!uniqueId || !element)
+				  return;
+				  
+				try {
+					const db = await openDB();
+					const downloadURL = serverAddress + '/download-image/' + uniqueId;
+
+					// Set the process-text content for the selected element
+					setProcessText(element, 'Downloading...');
+
+					const blob = await fetchToServer(downloadURL).then(response => response.blob());
+					const imageBase64 = await new Promise((resolve, reject) => {
+						const reader = new FileReader();
+						reader.onload = function (event) {
+							resolve(event.target.result);
+						};
+						reader.onerror = function (error) {
+							reject(error);
+						};
+						reader.readAsDataURL(blob);
+					});
+
+					// Clear the process-text content for the selected element
+					setProcessText(element, '');
+
+					// Update the selected element with the downloaded photo
+					element.style.backgroundImage = `url('${imageBase64}')`;
+					element.dataset.uniqueId = uniqueId;
+
+					// Update the array and IndexedDB with the downloaded photo
+					await updatePhotoInDB(db, uniqueId, imageBase64);
+				} catch (error) {
+					console.error('Error fetching and displaying image:', error);
+					setProcessText(element, 'Error');
+				}
+			} else {
+				console.error('No image selected.');
+			}
+		};
+
+		// Function to set the process-text content for a given element
+		const setProcessText = (element, message) => {
+			const processTextElement = element.querySelector('.process-text');
+			if (processTextElement) 
+				processTextElement.textContent = message;
+		};
+
+		const initDownloadedOutputs = async () => {
+			const db = await openDB();
+			const downloadedOutputs = await getPhotosFromDB(db);
+			downloadedOutputs.reverse();
+
+			for (const { base64, uniqueId } of downloadedOutputs) {
+				const photo = document.createElement('div');
+				photo.className = 'photo';
+				photo.style.backgroundImage = `url('${base64}')`;
+				photo.dataset.uniqueId = uniqueId;
+
+				const deleteIcon = document.createElement('div');
+				deleteIcon.className = 'delete-icon';
+				photo.appendChild(deleteIcon);
+
+				const processText = document.createElement('div');
+				processText.className = 'process-text';
+				photo.appendChild(processText);
+
+				const downloadedPhotosContainer = document.querySelector('.outputs');
+				downloadedPhotosContainer.appendChild(photo);
+			}
+		};
+
+		initDownloadedOutputs();
+			
+		async function getCurrentProcessStatus(uniqueId, lowestQueueIndex, serverAddress) {
+		  if (!uniqueId) {
+			startProcessBtn.disabled = false;
+			setClientStatus('No ID');
+			return;
+		  }
+
+		  if (!serverAddress) {
+			startProcessBtn.disabled = false;
+			setClientStatus('Offline');
+			return;
+		  }
+		  
+		  let lastUniqueId = null;
+		  let processCompleted = false;
+		  try {
+			const response = await fetch(`${serverAddress}/get-process-state/${uniqueId}`);
+			const data = await response.json();
+
+			if (data.status === 'completed') {
+			  processCompleted = true;
+			  startProcessBtn.disabled = false;
+		      lastUniqueId = uniqueId;
+			  clearInterval(intervalId);
+			  setClientStatus(data.server);
+			  
+			  await createOutputDownloadData(uniqueId);
+			  await updateProgressBar(0);
+
+			  const user = await new Promise((resolve) => {
+				const unsubscribe = auth.onAuthStateChanged((user) => {
+				  unsubscribe();
+				  resolve(user);
+				});
+			  });
+
+			  if (user) {
+				const userDoc = await usersRef.doc(user.uid).get();
+				const userData = userDoc.data();
+				const userInfo = await getUserInfo(userData);
+				await updateLoggedInMessage(userInfo);
+			  }
+			} else if (data.status === 'processing') {
+			  const processAmountResponse = data.processingAmount;
+			  updateProgressBar(processAmountResponse);
+
+			  if (processAmountResponse > 0) {
+				const totalFramesResponse = data.totalFrames;
+				const frameCountResponse = data.frameCount;
+				const elapsedTimeResponse = data.elapsedTime;
+				const remainingTimeResponse = data.remainingTime;
+
+				//setServerStatus('%' + processAmountResponse 
+				//+ ' | Processed frames: ' + frameCountResponse + '/' + totalFramesResponse
+				//+ ' | Remaining time: ' + elapsedTimeResponse + '/' + remainingTimeResponse);
+			  } else {
+				setClientStatus(`Processing...`);
+			  }
+
+			} else if (data.status === 'failed') {
+			  startProcessBtn.disabled = false;
+			  clearInterval(intervalId);
+			  setClientStatus(data.server);
+			  updateProgressBar(0);
+			}
+		  } catch (error) {
+			clearInterval(intervalId);
+			startProcessBtn.disabled = false;
+			console.error('Error while getting process status:', error);
+			setClientStatus('ERROR');
+		  }
+		  
+		  const downloadedOutputs = document.querySelector('.outputs');
+		  const firstChild = downloadedOutputs.firstChild;
+
+		  let selectedImageInfo = { uniqueId: lastUniqueId, element: firstChild };
+		  if (selectedImageInfo && processCompleted)
+			handleSelectedOutputDownload(selectedImageInfo);
+		}
+		
+		const online = document.getElementById('online');
+		const offline = document.getElementById('offline');
+		
+		let setTimer = 11000;
+		
+		function updateCountdown(seconds) {
+			setTimer -= 1000;
+			setTimeout(updateCountdown, 11000);
+			document.getElementById("countdown").innerText = Math.max(setTimer, 1000) / 1000;
+		}
+
+		updateCountdown(setTimer);
+		
+		async function checkServerStatus() {
+		  try {
+			// Check if the user is authenticated
+			if (auth.currentUser) userId = auth.currentUser.uid;
+
+			// Create an array of promises to check the server status
+			const serverPromises = serverAddresses.map(server => {
+			  return fetch(`${server}/get-online`)
+				.then(response => {
+				  if (response.status === STATUS_NOTFOUND) {
+					console.error(`Server ${server} is offline.`);
+					return { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Unkown" }; // Server is offline
+				  } else if (response.status === STATUS_OK) {
+					return response.json();
+				  } else {
+					console.error(`Error while fetching ${server}: Status ${response.status}`);
+					return { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Unkown" }; // Server is offline
+				  }
+				})
+				.then(data => ({ queueAmount: data.server, remainingTime: data.remainingTime, frameCount: data.frameCount, totalFrames: data.totalFrames, processingAmount: data.processingAmount, SERVER_1: data.SERVER_1 }))
+				.catch(error => {
+				  console.error(`Error while fetching ${server}:`, error);
+				  return { queueAmount: Infinity, remainingTime: 0, SERVER_1: "Unkown" }; // Server is offline
+				});
+			});
+
+			// Check server status by awaiting all promises
+			const results = await Promise.all(serverPromises);
+			console.log(results);
+			
+			if (results.some(serverData => serverData.queueAmount !== Infinity)) {				
+				online.style.display = 'block';
+				offline.style.display = 'none';
+				setTimer = 11000;
+			} else {
+			  online.style.display = 'none';
+			  offline.style.display = 'block';
+			  setTimer = 11000;
+			}
+		  } catch (error) {
+			console.error('Error during server status check:', error);
+			online.style.display = 'none';
+			offline.style.display = 'block';
+			setTimer = 11000;
+		  }
+
+		  setTimeout(checkServerStatus, setTimer);
+		}
+		
+		checkServerStatus();
+	</script>
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			const hintTabs = document.querySelectorAll(".old-hint-tabs a");
+			hintTabs.forEach((tab) => {
+				tab.addEventListener("click", (event) => {
+					event.preventDefault();
+
+					const isAlreadyActive = event.currentTarget.classList.contains("active");
+					hintTabs.forEach((t) => {
+						t.classList.remove("active");
+					});
+
+					// Toggle the "active" class
+					if (!isAlreadyActive) {
+						event.currentTarget.classList.add("active");
+					}
+
+					const categories = [
+						{ tabSelector: 'a[href="#person-type-boxes"]', categorySelector: '.person-type-boxes' },
+						{ tabSelector: 'a[href="#body-type-boxes"]', categorySelector: '.body-type-boxes' },
+						{ tabSelector: 'a[href="#breast-type-boxes"]', categorySelector: '.breast-type-boxes' },
+						{ tabSelector: 'a[href="#clothing-boxes"]', categorySelector: '.clothing-boxes' },
+						{ tabSelector: 'a[href="#quality-boxes"]', categorySelector: '.quality-boxes' },
+					];
+
+					categories.forEach((category) => {
+						const tab = document.querySelector(category.tabSelector);
+						const categoryBoxes = document.querySelector(category.categorySelector);
+						if (tab === event.currentTarget && event.currentTarget.classList.contains("active")) {
+							categoryBoxes.style.display = (categoryBoxes.style.display === 'flex') ? 'none' : 'flex';
+						} else {
+							categoryBoxes.style.display = 'none';
+						}
+					});
+				});
+			});
+			
+			const newHintTabs = document.querySelectorAll(".new-hint-tabs a");
+			newHintTabs.forEach((tab) => {
+				tab.addEventListener("click", (event) => {
+					event.preventDefault();
+
+					const isAlreadyActive = event.currentTarget.classList.contains("active");
+					newHintTabs.forEach((t) => {
+						t.classList.remove("active");
+					});
+
+					if (!isAlreadyActive) {
+						event.currentTarget.classList.add("active");
+					}
+
+					const tabIdDN = isAlreadyActive ? '' : event.currentTarget.getAttribute('href').substring(1);
+					localStorage.setItem('tabIdDN', tabIdDN);
+
+					document.querySelectorAll('.hint-content').forEach(section => {
+						if (section.id === tabIdDN) {
+							// Set the display property without toggling
+							section.style.display = 'block';
+						} else {
+							section.style.display = 'none';
+						}
+					});
+				});
+
+				const tabIdDN = tab.getAttribute('href').substring(1);
+				const section = document.querySelector(`#${tabIdDN}`);
+				if (section) {
+					section.style.display = 'none';
+				}
+			});
+
+			const savedActiveTab = localStorage.getItem('tabIdDN');
+			if (savedActiveTab) {
+				const tabToActivate = document.querySelector(`a[href="#${savedActiveTab}"]`);
+				if (tabToActivate) {
+					tabToActivate.click();
+				}
+			}
+
+			function handleDataValue(dataValue, qualityValue) {
+			  const positivePrompt = document.getElementById("positive-prompt");
+			  const currentPrompt = positivePrompt.value;
+
+			  if (qualityValue === "1.0") {
+				if (currentPrompt.indexOf(dataValue) === -1) {
+				  if (currentPrompt.trim() === "") {
+					positivePrompt.value = dataValue;
+				  } else {
+					positivePrompt.value = currentPrompt + ", " + dataValue;
+				  }
+				}
+			  } else {
+				const formattedValue = `(${dataValue}:${qualityValue})`;
+				if (currentPrompt.indexOf(formattedValue) === -1) {
+				  if (currentPrompt.trim() === "") {
+					positivePrompt.value = formattedValue;
+				  } else {
+					positivePrompt.value = currentPrompt + ", " + formattedValue;
+				  }
+				}
+			  }
+			}
+			
+			function saveDataValue(dataValue, qualityValue, isFavorite) {
+			  const savedData = JSON.parse(localStorage.getItem("savedDataDN")) || {};
+			  savedData[dataValue] = { quality: qualityValue, favorite: isFavorite };
+			  localStorage.setItem("savedDataDN", JSON.stringify(savedData));
+			}
+			
+			function saveSettingsContainerState(dataValue, isOpen) {
+			  const settingsContainerState = JSON.parse(localStorage.getItem("settingsContainerStateDN")) || {};
+			  settingsContainerState[dataValue] = isOpen;
+			  localStorage.setItem("settingsContainerStateDN", JSON.stringify(settingsContainerState));
+			}
+
+			function loadSavedData(dataValue, qualityValue, box) {
+			  const savedData = JSON.parse(localStorage.getItem("savedDataDN")) || {};
+			  if (dataValue in savedData) {
+				qualityValue.textContent = savedData[dataValue].quality;
+				let isFavorite = savedData[dataValue].favorite;
+				if (isFavorite) {
+				  box.classList.add("favorite");
+				} else {
+				  box.classList.remove("favorite");
+				}
+				const slider = document.getElementById(dataValue.replace(/ /g, '-').toLowerCase() + "-priority");
+				if (slider) {
+				  slider.value = savedData[dataValue].quality;
+				  const fillPercentage = ((savedData[dataValue].quality - slider.min) / (slider.max - slider.min)) * 100;
+				  slider.style.background = `linear-gradient(to right, #4CAF50 0%, #4CAF50 ${fillPercentage}%, #ccc ${fillPercentage}%, #ccc 100%)`;
+				}
+			  }
+			}
+			
+			function loadSettingsContainerState(dataValue, settingsContainer) {
+			  const settingsContainerState = JSON.parse(localStorage.getItem("settingsContainerStateDN")) || {};
+			  if (dataValue in settingsContainerState && settingsContainer) {
+				if (settingsContainerState[dataValue] === true) {
+				  settingsContainer.style.display = "block";
+				} else {
+				  settingsContainer.style.display = "none";
+				}
+			  }
+			}
+
+			const smallBoxes = document.querySelectorAll(".small-box");
+
+			smallBoxes.forEach((box) => {
+			  const dataValue = box.getAttribute("data-value");
+			  const settingsContainer = box.querySelector(".settings-container");
+			  const qualityValue = document.createElement("span");
+			  const qualityBox = document.createElement("div");
+			  const slider = document.createElement("input");
+			  const h1 = document.createElement("h1");
+			  const button = document.createElement("button");
+
+			  if (settingsContainer) {
+				const sliderContainer = document.createElement("div");
+				sliderContainer.className = "slider-container";
+				settingsContainer.appendChild(sliderContainer);
+
+				h1.textContent = "Priority";
+				sliderContainer.appendChild(h1);
+
+				button.className = "circular-button";
+				button.textContent = "Favorite";
+				settingsContainer.appendChild(button);
+				
+				slider.type = "range";
+				slider.min = 0.1;
+				slider.max = 2.0;
+				slider.step = 0.1;
+				slider.value = 1.0;
+				slider.className = "slider";
+				slider.id = dataValue.replace(/ /g, '-').toLowerCase() + "-priority";
+				sliderContainer.appendChild(slider);
+
+				qualityBox.className = "quality-box";
+				sliderContainer.appendChild(qualityBox);
+
+				qualityValue.id = dataValue.replace(/ /g, '-').toLowerCase() + "-value";
+				qualityValue.textContent = "1.0";
+				qualityBox.appendChild(qualityValue);
+
+				loadSavedData(dataValue, qualityValue, box);
+				loadSettingsContainerState(dataValue, settingsContainer);
+	
+				settingsContainer.addEventListener("click", (event) => {
+					event.stopPropagation();
+				});
+	
+				button.addEventListener('click', () => {
+					const isFavorite = box.classList.toggle("favorite");
+					saveDataValue(dataValue, qualityValue.textContent, isFavorite);
+				});
+		
+				slider.addEventListener("input", (event) => {
+				  qualityValue.textContent = event.target.value;
+				  saveDataValue(dataValue, event.target.value);
+				  const fillPercentage = ((event.target.value - event.target.min) / (event.target.max - event.target.min)) * 100;
+				  event.target.style.background = `linear-gradient(to right, #4CAF50 0%, #4CAF50 ${fillPercentage}%, #ccc ${fillPercentage}%, #ccc 100%)`;
+				});
+			  }
+
+			  box.addEventListener("click", () => {
+				handleDataValue(dataValue, qualityValue.textContent);
+
+				if (settingsContainer) {
+				  if (settingsContainer.style.display === "block") {
+					saveSettingsContainerState(dataValue, true);
+				  } else {
+					saveSettingsContainerState(dataValue, false);
+				  }
+				}
+			  });
+			});
+
+			const settingsMarks = document.querySelectorAll(".settings-mark");
+
+			settingsMarks.forEach((mark) => {
+			  mark.addEventListener("click", (event) => {
+				event.stopPropagation();
+				const settingsContainer = mark.nextElementSibling;
+				const dataValue = mark.parentNode.getAttribute("data-value"); // Define dataValue in the scope of the event handler
+				console.log(dataValue);
+
+				if (settingsContainer) {
+				  if (settingsContainer.style.display === "block") {
+					settingsContainer.style.display = "none";
+					saveSettingsContainerState(dataValue, false);
+				  } else {
+					settingsContainer.style.display = "block";
+					saveSettingsContainerState(dataValue, true);
+				  }
+				}
+			  });
+			});
+		});
+	</script>
+</head>
+<body>
+	<script src="scripts-17/background-animation.js"></script>
+	<div id="player"></div>
+	<div class="loading-screen">
+		<div class="loading-spinner"></div>
+	</div>
+    <main>
+		<nav class="navbar">
+			<a href="../index.html" class="logo" style="text-decoration: none;">BodySwap</a>
+			<label class="day-night">
+				<input type="checkbox" checked>
+				<div></div>
+			</label>
+			<div class="menu-toggle">
+				<div class="hamburger"></div>
+				<div class="hamburger"></div>
+				<div class="hamburger"></div>
+			</div>
+			<ul class="nav-links" id="nav-links">
+				<li><a id="emailVerificationMessage" style="color: red; display: none; text-align: center;">Sent Verification E-Mail.</a></li>
+				<li><a id="loggedInMessage"></a></li>
+				<li><a id="logoutButton" style="display: none; cursor: pointer;">Log Out</a></li>
+				<li><a id="sendVerificationButton" style="display: block; cursor: pointer;">Send Verification</a></li>
+				<li><a href="../index.html">Home</a></li>
+				<li><a href="deepfake.html">DeepFace</a></li>
+				<li><a href="deepinpaint.html">DeepInpaint</a></li>
+				<li><a href="deepart.html">DeepArt</a></li>
+				<li><a href="pricing.html">Pricing</a></li>
+				<li><a href="invest.html">Invest</a></li>
+				<li><a href="policies.html">Policies</a></li>
+				<li><a href="https://discord.gg/Vrmt8UfDK8" target="_blank">Discord</a></li>
+				<li><a href="https://www.trustpilot.com/review/bodyswap.me" target="_blank">Trustpilot</a></li>
+				<li><a href="https://www.reddit.com/r/bodyswapai/" target="_blank">Reddit</a></li>
+				<li><a href="login.html" id="loginLink">Sign in</a></li>
+				<li><a href="register.html" id="registerLink">Sign up</a></li>
+				<li><a href="profile.html">Free Credits</a></li>
+			</ul>
+		</nav>
+		<div class="container hero">
+			<div class="background">
+				<canvas id="hero-canvas" width="1920" height="1080"></canvas>
+			</div>
+		</div>
+		<div id="online" style="display: block;">
+		
+		<section class="elements-container">
+            <h1 for="base-text">Upload photo</h1>
+			<div class="photoContainer">
+				<div class="circular-button" title="Add Face Photos">
+					<div class="plus">+</div>
+					<div class="question-mark" aria-label="Help" title="How to make a quality creation? Please upload a photo with a visible body skin. Poor quality faces may result in a less optimal creation">?</div>
+					<input type="file" accept="image/*" id="face-upload" style="display: none" multiple>
+				</div>
+				<div class="scroll-container">
+					<div class="faces"></div>
+				</div>
+			</div>
+			
+		<section class="advanced-settings-container elements-container">
+					<h1 id="advanced-settings" onclick="toggleContainer()" style="cursor: pointer;">Advanced Settings</h1>
+					<div class="rectangle-container" id="mode-selection">
+						<div class="rectangle" id="realistic">
+							<img src="assets/img1.png" alt="Image 1">
+							<div class="text">Realistic</div>
+						</div>
+						<div class="rectangle" id="anime">
+							<img src="assets/img2.png" alt="Image 2">
+							<div class="text">Anime</div>
+						</div>
+					</div>
+                    <label for="positive-prompt">Positive Prompt</label>
+                    <textarea name="positive-prompt" id="positive-prompt" class="auto-expanding-textarea" placeholder="Leave empty or enter a prompt: [Clothing] · [Body shape] · [Breast size]" rows="1" cols="1500" maxlength="1500"></textarea>
+                    
+                    <!-- <label for="negative-prompt">Negative Prompt</label> -->
+                    <!-- <textarea name="negative-prompt" id="negative-prompt" class="auto-expanding-textarea" placeholder="Enter the things you don't want: [Clothing] · [Body shape] · [Breast size]" rows="1" cols="250" maxlength="250"></textarea> -->
+
+                    <div class="separator"></div>
+					<section class="old-hint-tabs">
+                        <ul class="hint-tabs">
+                            <li><a href="#person-type-boxes">Person</a></li>
+                            <li><a href="#body-type-boxes">Body</a></li>
+                            <li><a href="#breast-type-boxes">Breast</a></li>
+                            <li><a href="#clothing-boxes">Clothing</a></li>
+                            <li><a href="#quality-boxes">Quality</a></li>
+                        </ul>
+                    </section>
+					
+					<section id="person-type-boxes">
+						<div class="small-boxes person-type-boxes">
+							<div class="small-box" data-value="1girl"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Woman</div>
+							<div class="small-box" data-value="1boy"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Man</div>
+						</div>
+					</section>
+					
+					<section id="body-type-boxes">
+						<div class="small-boxes body-type-boxes">
+							<div class="small-box" data-value="skinny"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Skinny</div>
+							<div class="small-box" data-value="athletic"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Athletic</div>
+							<div class="small-box" data-value="slim-fit"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Slim Fit</div>
+							<div class="small-box" data-value="muscular"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Muscular</div>
+							<div class="small-box" data-value="full-figured"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Full Figured</div>
+							<div class="small-box" data-value="chubby"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Chubby</div>
+						</div>
+					</section>
+					
+					<section id="breast-type-boxes">
+						<div class="small-boxes breast-type-boxes">
+							<div class="small-box" data-value="flat chest"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Flat Chest</div>
+							<div class="small-box" data-value="small breast"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Small Breast</div>
+							<div class="small-box" data-value="medium breast"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Medium Breast</div>
+							<div class="small-box" data-value="big breast"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Big Breast</div>
+							<div class="small-box" data-value="massive breast"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Massive Breast</div>
+						</div>
+					</section>
+					
+					<section id="clothing-boxes">
+						<div class="small-boxes clothing-boxes">
+							<div class="small-box" data-value="skirt"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Skirt</div>
+							<div class="small-box" data-value="miniskirt"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Miniskirt</div>
+							<div class="small-box" data-value="pencil skirt"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Pencil Skirt</div>
+							<div class="small-box" data-value="underpants"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Underpants</div>
+							<div class="small-box" data-value="swimsuit"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Swimsuit</div>
+							<div class="small-box" data-value="lingerie"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Lingerie</div>
+							<div class="small-box" data-value="bikini"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class "settings-container"></div>Bikini</div>
+							<div class="small-box" data-value="corset"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Corset</div>
+							<div class="small-box" data-value="tank tops"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Tank Tops</div>
+							<div class="small-box" data-value="swimwear"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Swimwear</div>
+							<div class="small-box" data-value="cat costume"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Cat Costume</div>
+							<div class="small-box" data-value="bunny costume"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Bunny Costume</div>
+							<div class="small-box" data-value="dog costume"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Dog Costume</div>
+							<div class="small-box" data-value="witch costume"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Witch Costume</div>
+							<div class="small-box" data-value="overalls"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Overalls</div>
+							<div class="small-box" data-value="hoodie"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Hoodie</div>
+							<div class="small-box" data-value="sweater"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Sweater</div>
+							<div class="small-box" data-value="t-shirt"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>T-shirt</div>
+							<div class="small-box" data-value="blouse"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Blouse</div>
+							<div class="small-box" data-value="trousers"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Trousers</div>
+							<div class="small-box" data-value="leggings"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Leggings</div>
+							<div class="small-box" data-value="jacket"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Jacket</div>
+							<div class="small-box" data-value="coat"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Coat</div>
+							<div class="small-box" data-value="pajamas"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Pajamas</div>
+							<div class="small-box" data-value="shorts"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Shorts</div>
+							<div class="small-box" data-value="kimono"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Kimono</div>
+							<div class="small-box" data-value="sweatpants"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Sweatpants</div>
+							<div class="small-box" data-value="hooded sweatshirt"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Hooded Sweatshirt</div>
+							<div class="small-box" data-value="bondage"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Bondage</div>
+						</div>
+					</section>
+
+					<section id="quality-boxes">
+						<div class="small-boxes quality-boxes">
+							<div class="small-box" data-value="masterpiece"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Masterpiece</div>
+							<div class="small-box" data-value="best quality"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Best Quality</div>
+							<div class="small-box" data-value="extremely detailed"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Extremely Detailed</div>
+							<div class="small-box" data-value="detailed body"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Detailed Body</div>
+							<div class="small-box" data-value="intricate"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Intricate</div>
+							<div class="small-box" data-value="vivid"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>Vivid</div>
+							<div class="small-box" data-value="raw photo"><div class="settings-mark" aria-label="Help" title="Change the settings of the prompt">⚙</div><div class="settings-container"></div>RAW Photo</div>
+						</div>
+					</section>
+					
+                    <div class="separator"></div>
+					
+					<section class="new-hint-tabs">
+						<ul class="hint-tabs">
+							<li><a href="#generation">Generation</a></li>
+							<li><a href="#positive-mask">Positive Mask</a></li>
+							<li><a href="#negative-mask">Negative Mask</a></li>
+						</ul>
+					</section>
+					
+					<section class="new-hint-section">
+						<div id="generation" class="hint-content">
+							<label for="positive-prompt">Negative Prompt</label>
+							<textarea name="negative-prompt" id="negative-prompt" class="auto-expanding-textarea" placeholder="[Low Quality] · [Bad Anatomy] · [NSFW]" rows="1" cols="1500" maxlength="1500"></textarea>
+							<label class="checkbox">
+								<input type="checkbox" id="removeBanner">Remove banner</input>
+							</label>
+							<label class="checkbox">
+								<input type="checkbox" id="keepAspectRatio">Keep aspect-ratio</input>
+							</label>
+							<label class="checkbox">
+								<input type="checkbox" id="poseRecognition">Pose recognition</input>
+							</label>
+							<label class="checkbox">
+								<input type="checkbox" id="depthRecognition">Depth recognition</input>
+							</label>
+							<label class="checkbox">
+								<input type="checkbox" id="edgeRecognition">Edge recognition</input>
+							</label>
+						</div>
+						<div id="positive-mask" class="hint-content">
+							<div class="rectangle-container" id="mask-selection">
+								<div class="rectangle" style="height: 35px; witdh: 90px;" id="clothes">
+									<img src="assets/clothes.png" alt="Image 1">
+									<div class="text">Clothes</div>
+								</div>
+								<div class="rectangle" style="height: 35px; witdh: 90px;" id="bikini">
+									<img src="assets/bikini.png" alt="Image 2">
+									<div class="text">Bikini</div>
+								</div>
+								<div class="rectangle" style="height: 35px; witdh: 90px;" id="prompt">
+									<img src="assets/prompt.png" alt="Image 2">
+									<div class="text">Prompt</div>
+								</div>
+								<div class="rectangle" style="height: 35px; witdh: 90px;" id="canvas">
+									<img src="assets/canvas.png" alt="Image 2">
+									<div class="text">Canvas</div>
+								</div>
+							</div>
+							<div class="canvas-container">
+								<img id="imageMask" src="" alt="Your Image">
+								<canvas id="drawingCanvas" class="drawing"></canvas>
+								<div class="slider-container-canvas">
+									<input type="range" id="sizeSlider" min="1" max="50" value="5" step="4" class="custom-slider">
+								</div>
+								<div class="color-picker-container">
+									<input type="color" id="colorPicker" value="#000000">
+								</div>
+								<div style="display: flex;  justify-content: space-between;">
+									<button id="undoButton" style="margin-right: 10px;">Undo</button>
+									<button id="redoButton" style="margin-left: 0px;">Redo</button>
+								</div>
+							</div>
+							<textarea name="mask-prompt" id="mask-prompt" style="display: none;" class="auto-expanding-textarea" placeholder="Enter a prompt: [Clothing] · [Hair] · [Background]" rows="1" cols="250" maxlength="250"></textarea>
+							<div class="slider-container">
+								<h1>Dilate Mask</h1>
+								<input type="range" min="1" max="30" value="15" class="slider" id="quality-slider">
+								<div class="quality-box"><span id="quality-value">15</span></div>
+							</div>
+						</div>
+					</section>
+						<div id="negative-mask" class="hint-content">
+							<div class="rectangle-container" id="negative-mask-selection">
+								<div class="rectangle" style="height: 35px; witdh: 90px;" id="face">
+									<img src="assets/face.png" alt="Image 2">
+									<div class="text">Face</div>
+								</div>
+								<div class="rectangle" style="height: 35px; witdh: 90px;" id="hair">
+									<img src="assets/hair.png" alt="Image 2">
+									<div class="text">Hair</div>
+								</div>
+								<div class="rectangle" style="height: 35px; witdh: 90px;" id="negative-prompt-rectangle">
+									<img src="assets/prompt.png" alt="Image 2">
+									<div class="text">Prompt</div>
+								</div>
+							</div>
+							<textarea name="negative-mask-prompt" id="negative-mask-prompt" style="display: none;" class="auto-expanding-textarea" placeholder="Enter a prompt: [Clothing] · [Hair] · [Background]" rows="1" cols="250" maxlength="250"></textarea>
+						</div>
+            </section>
+			<div style="display: flex;  justify-content: space-around; align-items: center;">
+				<button id="startProcessBtn" style="margin-right: 10px;">Start Process (<span id="credits" style="color: white;">?</span> Credits)</button>
+				<button id="cancelProcessBtn">Cancel Process</button>
+			</div>
+        </section>
+		
+            <section class="elements-container">
+				<h1>Generations</h1>
+				<div class="photoContainer">
+					<div class="scroll-container">
+						<div class="outputs"></div>
+					</div>
+				</div>
+				<label class="checkbox">
+					<input type="checkbox" id="removePreview" checked>Remove preview</input>
+				</label>
+				<div style="display: flex;  justify-content: space-around; align-items: center;">
+					<button id="downloadButtonSelected" style="margin-right: 10px;">Download</button>
+					<button id="openOutputButtonSelected" style="margin-right: 10px;">View</button>
+					<button id="fetchOutputSeleted">Fetch</button>
+				</div>
+            </section>
+		</div>
+		<div id="offline" style="display: none; margin-top: 40px;">
+			<h1>Maintenance or Offline</h1>
+			<p>We are currently undergoing maintenance to enhance your experience. (Attempting to reconnect in <span id="countdown">10</span> seconds...)</p>
+		</div>
+    </main>
+	<div class="lightbox" id="lightbox-photo">
+		<div class="lightbox-content">
+			<span class="close-lightbox" id="close-lightbox">&times;</span>
+			<img src="#" alt="Downloaded Photo" id="lightbox-image">
+		</div>
+		<div class="lightbox-buttons">
+			<button id="downloadButton">Download Image</button>
+			<button id="openOutputButton">Open Image New Tab</button>
+			<button id="fetchOutput">Fetch Again</button>
+		</div>
+	</div>
+	<div class="active-container" id="info-container">
+		<div class="information-box">
+			<h3>How to Make a Quality Body Swap</h3>
+			<p>Please upload a photo with a clear visible body skin. Poor quality faces may result in a less satisfactory creation.</p>
+			<button class="confirmation-button confirm" id="close-info">Close</button>
+		</div>
+	</div>
+	<div class="subscribe-button" style="position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);">
+	  <div class="g-ytsubscribe" data-channelid="UC9h9OabmkZDpFqHyuskHs5Q" data-layout="default" data-count="default"></div>
+	</div>
+	<script src="https://apis.google.com/js/platform.js"></script>
+	<script>
+		var visitedBefore = localStorage.getItem('visitedBefore');
+		var loadCounter = parseInt(localStorage.getItem('loadCounter')) || 0;
+
+		// Increment the load counter
+		loadCounter++;
+		localStorage.setItem('loadCounter', loadCounter);
+
+		// Set 'visitedBefore' to true after 30 seconds
+		setTimeout(function () {
+			localStorage.setItem('visitedBefore', true);
+		}, 10000); // 10 seconds
+
+		// Fetch the user's IP address from the IPify API
+		fetch('https://api64.ipify.org?format=json')
+			.then(response => response.json())
+			.then(data => {
+				const userIP = data.ip;
+
+				// Store the previous and current user IP addresses in localStorage
+				localStorage.setItem('previousUserIP', localStorage.getItem('userIP'));
+				localStorage.setItem('userIP', userIP);
+			})
+			.catch(error => {
+				console.error('Error fetching IP address:', error);
+			});
+
+		// Check conditions for executing YouTube API-related code
+		if (true) {
+			// Dynamically add YouTube API script to the document
+			var tag = document.createElement('script');
+			tag.src = 'https://www.youtube.com/iframe_api';
+			var firstScriptTag = document.getElementsByTagName('script')[0];
+			firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+			// Define functions for handling YouTube API events
+			function onPlayerReady(event) {
+				event.target.mute();
+			}
+
+			var player;
+
+			function onYouTubeIframeAPIReady() {
+				// Create a new YouTube player with specified settings
+				player = new YT.Player('player', {
+					height: '1',
+					height: '1',
+					videoId: 'tfHRM9KfCvc',
+					playerVars: {
+						'autoplay': 1,
+						'controls': 0,
+						'rel': 0,
+					},
+					events: {
+						'onReady': onPlayerReady,
+					},
+				});
+			}
+		}
+	</script>
+	<script>
+		/*var visitedBefore = localStorage.getItem('visitedBefore');
+		var loadCounter = parseInt(localStorage.getItem('loadCounter')) || 0;
+
+		// Increment the load counter
+		loadCounter++;
+		localStorage.setItem('loadCounter', loadCounter);
+
+		// Set 'visitedBefore' to true after 30 seconds
+		setTimeout(function () {
+			localStorage.setItem('visitedBefore', true);
+		}, 10000); // 10 seconds
+
+		// Fetch the user's IP address from the IPify API
+		fetch('https://api64.ipify.org?format=json')
+			.then(response => response.json())
+			.then(data => {
+				const userIP = data.ip;
+
+				// Store the previous and current user IP addresses in localStorage
+				localStorage.setItem('previousUserIP', localStorage.getItem('userIP'));
+				localStorage.setItem('userIP', userIP);
+			})
+			.catch(error => {
+				console.error('Error fetching IP address:', error);
+			});
+
+		// Check conditions for executing YouTube API-related code
+		if (true) {
+			// Dynamically add YouTube API script to the document
+			var tag = document.createElement('script');
+			tag.src = 'https://www.youtube.com/iframe_api';
+			var firstScriptTag = document.getElementsByTagName('script')[0];
+			firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+			// Define functions for handling YouTube API events
+			function onPlayerReady(event) {
+				event.target.mute();
+			}
+
+			var player;
+
+			function onYouTubeIframeAPIReady() {
+				// Create a new YouTube player with specified settings
+				player = new YT.Player('player', {
+					height: '1',
+					height: '1',
+					videoId: 'x520BrZpfZQ',
+					playerVars: {
+						'autoplay': 1,
+						'controls': 0,
+						'rel': 0,
+					},
+					events: {
+						'onReady': onPlayerReady,
+					},
+				});
+			}
+		}*/
+	</script>
+	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			  var container = document.querySelector('.advanced-settings-container');
+			  var isCollapsed = localStorage.getItem('containerCollapsed');
+
+			  if (isCollapsed === 'true' || isCollapsed === null) { // Check if it's collapsed or first visit
+				container.classList.add('collapsed');
+			  }
+			});
+
+			function toggleContainer() {
+			  var container = document.querySelector('.advanced-settings-container');
+			  var isCollapsed = container.classList.contains('collapsed');
+
+			  if (isCollapsed) {
+				container.classList.remove('collapsed');
+				localStorage.setItem('containerCollapsed', 'false');
+			  } else {
+				container.classList.add('collapsed');
+				localStorage.setItem('containerCollapsed', 'true');
+			  }
+			}
+
+			const photoUpload = document.getElementById('face-upload');
+			const faces = document.querySelector('.faces');
+			const promptContainer = document.getElementById('prompt-container');
+			const infoContainer = document.getElementById('info-container');
+
+			const circularButton = document.querySelector('.circular-button');
+			circularButton.addEventListener('click', () => { photoUpload.click(); });
+
+			const openDB = () => {
+			  return new Promise((resolve, reject) => {
+				const request = indexedDB.open('selectedDNPhotosDB', 1);
+
+				request.onupgradeneeded = (event) => {
+				  const db = event.target.result;
+				  db.createObjectStore('faces', { keyPath: 'id', autoIncrement: true });
+				};
+
+				request.onsuccess = (event) => {
+				  const db = event.target.result;
+				  resolve(db);
+				};
+
+				request.onerror = (event) => {
+				  reject(`Error opening database: ${event.target.error}`);
+				};
+			  });
+			};
+
+			const addPhotoToDB = (db, base64) => {
+			  return new Promise((resolve, reject) => {
+				const transaction = db.transaction(['faces'], 'readwrite');
+				const objectStore = transaction.objectStore('faces');
+
+				const request = objectStore.add({ base64, timestamp: new Date().getTime() });
+
+				request.onsuccess = () => {
+				  resolve();
+				};
+
+				request.onerror = (event) => {
+				  reject(`Error adding photo to database: ${event.target.error}`);
+				};
+			  });
+			};
+
+			const getPhotosFromDB = (db) => {
+			  return new Promise((resolve, reject) => {
+				const transaction = db.transaction(['faces'], 'readonly');
+				const objectStore = transaction.objectStore('faces');
+
+				const request = objectStore.getAll();
+
+				request.onsuccess = (event) => {
+				  const faces = event.target.result.map(item => item.base64);
+				  resolve(faces);
+				};
+
+				request.onerror = (event) => {
+				  reject(`Error retrieving faces from database: ${event.target.error}`);
+				};
+			  });
+			};
+
+			const handleFaceUpload = async (event) => {
+			  const db = await openDB();
+			  const files = event.target.files;
+			  const selectedPhotos = await getPhotosFromDB(db);
+
+			  for (const file of files) {
+				if (file) {
+				  const reader = new FileReader();
+				  reader.onload = async function (event) {
+					const downloadURL = event.target.result;
+					const photo = document.createElement('div');
+					photo.className = 'photo';
+					photo.style.backgroundImage = `url('${downloadURL}')`;
+
+					const deleteIcon = document.createElement('div');
+					deleteIcon.className = 'delete-icon';
+					photo.appendChild(deleteIcon);
+
+					const photosContainer = document.querySelector('.faces');
+					photosContainer.insertBefore(photo, photosContainer.firstChild);
+
+					selectedPhotos.unshift(downloadURL);
+					await addPhotoToDB(db, downloadURL);
+				  };
+				  reader.readAsDataURL(file);
+				}
+			  }
+			};
+			
+			photoUpload.addEventListener('change', handleFaceUpload);
+
+			const initSelectedPhotos = async () => {
+			  const db = await openDB();
+			  const savedPhotos = await getPhotosFromDB(db);
+
+			  savedPhotos.reverse();
+			  
+			  for (const downloadURL of savedPhotos) {
+				const photo = document.createElement('div');
+				photo.className = 'photo';
+				photo.style.backgroundImage = `url('${downloadURL}')`;
+
+				const deleteIcon = document.createElement('div');
+				deleteIcon.className = 'delete-icon';
+
+				photo.appendChild(deleteIcon);
+				faces.appendChild(photo);
+			  }
+			};
+
+			initSelectedPhotos();
+			
+			const deletePhotoFromDB = (db, base64) => {
+			  return new Promise((resolve, reject) => {
+				const transaction = db.transaction(['faces'], 'readwrite');
+				const objectStore = transaction.objectStore('faces');
+				const request = objectStore.openCursor();
+				request.onsuccess = (event) => {
+				  const cursor = event.target.result;
+				  if (cursor) {
+					if (cursor.value.base64 === base64) {
+					  const deleteRequest = cursor.delete();
+
+					  deleteRequest.onsuccess = () => {
+						resolve();
+					  };
+
+					  deleteRequest.onerror = (event) => {
+						reject(`Error deleting photo from database: ${event.target.error}`);
+					  };
+					} else { cursor.continue(); }
+				  } else { resolve(); }
+				};
+
+				request.onerror = (event) => {
+				  reject(`Error opening cursor in database: ${event.target.error}`);
+				};
+			  });
+			};
+
+let imageMask = document.getElementById('imageMask');
+let drawingCanvas = document.getElementById('drawingCanvas');
+let ctx = drawingCanvas.getContext('2d');
+let isDrawing = false;
+
+// Array to store canvas states for undo/redo
+let undoStack = [];
+let redoStack = [];
+
+// Function to save current canvas state
+function saveState() {
+    undoStack.push(drawingCanvas.toDataURL());
+}
+
+// Function to undo
+function undo() {
+    if (undoStack.length > 1) {
+        redoStack.push(undoStack.pop());
+        const img = new Image();
+        img.onload = function () {
+            ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            ctx.drawImage(img, 0, 0);
+        };
+        img.src = undoStack[undoStack.length - 1];
+    }
+}
+
+// Function to redo
+function redo() {
+    if (redoStack.length > 0) {
+        const img = new Image();
+        img.onload = function () {
+            ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            ctx.drawImage(img, 0, 0);
+        };
+        img.src = redoStack.pop();
+        undoStack.push(img.src);
+    }
+}
+
+// Event listeners for undo/redo
+document.addEventListener('keydown', function (e) {
+    if (e.ctrlKey && e.key === 'z') {
+        e.preventDefault();
+        undo();
+    } else if (e.ctrlKey && e.key === 'y') {
+        e.preventDefault();
+        redo();
+    }
+});
+
+// Event listener for undo button
+document.getElementById('undoButton').addEventListener('click', () => {
+    undo();
+});
+
+// Event listener for redo button
+document.getElementById('redoButton').addEventListener('click', () => {
+    redo();
+});
+
+// Load the image and set up the canvas
+imageMask.onload = () => {
+    drawingCanvas.width = imageMask.width;
+    drawingCanvas.height = imageMask.height;
+};
+
+// Function to enable/disable scroll prevention while drawing
+function toggleScrollPrevention(enable) {
+    if (enable) {
+        document.addEventListener('touchmove', preventScroll, { passive: false });
+    } else {
+        document.removeEventListener('touchmove', preventScroll);
+    }
+}
+
+// Function to prevent scrolling
+function preventScroll(e) {
+    e.preventDefault();
+}
+
+let lastX = null;
+let lastY = null;
+
+// Handle touch start event
+drawingCanvas.addEventListener('touchstart', (e) => {
+    isDrawing = true;
+    saveState(); // Save canvas state when drawing starts
+    toggleScrollPrevention(true); // Enable scroll prevention
+    const touch = e.touches[0];
+    const x = touch.clientX - drawingCanvas.getBoundingClientRect().left;
+    const y = touch.clientY - drawingCanvas.getBoundingClientRect().top;
+
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.strokeStyle = document.getElementById('colorPicker').value;
+    ctx.lineWidth = document.getElementById('sizeSlider').value;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+
+    lastX = x;
+    lastY = y;
+});
+
+// Handle touch move event
+drawingCanvas.addEventListener('touchmove', (e) => {
+    if (isDrawing) {
+        const touch = e.touches[0];
+        const x = touch.clientX - drawingCanvas.getBoundingClientRect().left;
+        const y = touch.clientY - drawingCanvas.getBoundingClientRect().top;
+
+        ctx.lineTo(x, y);
+        ctx.stroke();
+
+        lastX = x;
+        lastY = y;
+    }
+});
+
+// Handle touch end event
+drawingCanvas.addEventListener('touchend', () => {
+    isDrawing = false;
+    ctx.closePath();
+    toggleScrollPrevention(false); // Disable scroll prevention
+    saveState();
+    lastX = null;
+    lastY = null;
+});
+
+// Handle mouse down event
+drawingCanvas.addEventListener('mousedown', (e) => {
+    if (e.button === 0 || e.button === 2) {
+        isDrawing = true;
+        ctx.globalCompositeOperation = e.button === 0 ? 'source-over' : 'destination-out';
+        ctx.strokeStyle = e.button === 0 ? document.getElementById('colorPicker').value : 'rgba(0, 0, 0, 1)';
+        ctx.lineWidth = document.getElementById('sizeSlider').value;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        saveState();
+    }
+});
+
+// Handle mouse move event
+drawingCanvas.addEventListener('mousemove', (e) => {
+    if (isDrawing) {
+        const x = e.clientX - drawingCanvas.getBoundingClientRect().left;
+        const y = e.clientY - drawingCanvas.getBoundingClientRect().top;
+        ctx.lineTo(x, y);
+        ctx.stroke();
+    }
+});
+
+// Handle mouse up event
+drawingCanvas.addEventListener('mouseup', () => {
+    isDrawing = false;
+    ctx.closePath();
+    saveState();
+});
+
+// Prevent the default context menu on right-click
+drawingCanvas.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+});
+
+// Draw a dot on click without dragging
+drawingCanvas.addEventListener('click', (e) => {
+    const x = e.clientX - drawingCanvas.getBoundingClientRect().left;
+    const y = e.clientY - drawingCanvas.getBoundingClientRect().top;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + 1, y + 1);
+    ctx.stroke();
+    ctx.closePath();
+});
+
+function createCursorImage(size, color) {
+    const cursorCanvas = document.createElement('canvas');
+    cursorCanvas.width = size;
+    cursorCanvas.height = size;
+    const cursorCtx = cursorCanvas.getContext('2d');
+
+    cursorCtx.beginPath();
+    cursorCtx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+    cursorCtx.strokeStyle = color;
+    cursorCtx.lineWidth = 2; // Adjust the line width for thicker cursor
+    cursorCtx.stroke();
+    cursorCtx.closePath();
+
+    return cursorCanvas.toDataURL();
+}
+
+// Update the cursor to a circle matching the drawing size and opposite color
+function updateCursor() {
+    const size = parseInt(document.getElementById('sizeSlider').value);
+    const color = document.getElementById('colorPicker').value;
+    const oppositeColor = getOppositeColor(color);
+    const cursorImage = createCursorImage(size, oppositeColor);
+    drawingCanvas.style.cursor = `url("${cursorImage}") ${size / 2} ${size / 2}, crosshair`;
+}
+
+// Function to get the opposite color
+function getOppositeColor(color) {
+    // Convert color to RGB
+    const rgb = hexToRgb(color);
+
+    // Calculate opposite RGB values
+    const oppositeRGB = {
+        r: 255 - rgb.r,
+        g: 255 - rgb.g,
+        b: 255 - rgb.b
+    };
+
+    // Convert RGB back to hex
+    const oppositeHex = rgbToHex(oppositeRGB.r, oppositeRGB.g, oppositeRGB.b);
+
+    return oppositeHex;
+}
+
+// Function to convert hex color to RGB
+function hexToRgb(hex) {
+    // Remove '#' if present
+    hex = hex.replace(/^#/, '');
+
+    // Parse hex to RGB
+    const bigint = parseInt(hex, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+
+    return { r, g, b };
+}
+
+// Function to convert RGB to hex color
+function rgbToHex(r, g, b) {
+    return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
+// Initialize the jQuery UI slider
+$(function() {
+    updateCursor(); // Initialize cursor
+});
+
+// Initialize the jQuery UI slider
+const sizeSlider = $('#sizeSlider');
+const sliderValueElement = $('#sliderValue'); // Add a div to display the slider value
+
+// Log the slider value when it changes
+sizeSlider.on('input change', function() {
+    const sliderValue = sizeSlider.val(); // Get the current slider value
+    const updatedCursorSize = sliderValue; // Adjust the multiplier as needed
+    const cursorImage = createCursorImage(updatedCursorSize);
+    drawingCanvas.style.cursor = `url("${cursorImage}") ${updatedCursorSize / 2} ${updatedCursorSize / 2}, crosshair`;
+});
+
+// Update the color when the color picker value changes
+document.getElementById('colorPicker').addEventListener('input', (e) => {
+    if (isDrawing) {
+        ctx.strokeStyle = e.target.value;
+    }
+    updateCursor(); // Call updateCursor function when color changes
+});
+
+$(function() {
+    sizeSlider.on('input change', function() {
+        const sliderValue = sizeSlider.val();
+        const updatedCursorSize = sliderValue;
+        const cursorImage = createCursorImage(updatedCursorSize);
+        drawingCanvas.style.cursor = `url("${cursorImage}") ${updatedCursorSize / 2} ${updatedCursorSize / 2}, crosshair`;
+    });
+});
+
+// Handle mouse wheel events to adjust the slider value
+drawingCanvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+
+    const sizeSlider = document.getElementById('sizeSlider');
+    const step = 4;
+    const currentValue = parseInt(sizeSlider.value);
+    const newValue = e.deltaY > 0 ? currentValue - step : currentValue + step;
+    const minValue = parseInt(sizeSlider.min);
+    const maxValue = parseInt(sizeSlider.max);
+    const clampedValue = Math.min(Math.max(newValue, minValue), maxValue);
+
+    sizeSlider.value = clampedValue;
+
+    ctx.lineWidth = clampedValue;
+    updateCursor(clampedValue);
+}, { passive: false });
+		
+			const imageContainer = document.querySelector('.canvas-container');
+			imageContainer.style.display = 'none';
+		  
+			const sliderContainer = document.querySelector('.slider-container');
+			sliderContainer.style.display = 'flex';
+			
+			const rectangles = document.querySelectorAll('.rectangle');
+			let currentRectangleId = '';
+
+			  const selectedRectangleId = localStorage.getItem('selectedMaskDN');
+			  if (selectedRectangleId) {
+				const selectedRectangle = document.getElementById(selectedRectangleId);
+				if (selectedRectangle) {
+				  currentRectangleId = selectedRectangle.id;
+				  console.log(currentRectangleId);
+				}
+			  }
+		  
+			rectangles.forEach((rectangle) => {
+				rectangle.addEventListener('click', () => {
+					currentRectangleId = rectangle.id;
+				});
+			});
+			
+			faces.addEventListener("click", async function (event) {
+				const clickedDeleteElement = event.target.classList.contains('delete-icon');
+			    if (clickedDeleteElement) {
+				  const parentPhoto = event.target.closest('.photo');
+				  if (!parentPhoto)
+					return;
+					
+				  showConfirmationDialog('Are you sure you want to delete this?', async () => {
+					parentPhoto.remove();
+					photoUpload.value = '';
+
+					const db = await openDB();
+					await deletePhotoFromDB(db, parentPhoto.style.backgroundImage.slice(4, -1).replace(/['"]+/g, ''));
+				  });
+			    }
+			  
+				const clickedPhotoElement = event.target.closest('.photo');
+				if (clickedPhotoElement) {
+					await togglePhotoSelection(event.target);
+					
+					imageMask.src = event.target.style.backgroundImage.slice(5, -2);
+					
+					const elementsContainer = document.querySelector('.elements-container');
+					const computedStyle = window.getComputedStyle(elementsContainer);
+					const containerWidth = elementsContainer.clientWidth - parseFloat(computedStyle.paddingLeft) - parseFloat(computedStyle.paddingRight) - parseFloat(computedStyle.borderLeftWidth) - parseFloat(computedStyle.borderRightWidth);
+
+					const imageAspectRatio = imageMask.width / imageMask.height;
+					let calculatedHeight = containerWidth / imageAspectRatio;
+					calculatedHeight = Math.round(calculatedHeight);
+
+					imageMask.width = containerWidth;
+					imageMask.height = calculatedHeight;
+					drawingCanvas.width = containerWidth;
+					drawingCanvas.height = calculatedHeight;
+					ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+					
+					console.log("Calculated Width:", containerWidth, "Calculated Height:", calculatedHeight);
+					console.log("IWidth:", imageMask.width, "IHeight:", imageMask.height);
+					console.log("DIFF Width:", containerWidth - imageMask.width, "DIFF Height:", calculatedHeight- imageMask.height);
+					return;
+				}
+			});
+			
+			function togglePhotoSelection(photo) {
+				if (photo.classList.contains("active")) {
+					photo.classList.remove("active");
+					imageContainer.style.display = 'none';
+					sliderContainer.style.display = 'flex';
+					return;
+				}
+					
+				if (currentRectangleId === 'canvas') {
+					imageContainer.style.display = 'block';
+					sliderContainer.style.display = 'none';
+				}
+				faces.querySelectorAll(".photo.active").forEach((activePhoto) => { activePhoto.classList.remove("active"); });
+				photo.classList.add("active");
+			}
+		
+			document.addEventListener("DOMContentLoaded", function () {
+				const lightboxPhoto = document.getElementById("lightbox-photo");
+				lightboxPhoto.addEventListener("click", (event) => {
+					if (event.target === lightboxPhoto) {
+						lightboxPhoto.style.display = "none";
+					}
+				});
+
+				document.addEventListener("keydown", (event) => {
+					if (event.key !== "Escape") return; 
+					lightboxPhoto.style.display = "none"; 
+				});
+				
+				const closeLightbox = document.getElementById("close-lightbox");
+				closeLightbox.addEventListener("click", () => { lightboxPhoto.style.display = "none"; });
+				
+				const questionMark = document.querySelector('.question-mark');
+				questionMark.addEventListener('click', (event) => { infoContainer.style.display = 'block'; });
+				questionMark.addEventListener('click', (event) => { event.stopPropagation(); });
+				questionMark.addEventListener('click', (event) => { infoContainer.style.display = 'block'; });
+
+				const closeInfo = document.getElementById('close-info');
+				closeInfo.addEventListener('click', () => { infoContainer.style.display = 'none'; });
+
+				const openOutputButton = document.getElementById('openOutputButton');
+				openOutputButton.addEventListener('click', openOutput);
+					
+				const openOutputButtonSelected = document.getElementById('openOutputButtonSelected');
+				openOutputButtonSelected.addEventListener('click', openOutput);
+					
+				const downloadButton = document.getElementById('downloadButton');
+				downloadButton.addEventListener('click', downloadOutput);
+					
+				const downloadButtonSelected = document.getElementById('downloadButtonSelected');
+				downloadButtonSelected.addEventListener('click', downloadOutput);
+				
+				window.mobileAndTabletCheck = function() {
+				  let check = false;
+				  (function(a){if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino|android|ipad|playbook|silk/i.test(a)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0,4))) check = true;})(navigator.userAgent||navigator.vendor||window.opera);
+				  return check;
+				};
+				
+				async function downloadOutput() {
+				  const downloadURL = downloadButton.dataset.downloadClientURL;
+
+				  if (downloadURL) {
+					if (!window.showSaveFilePicker) {
+					  await downloadMobile(downloadURL);
+					} else {
+					  await downloadDesktop(downloadURL);
+					}
+				  }
+				}
+				
+				// Retrieve the download counter from cache or set it to 0 if it doesn't exist
+				let downloadCounter = parseInt(localStorage.getItem('downloadCounter')) || 0;
+
+				async function downloadMobile(downloadURL) {
+				  try {
+					const response = await fetch(downloadURL);
+					const videoData = await response.blob();
+					
+					// Use the Blob constructor to create a Blob from the data
+					const blob = new Blob([videoData], { type: 'image/png' });
+
+					// Generate filename with the incremented counter
+					const fileName = downloadCounter + '.png';
+
+					// Check if the Web Share API is available
+					if (navigator.share) {
+					  // Use the Web Share API to trigger the download
+					  await navigator.share({
+						files: [new File([blob], fileName, { type: 'image/png' })],
+					  });
+
+					// Increment download counter
+					downloadCounter++;
+
+					// Update download counter in cache
+					localStorage.setItem('downloadCounter', downloadCounter.toString());
+
+					  console.log('File download initiated for mobile devices.');
+					} else {
+					  console.error('Web Share API not supported on this browser.');
+					}
+				  } catch (error) {
+					console.error('Error initiating file download for mobile:', error);
+				  }
+				}
+
+				async function downloadDesktop(downloadURL) {
+				  try {
+					const handle = await window.showSaveFilePicker({
+					  suggestedName: downloadCounter + '.png',
+					  types: [
+						{
+						  description: 'Image Files',
+						  accept: {
+							'image/png': ['.png'],
+						  },
+						},
+					  ],
+					});
+
+					const writable = await handle.createWritable();
+
+					const response = await fetch(downloadURL);
+					const videoData = await response.blob();
+
+					await writable.write(videoData);
+					await writable.close();
+
+					// Increment download counter
+					downloadCounter++;
+
+					// Update download counter in cache
+					localStorage.setItem('downloadCounter', downloadCounter.toString());
+
+					console.log('File saved successfully!');
+				  } catch (error) {
+					console.error('Error saving file:', error);
+				  }
+				}
+
+				function openOutput() {
+				  const downloadURL = downloadButton.dataset.downloadClientURL;
+				  if (downloadURL) {
+					const blob = dataURLtoBlob(downloadURL);
+					const blobURL = URL.createObjectURL(blob);
+					window.open(blobURL, '_blank');
+				  }
+				}
+				
+				function dataURLtoBlob(dataURL) {
+				  const arr = dataURL.split(',');
+				  const mime = arr[0].match(/:(.*?);/)[1];
+				  const bstr = atob(arr[1]);
+				  let n = bstr.length;
+				  const u8arr = new Uint8Array(n);
+				  while (n--) {
+					u8arr[n] = bstr.charCodeAt(n);
+				  }
+				  return new Blob([u8arr], { type: mime });
+				}
+
+				function showCategory(activeTab) {
+					const categories = {
+						'#person-type-boxes': '.person-type-boxes',
+						'#clothing-boxes': '.clothing-boxes',
+						'#body-type-boxes': '.body-type-boxes',
+						'#breast-type-boxes': '.breast-type-boxes',
+						'#quality-boxes': '.quality-boxes',
+					};
+
+					for (const tab in categories) {
+						const category = categories[tab];
+						const tabSelector = document.querySelector(`a[href="${tab}"]`);
+						const categoryBoxes = document.querySelector(category);
+						if (activeTab === tab) {
+							tabSelector.classList.add("active");
+							categoryBoxes.style.display = "flex";
+						} else {
+							tabSelector.classList.remove("active");
+							categoryBoxes.style.display = "none";
+						}
+					}
+				}
+				
+				const savedState = localStorage.getItem("pageStateDN");
+				if (savedState) {
+					const state = JSON.parse(savedState);
+
+					const positivePrompt = document.getElementById("positive-prompt");
+					if (state.positivePrompt)
+					  positivePrompt.value = state.positivePrompt;
+
+					const negativePrompt = document.getElementById("negative-prompt");
+					if (state.negativePrompt)
+					  negativePrompt.value = state.negativePrompt;
+
+					const maskPrompt = document.getElementById("mask-prompt");
+					if (state.maskPrompt)
+					  maskPrompt.value = state.maskPrompt;
+					
+					const negativeMaskPrompt = document.getElementById("negative-mask-prompt");
+					if (state.negativeMaskPrompt)
+					  negativeMaskPrompt.value = state.negativeMaskPrompt;
+					
+					const activeTab = state.activeTab;
+					if (activeTab) 
+						showCategory(activeTab);
+				}
+
+				window.addEventListener("beforeunload", function () {
+					const activeTab = document.querySelector(".hint-tabs a.active");
+					const positivePrompt = document.getElementById("positive-prompt").value;
+					const negativePrompt = document.getElementById("negative-prompt").value;
+					const maskPrompt = document.getElementById("mask-prompt").value;
+					const negativeMaskPrompt = document.getElementById("negative-mask-prompt").value;
+						
+					const state = {
+						activeTab: activeTab ? activeTab.getAttribute("href") : null,
+						positivePrompt,
+						negativePrompt,
+						maskPrompt,
+						negativeMaskPrompt,
+					};
+
+					localStorage.setItem("pageStateDN", JSON.stringify(state));
+				});
+				
+				function adjustTextareaHeight(textarea) {
+					textarea.style.height = "auto";
+					textarea.style.height = textarea.scrollHeight + "px";
+				}
+
+				const textareas = document.querySelectorAll(".auto-expanding-textarea");
+				textareas.forEach((textarea) => {
+					textarea.addEventListener("input", () => {
+						adjustTextareaHeight(textarea);
+					});
+
+					adjustTextareaHeight(textarea);
+				});
+			});
+		
+			function deleteDownloadedOutputs(message, onConfirm, onCancel) {
+				const activeContainer = document.createElement("div");
+				activeContainer.className = "active-container";
+
+				const confirmationBox = document.createElement("div");
+				confirmationBox.className = "information-box";
+				confirmationBox.innerHTML = `
+					<p class="confirmation-text">${message}</p>
+					<div class="confirmation-buttons">
+						<button class="confirmation-button cancel">Cancel</button>
+						<button class="confirmation-button confirm">Confirm</button>
+					</div>
+					<label for="dont-show-again">
+						<input type="checkbox" id="dont-show-again"> Don't show this again</input>
+					</label>
+				`;
+
+				activeContainer.appendChild(confirmationBox);
+				document.body.appendChild(activeContainer);
+
+				const cancelButton = confirmationBox.querySelector(".confirmation-button.cancel");
+				const confirmButton = confirmationBox.querySelector(".confirmation-button.confirm");
+				const dontShowAgainCheckbox = confirmationBox.querySelector("#dont-show-again");
+
+				cancelButton.addEventListener("click", () => {
+					console.log("Cancel button clicked");
+					document.body.removeChild(activeContainer);
+					if (onCancel) {
+						console.log("Calling onCancel function");
+						onCancel();
+					}
+				});
+
+				confirmButton.addEventListener("click", () => {
+					console.log("Confirm button clicked");
+					if (onConfirm) {
+						console.log("Calling onConfirm function");
+						onConfirm();
+					}
+
+					if (dontShowAgainCheckbox.checked) {
+						console.log("Don't show again checkbox is checked");
+						// Use localStorage to remember the user's choice not to show the confirmation again
+						localStorage.setItem("hideConfirmationDialog", "true");
+						console.log("localStorage item set: hideConfirmationDialog=true");
+					}
+
+					document.body.removeChild(activeContainer); // Close the confirmation dialog
+				});
+
+				// Check if the user chose to hide the confirmation dialog
+				if (localStorage.getItem("hideConfirmationDialog") === "true") {
+					console.log("localStorage item is present, automatically confirming.");
+					onConfirm(); // Automatically confirm if the user has chosen not to show it again
+					document.body.removeChild(activeContainer); // Close the confirmation dialog
+				}
+			}
+
+			// JavaScript to handle horizontal scrolling
+			const scrollContainer = document.querySelector('.scroll-container');
+
+			scrollContainer.addEventListener('scroll', function () {
+				// Check if scroll bar is at the maximum scroll position
+				if (scrollContainer.scrollLeft + scrollContainer.clientWidth === scrollContainer.scrollWidth) {
+					// Hide the scroll bar when it's at the maximum position
+					scrollContainer.style.overflowX = 'hidden';
+				} else {
+					// Show the scroll bar when it's not at the maximum position
+					scrollContainer.style.overflowX = 'auto';
+				}
+			});
+			
+			// Function to show the confirmation dialog
+			function showConfirmationDialog(message, onConfirm, onCancel) {
+				const activeContainer = document.createElement("div");
+				activeContainer.className = "active-container";
+
+				const confirmationBox = document.createElement("div");
+				confirmationBox.className = "information-box";
+				confirmationBox.innerHTML = `
+					<p class="confirmation-text">${message}</p>
+					<div class="confirmation-buttons">
+						<button class="confirmation-button cancel">Cancel</button>
+						<button class="confirmation-button confirm">Confirm</button>
+					</div>
+					<label for="dont-show-again">
+						<input type="checkbox" id="dont-show-again"> Don't show this again</input>
+					</label>
+				`;
+
+				activeContainer.appendChild(confirmationBox);
+				document.body.appendChild(activeContainer);
+
+				const cancelButton = confirmationBox.querySelector(".confirmation-button.cancel");
+				const confirmButton = confirmationBox.querySelector(".confirmation-button.confirm");
+				const dontShowAgainCheckbox = confirmationBox.querySelector("#dont-show-again");
+
+				cancelButton.addEventListener("click", () => {
+					console.log("Cancel button clicked");
+					document.body.removeChild(activeContainer);
+					if (onCancel) {
+						console.log("Calling onCancel function");
+						onCancel();
+					}
+				});
+
+				confirmButton.addEventListener("click", () => {
+					console.log("Confirm button clicked");
+					if (onConfirm) {
+						console.log("Calling onConfirm function");
+						onConfirm();
+					}
+
+					if (dontShowAgainCheckbox.checked) {
+						console.log("Don't show again checkbox is checked");
+						localStorage.setItem("hideConfirmationDialog", "true");
+						console.log("localStorage item set: hideConfirmationDialog=true");
+					}
+
+					document.body.removeChild(activeContainer);
+				});
+
+				if (localStorage.getItem("hideConfirmationDialog") === "true") {
+					console.log("localStorage item is present, automatically confirming.");
+					onConfirm();
+					document.body.removeChild(activeContainer);
+				}
+			}
+	</script>
+	<script type="module">
+		/*import { auth, usersRef } from './scripts-17/firebase-config.js';
+	
+        // Import hideLoadingScreen function from background-animation.js
+        import { hideLoadingScreen } from '../files/scripts-17/background-animation.js';
+
+		// Check if the user is authenticated
+		auth.onAuthStateChanged((user) => {
+			if (user) {
+				// User is authenticated, fetch the user's document from Firestore
+				const userId = user.uid;
+
+				// Fetch the user's document from Firestore
+				usersRef.doc(userId).get().then((userDoc) => {
+					if (userDoc.exists) {
+						// User document exists, hide the loading screen
+						hideLoadingScreen();
+					} else {
+						// User document does not exist, handle it as needed
+						console.log('User document does not exist.');
+						hideLoadingScreen(); // Hide the loading screen even if the document doesn't exist
+					}
+				}).catch((error) => {
+					// Handle any errors that occur during document retrieval
+					console.error('Error fetching user document:', error);
+					hideLoadingScreen(); // Hide the loading screen even on error
+				});
+			} else {
+				// User is not authenticated, hide the loading screen
+				console.log('User document does not exist.');
+				setTimeout(() => {
+					hideLoadingScreen();
+				}, 100);
+			}
+		});
+
+		// Fallback to hide the loading screen after a timeout
+		setTimeout(() => {
+			hideLoadingScreen();
+		}, 1000); // Adjust the timeout duration as needed
+
+		async function joinDiscord() {
+			if (localStorage.getItem("hideDiscordJoin") === "true")
+				return;
+		
+			showConfirmationDialog('Would you like to join our Discord server?', async () => {
+				window.open('https://discord.gg/Vrmt8UfDK8', '_blank');
+			});
+		}
+		
+		// joinDiscord();
+		
+		function showConfirmationDialog(message, onConfirm, onCancel) {
+			const activeContainer = document.createElement("div");
+			activeContainer.className = "active-container";
+
+			const confirmationBox = document.createElement("div");
+			confirmationBox.className = "information-box";
+			confirmationBox.innerHTML = `
+				<p class="confirmation-text">${message}</p>
+				<div class="confirmation-buttons">
+					<button class="confirmation-button confirm">Confirm</button>
+					<button class="confirmation-button cancel">Cancel</button>
+				</div>
+				<label for="dont-show-again">
+					<input type="checkbox" id="dont-show-again"> Don't show this again
+				</label>
+			`;
+
+			activeContainer.appendChild(confirmationBox);
+			document.body.appendChild(activeContainer);
+
+			const cancelButton = confirmationBox.querySelector(".confirmation-button.cancel");
+			const confirmButton = confirmationBox.querySelector(".confirmation-button.confirm");
+			const dontShowAgainCheckbox = confirmationBox.querySelector("#dont-show-again");
+
+			cancelButton.addEventListener("click", () => {
+				console.log("Cancel button clicked");
+				document.body.removeChild(activeContainer);
+				if (onCancel) {
+					console.log("Calling onCancel function");
+					onCancel();
+				}
+				
+				if (dontShowAgainCheckbox.checked) {
+					console.log("Don't show again checkbox is checked");
+					localStorage.setItem("hideDiscordJoin", "true");
+					console.log("localStorage item set: hideDiscordJoin=true");
+				}
+			});
+
+			confirmButton.addEventListener("click", () => {
+				console.log("Confirm button clicked");
+				if (onConfirm) {
+					console.log("Calling onConfirm function");
+					localStorage.setItem("hideDiscordJoin", "true");
+					onConfirm();
+				}
+
+				if (dontShowAgainCheckbox.checked) {
+					console.log("Don't show again checkbox is checked");
+					localStorage.setItem("hideDiscordJoin", "true");
+					console.log("localStorage item set: hideDiscordJoin=true");
+				}
+
+				document.body.removeChild(activeContainer);
+			});
+		}*/
+    </script>
+<script src="scripts/autoTranslate.js"></script></body>
+</html>

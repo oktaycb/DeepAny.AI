@@ -32,6 +32,7 @@
             left: 50%;
             border: 3px solid #f3f3f3;
             border-top: 3px solid #ff7300;
+            z-index: 999999;
             border-radius: 50%;
             width: 50px !important;
             height: 50px !important;
@@ -52,7 +53,38 @@
     <link rel="shortcut icon" href="/.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="stylesheet" href="css/styles.css?v=1.1.1.2.7.6">
+    <script>
+        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '1.1.1.5.0.8';
+        const url = window.location.origin + window.location.pathname;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            (async function () {
+                const storedVersion = localStorage.getItem('version');
+                const urlParamsVersion = new URLSearchParams(window.location.search).get('version');
+                const version = urlParamsVersion || storedVersion || '1.1.1.5.0.8';
+
+                try {
+                    const randomParam = `nocache=${Math.random()}`;
+                    const versionUrl = `${window.location.origin}/version?${randomParam}`;
+                    const response = await fetch(versionUrl, { cache: "no-store" });
+                    const newVersion = (await response.text()).trim();
+                    localStorage.setItem('version', newVersion);
+
+                    if (!urlParamsVersion && newVersion !== version) {
+                        location.reload(true);
+                    }
+                } catch (error) {
+                    console.error("Error checking for updates:", error);
+                }
+            })();
+        });
+
+        // Create and insert the stylesheet link with the version parameter
+        const linkEl = document.createElement('link');
+        linkEl.rel = 'stylesheet';
+        linkEl.href = `css/styles.css?v=${version}`;
+        document.head.appendChild(linkEl);
+    </script>
     <style>
         .faces, .inputs {
             width: calc(4 * (var(--input-size) + var(--input-margin)))
@@ -69,7 +101,7 @@
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = new URLSearchParams(window.location.search).get('referral') || '1.1.1.2.7.6';
+        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '1.1.1.5.0.8';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -77,7 +109,7 @@
 
         document.addEventListener('DOMContentLoaded', async function () {
             const functions = await loadModule('./scripts/functions.js');
-            const { fetchWithRandom, getSelectedInputId, setDownloadCancelled, abortController, pageName, setFetchableServerAdresses, getFetchableServerAdresses, checkServerStatus, setDynamicInterval, updateDownloadFile, cancelProcess, fetchUploadedChunks, processBlobToFile, createSectionAndElements, setMaxWidth, saveCountIndex, handleDownload, handleFileContainerEvents, handleUpload, setupFileUpload, setClientStatus, customFetch, checkServerQueue, showNotification, openDB, addToDB, getFromDB, initDB, setUser, getUserData, getUserDoc, setAuthentication, getFirebaseModules, getDocSnapshot, getDocsSnapshot, getScreenMode, getCurrentMain, updateContent, ScreenMode, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol, fetchServerAddresses } = functions;
+            const { fetchWithRandom, getSelectedInputId, setDownloadCancelled, showCanvas, abortController, pageName, setFetchableServerAdresses, getFetchableServerAdresses, checkServerStatus, setDynamicInterval, updateDownloadFile, cancelProcess, fetchUploadedChunks, processBase64ToFile, processBlobToFile, createSectionAndElements, setMaxWidth, saveCountIndex, handleDownload, handleFileContainerEvents, handleUpload, setupFileUpload, setClientStatus, customFetch, checkServerQueue, showNotification, openDB, addToDB, getFromDB, initDB, setUser, getUserData, getUserDoc, setAuthentication, getFirebaseModules, getDocSnapshot, getDocsSnapshot, getScreenMode, getCurrentMain, updateContent, ScreenMode, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol, fetchServerAddresses } = functions;
 
             if (!window.indexedDB) {
                 alert('Your browser does not support IndexedDB.');
@@ -135,280 +167,286 @@
             function updateMainContent(screenMode, pageContent) {
                 pageContent.length = 0;
                 pageContent.push(`                      <div id="baseContainer" class="centered-container">
-                                                                                    <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
-                                                                                        <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
-                                                                                            <div class="background-dot-container">
-                                                                                                <div class="background-dot-container-content">
-                                                                                                    <div class="features-witdh">
-                                                                                                        <div style="display: flex;justify-content: center;">
-                                                                                                            <div style="display: flex;flex-direction: column;align-items: center;">
-                                                                                                                    <div class="circular-button" id="circular-button-input-upload" title="Upload input" tooltip>
-                                                                                                                        <div class="tooltip">Add and choose the image where the inpainting will occur.</div>
+                                                                                                <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
+                                                                                                    <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
+                                                                                                        <div class="background-dot-container">
+                                                                                                            <div class="background-dot-container-content">
+                                                                                                                <div class="features-witdh">
+                                                                                                                    <div style="display: flex;justify-content: center;">
+                                                                                                                        <div style="display: flex;flex-direction: column;align-items: center;">
+                                                                                                                                <div class="circular-button circular-button-input-upload" title="Upload input" tooltip>
+                                                                                                                                    <div class="tooltip">Add and choose the image where the inpainting will occur.</div>
+                                                                                                                                </div>
+                                                                                                                                <div class="background-container hidden" style="flex-direction: column;align-items: stretch;width: inherit;height: inherit;" id="upload-options-modal-input-upload">
+                                                                                                                                    <div class="background-dot-container">
+                                                                                                                                        <div class="background-dot-container-content" style="padding: 0;">
+                                                                                                                                            <h4 class="upload-option" id="upload-device-input-upload">Upload from device...</h4>
+                                                                                                                                        </div>
+                                                                                                                                    </div>
+                                                                                                                                    <div class="background-dot-container disabled">
+                                                                                                                                       <div class="background-dot-container-content disabled" style="padding: 0;">
+                                                                                                                                           <h4 class="upload-option disabled" id="upload-link-input-upload">Upload via link...</h4>
+                                                                                                                                           <input type="url" id="link-upload-input-upload" class="hidden disabled" placeholder="Paste link here...">
+                                                                                                                                       </div>
+                                                                                                                                   </div>
+                                                                                                                                </div>
+                                                                                                                            <input type="file" accept="image/*" id="input-upload" style="display: none" multiple>
+                                                                                                                            <div class="inputs"></div>
+                                                                                                                        </div>
                                                                                                                     </div>
-                                                                                                                    <div class="background-container hidden" style="flex-direction: column;align-items: stretch;" id="upload-options-modal-input-upload">
-                                                                                                                        <div class="background-dot-container">
-                                                                                                                            <div class="background-dot-container-content" style="padding: 0;">
-                                                                                                                                <h4 class="upload-option" id="upload-device-input-upload">Upload from device...</h4>
+                                                                                                                        <div class="line"></div>
+                                                                                                                        <div class="rectangle-container" id="mode-selection">
+                                                                                                                            <div class="rectangle" id="realistic">
+                                                                                                                                <img src="assets/img1.png" alt="Image 1">
+                                                                                                                                <h4 class="text non-bold" title="Realistic"></h4>
+                                                                                                                                <span class="arrow-dwn"></span>
+                                                                                                                                   <ul class="list-items">
+                                                                                                                                        <li class="item">
+                                                                                                                                            <label class="checkbox">
+                                                                                                                                                <input type="checkbox" id="[default realistic]"><span>Default</span>
+                                                                                                                                            </label>
+                                                                                                                                        </li>
+                                                                                                                                    </ul>
+                                                                                                                            </div>
+                                                                                                                            <div class="rectangle" id="anime">
+                                                                                                                                <img src="assets/img2.png" alt="Image 2">
+                                                                                                                                <h4 class="text non-bold" title="Anime"></h4>
+                                                                                                                                <span class="arrow-dwn"></span>
+                                                                                                                                    <ul class="list-items">
+                                                                                                                                        <li class="item">
+                                                                                                                                            <label class="checkbox">
+                                                                                                                                                <input type="checkbox" id="[default anime]"><span>Default</span>
+                                                                                                                                            </label>
+                                                                                                                                        </li>
+                                                                                                                                        <li class="item">
+                                                                                                                                            <label class="checkbox">
+                                                                                                                                                <input type="checkbox" id="[30da7df8c2]"><span>Test 2</span>
+                                                                                                                                            </label>
+                                                                                                                                        </li>
+                                                                                                                                        <li class="item">
+                                                                                                                                            <label class="checkbox">
+                                                                                                                                                <input type="checkbox" id="[e1d224fca3]"><span>Test 3</span>
+                                                                                                                                            </label>
+                                                                                                                                        </li>
+                                                                                                                                        <li class="item">
+                                                                                                                                            <label class="checkbox">
+                                                                                                                                                <input type="checkbox" id="[c30aef16a7]"><span>Test 4</span>
+                                                                                                                                            </label>
+                                                                                                                                        </li>
+                                                                                                                                        <li class="item">
+                                                                                                                                            <label class="checkbox">
+                                                                                                                                                <input type="checkbox" id="[196f1332fe]"><span>Test 5</span>
+                                                                                                                                            </label>
+                                                                                                                                        </li>
+                                                                                                                                        <li class="item">
+                                                                                                                                            <label class="checkbox">
+                                                                                                                                                <input type="checkbox" id="[8836c40038]"><span>Test 6</span>
+                                                                                                                                            </label>
+                                                                                                                                        </li>
+                                                                                                                                        <li class="item">
+                                                                                                                                            <label class="checkbox">
+                                                                                                                                                <input type="checkbox" id="[8f3d0bbb83]"><span>Test 7</span>
+                                                                                                                                            </label>
+                                                                                                                                        </li>
+                                                                                                                                        <li class="item">
+                                                                                                                                            <label class="checkbox">
+                                                                                                                                                <input type="checkbox" id="[152524a14d]"><span>Test 8</span>
+                                                                                                                                            </label>
+                                                                                                                                        </li>
+                                                                                                                                        <li class="item">
+                                                                                                                                            <label class="checkbox">
+                                                                                                                                                <input type="checkbox" id="[ac84e05d50]"><span>Test 9</span>
+                                                                                                                                            </label>
+                                                                                                                                        </li>
+                                                                                                                                        <li class="item">
+                                                                                                                                            <label class="checkbox">
+                                                                                                                                                <input type="checkbox" id="[1ce479f37f]"><span>Test 10</span>
+                                                                                                                                            </label>
+                                                                                                                                        </li>
+                                                                                                                                    </ul>
                                                                                                                             </div>
                                                                                                                         </div>
-                                                                                                                        <div class="background-dot-container disabled">
-                                                                                                                           <div class="background-dot-container-content disabled" style="padding: 0;">
-                                                                                                                               <h4 class="upload-option disabled" id="upload-link-input-upload">Upload via link...</h4>
-                                                                                                                               <input type="url" id="link-upload-input-upload" class="hidden disabled" placeholder="Paste link here...">
-                                                                                                                           </div>
-                                                                                                                       </div>
+                                                                                                                        <div class="line"></div>
+                                                                                                                        <div class="nav-links group1">
+                                                                                                                            <li><a class="text" for="Positive">Positive</a></li>
+                                                                                                                            <li><a class="text" for="Negative">Negative</a></li>
+                                                                                                                            <li><a class="text" for="Other">Other</a></li>
+                                                                                                                        </div>
+                                                                                                                        <div id="Positive" class="section" style="display: none;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                            <div>
+                                                                                                                                <h4 class="non-bold">Positive Prompt</h4>
+                                                                                                                                <div style="font-size: 0px; font-weight: 400;" tooltip>
+                                                                                                                                    <div class="tooltip">Enter a positive prompt to specify elements you want to enhance, add or remove from the image..</div>
+                                                                                                                                    <textarea id="positivePrompt" placeholder="Leave empty or enter a desired positive prompt..." maxlength="2000" style="width: 100%;height: 100%;"></textarea>
+                                                                                                                                </div>
+                                                                                                                            </div>
+                                                                                                                            <div class="line"></div>
+                                                                                                                            <div>
+                                                                                                                                <h4 style="font-weight: 400;">Positive Mask</h4>
+                                                                                                                                <div id="positive_mask" class="combobox" tooltip style="gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                                    <div class="tooltip">Use the Positive Mask to detect specific objects and mask them using SAM (Segment Anything Model). This feature identifies and isolates targeted areas for enhancement or replacement based on your positive prompts.</div>
+                                                                                                                                    <span class="combobox-text" title="Change" default="Clothes"></span>
+                                                                                                                                    <span class="arrow-dwn"></span>
+                                                                                                                                    <ul class="list-items">
+                                                                                                                                        <li class="item">
+                                                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                                                <input type="checkbox" id="clothes"><span>Clothes</span>
+                                                                                                                                             <div class="tooltip">Auto-segment clothing in the image to apply changes based on your chosen prompt.</div>
+                                                                                                                                         </label>
+                                                                                                                                        </li>
+                                                                                                                                        <li class="item">
+                                                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                                                <input type="checkbox" id="bikini"><span>Bikini</span>
+                                                                                                                                                <div class="tooltip">Auto-segment bikinis in the image to apply changes based on your chosen prompt.</div>
+                                                                                                                                            </label>
+                                                                                                                                        </li>
+                                                                                                                                        <li class="item">
+                                                                                                                                            <label class="checkbox" tooltip>
+                                                                                                                                                <input type="checkbox" id="canvas"><span>Canvas</span>
+                                                                                                                                                <div class="tooltip">Draw your mask-segmentation via canvas to apply changes based on your chosen prompt.</div>
+                                                                                                                                            </label>
+                                                                                                                                        </li>
+                                                                                                                                    </ul>
+                                                                                                                                </div>
+                                                                                                                            </div>
+                                                                                                                            <div class="line"></div>
+                                                                                                                            <div class="nav-links group2">
+                                                                                                                                <li><a class="text" for="Person">Person</a></li>
+                                                                                                                                <li><a class="text" for="Body">Body</a></li>
+                                                                                                                                <li><a class="text" for="Breast">Breast</a></li>
+                                                                                                                                <li><a class="text" for="Clothing">Clothing</a></li>
+                                                                                                                                <li><a class="text" for="Quality">Quality</a></li>
+                                                                                                                            </div>
+
+                                                                                                                                <div class="small-boxes" id="Person">
+                                                                                                                                    <div class="small-box" tooltip data-value="1girl"><span class="arrow-dwn"></span>Woman</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="1boy"><span class="arrow-dwn"></span>Man</div>
+                                                                                                                                </div>
+
+                                                                                                                                <div class="small-boxes" id="Body">
+                                                                                                                                    <div class="small-box" tooltip data-value="skinny"><span class="arrow-dwn"></span>Skinny</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="athletic"><span class="arrow-dwn"></span>Athletic</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="slim-fit"><span class="arrow-dwn"></span>Slim Fit</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="muscular"><span class="arrow-dwn"></span>Muscular</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="full-figured"><span class="arrow-dwn"></span>Full Figured</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="chubby"><span class="arrow-dwn"></span>Chubby</div>
+                                                                                                                                </div>
+
+                                                                                                                                <div class="small-boxes" id="Breast">
+                                                                                                                                    <div class="small-box" tooltip data-value="flat chest"><span class="arrow-dwn"></span>Flat Chest</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="small breast"><span class="arrow-dwn"></span>Small Breast</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="medium breast"><span class="arrow-dwn"></span>Medium Breast</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="big breast"><span class="arrow-dwn"></span>Big Breast</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="massive breast"><span class="arrow-dwn"></span>Massive Breast</div>
+                                                                                                                                </div>
+
+                                                                                                                                <div class="small-boxes" id="Clothing">
+                                                                                                                                    <div class="small-box" tooltip data-value="skirt"><span class="arrow-dwn"></span>Skirt</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="miniskirt"><span class="arrow-dwn"></span>Miniskirt</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="pencil skirt"><span class="arrow-dwn"></span>Pencil Skirt</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="underpants"><span class="arrow-dwn"></span>Underpants</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="swimsuit"><span class="arrow-dwn"></span>Swimsuit</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="lingerie"><span class="arrow-dwn"></span>Lingerie</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="bikini"><span class="arrow-dwn"></span><div class "settings-container"></div>Bikini</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="corset"><span class="arrow-dwn"></span>Corset</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="tank tops"><span class="arrow-dwn"></span>Tank Tops</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="swimwear"><span class="arrow-dwn"></span>Swimwear</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="cat costume"><span class="arrow-dwn"></span>Cat Costume</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="bunny costume"><span class="arrow-dwn"></span>Bunny Costume</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="dog costume"><span class="arrow-dwn"></span>Dog Costume</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="witch costume"><span class="arrow-dwn"></span>Witch Costume</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="overalls"><span class="arrow-dwn"></span>Overalls</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="hoodie"><span class="arrow-dwn"></span>Hoodie</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="sweater"><span class="arrow-dwn"></span>Sweater</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="t-shirt"><span class="arrow-dwn"></span>T-shirt</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="blouse"><span class="arrow-dwn"></span>Blouse</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="trousers"><span class="arrow-dwn"></span>Trousers</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="leggings"><span class="arrow-dwn"></span>Leggings</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="jacket"><span class="arrow-dwn"></span>Jacket</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="coat"><span class="arrow-dwn"></span>Coat</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="pajamas"><span class="arrow-dwn"></span>Pajamas</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="shorts"><span class="arrow-dwn"></span>Shorts</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="kimono"><span class="arrow-dwn"></span>Kimono</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="sweatpants"><span class="arrow-dwn"></span>Sweatpants</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="hooded sweatshirt"><span class="arrow-dwn"></span>Hooded Sweatshirt</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="bondage"><span class="arrow-dwn"></span>Bondage</div>
+                                                                                                                                </div>
+
+                                                                                                                                <div class="small-boxes" id="Quality">
+                                                                                                                                    <div class="small-box" tooltip data-value="masterpiece"><span class="arrow-dwn"></span>Masterpiece</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="best quality"><span class="arrow-dwn"></span>Best Quality</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="extremely detailed"><span class="arrow-dwn"></span>Extremely Detailed</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="detailed body"><span class="arrow-dwn"></span>Detailed Body</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="intricate"><span class="arrow-dwn"></span>Intricate</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="vivid"><span class="arrow-dwn"></span>Vivid</div>
+                                                                                                                                    <div class="small-box" tooltip data-value="raw photo"><span class="arrow-dwn"></span>RAW Photo</div>
+                                                                                                                                </div>
+
+                                                                                                                        </div>
+                                                                                                                        <div id="Negative" class="section" style="display: none;position: relative;flex-direction: column;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                            <div>
+                                                                                                                                <h4 class="non-bold">Negative Prompt</h4>
+                                                                                                                                <div style="font-size: 0px;">
+                                                                                                                                    <textarea id="negativePrompt" placeholder="Leave empty or enter a desired negative prompt..." maxlength="2000" style="width: 100%;height: 100%;"></textarea>
+                                                                                                                                </div>
+                                                                                                                            </div>
+                                                                                                                            <div class="line"></div>
+                                                                                                                            <div>
+                                                                                                                              <h4 style="font-weight: 400;">Negative Mask</h4>
+                                                                                                                              <div id="positive_mask" class="combobox" tooltip style="gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                                  <div class="tooltip">Use the Negative Mask to exclude specific objects from detection and masking with SAM (Segment Anything Model). This feature prevents enhancement or alteration in unwanted areas, preserving the natural look of excluded regions.</div>
+                                                                                                                                  <span class="combobox-text" title="Keep" default="Nothing"></span>
+                                                                                                                                  <span class="arrow-dwn"></span>
+                                                                                                                                  <ul class="list-items">
+                                                                                                                                      <li class="item">
+                                                                                                                                          <label class="checkbox" tooltip>
+                                                                                                                                              <input type="checkbox" id="face"><span>Face</span>
+                                                                                                                                              <div class="tooltip">Selecting this option ensures that the face remains unaltered in the image .</div>
+                                                                                                                                          </label>
+                                                                                                                                      </li>
+                                                                                                                                      <li class="item">
+                                                                                                                                          <label class="checkbox" tooltip>
+                                                                                                                                              <input type="checkbox" id="hair"><span>Hair</span>
+                                                                                                                                              <div class="tooltip">Selecting this option ensures that the hair remains unaltered in the image.</div>
+                                                                                                                                          </label>
+                                                                                                                                      </li>
+                                                                                                                                  </ul>
+                                                                                                                              </div>
+                                                                                                                          </div>
+                                                                                                                        </div>
+                                                                                                                        <div id="Other" class="section" style="display: none;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                                                            <div>
+                                                                                                                                <h4 style="font-weight: 400;">Remove Banner</h4>
+                                                                                                                                <label class="checkbox">
+                                                                                                                                    <input type="checkbox" id="removeBanner"><span>Remove banner</span>
+                                                                                                                                </label>
+                                                                                                                            </div>
+                                                                                                                        </div>
+                                                                                                                        <div class="line"></div>
+                                                                                                                    <div style="display: flex;gap: calc(1.5vh* var(--scale-factor-h));">
+                                                                                                                        <button class="wide" id="startProcessBtn">Start Process</button>
+                                                                                                                        <button class="wide" id="cancelProcessBtn">Cancel Process</button>
                                                                                                                     </div>
-                                                                                                                <input type="file" accept="video/*,image/*" id="input-upload" style="display: none" multiple>
-                                                                                                                <div class="inputs"></div>
+                                                                                                                </div>
                                                                                                             </div>
                                                                                                         </div>
-                                                                                                            <div class="line"></div>
-                                                                                                            <div class="rectangle-container" id="mode-selection">
-						                                                                                        <div class="rectangle" id="realistic">
-							                                                                                        <img src="assets/img1.png" alt="Image 1">
-							                                                                                        <h4 class="text non-bold" title="Realistic"></h4>
-                                                                                                                    <span class="arrow-dwn"></span>
-                                                                                                                       <ul class="list-items">
-                                                                                                                            <li class="item">
-                                                                                                                                <label class="checkbox">
-                                                                                                                                    <input type="checkbox" id="[default realistic]"><span>Default</span>
-                                                                                                                                </label>
-                                                                                                                            </li>
-                                                                                                                        </ul>
-						                                                                                        </div>
-						                                                                                        <div class="rectangle" id="anime">
-							                                                                                        <img src="assets/img2.png" alt="Image 2">
-							                                                                                        <h4 class="text non-bold" title="Anime"></h4>
-                                                                                                                    <span class="arrow-dwn"></span>
-                                                                                                                        <ul class="list-items">
-                                                                                                                            <li class="item">
-                                                                                                                                <label class="checkbox">
-                                                                                                                                    <input type="checkbox" id="[default anime]"><span>Default</span>
-                                                                                                                                </label>
-                                                                                                                            </li>
-                                                                                                                            <li class="item">
-                                                                                                                                <label class="checkbox">
-                                                                                                                                    <input type="checkbox" id="[30da7df8c2]"><span>Test 2</span>
-                                                                                                                                </label>
-                                                                                                                            </li>
-                                                                                                                            <li class="item">
-                                                                                                                                <label class="checkbox">
-                                                                                                                                    <input type="checkbox" id="[e1d224fca3]"><span>Test 3</span>
-                                                                                                                                </label>
-                                                                                                                            </li>
-                                                                                                                            <li class="item">
-                                                                                                                                <label class="checkbox">
-                                                                                                                                    <input type="checkbox" id="[c30aef16a7]"><span>Test 4</span>
-                                                                                                                                </label>
-                                                                                                                            </li>
-                                                                                                                            <li class="item">
-                                                                                                                                <label class="checkbox">
-                                                                                                                                    <input type="checkbox" id="[196f1332fe]"><span>Test 5</span>
-                                                                                                                                </label>
-                                                                                                                            </li>
-                                                                                                                            <li class="item">
-                                                                                                                                <label class="checkbox">
-                                                                                                                                    <input type="checkbox" id="[8836c40038]"><span>Test 6</span>
-                                                                                                                                </label>
-                                                                                                                            </li>
-                                                                                                                            <li class="item">
-                                                                                                                                <label class="checkbox">
-                                                                                                                                    <input type="checkbox" id="[8f3d0bbb83]"><span>Test 7</span>
-                                                                                                                                </label>
-                                                                                                                            </li>
-                                                                                                                            <li class="item">
-                                                                                                                                <label class="checkbox">
-                                                                                                                                    <input type="checkbox" id="[152524a14d]"><span>Test 8</span>
-                                                                                                                                </label>
-                                                                                                                            </li>
-                                                                                                                            <li class="item">
-                                                                                                                                <label class="checkbox">
-                                                                                                                                    <input type="checkbox" id="[ac84e05d50]"><span>Test 9</span>
-                                                                                                                                </label>
-                                                                                                                            </li>
-                                                                                                                            <li class="item">
-                                                                                                                                <label class="checkbox">
-                                                                                                                                    <input type="checkbox" id="[1ce479f37f]"><span>Test 10</span>
-                                                                                                                                </label>
-                                                                                                                            </li>
-                                                                                                                        </ul>
-						                                                                                        </div>
-					                                                                                        </div>
-                                                                                                            <div class="line"></div>
-                                                                                                            <div class="nav-links group1">
-                                                                                                                <li><a class="text" for="Positive">Positive</a></li>
-                                                                                                                <li><a class="text" for="Negative">Negative</a></li>
-                                                                                                                <li><a class="text" for="Other">Other</a></li>
-                                                                                                            </div>
-                                                                                                            <div id="Positive" class="section" style="display: none;gap: calc(1vh* var(--scale-factor-h));">
-                                                                                                                <div>
-                                                                                                                    <h4 class="non-bold">Positive Prompt</h4>
-                                                                                                                    <div style="font-size: 0px; font-weight: 400;" tooltip>
-                                                                                                                        <div class="tooltip">Enter a positive prompt to specify elements you want to enhance, add or remove from the image..</div>
-                                                                                                                        <textarea id="positivePrompt" placeholder="Leave empty or enter a desired positive prompt..." maxlength="2000" style="width: 100%;height: 100%;"></textarea>
-                                                                                                                    </div>
-                                                                                                                </div>                                                                                 
-                                                                                                                <div class="line"></div>                                                                                                         
-                                                                                                                <div>
-                                                                                                                    <h4 style="font-weight: 400;">Positive Mask</h4>
-                                                                                                                    <div id="positive_mask" class="combobox" tooltip style="gap: calc(1vh* var(--scale-factor-h));">
-                                                                                                                        <div class="tooltip">Use the Positive Mask to detect specific objects and mask them using SAM (Segment Anything Model). This feature identifies and isolates targeted areas for enhancement or replacement based on your positive prompts.</div>
-                                                                                                                        <span class="combobox-text" title="Change" default="Clothes"></span>
-                                                                                                                        <span class="arrow-dwn"></span>
-                                                                                                                        <ul class="list-items">
-                                                                                                                            <li class="item">
-                                                                                                                                <label class="checkbox" tooltip>
-                                                                                                                                    <input type="checkbox" id="clothes"><span>Clothes</span>
-                                                                                                                                 <div class="tooltip">Segment clothing in the image to apply changes based on your chosen prompt.</div>
-                                                                                                                             </label>
-                                                                                                                            </li>
-                                                                                                                            <li class="item">
-                                                                                                                                <label class="checkbox" tooltip>
-                                                                                                                                    <input type="checkbox" id="bikini"><span>Bikini</span>
-                                                                                                                                    <div class="tooltip">Segment bikinis in the image to apply changes based on your chosen prompt.</div>
-                                                                                                                                </label>
-                                                                                                                            </li>
-                                                                                                                        </ul>
-                                                                                                                    </div>
-                                                                                                                </div>
-                                                                                                                <div class="line"></div>
-                                                                                                                <div class="nav-links group2">
-                                                                                                                    <li><a class="text" for="Person">Person</a></li>
-                                                                                                                    <li><a class="text" for="Body">Body</a></li>
-                                                                                                                    <li><a class="text" for="Breast">Breast</a></li>
-                                                                                                                    <li><a class="text" for="Clothing">Clothing</a></li>
-                                                                                                                    <li><a class="text" for="Quality">Quality</a></li>
-                                                                                                                </div>
-
-						                                                                                            <div class="small-boxes" id="Person">
-							                                                                                            <div class="small-box" tooltip data-value="1girl"><span class="arrow-dwn"></span>Woman</div>
-							                                                                                            <div class="small-box" tooltip data-value="1boy"><span class="arrow-dwn"></span>Man</div>
-						                                                                                            </div>
-					
-						                                                                                            <div class="small-boxes" id="Body">
-							                                                                                            <div class="small-box" tooltip data-value="skinny"><span class="arrow-dwn"></span>Skinny</div>
-							                                                                                            <div class="small-box" tooltip data-value="athletic"><span class="arrow-dwn"></span>Athletic</div>
-							                                                                                            <div class="small-box" tooltip data-value="slim-fit"><span class="arrow-dwn"></span>Slim Fit</div>
-							                                                                                            <div class="small-box" tooltip data-value="muscular"><span class="arrow-dwn"></span>Muscular</div>
-							                                                                                            <div class="small-box" tooltip data-value="full-figured"><span class="arrow-dwn"></span>Full Figured</div>
-							                                                                                            <div class="small-box" tooltip data-value="chubby"><span class="arrow-dwn"></span>Chubby</div>
-						                                                                                            </div>
-					
-						                                                                                            <div class="small-boxes" id="Breast">
-							                                                                                            <div class="small-box" tooltip data-value="flat chest"><span class="arrow-dwn"></span>Flat Chest</div>
-							                                                                                            <div class="small-box" tooltip data-value="small breast"><span class="arrow-dwn"></span>Small Breast</div>
-							                                                                                            <div class="small-box" tooltip data-value="medium breast"><span class="arrow-dwn"></span>Medium Breast</div>
-							                                                                                            <div class="small-box" tooltip data-value="big breast"><span class="arrow-dwn"></span>Big Breast</div>
-							                                                                                            <div class="small-box" tooltip data-value="massive breast"><span class="arrow-dwn"></span>Massive Breast</div>
-						                                                                                            </div>
-					
-						                                                                                            <div class="small-boxes" id="Clothing">
-							                                                                                            <div class="small-box" tooltip data-value="skirt"><span class="arrow-dwn"></span>Skirt</div>
-							                                                                                            <div class="small-box" tooltip data-value="miniskirt"><span class="arrow-dwn"></span>Miniskirt</div>
-							                                                                                            <div class="small-box" tooltip data-value="pencil skirt"><span class="arrow-dwn"></span>Pencil Skirt</div>
-							                                                                                            <div class="small-box" tooltip data-value="underpants"><span class="arrow-dwn"></span>Underpants</div>
-							                                                                                            <div class="small-box" tooltip data-value="swimsuit"><span class="arrow-dwn"></span>Swimsuit</div>
-							                                                                                            <div class="small-box" tooltip data-value="lingerie"><span class="arrow-dwn"></span>Lingerie</div>
-							                                                                                            <div class="small-box" tooltip data-value="bikini"><span class="arrow-dwn"></span><div class "settings-container"></div>Bikini</div>
-							                                                                                            <div class="small-box" tooltip data-value="corset"><span class="arrow-dwn"></span>Corset</div>
-							                                                                                            <div class="small-box" tooltip data-value="tank tops"><span class="arrow-dwn"></span>Tank Tops</div>
-							                                                                                            <div class="small-box" tooltip data-value="swimwear"><span class="arrow-dwn"></span>Swimwear</div>
-							                                                                                            <div class="small-box" tooltip data-value="cat costume"><span class="arrow-dwn"></span>Cat Costume</div>
-							                                                                                            <div class="small-box" tooltip data-value="bunny costume"><span class="arrow-dwn"></span>Bunny Costume</div>
-							                                                                                            <div class="small-box" tooltip data-value="dog costume"><span class="arrow-dwn"></span>Dog Costume</div>
-							                                                                                            <div class="small-box" tooltip data-value="witch costume"><span class="arrow-dwn"></span>Witch Costume</div>
-							                                                                                            <div class="small-box" tooltip data-value="overalls"><span class="arrow-dwn"></span>Overalls</div>
-							                                                                                            <div class="small-box" tooltip data-value="hoodie"><span class="arrow-dwn"></span>Hoodie</div>
-							                                                                                            <div class="small-box" tooltip data-value="sweater"><span class="arrow-dwn"></span>Sweater</div>
-							                                                                                            <div class="small-box" tooltip data-value="t-shirt"><span class="arrow-dwn"></span>T-shirt</div>
-							                                                                                            <div class="small-box" tooltip data-value="blouse"><span class="arrow-dwn"></span>Blouse</div>
-							                                                                                            <div class="small-box" tooltip data-value="trousers"><span class="arrow-dwn"></span>Trousers</div>
-							                                                                                            <div class="small-box" tooltip data-value="leggings"><span class="arrow-dwn"></span>Leggings</div>
-							                                                                                            <div class="small-box" tooltip data-value="jacket"><span class="arrow-dwn"></span>Jacket</div>
-							                                                                                            <div class="small-box" tooltip data-value="coat"><span class="arrow-dwn"></span>Coat</div>
-							                                                                                            <div class="small-box" tooltip data-value="pajamas"><span class="arrow-dwn"></span>Pajamas</div>
-							                                                                                            <div class="small-box" tooltip data-value="shorts"><span class="arrow-dwn"></span>Shorts</div>
-							                                                                                            <div class="small-box" tooltip data-value="kimono"><span class="arrow-dwn"></span>Kimono</div>
-							                                                                                            <div class="small-box" tooltip data-value="sweatpants"><span class="arrow-dwn"></span>Sweatpants</div>
-							                                                                                            <div class="small-box" tooltip data-value="hooded sweatshirt"><span class="arrow-dwn"></span>Hooded Sweatshirt</div>
-							                                                                                            <div class="small-box" tooltip data-value="bondage"><span class="arrow-dwn"></span>Bondage</div>
-						                                                                                            </div>
-
-						                                                                                            <div class="small-boxes" id="Quality">
-							                                                                                            <div class="small-box" tooltip data-value="masterpiece"><span class="arrow-dwn"></span>Masterpiece</div>
-							                                                                                            <div class="small-box" tooltip data-value="best quality"><span class="arrow-dwn"></span>Best Quality</div>
-							                                                                                            <div class="small-box" tooltip data-value="extremely detailed"><span class="arrow-dwn"></span>Extremely Detailed</div>
-							                                                                                            <div class="small-box" tooltip data-value="detailed body"><span class="arrow-dwn"></span>Detailed Body</div>
-							                                                                                            <div class="small-box" tooltip data-value="intricate"><span class="arrow-dwn"></span>Intricate</div>
-							                                                                                            <div class="small-box" tooltip data-value="vivid"><span class="arrow-dwn"></span>Vivid</div>
-							                                                                                            <div class="small-box" tooltip data-value="raw photo"><span class="arrow-dwn"></span>RAW Photo</div>
-						                                                                                            </div>
-
-                                                                                                            </div>
-                                                                                                            <div id="Negative" class="section" style="display: none;position: relative;flex-direction: column;gap: calc(1vh* var(--scale-factor-h));">
-                                                                                                                <div>
-                                                                                                                    <h4 class="non-bold">Negative Prompt</h4>
-                                                                                                                    <div style="font-size: 0px;">
-                                                                                                                        <textarea id="negativePrompt" placeholder="Leave empty or enter a desired negative prompt..." maxlength="2000" style="width: 100%;height: 100%;"></textarea>
-                                                                                                                    </div>
-                                                                                                                </div>                              
-                                                                                                                <div class="line"></div>
-                                                                                                                <div>
-                                                                                                                  <h4 style="font-weight: 400;">Negative Mask</h4>
-                                                                                                                  <div id="positive_mask" class="combobox" tooltip style="gap: calc(1vh* var(--scale-factor-h));">
-                                                                                                                      <div class="tooltip">Use the Negative Mask to exclude specific objects from detection and masking with SAM (Segment Anything Model). This feature prevents enhancement or alteration in unwanted areas, preserving the natural look of excluded regions.</div>
-                                                                                                                      <span class="combobox-text" title="Keep" default="Nothing"></span>
-                                                                                                                      <span class="arrow-dwn"></span>
-                                                                                                                      <ul class="list-items">
-                                                                                                                          <li class="item">
-                                                                                                                              <label class="checkbox" tooltip>
-                                                                                                                                  <input type="checkbox" id="face"><span>Face</span>
-                                                                                                                                  <div class="tooltip">Selecting this option ensures that the face remains unaltered in the image .</div>
-                                                                                                                              </label>
-                                                                                                                          </li>
-                                                                                                                          <li class="item">
-                                                                                                                              <label class="checkbox" tooltip>
-                                                                                                                                  <input type="checkbox" id="hair"><span>Hair</span>
-                                                                                                                                  <div class="tooltip">Selecting this option ensures that the hair remains unaltered in the image.</div>
-                                                                                                                              </label>
-                                                                                                                          </li>
-                                                                                                                      </ul>
-                                                                                                                  </div>
-                                                                                                              </div>                         
-                                                                                                            </div>
-                                                                                                            <div id="Other" class="section" style="display: none;gap: calc(1vh* var(--scale-factor-h));">
-                                                                                                                <div>
-                                                                                                                    <h4 style="font-weight: 400;">Remove Banner</h4>
-                                                                                                                    <label class="checkbox">
-                                                                                                                        <input type="checkbox" id="removeBanner"><span>Remove banner</span>
-                                                                                                                    </label>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                                <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
+                                                                                                    <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
+                                                                                                        <div class="background-dot-container">
+                                                                                                            <div class="background-dot-container-content">
+                                                                                                                <div class="outputs"></div>
+                                                                                                                <div style="display: flex;justify-content: space-around;gap: calc(1.5vh* var(--scale-factor-h));">
+                                                                                                                    <button class="wide" id="downloadOutput">Download</button>
+                                                                                                                    <button class="wide" id="viewOutput">View</button>
                                                                                                                 </div>
                                                                                                             </div>
-                                                                                                            <div class="line"></div>
-                                                                                                        <div style="display: flex;gap: calc(1.5vh* var(--scale-factor-h));">
-                                                                                                            <button class="wide" id="startProcessBtn">Start Process</button>
-                                                                                                            <button class="wide" id="cancellProcessBtn">Cancel Process</button>
                                                                                                         </div>
                                                                                                     </div>
                                                                                                 </div>
                                                                                             </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
-                                                                                        <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
-                                                                                            <div class="background-dot-container">
-                                                                                                <div class="background-dot-container-content">
-                                                                                                    <div class="outputs"></div>
-                                                                                                    <div style="display: flex;justify-content: space-around;gap: calc(1.5vh* var(--scale-factor-h));">
-                                                                                                        <button class="wide" id="downloadOutput">Download</button>
-                                                                                                        <button class="wide" id="viewOutput">View</button>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                                `);
+                                                                                            `);
             }
 
             loadPageContent(setUser, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, setAuthentication, updateMainContent, savePageState);
@@ -678,7 +716,7 @@
                         listItems.appendChild(buttonItem);
 
                         entry.target.appendChild(listItems);
-                        loadSavedData(dataValue, qualityValue, entry.target);  // Use entry.target instead of box
+                        loadSavedData(dataValue, qualityValue, entry.target);
 
                         slider.addEventListener("input", (event) => {
                             qualityValue.textContent = event.target.value;
@@ -756,20 +794,6 @@
 
             smallBoxes.forEach(box => observer.observe(box));
 
-            let selectedModeId = null;
-
-            const rectangles = document.querySelectorAll(".rectangle");
-            rectangles.forEach((rectangle) => {
-                if (rectangle.classList.contains('selected')) 
-                    selectedModeId = rectangle.id;
-
-                rectangle.addEventListener("click", () => {
-                    rectangles.forEach((rect) => rect.classList.remove("selected"));
-                    rectangle.classList.add("selected");
-                    selectedModeId = rectangle.id;
-                });
-            });
-
             checkServerStatus(databases, userData?.uid);
             setDynamicInterval(databases, userData?.uid);
 
@@ -800,10 +824,30 @@
                 createSectionAndElements();
 
                 const startProcessBtn = document.getElementById('startProcessBtn');
-                startProcessBtn.addEventListener('click', async () => { await startProcess(); });
+                startProcessBtn.addEventListener('click', () => { startProcess(); });
 
-                const cancellProcessBtn = document.getElementById('cancellProcessBtn');
-                cancellProcessBtn.addEventListener('click', async () => { await cancelProcess(true); });
+                const cancelProcessBtn = document.getElementById('cancelProcessBtn');
+                cancelProcessBtn.addEventListener('click', () => { cancelProcess(true); });
+
+                let selectedModeId = null;
+
+                const rectangles = document.querySelectorAll(".rectangle");
+                rectangles.forEach((rectangle) => {
+                    if (rectangle.classList.contains('selected'))
+                        selectedModeId = rectangle.id;
+
+                    rectangle.addEventListener("click", () => {
+                        rectangles.forEach((rect) => rect.classList.remove("selected"));
+                        rectangle.classList.add("selected");
+                        selectedModeId = rectangle.id;
+                    });
+                });
+
+                const removeBannerCheckbox = document.getElementById("removeBanner");
+                if (removeBannerCheckbox && userDoc?.paid && localStorage.getItem(`bannerChecked_${pageName}`) === null) {
+                    removeBannerCheckbox.checked = true;
+                    localStorage.setItem(`bannerChecked_${pageName}`, "true");
+                }
 
                 async function startProcess() {
                     startProcessBtn.disabled = true;
@@ -820,6 +864,26 @@
                             return;
                         }
 
+                        let imageMask = null;
+
+                        const maskSelectorIds = [
+                            document.getElementById('clothes'),
+                            document.getElementById('bikini'),
+                            document.getElementById('canvas'),
+                        ];
+
+                        const maskSelector = getSelectedInputId(maskSelectorIds);
+                        const activePhotoInput = document.querySelector(".inputs .data-container.active img");
+                        if (activePhotoInput && maskSelector === 'canvas') {
+                            const data = await showCanvas(activePhotoInput);
+                            if (data?.didFail === 'true') {
+                                startProcessBtn.disabled = false;
+                                return;
+                            }
+
+                            imageMask = await processBase64ToFile(data.image, 'drawing.png');
+                        }
+
                         const dataContainer = document.createElement('div');
                         dataContainer.className = 'data-container';
 
@@ -831,6 +895,13 @@
                         outputs.style.display = 'flex';
                         outputs.insertBefore(dataContainer, outputs.firstChild);
 
+                        if (!activePhotoInput) {
+                            setClientStatus(`Click Your Uploaded Input Above`);
+                            showNotification(`Click your uploaded input above to select it.`, 'Warning - No Input Selected', 'warning-important');
+                            startProcessBtn.disabled = false;
+                            return;
+                        }
+
                         if (!userData.emailVerified) {
                             setClientStatus('Verify Your Email');
                             showNotification(`Please verify you.`, 'Warning - No Input Selected', 'warning-important');
@@ -839,14 +910,6 @@
                         }
 
                         userDoc = await getUserDoc();
-
-                        const activePhotoInput = document.querySelector(".inputs .data-container.active img");
-                        if (!activePhotoInput) {
-                            setClientStatus(`Click Your Uploaded Input Above`);
-                            showNotification(`Click your uploaded input above to select it.`, 'Warning - No Input Selected', 'warning-important');
-                            startProcessBtn.disabled = false;
-                            return;
-                        }
 
                         const removeBanner = document.getElementById("removeBanner");
                         const removeBannerStateMultiplier = removeBanner.checked ? 3 : 2;
@@ -907,7 +970,6 @@
                             });
                         };
 
-                        // Main function to manage the process
                         const createUserIds = async () => {
                             try {
                                 setClientStatus("Fetching ID's...");
@@ -986,6 +1048,9 @@
                             return;
                         }
 
+                        if (!imageMask)
+                            imageMask = imageFile;
+
                         if (imageFile.size / 1048576 > FILE_SIZE_LIMIT_MB) {
                             startProcessBtn.disabled = false;
                             setClientStatus(`Size exceeds ${FILE_SIZE_LIMIT_MB}MB limit`);
@@ -995,13 +1060,6 @@
 
                         const positivePrompt = document.getElementById("positivePrompt").value;
                         const negativePrompt = document.getElementById("negativePrompt").value;
-
-                        const maskSelectorIds = [
-                            document.getElementById('clothes'),
-                            document.getElementById('bikini')
-                        ];
-
-                        const maskSelector = getSelectedInputId(maskSelectorIds);
 
                         const negativeMaskSelectorIds = [
                             document.getElementById('face'),
@@ -1013,7 +1071,7 @@
                         const formData = new FormData();
                         formData.append('userId', userData.uid);
                         formData.append('imageFile', imageFile);
-                        formData.append('imageMask', imageFile);
+                        formData.append('imageMask', imageMask);
                         formData.append('modeSelector', selectedModeId);
                         formData.append('removeBanner', removeBanner.checked);
                         formData.append('poseRecognition', false);
@@ -1353,5 +1411,5 @@
             window.addEventListener('resize', sizeBasedElements);
         });
     </script>
-</body>
+<script src="scripts/autoTranslate.js"></script></body>
 </html>

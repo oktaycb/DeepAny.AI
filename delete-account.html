@@ -17,6 +17,7 @@
             left: 50%;
             border: 3px solid #f3f3f3;
             border-top: 3px solid #ff7300;
+            z-index: 999999;
             border-radius: 50%;
             width: 50px !important;
             height: 50px !important;
@@ -37,11 +38,42 @@
     <link rel="shortcut icon" href="/.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="stylesheet" href="css/styles.css?v=1.1.1.2.7.6">
+    <script>
+        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '1.1.1.5.0.8';
+        const url = window.location.origin + window.location.pathname;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            (async function () {
+                const storedVersion = localStorage.getItem('version');
+                const urlParamsVersion = new URLSearchParams(window.location.search).get('version');
+                const version = urlParamsVersion || storedVersion || '1.1.1.5.0.8';
+
+                try {
+                    const randomParam = `nocache=${Math.random()}`;
+                    const versionUrl = `${window.location.origin}/version?${randomParam}`;
+                    const response = await fetch(versionUrl, { cache: "no-store" });
+                    const newVersion = (await response.text()).trim();
+                    localStorage.setItem('version', newVersion);
+
+                    if (!urlParamsVersion && newVersion !== version) {
+                        location.reload(true);
+                    }
+                } catch (error) {
+                    console.error("Error checking for updates:", error);
+                }
+            })();
+        });
+
+        // Create and insert the stylesheet link with the version parameter
+        const linkEl = document.createElement('link');
+        linkEl.rel = 'stylesheet';
+        linkEl.href = `css/styles.css?v=${version}`;
+        document.head.appendChild(linkEl);
+    </script>
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = new URLSearchParams(window.location.search).get('referral') || '1.1.1.2.7.6';
+        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '1.1.1.5.0.8';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -60,26 +92,26 @@
                 if (!userData) {
                     if (screenMode !== 1) {
                         pageContent.push(`
-                                                <div style="display: flex;flex-direction: column;justify-content: center;gap: 1vh;align-items: center;text-align: center;">
-                                                    <h2>Account does not exist.</h2>
-                                                </div>
-                                            `);
+                                                            <div style="display: flex;flex-direction: column;justify-content: center;gap: 1vh;align-items: center;text-align: center;">
+                                                                <h2>Account does not exist.</h2>
+                                                            </div>
+                                                        `);
                     }
                     else {
                         pageContent.push(`
-                                                <div style="display: flex;flex-direction: column;justify-content: center;gap: 1vh;align-items: center;text-align: center;">
-                                                    <h1>Please login or register to see your account.</h1>
-                                                </div>
-                                            `);
+                                                            <div style="display: flex;flex-direction: column;justify-content: center;gap: 1vh;align-items: center;text-align: center;">
+                                                                <h1>Please login or register to see your account.</h1>
+                                                            </div>
+                                                        `);
                     }
                     return;
                 }
 
                 pageContent.push(`
-                                                <div style="display: flex;flex-direction: column;justify-content: center;gap: 1vh;align-items: center;text-align: center;">
-                                                    <h1 id="deleteAccountMessage">Your account is in the process of being deleted. All user data will be permanently removed within 90 days.</h1>
-                                                </div>
-                                            `);
+                                                            <div style="display: flex;flex-direction: column;justify-content: center;gap: 1vh;align-items: center;text-align: center;">
+                                                                <h1 id="deleteAccountMessage">Your account is in the process of being deleted. All user data will be permanently removed within 90 days.</h1>
+                                                            </div>
+                                                        `);
             }
 
             loadPageContent(setUser, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, setAuthentication, updateMainContent);
@@ -93,10 +125,11 @@
 
             const userId = userData.uid;
             const confirmation = window.confirm(
-                "Are you sure you want to delete your account? This action is irreversible, and you will no longer be able to use our services again."
+                "Are you sure you want to delete your account? This action is irreversible, and you will no longer be able to use our services or create a new account."
             );
 
-            if (!confirmation) {
+            //if (!confirmation)
+            {
                 document.getElementById('deleteAccountMessage').textContent = "Your account won't be deleted.";
                 showNotification("Your account won't be deleted.", 'Account Deletion', 'normal');
                 return;
@@ -128,5 +161,5 @@
             }
         });
     </script>
-</body>
+<script src="scripts/autoTranslate.js"></script></body>
 </html>

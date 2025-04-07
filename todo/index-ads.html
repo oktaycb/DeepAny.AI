@@ -33,7 +33,7 @@
             top: 50%;
             left: 50%;
             border: 3px solid #f3f3f3;
-            border-top: 3px solid #ff7300;
+            border-top: 3px solid #ff7300; z-index: 999999;
             border-radius: 50%;
             width: 50px !important;
             height: 50px !important;
@@ -73,7 +73,7 @@
     <link rel="shortcut icon" href="/.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="stylesheet" href="css/styles.css?v=1.1.1.2.7.6">
+    <link rel="stylesheet" href="css/styles.css?v=1.1.1.3.6.7">
     <style>
         .main-container {
             display: grid;
@@ -588,7 +588,7 @@
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = new URLSearchParams(window.location.search).get('referral') || '1.1.1.2.7.6';
+        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '1.1.1.3.6.7';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -755,5 +755,5 @@
             window.addEventListener('resize', sizeBasedElements);
         });
     </script>
-</body>
+<script src="scripts/autoTranslate.js"></script></body>
 </html>

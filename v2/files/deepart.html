@@ -1225,7 +1225,7 @@
 		const progressBar = document.getElementById('progressBar');
 		//const actionRecorder = document.getElementById('actionRecorder');
 		//const actionRecorderShort = document.getElementById('actionRecorderShort');
-		const cancellProcessBtn = document.getElementById('cancellProcessBtn');
+		const cancelProcessBtn = document.getElementById('cancelProcessBtn');
 		
 		function cancelProcess(showAlertion) {
 		  return new Promise(async (resolve) => {
@@ -1315,7 +1315,7 @@
 		  });
 		}
 
-		cancellProcessBtn.addEventListener('click', async () => {
+		cancelProcessBtn.addEventListener('click', async () => {
 		  await cancelProcess(true);
 		});
 		
@@ -3809,7 +3809,7 @@
 					
 				<div style="display: flex;  justify-content: space-around; align-items: center;">
 					<button id="startProcessBtn" style="margin-right: 10px;">Start Process (<span id="credits" style="color: white;">?</span> Credits)</button>
-					<button id="cancellProcessBtn">Cancel Process</button>
+					<button id="cancelProcessBtn">Cancel Process</button>
 				</div>
             </section>
 			
@@ -4674,5 +4674,5 @@
 			});
 		}
     </script>
-</body>
+<script src="scripts/autoTranslate.js"></script></body>
 </html>

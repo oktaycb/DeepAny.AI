@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en" style="background: rgba(24, 24, 24, 1);" class="loading-screen">
+<head>
+    <title>DeepAny.AI: Face Swap</title>
+
+    <link rel="icon" href="assets/icon.ico" type="image/x-icon" title="DeepAny.AI Favicon">
+    <link rel="canonical" href="https://www.deepany.ai/face-swap">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="DeepAny.AI offers a free trial for creating realistic deepfake face swaps with cutting-edge AI technology. Easily swap faces in inputs and images with our user-friendly tools. No technical skills required�start your free trial today!">
+    <meta name="keywords" content="AI, DeepAny, bodyswap, technology, services, solutions">
+
+    <link id="loading-stylesheet" rel="stylesheet" href="css/loading.css">
+    <link rel="preload" href="assets/logo.webp" as="image">
+    <link rel="preload" href="css/pxiEyp8kv8JHgFVrJJfecg.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+    <link rel="preload" href="css/pxiByp8kv8JHgFVrLCz7Z1xlFQ.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/features.css">
+    <link rel="stylesheet" href="css/explanation.css">
+</head>
+<body lang="en">
+    <script type="module" defer>
+        import { loadPageContent } from './js/defaultPageLoads/loadDefaultHTML.js';
+        import { getScreenMode, getPageName } from './js/defaultPageLoads/accessVariables.js';
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const pageName = getPageName();
+
+            function savePageState() {
+                const requiredIds = [
+                    'enableOccluder',
+                    'enableEnhancer',
+                    'enableEnhancedAnalyzer',
+                    'enableEnhancedLandmarks',
+                    'skin',
+                    'eyebrow',
+                    'eye',
+                    'glasses',
+                    'nose',
+                    'mouth',
+                    'lip',
+                    'removeBanner',
+                    'keepFPS',
+                    'fps-slider'
+                ];
+
+                if (!requiredIds.every(id => document.getElementById(id))) {
+                    return;
+                }
+
+                const getCheckboxState = id => document.getElementById(id)?.checked || false;
+                const activeLink = document.querySelector('.nav-links .active');
+                const state = {
+                    enableOccluder: getCheckboxState('enableOccluder'),
+                    enableEnhancer: getCheckboxState('enableEnhancer'),
+                    enableEnhancedAnalyzer: getCheckboxState('enableEnhancedAnalyzer'),
+                    enableEnhancedLandmarks: getCheckboxState('enableEnhancedLandmarks'),
+                    skin: getCheckboxState('skin'),
+                    eyebrow: getCheckboxState('eyebrow'),
+                    eye: getCheckboxState('eye'),
+                    glasses: getCheckboxState('glasses'),
+                    nose: getCheckboxState('nose'),
+                    mouth: getCheckboxState('mouth'),
+                    lip: getCheckboxState('lip'),
+                    frontalRotation: getCheckboxState('frontalRotation'),
+                    rightRotation: getCheckboxState('rightRotation'),
+                    invertedRotation: getCheckboxState('invertedRotation'),
+                    leftRotation: getCheckboxState('leftRotation'),
+                    removeBanner: getCheckboxState('removeBanner'),
+                    keepFPS: getCheckboxState('keepFPS'),
+                    fpsValue: document.getElementById('fps-slider').value,
+                    activeLink: activeLink?.getAttribute('for') || '',
+                    multiboxes: Array.from(document.querySelectorAll('.multibox')).map(multibox => ({
+                        text: multibox.querySelector('.multibox-text')?.innerText || '',
+                        items: Array.from(multibox.querySelectorAll('.item')).map(item => ({
+                            checked: item.querySelector('input[type="checkbox"]')?.checked || false,
+                        })),
+                    })),
+                };
+
+                localStorage.setItem(pageName, JSON.stringify(state));
+            }
+
+            function updateMainContent(screenMode, pageContent) {
+                pageContent.length = 0;
+                pageContent.push(`
+                                            <div id="baseContainer" class="centered-container">
+                                                <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
+                                                    <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
+                                                        <div class="background-dot-container">
+                                                            <div class="background-dot-container-content">
+                                                                <div style="display: flex;justify-content: space-between;">
+                                                                 <div style="display: flex;flex-direction: column;align-items: center;">
+                                                                        <div class="circular-button circular-button-input-upload" title="Upload input">
+                                                                            <div class="question-mark" aria-label="Help" title="Choose the video or image where you want to change the face."></div>
+                                                                            <input type="file" accept="video/*,image/*" id="input-upload" style="display: none" multiple>
+                                                                        </div>
+                                                                        <div class="inputs"></div>
+                                                                    </div>
+                                                                    <div style="display: flex;flex-direction: column;align-items: center;">
+                                                                        <div class="circular-button circular-button-face-upload" title="Upload face">
+                                                                            <div class="question-mark" aria-label="Help" title="Choose the new face you want to add to the video or image."></div>
+                                                                            <input type="file" accept="image/*" id="face-upload" style="display: none" multiple>
+                                                                        </div>
+                                                                        <div class="faces"></div>
+                                                                    </div>
+                                                                </div>
+                                                                    <div class="nav-links">
+                                                                        <li><a class="text" for="Facial">Facial</a></li>
+                                                                        <li><a class="text" for="Analyzer">Analyzer</a></li>
+                                                                        <li><a class="text" for="Other">Other</a></li>
+                                                                    </div>
+                                                                    <div id="Facial" class="section" style="display: none;gap: calc(1vh* var(--scale-factor-h));">
+                                                                        <label class="checkbox" tooltip>
+                                                                            <input type="checkbox" id="enableOccluder"><span>Facial obstruction detection</span>
+                                                                            <div class="tooltip">Detects objects blocking the face, but this can cause slight unsimilarity as it will retain the unswapped face's shape.</div>
+                                                                        </label>
+                                                                        <label class="checkbox" tooltip>
+                                                                            <input type="checkbox" id="enableEnhancer"><span>Facial enhancement</span>
+                                                                            <div class="tooltip">Uses AI techniques to improve the quality of the face in output.</div>
+                                                                        </label>
+                                                                        <label class="checkbox" tooltip>
+                                                                            <input type="checkbox" id="enableEnhancedLandmarks"><span>68 Facial Landmarks</span>
+                                                                            <div class="tooltip">Enable detailed facial feature detection for better swaps.</div>
+                                                                        </label>
+                                                                    </div>
+                                                                    <div id="Analyzer" class="section" style="display: none;position: relative;flex-direction: column;gap: calc(1vh* var(--scale-factor-h));">
+                                                                        <div class="multibox" tooltip>
+                                                                            <div class="tooltip">Select regions to customize in the new face. If an area is not enabled, it will remain unchanged from the original face.</div>
+                                                                            <span class="multibox-text">Select Regions</span>
+                                                                            <span class="arrow-dwn"></span>
+                                                                            <ul class="list-items">
+                                                                                <li class="item">
+                                                                                    <label class="checkbox" tooltip>
+                                                                                        <input type="checkbox" id="skin"><span>Change Skin</span>
+                                                                                        <div class="tooltip">Swap the skin area with the new face.</div>
+                                                                                    </label>
+                                                                                </li>
+                                                                                <li class="item">
+                                                                                    <label class="checkbox" tooltip>
+                                                                                        <input type="checkbox" id="eyebrow"><span>Change Eyebrow</span>
+                                                                                        <div class="tooltip">Replace the eyebrow shape or color.</div>
+                                                                                    </label>
+                                                                                </li>
+                                                                                <li class="item">
+                                                                                    <label class="checkbox" tooltip>
+                                                                                        <input type="checkbox" id="eye"><span>Change Eye</span>
+                                                                                        <div class="tooltip">Change the eye appearance.</div>
+                                                                                    </label>
+                                                                                </li>
+                                                                                <li class="item">
+                                                                                    <label class="checkbox" tooltip>
+                                                                                        <input type="checkbox" id="glasses"><span>Change Glasses</span>
+                                                                                        <div class="tooltip">Modify or add eyewear styles.</div>
+                                                                                    </label>
+                                                                                </li>
+                                                                                <li class="item">
+                                                                                    <label class="checkbox" tooltip>
+                                                                                        <input type="checkbox" id="nose"><span>Change Nose</span>
+                                                                                        <div class="tooltip">Alter the nose shape or size.</div>
+                                                                                    </label>
+                                                                                </li>
+                                                                                <li class="item">
+                                                                                    <label class="checkbox" tooltip>
+                                                                                        <input type="checkbox" id="mouth"><span>Change Mouth</span>
+                                                                                        <div class="tooltip">Change the shape or expression of the mouth.</div>
+                                                                                    </label>
+                                                                                </li>
+                                                                                <li class="item">
+                                                                                    <label class="checkbox" tooltip>
+                                                                                        <input type="checkbox" id="lip"><span>Change Lip</span>
+                                                                                        <div class="tooltip">Adjust the color or shape of the lips.</div>
+                                                                                    </label>
+                                                                                </li>
+                                                                            </ul>
+                                                                        </div>
+                                                                        <div class="multibox" tooltip>
+                                                                            <div class="tooltip">Select head orientation to improve the analysis of the input video.</div>
+                                                                            <span class="multibox-text">Orientation</span>
+                                                                            <span class="arrow-dwn"></span>
+                                                                            <ul class="list-items">
+                                                                                <li class="item">
+                                                                                    <label class="checkbox" tooltip>
+                                                                                        <input type="checkbox" id="frontalRotation" checked disabled><span>Frontal Head (0°)</span>
+                                                                                        <div class="tooltip">The face is facing forward. Best for accurate analysis.</div>
+                                                                                    </label>
+                                                                                </li>
+                                                                                <li class="item">
+                                                                                    <label class="checkbox" tooltip>
+                                                                                        <input type="checkbox" id="rightRotation"><span>Tilted Right Head (90°)</span>
+                                                                                        <div class="tooltip">Select this if the face is tilted to the right.</div>
+                                                                                    </label>
+                                                                                </li>
+                                                                                <li class="item">
+                                                                                    <label class="checkbox" tooltip>
+                                                                                        <input type="checkbox" id="invertedRotation"><span>Inverted Head (180°)</span>
+                                                                                        <div class="tooltip">Select this if the face is upside down.</div>
+                                                                                    </label>
+                                                                                </li>
+                                                                                <li class="item">
+                                                                                    <label class="checkbox" tooltip>
+                                                                                        <div class="tooltip">Select this if the face is tilted to the left.</div>
+                                                                                        <input type="checkbox" id="leftRotation"><span>Tilted Left Head (-90°)</span>
+                                                                                    </label>
+                                                                                </li>
+                                                                            </ul>
+                                                                        </div>
+                                                                        <label class="checkbox" tooltip>
+                                                                            <input type="checkbox" id="enableEnhancedAnalyzer"><span>Multiple Face Detectors</span>
+                                                                            <div class="tooltip">Use multiple detection algorithms (like YoloFace, RetinaFace, SCRFD) to get the best results.</div>
+                                                                        </label>
+                                                                    </div>
+                                                                    <div id="Other" class="section" style="display: none;gap: calc(1vh* var(--scale-factor-h));">
+                                                                        <label class="checkbox">
+                                                                            <input type="checkbox" id="removeBanner"><span>Remove banner</span>
+                                                                        </label>
+                                                                        <label class="checkbox" style="display: flex;align-items: center;gap: calc(1vh* var(--scale-factor-h));justify-content: space-between;">
+                                                                            <div style="display: flex;align-items: center;"><input type="checkbox" id="keepFPS"><span>Keep FPS</span></div>
+                                                                            <div id="keepFPSContainer" style="display: flex;align-items: center;flex-direction: row-reverse;gap: calc(1vh* var(--scale-factor-h));">
+                                                                                <input type="range" min="1" max="60" value="30" class="slider" id="fps-slider">
+                                                                                <div class="slider-value" id="fps-value">30</div>
+                                                                            </div>
+                                                                        </label>
+                                                                    </div>
+                                                                <div style="display: flex;gap: calc(1vh* var(--scale-factor-h));">
+                                                                    <button class="wide" id="startProcessBtn">Start</button>
+                                                                    <button class="wide" id="cancelProcessBtn" >Cancel</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;">
+                                                    <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
+                                                        <div class="background-dot-container">
+                                                            <div class="background-dot-container-content">
+                                                                <div class="outputs"></div>
+                                                                <div style="display: flex;justify-content: space-around;gap: calc(1vh* var(--scale-factor-h));">
+                                                                    <button class="wide" id="downloadButtonSelected">Download</button>
+                                                                    <button class="wide" id="openOutputButtonSelected">View</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            `);
+            }
+
+            loadPageContent(updateMainContent, savePageState);
+
+            window.addEventListener('beforeunload', () => {
+                savePageState();
+            });
+
+            function setMaxWidth() {
+                const backgroundDotContainer = document.querySelector('.background-dot-container-content');
+                const multibox = document.querySelector('.multibox');
+                const multiboxText = document.querySelectorAll('.multibox-text');
+                const arrowDwn = document.querySelector('.arrow-dwn');
+
+                if (backgroundDotContainer && multibox && multiboxText && arrowDwn) {
+                    const containerWidth = backgroundDotContainer.offsetWidth;
+                    const containerStyle = getComputedStyle(backgroundDotContainer);
+                    const multiboxStyle = getComputedStyle(multibox);
+                    const arrowDwnStyle = getComputedStyle(arrowDwn);
+
+                    const paddingLeft = parseFloat(multiboxStyle.paddingLeft) + parseFloat(containerStyle.paddingLeft) * 2;
+                    const paddingRight = parseFloat(multiboxStyle.paddingRight) + parseFloat(containerStyle.paddingRight);
+                    const arrowWidth = parseFloat(arrowDwnStyle.width);
+                    const maxWidth = containerWidth - paddingLeft - paddingRight - arrowWidth;
+                    multiboxText.forEach(text => {
+                        text.style.maxWidth = `${maxWidth - 2}px`;
+                    });
+                }
+            }
+
+            function loadPageState() {
+                setMaxWidth();
+
+                const pageData = localStorage.getItem(pageName) || null;
+                if (pageData) {
+                    const state = JSON.parse(pageData || '{}') || {};
+                    document.getElementById('enableOccluder').checked = state.enableOccluder || false;
+                    document.getElementById('enableEnhancer').checked = state.enableEnhancer || false;
+                    document.getElementById('enableEnhancedAnalyzer').checked = state.enableEnhancedAnalyzer || false;
+                    document.getElementById('enableEnhancedLandmarks').checked = state.enableEnhancedLandmarks || false;
+                    document.getElementById('skin').checked = state.skin || false;
+                    document.getElementById('eyebrow').checked = state.eyebrow || false;
+                    document.getElementById('eye').checked = state.eye || false;
+                    document.getElementById('glasses').checked = state.glasses || false;
+                    document.getElementById('nose').checked = state.nose || false;
+                    document.getElementById('mouth').checked = state.mouth || false;
+                    document.getElementById('lip').checked = state.lip || false;
+                    document.getElementById('frontalRotation').checked = state.frontalRotation || false;
+                    document.getElementById('rightRotation').checked = state.rightRotation || false;
+                    document.getElementById('invertedRotation').checked = state.invertedRotation || false;
+                    document.getElementById('leftRotation').checked = state.leftRotation || false;
+                    document.getElementById('removeBanner').checked = state.removeBanner || false;
+                    document.getElementById('keepFPS').checked = state.keepFPS || false;
+                    document.getElementById('fps-slider').value = state.fpsValue || 30;
+                    document.getElementById('fps-value').textContent = (state.fpsValue || 30) + ' FPS';
+
+                    const navLinks = document.querySelectorAll('.nav-links .text');
+                    navLinks.forEach(link => {
+                        if (link.getAttribute("for") === state.activeLink) {
+                            link.classList.add('active');
+                            const targetSection = document.getElementById(state.activeLink);
+                            if (targetSection) {
+                                targetSection.style.display = 'flex';
+                            }
+                        }
+                    });
+
+                    const multiboxQuery = document.querySelectorAll('.multibox');
+                    multiboxQuery.forEach((multibox, index) => {
+                        const btnText = multibox.querySelector('.multibox-text');
+                        const items = multibox.querySelectorAll('.item');
+
+                        if (state.multiboxes && state.multiboxes[index]) {
+                            btnText.innerText = state.multiboxes[index].text || '';
+
+                            state.multiboxes[index].items.forEach((itemState, itemIndex) => {
+                                if (itemIndex < items.length) {
+                                    const checkbox = items[itemIndex].querySelector('input[type="checkbox"]');
+                                    checkbox.checked = itemState.checked;
+                                    items[itemIndex].classList.toggle('checked', checkbox.checked);
+                                }
+                            });
+                        }
+                    });
+                }
+                else {
+                    const checkboxIds = [
+                        'skin',
+                        'eyebrow',
+                        'eye',
+                        'glasses',
+                        'nose',
+                        'mouth',
+                        'lip',
+                        'enableEnhancedAnalyzer',
+                        'enableEnhancedLandmarks',
+                        'enableOccluder',
+                        'enableEnhancer',
+                        'keepFPS'
+                    ];
+
+                    checkboxIds.forEach(id => {
+                        const checkbox = document.getElementById(id);
+                        checkbox.checked = true;
+                        setTimeout(() => {
+                            checkbox.dispatchEvent(new Event('change'));
+                        }, 0);
+                    });
+
+                    document.getElementById('removeBanner').checked = false;
+                    document.getElementById('fps-slider').value = 30;
+                    document.getElementById('fps-value').textContent = '30';
+                }
+            }
+
+            loadPageState();
+
+            async function loadPage() {
+                let dbCache = {};
+
+                const openDB = (dataBaseIndexName, dataBaseObjectStoreName) => {
+                    if (dbCache[dataBaseIndexName]) {
+                        return Promise.resolve(dbCache[dataBaseIndexName]);
+                    }
+
+                    return new Promise((resolve, reject) => {
+                        const request = indexedDB.open(dataBaseIndexName, 1);
+
+                        request.onupgradeneeded = (event) => {
+                            const db = event.target.result;
+                            db.createObjectStore(dataBaseObjectStoreName, { keyPath: 'id', autoIncrement: true });
+                        };
+
+                        request.onsuccess = (event) => {
+                            const db = event.target.result;
+                            dbCache[dataBaseIndexName] = db;
+                            resolve(db);
+                        };
+
+                        request.onerror = (event) => {
+                            reject(`Error opening database: ${event.target.error}`);
+                        };
+                    });
+                };
+
+                const addToDB = (db, blob, dataBaseObjectStoreName) => {
+                    return new Promise((resolve, reject) => {
+                        const transaction = db.transaction([dataBaseObjectStoreName], 'readwrite');
+                        const objectStore = transaction.objectStore(dataBaseObjectStoreName);
+
+                        let currentIndex = localStorage.getItem(`${dataBaseObjectStoreName}-index`);
+                        if (currentIndex === null) {
+                            currentIndex = 0;
+                        } else {
+                            currentIndex = parseInt(currentIndex, 10);
+                        }
+
+                        currentIndex += 1;
+                        localStorage.setItem(`${dataBaseObjectStoreName}-index`, currentIndex);
+
+                        const request = objectStore.add({ blob, timestamp: new Date().getTime(), index: currentIndex });
+                        request.onsuccess = () => {
+                            resolve(currentIndex);
+                        };
+
+                        request.onerror = (event) => {
+                            currentIndex -= 1;
+                            localStorage.setItem(`${dataBaseObjectStoreName}-index`, currentIndex);
+                            reject(`Error adding data to database: ${event.target.error}`);
+                        };
+                    });
+                };
+
+                const countInDB = (db, dataBaseObjectStoreName) => {
+                    return new Promise((resolve, reject) => {
+                        const transaction = db.transaction([dataBaseObjectStoreName], 'readonly');
+                        const objectStore = transaction.objectStore(dataBaseObjectStoreName);
+                        const request = objectStore.count();
+
+                        request.onsuccess = (event) => {
+                            resolve(event.target.result);
+                        };
+
+                        request.onerror = (event) => {
+                            reject(`Error counting entries in database: ${event.target.error}`);
+                        };
+                    });
+                };
+
+                const getFromDB = (db, dataBaseObjectStoreName, limit = null, offset = 0) => {
+                    return new Promise((resolve, reject) => {
+                        const transaction = db.transaction([dataBaseObjectStoreName], 'readonly');
+                        const objectStore = transaction.objectStore(dataBaseObjectStoreName);
+                        const request = objectStore.getAll();
+
+                        request.onsuccess = (event) => {
+                            let results = event.target.result;
+                            results = results.sort((a, b) => b.index - a.index);
+                            if (limit !== null) {
+                                results = results.slice(offset, offset + limit);
+                            }
+
+                            resolve(results.map(item => ({ blob: item.blob, index: item.index })));
+                        };
+
+                        request.onerror = (event) => {
+                            reject(`Error retrieving data from database: ${event.target.error}`);
+                        };
+                    });
+                };
+
+                let mediaCache = {};
+
+                const getFromDBWithCache = async (db, dataBaseObjectStoreName, limit = null, offset = 0) => {
+                    const cacheKey = `${dataBaseObjectStoreName}-${offset}-${limit}`;
+                    if (mediaCache[cacheKey]) {
+                        return mediaCache[cacheKey];
+                    }
+                    const results = await getFromDB(db, dataBaseObjectStoreName, limit, offset);
+                    mediaCache[cacheKey] = results;
+                    return results;
+                };
+
+                const initDB = async (dataBaseIndexName, dataBaseObjectStoreName) => {
+                    try {
+                        let db = openDB(dataBaseIndexName, dataBaseObjectStoreName);
+                        let mediaCount = localStorage.getItem(`${dataBaseObjectStoreName}-count`);
+
+                        if (!mediaCount) {
+                            mediaCount = await countInDB(await db, dataBaseObjectStoreName);
+                            localStorage.setItem(`${dataBaseObjectStoreName}-count`, mediaCount);
+                        } else {
+                            mediaCount = parseInt(mediaCount, 10);
+                        }
+
+                        const mediaContainer = document.querySelector(`.${dataBaseObjectStoreName}`);
+                        const fragment = document.createDocumentFragment();
+
+                        for (let i = 0; i < mediaCount; i++) {
+                            const input = document.createElement('div');
+                            input.className = 'input';
+                            input.innerHTML = `<div class="delete-icon"></div>`;
+                            fragment.appendChild(input);
+                        }
+                        mediaContainer.appendChild(fragment);
+                        db = await db;
+                        mediaCount = await countInDB(db, dataBaseObjectStoreName);
+                        localStorage.setItem(`${dataBaseObjectStoreName}-count`, mediaCount);
+
+                        if (mediaCount > 0) {
+                            const useBatching = false;
+                            if (useBatching) {
+                                let offset = 0;
+                                const batchSize = 1;
+
+                                while (true) {
+                                    const mediaItems = await getFromDBWithCache(db, dataBaseObjectStoreName, batchSize, offset);
+                                    if (mediaItems.length === 0) break;
+
+                                    const inputElements = mediaContainer.querySelectorAll('.input');
+                                    mediaItems.forEach(({ blob, index }, indexInBatch) => {
+                                        const blobUrl = URL.createObjectURL(blob);
+                                        let mediaElement;
+
+                                        if (blob.type.startsWith('video')) {
+                                            mediaElement = document.createElement('video');
+                                            mediaElement.controls = false;
+                                            mediaElement.loop = true;
+                                            mediaElement.muted = true;
+                                            mediaElement.addEventListener('click', () => {
+                                                mediaElement.play();
+                                            });
+                                            mediaElement.play();
+                                            mediaElement.innerHTML = `<source src="${blobUrl}" type="${blob.type}">Your browser does not support the video tag.`;
+                                        } else {
+                                            mediaElement = document.createElement('img');
+                                            mediaElement.src = blobUrl;
+                                        }
+
+                                        mediaElement.setAttribute('index', index);
+                                        inputElements[offset + indexInBatch].insertBefore(mediaElement, inputElements[offset + indexInBatch].firstChild);
+                                    });
+
+                                    offset += batchSize;
+                                }
+                            } else {
+                                const mediaItems = await getFromDBWithCache(db, dataBaseObjectStoreName);
+
+                                const inputElements = mediaContainer.querySelectorAll('.input');
+                                mediaItems.forEach(({ blob, index }, indexInBatch) => {
+                                    const blobUrl = URL.createObjectURL(blob);
+                                    let mediaElement;
+
+                                    if (blob.type.startsWith('video')) {
+                                        mediaElement = document.createElement('video');
+                                        mediaElement.controls = false;
+                                        mediaElement.loop = true;
+                                        mediaElement.muted = true;
+                                        mediaElement.addEventListener('click', () => {
+                                            mediaElement.play();
+                                        });
+                                        mediaElement.play();
+                                        mediaElement.innerHTML = `<source src="${blobUrl}" type="${blob.type}">Your browser does not support the video tag.`;
+                                    } else {
+                                        mediaElement = document.createElement('img');
+                                        mediaElement.src = blobUrl;
+                                    }
+
+                                    mediaElement.setAttribute('index', index);
+                                    inputElements[indexInBatch].insertBefore(mediaElement, inputElements[indexInBatch].firstChild);
+                                });
+                            }
+                        }
+                    } catch (error) {
+                        console.error(`Database initialization failed: ${error.message}`);
+                    }
+                };
+
+                const databases = [
+                    { indexName: 'faceDB-face-swap', objectStore: 'faces' },
+                    { indexName: 'inputDB-face-swap', objectStore: 'inputs' }
+                ];
+                databases.forEach(db => initDB(db.indexName, db.objectStore));
+
+                window.addEventListener('beforeunload', async () => {
+                    for (const dbConfig of databases) {
+                        const db = await openDB(dbConfig.indexName, dbConfig.objectStore);
+                        const photoCount = await countInDB(db, dbConfig.objectStore);
+                        localStorage.setItem(`${dbConfig.objectStore}-count`, photoCount);
+                    }
+                });
+
+                const deleteFromDB = async (db, index) => {
+                    return new Promise((resolve, reject) => {
+                        const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
+                        const photosObjectStore = transaction.objectStore(db.objectStoreNames[0]);
+                        const deleteRequest = photosObjectStore.delete(index);
+
+                        deleteRequest.onsuccess = async () => {
+                            resolve();
+
+                            for (const dbConfig of databases) {
+                                const db = await openDB(dbConfig.indexName, dbConfig.objectStore);
+                                const photoCount = await countInDB(db, dbConfig.objectStore);
+                                localStorage.setItem(`${dbConfig.objectStore}-count`, photoCount);
+                            }
+                        };
+
+                        deleteRequest.onerror = (event) => {
+                            reject(`Error deleting photo from database: ${event.target.error}`);
+                        };
+                    });
+                };
+
+                const handleDelete = async (dbName, storeName, parent) => {
+                    const element = parent.querySelector('img, video');
+                    const id = parseInt(element.getAttribute('index'), 10);
+                    const db = await openDB(dbName, storeName);
+                    await deleteFromDB(db, id);
+                    parent.remove();
+                };
+
+                const handleSelectionToggle = (container, clickedElement) => {
+                    container.querySelectorAll(".input.active").forEach(activePhoto => {
+                        activePhoto.classList.remove("active");
+                    });
+
+                    if (clickedElement.classList.contains("active"))
+                        clickedElement.classList.remove("active");
+                    else clickedElement.classList.add("active");
+                };
+
+                const handleEvent = async (event, dbName, storeName, container) => {
+                    const parent = event.target.closest('.input');
+                    if (!parent) return;
+
+                    if (event.target.classList.contains('delete-icon')) {
+                        return await handleDelete(dbName, storeName, parent);
+                    }
+
+                    handleSelectionToggle(container, parent);
+                };
+
+                document.querySelector('.inputs').addEventListener('click', async function (event) {
+                    await handleEvent(event, 'inputDB-face-swap', 'inputs', document.querySelector('.inputs'));
+                });
+
+                document.querySelector('.faces').addEventListener('click', async function (event) {
+                    await handleEvent(event, 'faceDB-face-swap', 'faces', document.querySelector('.faces'));
+                });
+
+                document.querySelectorAll('.question-mark').forEach(questionMark => {
+                    questionMark.addEventListener('click', (event) => {
+                        event.stopPropagation();
+                    });
+                });
+
+                const handleUpload = async (event, dataBaseIndexName, dataBaseObjectStoreName) => {
+                    try {
+                        const db = await openDB(dataBaseIndexName, dataBaseObjectStoreName);
+                        const files = Array.from(event.target.files);
+                        const mediaContainer = document.querySelector(`.${dataBaseObjectStoreName}`);
+                        const fragment = document.createDocumentFragment();
+                        const newMedia = [];
+
+                        const processFile = async (file) => {
+                            return new Promise((resolve, reject) => {
+                                const reader = new FileReader();
+                                reader.onload = async (e) => {
+                                    try {
+                                        const blob = new Blob([e.target.result], { type: file.type });
+                                        const index = await addToDB(db, blob, dataBaseObjectStoreName);
+                                        newMedia.push({ index, blob, isVideo: file.type.startsWith('video') });
+                                        resolve();
+                                    } catch (error) {
+                                        reject(`Processing media failed: ${error.message}`);
+                                    }
+                                };
+                                reader.readAsArrayBuffer(file);
+                            });
+                        };
+
+                        await Promise.all(files.map(processFile));
+
+                        newMedia.reverse().forEach(({ index, blob, isVideo }) => {
+                            const input = document.createElement('div');
+                            input.className = 'input';
+                            const blobUrl = URL.createObjectURL(blob);
+                            if (isVideo) {
+                                input.innerHTML = `<video index="${index}" loop muted autoplay><source src="${blobUrl}" type="${blob.type}">Your browser does not support the video tag.</video><div class="delete-icon"></div>`;
+                            } else {
+                                input.innerHTML = `<img index="${index}" src="${blobUrl}" alt="Uploaded Photo"/><div class="delete-icon"></div>`;
+                            }
+                            fragment.appendChild(input);
+                        });
+
+                        mediaContainer.insertBefore(fragment, mediaContainer.firstChild);
+                        localStorage.setItem(`${dataBaseObjectStoreName}-count`, await countInDB(db, dataBaseObjectStoreName));
+                    } catch (error) {
+                        console.error(`Opening media database failed: ${error.message}`);
+                    }
+                };
+
+                function setupFileUpload({ buttonId, inputId, dataBaseIndexName, dataBaseObjectStoreName, changeHandler }) {
+                    const input = document.getElementById(inputId);
+                    document.getElementById(buttonId).addEventListener('click', () => input.click());
+                    input.addEventListener('change', (event) => {
+                        changeHandler(event, dataBaseIndexName, dataBaseObjectStoreName);
+                    });
+                }
+
+                const fileUploads = [
+                    { buttonId: 'circular-button-face-upload', inputId: 'face-upload', dataBaseIndexName: 'faceDB-face-swap', dataBaseObjectStoreName: 'faces' },
+                    { buttonId: 'circular-button-input-upload', inputId: 'input-upload', dataBaseIndexName: 'inputDB-face-swap', dataBaseObjectStoreName: 'inputs' }
+                ];
+                fileUploads.forEach(config => setupFileUpload({ ...config, changeHandler: handleUpload }));
+
+                const navLinks = document.querySelectorAll('.nav-links .text');
+                const sections = document.querySelectorAll('.section');
+
+                navLinks.forEach(link => {
+                    link.addEventListener('click', function () {
+                        navLinks.forEach(link => link.classList.remove('active'));
+                        this.classList.add('active');
+
+                        sections.forEach(section => section.style.display = 'none');
+
+                        const targetId = this.getAttribute('for');
+                        const targetSection = document.getElementById(targetId);
+                        if (targetSection) {
+                            targetSection.style.display = 'flex';
+                        }
+                    });
+                });
+
+                const multiboxes = document.querySelectorAll(".multibox");
+                multiboxes.forEach(multibox => {
+                    const selectBtn = multibox;
+                    const items = multibox.querySelectorAll(".item");
+                    const btnText = multibox.querySelector(".multibox-text");
+                    const listItems = multibox.querySelector(".list-items");
+
+                    selectBtn.addEventListener("click", (event) => {
+                        event.stopPropagation();
+                        multiboxes.forEach(box => {
+                            if (box !== selectBtn) {
+                                box.classList.remove("open");
+                                box.querySelector(".list-items").style.display = "none";
+                            }
+                        });
+
+                        selectBtn.classList.toggle("open");
+                        listItems.style.display = selectBtn.classList.contains("open") ? "flex" : "none";
+                        listItems.style.flexDirection = selectBtn.classList.contains("open") ? "column" : "";
+                    });
+
+                    items.forEach(item => {
+                        const checkbox = item.querySelector('input[type="checkbox"]');
+                        checkbox.addEventListener("change", () => {
+                            item.classList.toggle("checked", checkbox.checked);
+
+                            const checkedItems = multibox.querySelectorAll(".item.checked input[type='checkbox']");
+                            const selectedNames = Array.from(checkedItems).map(checkbox => {
+                                const label = checkbox.parentElement.querySelector('span');
+                                return label ? label.textContent.trim() : '';
+                            }).filter(name => name !== '');
+
+                            btnText.innerText = selectedNames.length > 0 ? selectedNames.join(', ') : "";
+                        });
+                    });
+                });
+
+                document.addEventListener("click", () => {
+                    multiboxes.forEach(box => {
+                        box.classList.remove("open");
+                        box.querySelector(".list-items").style.display = "none";
+                    });
+                });
+
+                const keepFPSCheckbox = document.getElementById('keepFPS');
+                const keepFPSContainer = document.getElementById('keepFPSContainer');
+                const fpsSlider = document.getElementById('fps-slider');
+                const fpsValue = document.getElementById('fps-value');
+
+                keepFPSCheckbox.addEventListener('change', () => {
+                    if (!keepFPSCheckbox.checked) {
+                        keepFPSContainer.style.display = 'flex';
+                    } else {
+                        keepFPSContainer.style.display = 'none';
+                    }
+                });
+
+                fpsSlider.addEventListener('input', () => {
+                    fpsValue.innerText = fpsSlider.value + " FPS";
+                });
+            }
+
+            let previousScreenMode = null;
+
+            async function sizeBasedElements() {
+                setMaxWidth();
+                let screenMode = getScreenMode();
+                const shouldUpdate = previousScreenMode !== screenMode;
+                previousScreenMode = screenMode;
+                if (!shouldUpdate)
+                    return;
+
+                loadPageState();
+                loadPage();
+            }
+
+            sizeBasedElements();
+
+            window.addEventListener('resize', sizeBasedElements);
+        });
+    </script>
+    <script src="js/defaultPageLoads/autoTranslate.js" defer></script>
+<script src="scripts/autoTranslate.js"></script></body>
+</html>

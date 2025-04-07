@@ -1315,7 +1315,7 @@
 		
 		const startProcessBtn = document.getElementById('startProcessBtn');
 		const progressBar = document.getElementById('progressBar');
-		const cancellProcessBtn = document.getElementById('cancellProcessBtn');
+		const cancelProcessBtn = document.getElementById('cancelProcessBtn');
 		
 		function cancelProcess(showAlertion) {
 		  return new Promise(async (resolve) => {
@@ -1405,7 +1405,7 @@
 		  });
 		}
 
-		cancellProcessBtn.addEventListener('click', async () => {
+		cancelProcessBtn.addEventListener('click', async () => {
 		  await cancelProcess(true);
 		});
 		
@@ -2461,10 +2461,7 @@
 		
 		async function checkServerStatus() {
 		  try {
-			// Check if the user is authenticated
 			if (auth.currentUser) userId = auth.currentUser.uid;
-
-			// Create an array of promises to check the server status
 			const serverPromises = serverAddresses.map(server => {
 			  return fetchWithRandom(`${server}/get-online`)
 				.then(response => {
@@ -2490,18 +2487,12 @@
 			console.log(results);
 			
 			if (results.some(serverData => serverData.queueAmount !== Infinity)) {				
-				online.style.display = 'block';
-				offline.style.display = 'none';
 				setTimer = 11000;
 			} else {
-			  online.style.display = 'none';
-			  offline.style.display = 'block';
 			  setTimer = 11000;
 			}
 		  } catch (error) {
 			console.error('Error during server status check:', error);
-			online.style.display = 'none';
-			offline.style.display = 'block';
 			setTimer = 11000;
 		  }
 
@@ -3002,7 +2993,7 @@
             </section>
 			<div style="display: flex;  justify-content: space-around; align-items: center;">
 				<button id="startProcessBtn" style="margin-right: 10px;">Start Process (<span id="credits" style="color: white;">?</span> Credits)</button>
-				<button id="cancellProcessBtn">Cancel Process</button>
+				<button id="cancelProcessBtn">Cancel Process</button>
 			</div>
         </section>
 		
@@ -3336,295 +3327,295 @@
 			  });
 			};
 
-let imageMask = document.getElementById('imageMask');
-let drawingCanvas = document.getElementById('drawingCanvas');
-let ctx = drawingCanvas.getContext('2d');
-let isDrawing = false;
+			let imageMask = document.getElementById('imageMask');
+			let drawingCanvas = document.getElementById('drawingCanvas');
+			let ctx = drawingCanvas.getContext('2d');
+			let isDrawing = false;
 
-// Array to store canvas states for undo/redo
-let undoStack = [];
-let redoStack = [];
+			// Array to store canvas states for undo/redo
+			let undoStack = [];
+			let redoStack = [];
 
-// Function to save current canvas state
-function saveState() {
-    undoStack.push(drawingCanvas.toDataURL());
-}
+			// Function to save current canvas state
+			function saveState() {
+				undoStack.push(drawingCanvas.toDataURL());
+			}
 
-// Function to undo
-function undo() {
-    if (undoStack.length > 1) {
-        redoStack.push(undoStack.pop());
-        const img = new Image();
-        img.onload = function () {
-            ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
-            ctx.drawImage(img, 0, 0);
-        };
-        img.src = undoStack[undoStack.length - 1];
-    }
-}
+			// Function to undo
+			function undo() {
+				if (undoStack.length > 1) {
+					redoStack.push(undoStack.pop());
+					const img = new Image();
+					img.onload = function () {
+						ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+						ctx.drawImage(img, 0, 0);
+					};
+					img.src = undoStack[undoStack.length - 1];
+				}
+			}
 
-// Function to redo
-function redo() {
-    if (redoStack.length > 0) {
-        const img = new Image();
-        img.onload = function () {
-            ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
-            ctx.drawImage(img, 0, 0);
-        };
-        img.src = redoStack.pop();
-        undoStack.push(img.src);
-    }
-}
+			// Function to redo
+			function redo() {
+				if (redoStack.length > 0) {
+					const img = new Image();
+					img.onload = function () {
+						ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+						ctx.drawImage(img, 0, 0);
+					};
+					img.src = redoStack.pop();
+					undoStack.push(img.src);
+				}
+			}
 
-// Event listeners for undo/redo
-document.addEventListener('keydown', function (e) {
-    if (e.ctrlKey && e.key === 'z') {
-        e.preventDefault();
-        undo();
-    } else if (e.ctrlKey && e.key === 'y') {
-        e.preventDefault();
-        redo();
-    }
-});
+			// Event listeners for undo/redo
+			document.addEventListener('keydown', function (e) {
+				if (e.ctrlKey && e.key === 'z') {
+					e.preventDefault();
+					undo();
+				} else if (e.ctrlKey && e.key === 'y') {
+					e.preventDefault();
+					redo();
+				}
+			});
 
-// Event listener for undo button
-document.getElementById('undoButton').addEventListener('click', () => {
-    undo();
-});
+			// Event listener for undo button
+			document.getElementById('undoButton').addEventListener('click', () => {
+				undo();
+			});
 
-// Event listener for redo button
-document.getElementById('redoButton').addEventListener('click', () => {
-    redo();
-});
+			// Event listener for redo button
+			document.getElementById('redoButton').addEventListener('click', () => {
+				redo();
+			});
 
-// Load the image and set up the canvas
-imageMask.onload = () => {
-    drawingCanvas.width = imageMask.width;
-    drawingCanvas.height = imageMask.height;
-};
+			// Load the image and set up the canvas
+			imageMask.onload = () => {
+				drawingCanvas.width = imageMask.width;
+				drawingCanvas.height = imageMask.height;
+			};
 
-// Function to enable/disable scroll prevention while drawing
-function toggleScrollPrevention(enable) {
-    if (enable) {
-        document.addEventListener('touchmove', preventScroll, { passive: false });
-    } else {
-        document.removeEventListener('touchmove', preventScroll);
-    }
-}
+			// Function to enable/disable scroll prevention while drawing
+			function toggleScrollPrevention(enable) {
+				if (enable) {
+					document.addEventListener('touchmove', preventScroll, { passive: false });
+				} else {
+					document.removeEventListener('touchmove', preventScroll);
+				}
+			}
 
-// Function to prevent scrolling
-function preventScroll(e) {
-    e.preventDefault();
-}
+			// Function to prevent scrolling
+			function preventScroll(e) {
+				e.preventDefault();
+			}
 
-let lastX = null;
-let lastY = null;
+			let lastX = null;
+			let lastY = null;
 
-// Handle touch start event
-drawingCanvas.addEventListener('touchstart', (e) => {
-    isDrawing = true;
-    saveState(); // Save canvas state when drawing starts
-    toggleScrollPrevention(true); // Enable scroll prevention
-    const touch = e.touches[0];
-    const x = touch.clientX - drawingCanvas.getBoundingClientRect().left;
-    const y = touch.clientY - drawingCanvas.getBoundingClientRect().top;
+			// Handle touch start event
+			drawingCanvas.addEventListener('touchstart', (e) => {
+				isDrawing = true;
+				saveState(); // Save canvas state when drawing starts
+				toggleScrollPrevention(true); // Enable scroll prevention
+				const touch = e.touches[0];
+				const x = touch.clientX - drawingCanvas.getBoundingClientRect().left;
+				const y = touch.clientY - drawingCanvas.getBoundingClientRect().top;
 
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.strokeStyle = document.getElementById('colorPicker').value;
-    ctx.lineWidth = document.getElementById('sizeSlider').value;
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
+				ctx.beginPath();
+				ctx.moveTo(x, y);
+				ctx.strokeStyle = document.getElementById('colorPicker').value;
+				ctx.lineWidth = document.getElementById('sizeSlider').value;
+				ctx.lineJoin = 'round';
+				ctx.lineCap = 'round';
 
-    lastX = x;
-    lastY = y;
-});
+				lastX = x;
+				lastY = y;
+			});
 
-// Handle touch move event
-drawingCanvas.addEventListener('touchmove', (e) => {
-    if (isDrawing) {
-        const touch = e.touches[0];
-        const x = touch.clientX - drawingCanvas.getBoundingClientRect().left;
-        const y = touch.clientY - drawingCanvas.getBoundingClientRect().top;
+			// Handle touch move event
+			drawingCanvas.addEventListener('touchmove', (e) => {
+				if (isDrawing) {
+					const touch = e.touches[0];
+					const x = touch.clientX - drawingCanvas.getBoundingClientRect().left;
+					const y = touch.clientY - drawingCanvas.getBoundingClientRect().top;
 
-        ctx.lineTo(x, y);
-        ctx.stroke();
+					ctx.lineTo(x, y);
+					ctx.stroke();
 
-        lastX = x;
-        lastY = y;
-    }
-});
+					lastX = x;
+					lastY = y;
+				}
+			});
 
-// Handle touch end event
-drawingCanvas.addEventListener('touchend', () => {
-    isDrawing = false;
-    ctx.closePath();
-    toggleScrollPrevention(false); // Disable scroll prevention
-    saveState();
-    lastX = null;
-    lastY = null;
-});
+			// Handle touch end event
+			drawingCanvas.addEventListener('touchend', () => {
+				isDrawing = false;
+				ctx.closePath();
+				toggleScrollPrevention(false); // Disable scroll prevention
+				saveState();
+				lastX = null;
+				lastY = null;
+			});
 
-// Handle mouse down event
-drawingCanvas.addEventListener('mousedown', (e) => {
-    if (e.button === 0 || e.button === 2) {
-        isDrawing = true;
-        ctx.globalCompositeOperation = e.button === 0 ? 'source-over' : 'destination-out';
-        ctx.strokeStyle = e.button === 0 ? document.getElementById('colorPicker').value : 'rgba(0, 0, 0, 1)';
-        ctx.lineWidth = document.getElementById('sizeSlider').value;
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        saveState();
-    }
-});
+			// Handle mouse down event
+			drawingCanvas.addEventListener('mousedown', (e) => {
+				if (e.button === 0 || e.button === 2) {
+					isDrawing = true;
+					ctx.globalCompositeOperation = e.button === 0 ? 'source-over' : 'destination-out';
+					ctx.strokeStyle = e.button === 0 ? document.getElementById('colorPicker').value : 'rgba(0, 0, 0, 1)';
+					ctx.lineWidth = document.getElementById('sizeSlider').value;
+					ctx.lineJoin = 'round';
+					ctx.lineCap = 'round';
+					ctx.beginPath();
+					saveState();
+				}
+			});
 
-// Handle mouse move event
-drawingCanvas.addEventListener('mousemove', (e) => {
-    if (isDrawing) {
-        const x = e.clientX - drawingCanvas.getBoundingClientRect().left;
-        const y = e.clientY - drawingCanvas.getBoundingClientRect().top;
-        ctx.lineTo(x, y);
-        ctx.stroke();
-    }
-});
+			// Handle mouse move event
+			drawingCanvas.addEventListener('mousemove', (e) => {
+				if (isDrawing) {
+					const x = e.clientX - drawingCanvas.getBoundingClientRect().left;
+					const y = e.clientY - drawingCanvas.getBoundingClientRect().top;
+					ctx.lineTo(x, y);
+					ctx.stroke();
+				}
+			});
 
-// Handle mouse up event
-drawingCanvas.addEventListener('mouseup', () => {
-    isDrawing = false;
-    ctx.closePath();
-    saveState();
-});
+			// Handle mouse up event
+			drawingCanvas.addEventListener('mouseup', () => {
+				isDrawing = false;
+				ctx.closePath();
+				saveState();
+			});
 
-// Prevent the default context menu on right-click
-drawingCanvas.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-});
+			// Prevent the default context menu on right-click
+			drawingCanvas.addEventListener('contextmenu', (e) => {
+				e.preventDefault();
+			});
 
-// Draw a dot on click without dragging
-drawingCanvas.addEventListener('click', (e) => {
-    const x = e.clientX - drawingCanvas.getBoundingClientRect().left;
-    const y = e.clientY - drawingCanvas.getBoundingClientRect().top;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x + 1, y + 1);
-    ctx.stroke();
-    ctx.closePath();
-});
+			// Draw a dot on click without dragging
+			drawingCanvas.addEventListener('click', (e) => {
+				const x = e.clientX - drawingCanvas.getBoundingClientRect().left;
+				const y = e.clientY - drawingCanvas.getBoundingClientRect().top;
+				ctx.beginPath();
+				ctx.moveTo(x, y);
+				ctx.lineTo(x + 1, y + 1);
+				ctx.stroke();
+				ctx.closePath();
+			});
 
-function createCursorImage(size, color) {
-    const cursorCanvas = document.createElement('canvas');
-    cursorCanvas.width = size;
-    cursorCanvas.height = size;
-    const cursorCtx = cursorCanvas.getContext('2d');
+			function createCursorImage(size, color) {
+				const cursorCanvas = document.createElement('canvas');
+				cursorCanvas.width = size;
+				cursorCanvas.height = size;
+				const cursorCtx = cursorCanvas.getContext('2d');
 
-    cursorCtx.beginPath();
-    cursorCtx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
-    cursorCtx.strokeStyle = color;
-    cursorCtx.lineWidth = 2; // Adjust the line width for thicker cursor
-    cursorCtx.stroke();
-    cursorCtx.closePath();
+				cursorCtx.beginPath();
+				cursorCtx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+				cursorCtx.strokeStyle = color;
+				cursorCtx.lineWidth = 2; // Adjust the line width for thicker cursor
+				cursorCtx.stroke();
+				cursorCtx.closePath();
 
-    return cursorCanvas.toDataURL();
-}
+				return cursorCanvas.toDataURL();
+			}
 
-// Update the cursor to a circle matching the drawing size and opposite color
-function updateCursor() {
-    const size = parseInt(document.getElementById('sizeSlider').value);
-    const color = document.getElementById('colorPicker').value;
-    const oppositeColor = getOppositeColor(color);
-    const cursorImage = createCursorImage(size, oppositeColor);
-    drawingCanvas.style.cursor = `url("${cursorImage}") ${size / 2} ${size / 2}, crosshair`;
-}
+			// Update the cursor to a circle matching the drawing size and opposite color
+			function updateCursor() {
+				const size = parseInt(document.getElementById('sizeSlider').value);
+				const color = document.getElementById('colorPicker').value;
+				const oppositeColor = getOppositeColor(color);
+				const cursorImage = createCursorImage(size, oppositeColor);
+				drawingCanvas.style.cursor = `url("${cursorImage}") ${size / 2} ${size / 2}, crosshair`;
+			}
 
-// Function to get the opposite color
-function getOppositeColor(color) {
-    // Convert color to RGB
-    const rgb = hexToRgb(color);
+			// Function to get the opposite color
+			function getOppositeColor(color) {
+				// Convert color to RGB
+				const rgb = hexToRgb(color);
 
-    // Calculate opposite RGB values
-    const oppositeRGB = {
-        r: 255 - rgb.r,
-        g: 255 - rgb.g,
-        b: 255 - rgb.b
-    };
+				// Calculate opposite RGB values
+				const oppositeRGB = {
+					r: 255 - rgb.r,
+					g: 255 - rgb.g,
+					b: 255 - rgb.b
+				};
 
-    // Convert RGB back to hex
-    const oppositeHex = rgbToHex(oppositeRGB.r, oppositeRGB.g, oppositeRGB.b);
+				// Convert RGB back to hex
+				const oppositeHex = rgbToHex(oppositeRGB.r, oppositeRGB.g, oppositeRGB.b);
 
-    return oppositeHex;
-}
+				return oppositeHex;
+			}
 
-// Function to convert hex color to RGB
-function hexToRgb(hex) {
-    // Remove '#' if present
-    hex = hex.replace(/^#/, '');
+			// Function to convert hex color to RGB
+			function hexToRgb(hex) {
+				// Remove '#' if present
+				hex = hex.replace(/^#/, '');
 
-    // Parse hex to RGB
-    const bigint = parseInt(hex, 16);
-    const r = (bigint >> 16) & 255;
-    const g = (bigint >> 8) & 255;
-    const b = bigint & 255;
+				// Parse hex to RGB
+				const bigint = parseInt(hex, 16);
+				const r = (bigint >> 16) & 255;
+				const g = (bigint >> 8) & 255;
+				const b = bigint & 255;
 
-    return { r, g, b };
-}
+				return { r, g, b };
+			}
 
-// Function to convert RGB to hex color
-function rgbToHex(r, g, b) {
-    return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-}
+			// Function to convert RGB to hex color
+			function rgbToHex(r, g, b) {
+				return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+			}
 
-// Initialize the jQuery UI slider
-$(function() {
-    updateCursor(); // Initialize cursor
-});
+			// Initialize the jQuery UI slider
+			$(function() {
+				updateCursor(); // Initialize cursor
+			});
 
-// Initialize the jQuery UI slider
-const sizeSlider = $('#sizeSlider');
-const sliderValueElement = $('#sliderValue'); // Add a div to display the slider value
+			// Initialize the jQuery UI slider
+			const sizeSlider = $('#sizeSlider');
+			const sliderValueElement = $('#sliderValue'); // Add a div to display the slider value
 
-// Log the slider value when it changes
-sizeSlider.on('input change', function() {
-    const sliderValue = sizeSlider.val(); // Get the current slider value
-    const updatedCursorSize = sliderValue; // Adjust the multiplier as needed
-    const cursorImage = createCursorImage(updatedCursorSize);
-    drawingCanvas.style.cursor = `url("${cursorImage}") ${updatedCursorSize / 2} ${updatedCursorSize / 2}, crosshair`;
-});
+			// Log the slider value when it changes
+			sizeSlider.on('input change', function() {
+				const sliderValue = sizeSlider.val(); // Get the current slider value
+				const updatedCursorSize = sliderValue; // Adjust the multiplier as needed
+				const cursorImage = createCursorImage(updatedCursorSize);
+				drawingCanvas.style.cursor = `url("${cursorImage}") ${updatedCursorSize / 2} ${updatedCursorSize / 2}, crosshair`;
+			});
 
-// Update the color when the color picker value changes
-document.getElementById('colorPicker').addEventListener('input', (e) => {
-    if (isDrawing) {
-        ctx.strokeStyle = e.target.value;
-    }
-    updateCursor(); // Call updateCursor function when color changes
-});
+			// Update the color when the color picker value changes
+			document.getElementById('colorPicker').addEventListener('input', (e) => {
+				if (isDrawing) {
+					ctx.strokeStyle = e.target.value;
+				}
+				updateCursor(); // Call updateCursor function when color changes
+			});
 
-$(function() {
-    sizeSlider.on('input change', function() {
-        const sliderValue = sizeSlider.val();
-        const updatedCursorSize = sliderValue;
-        const cursorImage = createCursorImage(updatedCursorSize);
-        drawingCanvas.style.cursor = `url("${cursorImage}") ${updatedCursorSize / 2} ${updatedCursorSize / 2}, crosshair`;
-    });
-});
+			$(function() {
+				sizeSlider.on('input change', function() {
+					const sliderValue = sizeSlider.val();
+					const updatedCursorSize = sliderValue;
+					const cursorImage = createCursorImage(updatedCursorSize);
+					drawingCanvas.style.cursor = `url("${cursorImage}") ${updatedCursorSize / 2} ${updatedCursorSize / 2}, crosshair`;
+				});
+			});
 
-// Handle mouse wheel events to adjust the slider value
-drawingCanvas.addEventListener('wheel', (e) => {
-    e.preventDefault();
+			// Handle mouse wheel events to adjust the slider value
+			drawingCanvas.addEventListener('wheel', (e) => {
+				e.preventDefault();
 
-    const sizeSlider = document.getElementById('sizeSlider');
-    const step = 4;
-    const currentValue = parseInt(sizeSlider.value);
-    const newValue = e.deltaY > 0 ? currentValue - step : currentValue + step;
-    const minValue = parseInt(sizeSlider.min);
-    const maxValue = parseInt(sizeSlider.max);
-    const clampedValue = Math.min(Math.max(newValue, minValue), maxValue);
+				const sizeSlider = document.getElementById('sizeSlider');
+				const step = 4;
+				const currentValue = parseInt(sizeSlider.value);
+				const newValue = e.deltaY > 0 ? currentValue - step : currentValue + step;
+				const minValue = parseInt(sizeSlider.min);
+				const maxValue = parseInt(sizeSlider.max);
+				const clampedValue = Math.min(Math.max(newValue, minValue), maxValue);
 
-    sizeSlider.value = clampedValue;
+				sizeSlider.value = clampedValue;
 
-    ctx.lineWidth = clampedValue;
-    updateCursor(clampedValue);
-}, { passive: false });
+				ctx.lineWidth = clampedValue;
+				updateCursor(clampedValue);
+			}, { passive: false });
 		
 			const imageContainer = document.querySelector('.canvas-container');
 			imageContainer.style.display = 'none';
@@ -4173,5 +4164,5 @@ drawingCanvas.addEventListener('wheel', (e) => {
 			});
 		}*/
     </script>
-</body>
+<script src="scripts/autoTranslate.js"></script></body>
 </html>

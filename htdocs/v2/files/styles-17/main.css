@@ -1,0 +1,831 @@
+@import url("https://fonts.googleapis.com/css?family=Barlow+Condensed:300,400,500,600,700,800,900|Barlow:300,400,500,600,700,800,900&display=swap");
+body {
+  --white-color: rgba(248, 248, 248, 1);
+  --even-lighter-grey-color: rgba(235, 235, 235, 1);
+  --lighter-grey-color: rgba(215, 215, 215, 1);
+  --light-grey-color: rgba(164, 164, 164, 1);
+  --grey-color: rgba(126, 126, 126, 1);
+  --dark-grey-color: rgba(82, 82, 82, 1);
+  --darker-grey-color: rgba(48, 48, 48, 1);
+  --even-darker-grey-color: rgba(31, 31, 31, 1);
+  --black-color: rgba(21, 21, 21, 1);
+  
+  --background-color: #18181B;
+  
+  --text-box-color: grey;
+  --text-color: #d2d2d2;
+  --text-color-opposite: black;
+  
+  --feel-color: rgba(185, 16, 157, 1);
+  --feel-color-low: rgba(185, 16, 157, 0.18);
+  --card-main-background-color: rgba(255, 255, 255, .015);
+  --card-main-border-color: rgba(255, 255, 255, 0.1);
+  --card-main-box-shadow-1: rgba(0, 0, 0, 0.05);
+  --card-main-box-shadow-1-y: 3px;
+  --card-main-box-shadow-1-blur: 6px;
+  --card-main-box-shadow-2: rgba(0, 0, 0, 0.1);
+  --card-main-box-shadow-2-y: 8px;
+  --card-main-box-shadow-2-blur: 15px;
+  --card-main-label-color: #FFFFFF;
+  --card-main-icon-color: #D4D4D8;
+  --card-main-icon-background-color: rgba(255, 255, 255, 0.08);
+  --card-main-icon-border-color: rgba(255, 255, 255, 0.12);
+  --card-main-shine-opacity: .1;
+  --card-main-shine-gradient: conic-gradient(from 205deg at 50% 50%, var(--feel-color) 0deg, var(--feel-color) 25deg, var(--feel-color-low) 295deg, black 360deg);
+  --card-main-line-color: #2A2B2C;
+  --card-main-tile-color: var(--card-main-shine-gradient);
+  --card-main-hover-border-color: rgba(24, 24, 27, 0.15);
+  --card-main-hover-box-shadow-1: rgba(24, 24, 27, 0.05);
+  --card-main-hover-box-shadow-1-y: 3px;
+  --card-main-hover-box-shadow-1-blur: 6px;
+  --card-main-hover-box-shadow-2: rgba(24, 24, 27, 0.1);
+  --card-main-hover-box-shadow-2-y: 8px;
+  --card-main-hover-box-shadow-2-blur: 15px;
+  --card-main-hover-icon-color: #18181B;
+  --card-main-hover-icon-background-color: rgba(24, 24, 27, 0.04);
+  --card-main-hover-icon-border-color: rgba(24, 24, 27, 0.34);
+  --blur-opacity: .1;
+}
+body.light {
+  --white-color: rgba(21, 21, 21, 1);
+  --even-lighter-grey-color: rgba(31, 31, 31, 1);
+  --lighter-grey-color: rgba(48, 48, 48, 1);
+  --light-grey-color: rgba(82, 82, 82, 1);
+  --grey-color: rgba(126, 126, 126, 1);
+  --dark-grey-color: rgba(164, 164, 164, 1);
+  --darker-grey-color: rgba(215, 215, 215, 1);
+  --even-darker-grey-color: rgba(235, 235, 235, 1);
+  --black-color: rgba(248, 248, 248, 1);
+	
+  --background-color: #FAFAFA;
+  
+  --text-box-color: white;
+  --text-color: black;
+  --text-color-opposite: #d2d2d2;
+  
+  --feel-color: rgba(185, 16, 157, 1);
+  --feel-color-low: rgba(185, 16, 157, 0.50);
+  --card-main-background-color: transparent;
+  --card-main-border-color: rgba(24, 24, 27, 0.08);
+  --card-main-box-shadow-1: rgba(24, 24, 27, 0.02);
+  --card-main-box-shadow-1-y: 3px;
+  --card-main-box-shadow-1-blur: 6px;
+  --card-main-box-shadow-2: rgba(24, 24, 27, 0.04);
+  --card-main-box-shadow-2-y: 2px;
+  --card-main-box-shadow-2-blur: 7px;
+  --card-main-label-color: black;
+  --card-main-icon-color: black;
+  --card-main-icon-background-color: rgba(24, 24, 27, 0.04);
+  --card-main-icon-border-color: rgba(24, 24, 27, 0.1);
+  --card-main-shine-opacity: .3;
+  --card-main-shine-gradient: conic-gradient(from 205deg at 50% 50%, var(--feel-color-low) 0deg, var(--feel-color) 25deg, #EDFAF6 285deg, #FFFFFF 345deg, var(--feel-color-low) 360deg);
+  --card-main-line-color: #E9E9E7;
+  --card-main-tile-color: rgba(16, 185, 129, 0.08);
+  --card-main-hover-border-color: rgba(24, 24, 27, 0.15);
+  --card-main-hover-box-shadow-1: rgba(24, 24, 27, 0.05);
+  --card-main-hover-box-shadow-1-y: 3px;
+  --card-main-hover-box-shadow-1-blur: 6px;
+  --card-main-hover-box-shadow-2: rgba(24, 24, 27, 0.1);
+  --card-main-hover-box-shadow-2-y: 8px;
+  --card-main-hover-box-shadow-2-blur: 15px;
+  --card-main-hover-icon-color: black;
+  --card-main-hover-icon-background-color: rgba(24, 24, 27, 0.04);
+  --card-main-hover-icon-border-color: rgba(24, 24, 27, 0.34);
+  --blur-opacity: .1;
+}
+
+div {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  height: auto; /* Allow the height to adapt to the content */
+  background-color: var(--background-color); /* Use a variable for background color */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  margin-top: 30px;
+  font-family: "Arial", sans-serif;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+main {
+  text-align: center;
+}
+		
+span,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+label,
+p,
+ul,
+li,
+button,
+a,
+i,
+input,
+figure,
+pre,
+option,
+p {
+  color: var(--text-color);
+}
+
+input {
+  color: var(--background-color);
+}
+
+/* Progress Bar */
+.progress-bar {
+  width: 200px; /* Set the initial width of the progress bar */
+  height: 20px;
+  background-color: #f2f2f2;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex; /* Use flexbox to center the progress bar */
+  align-items: center; /* Center vertically within the container */
+  justify-content: center; /* Center horizontally within the container */
+  margin: 0 auto; /* Center the container itself */
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background-color: #4CAF50;
+  transition: width 0.3s ease;
+}
+
+.upload-btns {
+  position: absolute;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  margin-top: 20px;
+  z-index: 2;
+}
+
+.upload-btn-wrapper {
+  display: inline-block;
+  position: relative;
+}
+
+.upload-btn-wrapper label {
+  transition: transform 0.3s, color 0.3s;
+}
+
+.upload-btn-wrapper input:not(:placeholder-shown) + label,
+.upload-btn-wrapper input:focus + label {
+  --label-y: -17px;
+  --label-scale: 0.8;
+  --label-color: var(--grey);
+}
+
+.upload-btn-wrapper:hover label {
+  --label-y: -17px;
+  --label-scale: 0.8;
+  --label-color: var(--grey);
+}
+
+.upload-btn-wrapper button {
+  transition: all 0.3s ease-in-out;
+  margin-right: 10px; /* Add margin space to the right of the first button */
+}
+
+.upload-btn-wrapper:last-child button {
+  margin-right: 0; /* Reset margin for the last button */
+  margin-left: 10px; /* Add margin space to the left of the second button */
+}
+
+.upload-btn-wrapper:hover button {
+  transform: scale(1.05);
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+button {
+  border: 2px solid gray;
+  color: gray;
+  background-color: transparent;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+}
+
+.upload-btn-wrapper:hover button {
+  background-color: var(--feel-color);
+  color: white;
+  border-color: var(--feel-color);
+}
+
+button:hover {
+  background-color: var(--feel-color);
+  color: white;
+  border-color: var(--feel-color);
+}
+
+/* Hide the file input */
+.upload-btn-wrapper input[type="file"] {
+  font-size: 100px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+button-wrapper {
+  display: inline-block;
+  position: relative;
+}
+
+button-wrapper label {
+  transition: transform 0.3s, color 0.3s;
+}
+
+button-wrapper input:not(:placeholder-shown) + label,
+button-wrapper input:focus + label {
+  --label-y: -17px;
+  --label-scale: 0.8;
+  --label-color: var(--grey);
+}
+
+button-wrapper:hover label {
+  --label-y: -17px;
+  --label-scale: 0.8;
+  --label-color: var(--grey);
+}
+
+button-wrapper button {
+  transition: all 0.3s ease-in-out;
+  margin-right: 10px; /* Add margin space to the right of the first button */
+}
+
+button-wrapper:last-child button {
+  margin-right: 0; /* Reset margin for the last button */
+  margin-left: 10px; /* Add margin space to the left of the second button */
+}
+
+button-wrapper:hover button {
+  transform: scale(1.05);
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+button-wrapper:hover button {
+  background-color: var(--feel-color);
+  color: white;
+  border-color: var(--feel-color);
+}
+
+/* Hide the file input */
+button-wrapper input[type="file"] {
+  font-size: 100px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+body.toggle .instructions-container * {
+  transition-duration: 0s !important;
+}
+
+.instructions-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  position: relative;
+  bottom: 0px;
+  margin: auto;
+  grid-gap: 32px;
+}
+
+body.toggle .process * {
+  transition-duration: 0s !important;
+}
+
+.process {
+  display: block;
+  position: fixed;
+}
+
+.card-main {
+  background-color: var(--background-color);
+  box-shadow: 0px var(--card-main-box-shadow-1-y) var(--card-main-box-shadow-1-blur) var(--card-main-box-shadow-1), 0px var(--card-main-box-shadow-2-y) var(--card-main-box-shadow-2-blur) var(--card-main-box-shadow-2), 0 0 0 1px var(--card-main-border-color);
+  padding: 56px 16px 16px 16px;
+  border-radius: 15px;
+  cursor: pointer;
+  position: relative;
+  transition: box-shadow 0.25s;
+}
+.card-main::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 15px;
+  background-color: var(--card-main-background-color);
+}
+.card-main .icon {
+  z-index: 2;
+  position: relative;
+  display: table;
+  padding: 8px;
+}
+.card-main .icon::after {
+  content: "";
+  position: absolute;
+  inset: 4.5px;
+  border-radius: 50%;
+  background-color: var(--card-main-icon-background-color);
+  border: 1px solid var(--card-main-icon-border-color);
+  -webkit-backdrop-filter: blur(2px);
+          backdrop-filter: blur(2px);
+  transition: background-color 0.25s, border-color 0.25s;
+}
+.card-main .icon svg {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 24px;
+  height: 24px;
+  transform: translateZ(0);
+  color: var(--card-main-icon-color);
+  transition: color 0.25s;
+}
+.card-main h4 {
+  z-index: 2;
+  position: relative;
+  margin: 12px 0 4px 0;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 2;
+  color: var(--card-main-label-color);
+}
+.card-main p {
+  z-index: 2;
+  position: relative;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-color);
+}
+.card-main .shine {
+  border-radius: inherit;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+.card-main .shine:before {
+  content: "";
+  width: 150%;
+  padding-bottom: 150%;
+  border-radius: 50%;
+  position: absolute;
+  left: 50%;
+  bottom: 55%;
+  filter: blur(35px);
+  opacity: var(--card-main-shine-opacity);
+  transform: translateX(-50%);
+  background-image: var(--card-main-shine-gradient);
+}
+.card-main .background {
+  border-radius: inherit;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  -webkit-mask-image: radial-gradient(circle at 60% 5%, black 0%, black 15%, transparent 60%);
+  mask-image: radial-gradient(circle at 60% 5%, black 0%, black 15%, transparent 60%);
+}
+.card-main .background .tiles {
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.card-main .background .tiles .tile {
+  position: absolute;
+  background-color: var(--card-main-tile-color);
+  -webkit-animation-duration: 8s;
+          animation-duration: 8s;
+  -webkit-animation-iteration-count: infinite;
+          animation-iteration-count: infinite;
+  opacity: 0;
+}
+.card-main .background .tiles .tile.tile-4, .card-main .background .tiles .tile.tile-6, .card-main .background .tiles .tile.tile-10 {
+  -webkit-animation-delay: -2s;
+          animation-delay: -2s;
+}
+.card-main .background .tiles .tile.tile-3, .card-main .background .tiles .tile.tile-5, .card-main .background .tiles .tile.tile-8 {
+  -webkit-animation-delay: -4s;
+          animation-delay: -4s;
+}
+.card-main .background .tiles .tile.tile-2, .card-main .background .tiles .tile.tile-9 {
+  -webkit-animation-delay: -6s;
+          animation-delay: -6s;
+}
+.card-main .background .tiles .tile.tile-1 {
+  top: 0;
+  left: 0;
+  height: 10%;
+  width: 22.5%;
+}
+.card-main .background .tiles .tile.tile-2 {
+  top: 0;
+  left: 22.5%;
+  height: 10%;
+  width: 27.5%;
+}
+.card-main .background .tiles .tile.tile-3 {
+  top: 0;
+  left: 50%;
+  height: 10%;
+  width: 27.5%;
+}
+.card-main .background .tiles .tile.tile-4 {
+  top: 0;
+  left: 77.5%;
+  height: 10%;
+  width: 22.5%;
+}
+.card-main .background .tiles .tile.tile-5 {
+  top: 10%;
+  left: 0;
+  height: 22.5%;
+  width: 22.5%;
+}
+.card-main .background .tiles .tile.tile-6 {
+  top: 10%;
+  left: 22.5%;
+  height: 22.5%;
+  width: 27.5%;
+}
+.card-main .background .tiles .tile.tile-7 {
+  top: 10%;
+  left: 50%;
+  height: 22.5%;
+  width: 27.5%;
+}
+.card-main .background .tiles .tile.tile-8 {
+  top: 10%;
+  left: 77.5%;
+  height: 22.5%;
+  width: 22.5%;
+}
+.card-main .background .tiles .tile.tile-9 {
+  top: 32.5%;
+  left: 50%;
+  height: 22.5%;
+  width: 27.5%;
+}
+.card-main .background .tiles .tile.tile-10 {
+  top: 32.5%;
+  left: 77.5%;
+  height: 22.5%;
+  width: 22.5%;
+}
+@-webkit-keyframes tile {
+  0%, 12.5%, 100% {
+    opacity: 1;
+  }
+  25%, 82.5% {
+    opacity: 0;
+  }
+}
+@keyframes tile {
+  0%, 12.5%, 100% {
+    opacity: 1;
+  }
+  25%, 82.5% {
+    opacity: 0;
+  }
+}
+.card-main .background .line {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.35s;
+}
+.card-main .background .line:before, .card-main .background .line:after {
+  content: "";
+  position: absolute;
+  background-color: var(--card-main-line-color);
+  transition: transform 0.35s;
+}
+.card-main .background .line:before {
+  left: 0;
+  right: 0;
+  height: 1px;
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+}
+.card-main .background .line:after {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  transform-origin: 50% 0;
+  transform: scaleY(0);
+}
+.card-main .background .line.line-1:before {
+  top: 10%;
+}
+.card-main .background .line.line-1:after {
+  left: 22.5%;
+}
+.card-main .background .line.line-1:before, .card-main .background .line.line-1:after {
+  transition-delay: 0.3s;
+}
+.card-main .background .line.line-2:before {
+  top: 32.5%;
+}
+.card-main .background .line.line-2:after {
+  left: 50%;
+}
+.card-main .background .line.line-2:before, .card-main .background .line.line-2:after {
+  transition-delay: 0.15s;
+}
+.card-main .background .line.line-3:before {
+  top: 55%;
+}
+.card-main .background .line.line-3:after {
+  right: 22.5%;
+}
+.card-main:hover {
+  box-shadow: 0px 3px 6px var(--card-main-hover-box-shadow-1), 0px var(--card-main-hover-box-shadow-2-y) var(--card-main-hover-box-shadow-2-blur) var(--card-main-hover-box-shadow-2), 0 0 0 1px var(--card-main-hover-border-color);
+}
+.card-main:hover .icon::after {
+  background-color: var(--card-main-hover-icon-background-color);
+  border-color: var(--card-main-hover-icon-border-color);
+}
+.card-main:hover .icon svg {
+  color: var(--card-main-hover-icon-color);
+}
+.card-main:hover .shine {
+  opacity: 1;
+  transition-duration: 0.5s;
+  transition-delay: 0s;
+}
+.card-main:hover .background .tiles {
+  opacity: 1;
+  transition-delay: 0.25s;
+}
+.card-main:hover .background .tiles .tile {
+  -webkit-animation-name: tile;
+          animation-name: tile;
+}
+.card-main:hover .background .line {
+  opacity: 1;
+  transition-duration: 0.15s;
+}
+.card-main:hover .background .line:before {
+  transform: scaleX(1);
+}
+.card-main:hover .background .line:after {
+  transform: scaleY(1);
+}
+.card-main:hover .background .line.line-1:before, .card-main:hover .background .line.line-1:after {
+  transition-delay: 0s;
+}
+.card-main:hover .background .line.line-2:before, .card-main:hover .background .line.line-2:after {
+  transition-delay: 0.15s;
+}
+.card-main:hover .background .line.line-3:before, .card-main:hover .background .line.line-3:after {
+  transition-delay: 0.3s;
+}
+
+.day-night {
+  cursor: pointer;
+  position: absolute;
+  right: 10px;
+  top: 14px;
+  opacity: 0.3;
+  margin-right: 10px;
+}
+
+.day-night input {
+  display: none;
+}
+
+.day-night input + div {
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  position: relative;
+  box-shadow: inset 8px -8px 0 0 var(--text-color);
+  transform: scale(1) rotate(-2deg);
+  transition: box-shadow 0.5s ease 0s, transform 0.4s ease 0.1s;
+}
+.day-night input + div:before {
+  content: "";
+  width: inherit;
+  height: inherit;
+  border-radius: inherit;
+  position: absolute;
+  left: 0;
+  top: 0;
+  transition: background-color 0.3s ease;
+}
+.day-night input + div:after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin: -3px 0 0 -3px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  box-shadow: 0 -23px 0 var(--text-color), 0 23px 0 var(--text-color), 23px 0 0 var(--text-color), -23px 0 0 var(--text-color), 15px 15px 0 var(--text-color), -15px 15px 0 var(--text-color), 15px -15px 0 var(--text-color), -15px -15px 0 var(--text-color);
+  transform: scale(0);
+  transition: all 0.3s ease;
+}
+.day-night input:checked + div {
+  box-shadow: inset 20px -20px 0 0 var(--text-color);
+  transform: scale(0.5) rotate(0deg);
+  transition: transform 0.3s ease 0.1s, box-shadow 0.2s ease 0s;
+}
+.day-night input:checked + div:before {
+  background: var(--text-color);
+  transition: background-color 0.3s ease 0.1s;
+}
+.day-night input:checked + div:after {
+  transform: scale(1);
+  transition: transform 0.5s ease 0.15s;
+}
+
+
+/* Scrollbar Styles */
+/* For WebKit-based browsers (Chrome, Safari) */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #999999;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #f0f0f0;
+}
+
+/* For Firefox */
+/* Note: Firefox currently does not support customizing the scrollbar track color */
+/* You can omit these styles if you don't need to support Firefox */
+/* To target the thumb */
+html {
+  scrollbar-color: #f0f0f0 #999999;
+  scrollbar-width: thin;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: inherit;
+}
+*:before, *:after {
+  box-sizing: inherit;
+}
+/* Add these styles to your CSS */
+.navbar {
+  background-color: var(--background-color);
+  display: flex;
+  align-items: center; /* Align items vertically in the center */
+  justify-content: space-between;
+  padding: 10px 20px; /* Adjust padding to control vertical and horizontal spacing */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 2;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.navbar:before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(to right, var(--card-main-icon-color), var(--text-color));
+  box-shadow: 0px 0px 7px 0px white;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.nav-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  margin-right: 20px; /* Adjust this value to move the text to the left */
+  background-color: var(--background-color);
+}
+
+.nav-links li {
+  margin-right: 20px;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: var(--text-color);
+  transition: color 0.3s;
+}
+
+.nav-links a:hover {
+  color: var(--card-main-hover-icon-color);
+}
+
+		/* Style for disabled buttons */
+		button[disabled] {
+		  background-color: #ccc; /* Change to your preferred grayed-out color */
+		  cursor: not-allowed; /* Change cursor style to indicate disabled state */
+		}
+		
+        /* Hamburger menu styles */
+        .menu-toggle {
+            display: none; /* Hide by default for desktop */
+            cursor: pointer;
+            padding: 10px;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+.hamburger {
+    width: 30px;
+    height: 3px;
+    background-color: var(--card-main-label-color);
+    margin: 3px 20px; /* Adjust the left margin as needed (e.g., -10px) */
+    transition: transform 0.4s, opacity 0.4s;
+}
+
+		/* Media query for mobile responsiveness */
+		@media (max-width: 768px) {
+.day-night {
+  cursor: pointer;
+  position: absolute;
+  right: 10px;
+  top: 22px;
+  opacity: 0.3;
+  margin-right: 6px;
+}
+
+    .upload-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .upload-box {
+        width: 100%;
+        max-width: 100%; /* Subtract twice the padding to fit the entire screen */
+        margin-bottom: 20px; /* Add space between the two upload boxes */
+    }
+	
+            .menu-toggle {
+                display: flex; /* Show hamburger icon on mobile */
+            }
+
+            .nav-links {
+				background-color: var(--background-color);
+                display: none;
+                flex-direction: column;
+                position: absolute;
+                top: 60px;
+                right: 0;
+                left: 0;
+                z-index: 1000;
+            }
+
+            .nav-links.show {
+                display: flex;
+            }
+
+            .menu-toggle.active .hamburger:first-child {
+                margin-bottom: 0;
+            }
+
+            .menu-toggle.active .hamburger:nth-child(2) {
+                transform: rotate(90deg);
+            }
+
+            .menu-toggle.active .hamburger:last-child {
+                margin-top: 0;
+            }
+		}    

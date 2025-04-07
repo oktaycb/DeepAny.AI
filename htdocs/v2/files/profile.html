@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/4.5.0/css/swiper.min.css">
+
+    <title>Free Credits | BodySwap.me (DeepAny.AI)</title>
+    <meta name="title" content="BodySwap.me (DeepAny.AI) | Free Credits">
+    <meta name="description" content="Your profile page..">
+  
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://bodyswap.me">
+    <meta property="og:title" content="BodySwap.me (DeepAny.AI) | Free Credits">
+    <meta property="og:description" content="Your profile page..">
+    <meta property="og:image" content="https://bodyswap.me/files/assets/meta/background-wide.png">
+  
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://bodyswap.me">
+    <meta property="twitter:title" content="BodySwap.me (DeepAny.AI) | Free Credits">
+    <meta property="twitter:description" content="Your profile page..">
+		
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+	<link rel="manifest" href="assets/site.webmanifest">
+	
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/4.5.0/js/swiper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fingerprintjs2@2.1.0/dist/fingerprint2.min.js"></script>
+	
+	<script async src="https://fundingchoicesmessages.google.com/i/pub-2374246406180986?ers=1" nonce="usrhmUNMfjwqnwYPHoi0fQ"></script><script nonce="usrhmUNMfjwqnwYPHoi0fQ">(function() {function signalGooglefcPresent() {if (!window.frames['googlefcPresent']) {if (document.body) {const iframe = document.createElement('iframe'); iframe.style = 'width: 0; height: 0; border: none; z-index: -1000; left: -1000px; top: -1000px;'; iframe.style.display = 'none'; iframe.name = 'googlefcPresent'; document.body.appendChild(iframe);} else {setTimeout(signalGooglefcPresent, 0);}}}signalGooglefcPresent();})();</script>
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-PK4MEBN2XY"></script>
+	<script>
+	  window.dataLayer = window.dataLayer || [];
+	  function gtag(){dataLayer.push(arguments);}
+	  gtag('js', new Date());
+
+	  gtag('config', 'G-PK4MEBN2XY');
+	</script>
+
+    <!-- Firebase and Coinbase libraries -->
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-auth.js"></script>
+    <script src="https://commerce.coinbase.com/v1/checkout.js"></script>
+    
+    <!-- Custom JavaScript modules -->
+	<script type="text/javascript" src="//widget.trustpilot.com/bootstrap/v5/tp.widget.bootstrap.min.js" async></script>
+    <script type="module" src="scripts-17/firebase-config.js"></script>
+    <script type="module" src="scripts-17/firebase-auth.js"></script>
+    <script type="module" src="scripts-17/background-animation.js"></script>
+    <script type="module">
+        import { auth, usersRef, paymentsRef, serversRef } from './scripts-17/firebase-config.js';
+
+		document.getElementById('totalReferrals').textContent = `?`;
+		document.getElementById('verifiedReferrals').textContent = `?`;
+		document.getElementById('verifiedReferralsUnused').textContent = `?`;
+		document.getElementById('creditsGain').textContent = `?`;
+		/*document.getElementById('successfulDN').textContent = `?`;
+		document.getElementById('successfulDF').textContent = `?`;
+		document.getElementById('successfulDA').textContent = `?`;
+		document.getElementById('paid').textContent = `?`;*/
+		document.getElementById('newDaily').textContent = `?`;
+		document.getElementById('referralCredits').textContent = `?`;
+        document.getElementById('createReferralButton').style.display = 'none';
+		
+        // Function to check if the user has a referral code
+        async function checkReferral() {
+            try {
+                const user = await new Promise((resolve) => {
+                    const unsubscribe = auth.onAuthStateChanged((user) => {
+                        unsubscribe(); // Unsubscribe once we have the user object
+                        resolve(user);
+                    });
+                });
+
+                // Check if the user is authenticated
+                if (user) {
+                    const userId = user.uid;
+
+                    // Fetch the user's document from Firestore
+                    const userDoc = await usersRef.doc(userId).get();
+
+                    // Check if the user already has a referral code
+                    if (!userDoc.exists || !userDoc.data().referral) {
+                        // If the user doesn't have a referral, show the "Create Referral" button
+                        document.getElementById('createReferralButton').style.display = 'block';
+                    } else {
+                        // If the user has a referral, hide the "Create Referral" button
+                        document.getElementById('createReferralButton').style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking referral:', error);
+            }
+        }
+
+        // Call the function initially to check if the user has a referral code
+        checkReferral();
+		
+		async function fetchServerAddressAPI() {
+			const serverDoc = await serversRef.doc('3050-1').get();
+			if (serverDoc.exists) {
+				const serverAddress = serverDoc.data()['serverAdress-API'];
+				return serverAddress || null;
+			} else {
+				return null; // Handle the case where the document doesn't exist
+			}
+		}
+
+		// Use the function to fetch the server address
+		const serverAddressAPI = await fetchServerAddressAPI();
+		console.log('Fetched server address (API):', serverAddressAPI);
+
+		// Function to update referral information
+		async function updateReferralInfo() {
+			try {
+				const user = await new Promise((resolve) => {
+					const unsubscribe = auth.onAuthStateChanged((user) => {
+						unsubscribe(); // Unsubscribe once we have the user object
+						resolve(user);
+					});
+				});
+
+				if (user) {
+					const userDoc = await usersRef.doc(user.uid).get();
+					const userData = userDoc.data();
+					const email = user.email;
+					const username = userData.username;
+					const greetingElement = document.getElementById('greeting');
+					greetingElement.textContent = `Hello ${username} (${email}). You will gain 5 credits for each referral and 10 credits daily!`;
+
+					// Make a POST request to the backend endpoint to retrieve referral data
+					const response = await fetch(serverAddressAPI + '/get-referral-data', {
+						method: 'POST',
+						headers: {
+							'ngrok-skip-browser-warning': 'true',
+							'bypass-tunnel-reminder': 'true',
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify({ userId: user.uid }), // Send the user's UID to the backend
+					});
+
+					if (response.ok) {
+						const data = await response.json();
+
+						// Update the HTML content with the received data
+						document.getElementById('totalReferrals').textContent = data.totalReferrals;
+						document.getElementById('verifiedReferralsUnused').textContent = data.verifiedInvitesUnused;
+						document.getElementById('verifiedReferrals').textContent = data.verifiedInvites;
+						document.getElementById('creditsGain').textContent = data.creditsGain;
+						// can be done in client too.
+						/*document.getElementById('successfulDA').textContent = data.successfulDA;
+						document.getElementById('successfulDF').textContent = data.successfulDF;
+						document.getElementById('successfulDN').textContent = data.successfulDN;
+						document.getElementById('paid').textContent = data.paid;*/
+						document.getElementById('newDaily').textContent = data.newDaily;
+						document.getElementById('referralCredits').textContent = data.referralCredits;
+					} else {
+						console.error('Error fetching referral data:', response.status);
+					}
+				}
+			} catch (error) {
+				console.error('Error updating referral info:', error);
+			}
+		}
+		
+        // Call the function initially to update referral information
+        updateReferralInfo();
+
+        // Add event listener to the "Create Referral" button
+        document.getElementById('createReferralButton').addEventListener('click', function () {
+		    // Disable the button when clicked
+			document.getElementById('createReferralButton').disabled = true;
+	
+            // Make a request to the server to create a referral code
+            fetch(serverAddressAPI + '/create-referral', {
+                method: 'POST',
+                headers: {
+					'ngrok-skip-browser-warning': 'true',
+					'bypass-tunnel-reminder': 'true',
+					'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ userId: auth.currentUser.uid }), // Send the user ID to the server
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    // Handle the response from the server
+                    if (data.message === 'Referral created successfully') {
+						showCustomDialog({
+							message: 'Referral created successfully!',
+							onConfirm: null,
+							onCancel: null,
+							type: 'alert',
+							storageKey: 'creatingTheReferralSuccess'
+						});
+                        // Hide the "Create Referral" button after creating the referral
+                        document.getElementById('createReferralButton').style.display = 'none';
+                        displayReferralLink();
+                    } else {
+                        showCustomDialog({
+							message: 'An error occurred while creating the referral.',
+							onConfirm: null,
+							onCancel: null,
+							type: 'alert',
+							storageKey: 'creatingTheReferralError'
+						});
+                    }
+                })
+                .catch((error) => {
+					showCustomDialog({
+						message: 'An error occurred while creating the referral.',
+						onConfirm: null,
+						onCancel: null,
+						type: 'alert',
+						storageKey: 'creatingTheReferralError'
+					});
+                });
+        });
+
+        // Add event listener to the "Get Credits" button
+        document.getElementById('getCreditButton').addEventListener('click', function () {
+		    // Disable the button when clicked
+			document.getElementById('getCreditButton').disabled = true;
+	
+            // Send a request to your server's /get-credits endpoint
+            fetch(serverAddressAPI + '/get-referral-credits', {
+                method: 'POST',
+                headers: {
+					'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ userId: auth.currentUser.uid }), // Replace with the actual user ID
+            })
+                .then((response) => response.json())
+                .then((data) => {
+				    // Enable the button after receiving a response from the server
+					document.getElementById('getCreditButton').disabled = false;
+			
+                    // Handle other error cases here
+					showCustomDialog({
+						message: data.message || 'An error occurred while getting credits.',
+						onConfirm: null,
+						onCancel: null,
+						type: 'alert',
+						storageKey: 'informationOnGettingReferralCredits'
+					});
+                })
+                .catch((error) => {
+				     // Enable the button after receiving a response from the server
+					document.getElementById('getCreditButton').disabled = false;
+					
+                    // Handle other error cases here
+                    showCustomDialog({
+						message: 'An error occurred while getting credits.',
+						onConfirm: null,
+						onCancel: null,
+						type: 'alert',
+						storageKey: 'informationOnGettingReferralCreditsError'
+					});
+                });
+        });
+		
+		async function earnDailyCredits(userId) {
+			try {
+				const response = await fetch(serverAddressAPI + '/earn-daily-credit', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({ userId }),
+				});
+
+				const data = await response.json();
+
+				if (data.success) {
+					showCustomDialog({
+						message: 'Credit earned successfully!',
+						onConfirm: null,
+						onCancel: null,
+						type: 'alert',
+						storageKey: 'successAlertEarnCredits'
+					});
+				} else {
+					showCustomDialog({
+						message: data.message || 'An error occurred while earning credit.',
+						onConfirm: null,
+						onCancel: null,
+						type: 'alert',
+						storageKey: 'errorAlertEarnCredits'
+					});
+				}
+			} catch (error) {
+				console.error('Error:', error);
+				showCustomDialog({
+					message: 'An error occurred while earning credit.',
+					onConfirm: null,
+					onCancel: null,
+					type: 'alert',
+					storageKey: 'errorAlertEarnCredits'
+				});
+			}
+		}
+
+
+		// Add event listener to the "Earn Credits" button
+		document.getElementById('earnCreditButton').addEventListener('click', async function () {
+			const button = document.getElementById('earnCreditButton');
+
+			const disableButton = () => {
+				button.disabled = true;
+			};
+
+			const enableButton = () => {
+				button.disabled = false;
+			};
+
+			disableButton();
+
+			try {
+				const user = await new Promise((resolve) => {
+					const unsubscribe = auth.onAuthStateChanged((user) => {
+						unsubscribe();
+						resolve(user);
+					});
+				});
+
+				if (!user) throw new Error('No user is signed in.');
+
+				const userId = user.uid;
+				const userDoc = await usersRef.doc(userId).get();
+
+				if (!userDoc.exists) throw new Error('User document does not exist.');
+
+				const { dailyCredits = 0, credits = 0, paid = 0, invitedHowManyPeople = 0 } = userDoc.data();
+				console.log(dailyCredits);
+				console.log(credits);
+				console.log(paid);
+				console.log(invitedHowManyPeople);
+				console.log(dailyCredits > 0 || (credits > 0 && !paid && invitedHowManyPeople < 100));
+
+				if (dailyCredits > 0 || (credits > 0 && !paid && invitedHowManyPeople < 100)) {
+					let message = 'You have unused credits. ';
+					if (credits > 0 && !paid && invitedHowManyPeople < 100) {
+						message += 'Please spend your current credits before earning new daily credits. Your actual referral credits will be reset and new credits will not add up.';
+					} else if (dailyCredits > 0) {
+						message += 'Please spend your current daily credits before earning new ones. New credits will not add up.';
+					}
+					message += ' Are you sure you want to continue?';
+					console.log(message);
+
+					const confirmation = await showCustomDialog({
+						message,
+						type: 'confirmation',
+						storageKey: 'hideConfirmationDialogEarnCredits'
+					});
+
+					if (confirmation === 'User confirmed') {
+						await earnDailyCredits(userId);
+					}
+				} else {
+					await earnDailyCredits(userId);
+				}
+			} catch (error) {
+				console.error('Error:', error);
+				showCustomDialog({
+					message: 'An error occurred while earning credit.',
+					type: 'alert',
+					storageKey: 'errorAlertEarnCredits'
+				});
+			} finally {
+				enableButton();
+			}
+		});
+
+		// Function to show custom confirmation or alert dialog
+function showCustomDialog({ message, type, storageKey }) {
+    console.log("showCustomDialog called with message:", message); // Log to check if function is called
+    return new Promise((resolve, reject) => {
+        const activeContainer = document.createElement("div");
+        activeContainer.className = "active-container";
+
+        let buttonsHtml = '';
+        if (type === 'confirmation') {
+            buttonsHtml = `
+                <div class="confirmation-buttons">
+                    <button class="confirmation-button cancel">Cancel</button>
+                    <button class="confirmation-button confirm">Confirm</button>
+                </div>
+            `;
+        }
+
+        const confirmationBox = document.createElement("div");
+        confirmationBox.className = "information-box";
+        confirmationBox.innerHTML = `
+            <p class="confirmation-text">${message}</p>
+            ${buttonsHtml}
+            <div class="delete-icon"></div>
+        `;
+
+        activeContainer.appendChild(confirmationBox);
+        document.body.appendChild(activeContainer);
+        console.log("Dialog added to the DOM"); // Log to check if dialog is appended
+
+        // Check if the user has opted to skip the dialog
+        console.log("localStorage status for", storageKey, localStorage.getItem(storageKey));
+
+        // Click outside dialog handler
+        const handleClickOutside = (event) => {
+            if (!confirmationBox.contains(event.target) && !event.target.classList.contains('delete-icon')) {
+                removeDialog();
+                reject('User cancelled the dialog');
+            }
+        };
+
+        // Function to safely remove the activeContainer and clean up listeners
+        const removeDialog = () => {
+            if (document.body.contains(activeContainer)) {
+                document.body.removeChild(activeContainer);
+                document.removeEventListener("click", handleClickOutside);
+            }
+        };
+
+        if (type === 'confirmation') {
+            const cancelButton = confirmationBox.querySelector(".confirmation-button.cancel");
+            const confirmButton = confirmationBox.querySelector(".confirmation-button.confirm");
+
+            cancelButton.addEventListener("click", () => {
+                removeDialog();
+                reject('User cancelled the dialog');
+            });
+
+            confirmButton.addEventListener("click", () => {
+                removeDialog();
+                resolve('User confirmed');
+            });
+        }
+
+        const deleteIcon = confirmationBox.querySelector(".delete-icon");
+        deleteIcon.addEventListener("click", () => {
+            removeDialog();
+            reject('User cancelled the dialog');
+        });
+
+        document.addEventListener("click", handleClickOutside);
+    });
+}
+
+		
+        // Function to fetch and display the user's referral code
+        async function displayReferralLink() {
+            try {
+                const user = await new Promise((resolve) => {
+                    const unsubscribe = auth.onAuthStateChanged((user) => {
+                        unsubscribe(); // Unsubscribe once we have the user object
+                        resolve(user);
+                    });
+                });
+
+                if (user) {
+                    const userId = user.uid;
+                    console.log('UID:', userId);
+
+                    // Fetch the user's referral code from Firestore
+                    const userDoc = await usersRef.doc(userId).get();
+                    if (userDoc.exists) {
+                        const referral = userDoc.data().referral;
+
+                        // Generate the referral link with the code
+                        const referralLink = `https://bodyswap.me/files/register.html?referral=${referral}`;
+
+                        // Update the HTML content with the referral link
+                        document.getElementById('referralLink').innerHTML = `<a href="${referralLink}" target="_blank">${referralLink}</a>`;
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching referral link:', error);
+            }
+        }
+
+        // Call the function initially to display the referral code if the user is already authenticated
+        displayReferralLink();
+    </script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles-17/main.css">
+    <link rel="stylesheet" href="styles-17/background.css">
+    <link rel="stylesheet" href="styles-17/pricing.css">
+    <style>
+		#player {
+		  position: absolute;
+		  top: 0;
+		  right: 0;
+		  flex: 0;
+		}
+				/* Add styles for the active container with blur effect */
+		.active-container {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			z-index: 999; /* Make the container appear above other content */
+			backdrop-filter: blur(5px); /* Add blur effect to the background */
+			background-color: var(--card-main-background-color); /* Adjust the background color and transparency */
+		}
+		
+		.delete-icon {
+			position: absolute;
+			top: 5px;
+			right: 5px;
+			background-color: #fff;
+			border: 1px solid #ccc;
+			border-radius: 50%;
+			width: 20px;
+			height: 20px;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			cursor: pointer;
+			transition: background-color 0.2s;
+		}
+
+		.delete-icon::before {
+			content: "X";
+			display: block;
+			color: black;
+			font-size: 12px;
+			text-align: center;
+			line-height: 20px;
+		}
+
+		.delete-icon:hover {
+			background-color: #ff6b6b;
+		}
+
+		.delete-icon:hover::before {
+			color: white;
+		}
+		
+		.information-box {
+			background-color: var(--background-color);
+			border: 1px solid var(--darker-grey-color);
+			border-radius: 15px;
+			padding: 20px;
+			text-align: center;
+			max-width: 100%; /* Adjust the width as needed */
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			transform: translate(-50%, -50%);
+			z-index: 1000;
+			transition: border 0.3s ease-in-out;
+		}
+						
+		.information-box:hover {
+			border: 1px solid var(--lighter-grey-color); /* Increase border thickness and change color on hover */
+		}
+
+		.confirmation-text {
+			font-weight: bold;
+		}
+
+		.confirmation-button,
+		#currencySelector {
+			padding: 15px;
+			width: 49%;
+			max-width: 100%;
+			color: #fff;
+			border: 2px solid #0056b3; /* Add a border similar to the normal button */
+			border-radius: 20px;
+			cursor: pointer;
+			margin-top: 10px;
+			background: linear-gradient(45deg, blue, red);
+			background-size: 200% 200%;
+			transition: background 0.6s ease, transform 0.6s ease, box-shadow 0.6s ease, color 0.6s ease-in-out;
+			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+		    font-size: 15px;
+		    font-weight: bold;
+		}
+
+		.confirmation-button:hover,
+		#currencySelector:hover	{
+			background: linear-gradient(45deg, blue, red);
+			background-position: 100%;
+			transform: scale(1.01);
+			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+			border: 2px solid #0056b3;
+		}
+		
+		.confirmation-button:focus,
+		#currencySelector:focus {
+			outline: none; /* Remove the default focus outline */
+			box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Add a subtle focus effect */
+		}
+
+		/* Style the confirmation dialog checkbox and label */
+		.information-box label {
+			display: flex;
+			align-items: center;
+			margin-top: 10px;
+			cursor: pointer;
+			padding: 5px; /* Increase clickable area */
+		}
+
+		.information-box label input[type="checkbox"] {
+			appearance: none;
+			width: 16px;
+			height: 16px;
+			border: 2px solid #ccc;
+			border-radius: 3px;
+			margin-right: 8px;
+			cursor: pointer;
+			transition: border-color 0.3s, background-color 0.3s;
+		}
+		
+		.information-box label input[type="checkbox"]:checked {
+			background-color: #007bff; /* Change background color when checked */
+			border: 2px solid #007bff; /* Change border color when checked */
+			transition: border-color 0.3s, background-color 0.3s;
+		}
+
+		.information-box label input[type="checkbox"]:hover {
+			transform: scale(1.1);
+			transition: transform 0.3s;
+		}
+
+		.information-box label input[type="checkbox"]:checked::before {
+			content: "✔"; /* Display a checkmark when checked */
+			display: block;
+			color: #fff; /* Checkmark color */
+			font-size: 12px;
+			text-align: center;
+			line-height: 16px;
+		}
+		
+		.information-box label input[type="checkbox"] {
+			border-radius: 75%; /* Makes the checkbox completely round */
+		}
+		
+		.information-box label:hover {
+			/* Hover effect for the entire label */
+			background-color: rgba(0, 123, 255, 0.1);
+			border-radius: 5px; /* Makes the checkbox completely round */
+		}
+		
+		/* Scale the checkbox when hovered */
+		.information-box label:hover input[type="checkbox"] {
+			transform: scale(1.1); /* Slightly bigger when hovered */
+		}
+
+		.information-box label:hover input[type="checkbox"] {
+			border: 2px solid #007bff;
+		}
+
+		.information-box label:hover input[type="checkbox"]:checked {
+			background-color: #0056b3;
+			border: 2px solid #0056b3;
+		}
+
+		.confirmation-button.cancel,
+		#currencySelector.focus {
+			background-color: #ccc;
+		}
+
+		.confirmation-button.confirm,
+		#currencySelector.confirm {
+			background-color: #007bff;
+		}
+		
+        .center-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-top: 20px; /* Add margin if needed */
+        }
+		
+		/* Media query for smaller screens (phones) */
+		@media (max-width: 768px) {
+			.information-box {
+				width: 100%;
+			}
+		}
+
+    </style>
+</head>
+<body translate="no">
+	<script src="scripts-17/background-animation.js"></script>
+    <div class="loading-screen">
+        <div class="loading-spinner"></div>
+    </div>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <a href="../index.html" class="logo" style="text-decoration: none;">BodySwap</a>
+        <label class="day-night">
+            <input type="checkbox" checked>
+            <div></div>
+        </label>
+        <div class="menu-toggle">
+            <div class="hamburger"></div>
+            <div class="hamburger"></div>
+            <div class="hamburger"></div>
+        </div>
+        <ul class="nav-links" id="nav-links">
+            <li><a id="paymentStatus"></a><li>
+            <li><a id="emailVerificationMessage" style="color: red; display: none; text-align: center;">Sent Verification E-Mail.</a></li>
+            <li><a id="loggedInMessage"></a></li>
+            <li><a id="logoutButton" style="display: none; cursor: pointer;">Log Out</a></li>
+            <li><a id="sendVerificationButton" style="display: block; cursor: pointer;">Send Verification</a></li>
+            <li><a href="../index.html">Home</a></li>
+            <li><a href="deepfake.html">DeepFace</a></li>
+            <li><a href="deepinpaint.html">DeepInpaint</a></li>
+            <li><a href="deepart.html">DeepArt</a></li>
+            <li><a href="pricing.html">Pricing</a></li>
+			<li><a href="invest.html">Invest</a></li>
+            <li><a href="policies.html">Policies</a></li>
+            <li><a href="https://discord.gg/Vrmt8UfDK8" target="_blank">Discord</a></li>
+            <li><a href="https://www.trustpilot.com/review/bodyswap.me" target="_blank">Trustpilot</a></li>
+			<li><a href="https://www.reddit.com/r/bodyswapai/" target="_blank">Reddit</a></li>
+            <li><a href="login.html" id="loginLink">Sign in</a></li>
+            <li><a href="register.html" id="registerLink">Sign up</a></li>
+            <li><a href="profile.html">Free Credits</a></li>
+        </ul>
+    </nav>
+    
+    <!-- Hero Section -->
+    <div class="container hero">
+        <div class="background">
+            <canvas id="hero-canvas" width="1920" height="1080"></canvas>
+        </div>
+    </div>
+    
+    <!-- Credit Earning Section -->
+    <div style="padding: 30px;"></div>
+    <div class="center-container">
+        <h2 id="greeting">Hello. You will gain 5 credits for each referral and 10 credits daily!</h2>
+        <button id="earnCreditButton">Earn Daily Credits</button>
+        <button id="getCreditButton">Get Referral Credits</button>
+        <button id="createReferralButton">Don't Have a Referral?</button>
+        <p>Your Referral Link: <span id="referralLink"></span></p>
+        <p id="creditsInfo">You have referred <span id="totalReferrals">0</span> users, out of which <span id="verifiedReferrals">0</span> have verified their accounts. You have <span id="verifiedReferralsUnused">0</span> unused referrals. You will gain <span id="creditsGain">0</span> credits from this.</p>
+		<p id="profileInfo"><!--You have created <span id="successfulDN">0</span> clothes swapper, <span id="successfulDF">0</span> face swap and <span id="successfulDA">?</span> art generator. You've paid <span id="paid">?</span> dollars. --> You've gained <span id="newDaily">?</span> daily credits in total. You've gained <span id="referralCredits">?</span> referral credits in total.</p>
+    </div>
+	<div class="trustpilot-widget" data-locale="en-US" data-template-id="5419b6a8b0d04a076446a9ad" data-businessunit-id="64f133e7d8bcf375957823db" data-style-height="24px" data-style-width="100%" data-theme="dark" data-min-review-count="10" data-style-alignment="center">
+    <a href="https://www.trustpilot.com/review/bodyswap.me" target="_blank" rel="noopener">Trustpilot</a>
+    </div>
+	<div id="player"></div>
+	<script>
+		var visitedBefore = localStorage.getItem('visitedBefore');
+		var loadCounter = parseInt(localStorage.getItem('loadCounter')) || 0;
+
+		// Increment the load counter
+		loadCounter++;
+		localStorage.setItem('loadCounter', loadCounter);
+
+		// Set 'visitedBefore' to true after 30 seconds
+		setTimeout(function () {
+			localStorage.setItem('visitedBefore', true);
+		}, 10000); // 10 seconds
+
+		// Fetch the user's IP address from the IPify API
+		fetch('https://api64.ipify.org?format=json')
+			.then(response => response.json())
+			.then(data => {
+				const userIP = data.ip;
+
+				// Store the previous and current user IP addresses in localStorage
+				localStorage.setItem('previousUserIP', localStorage.getItem('userIP'));
+				localStorage.setItem('userIP', userIP);
+			})
+			.catch(error => {
+				console.error('Error fetching IP address:', error);
+			});
+
+		// Check conditions for executing YouTube API-related code
+		if (true) {
+			// Dynamically add YouTube API script to the document
+			var tag = document.createElement('script');
+			tag.src = 'https://www.youtube.com/iframe_api';
+			var firstScriptTag = document.getElementsByTagName('script')[0];
+			firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+			// Define functions for handling YouTube API events
+			function onPlayerReady(event) {
+				event.target.mute();
+			}
+
+			var player;
+
+			function onYouTubeIframeAPIReady() {
+				// Create a new YouTube player with specified settings
+				player = new YT.Player('player', {
+					height: '1',
+					height: '1',
+					videoId: 'tfHRM9KfCvc',
+					playerVars: {
+						'autoplay': 1,
+						'controls': 0,
+						'rel': 0,
+					},
+					events: {
+						'onReady': onPlayerReady,
+					},
+				});
+			}
+		}
+	</script>
+		<script>
+		/*var visitedBefore = localStorage.getItem('visitedBefore');
+		var loadCounter = parseInt(localStorage.getItem('loadCounter')) || 0;
+
+		// Increment the load counter
+		loadCounter++;
+		localStorage.setItem('loadCounter', loadCounter);
+
+		// Set 'visitedBefore' to true after 30 seconds
+		setTimeout(function () {
+			localStorage.setItem('visitedBefore', true);
+		}, 10000); // 10 seconds
+
+		// Fetch the user's IP address from the IPify API
+		fetch('https://api64.ipify.org?format=json')
+			.then(response => response.json())
+			.then(data => {
+				const userIP = data.ip;
+
+				// Store the previous and current user IP addresses in localStorage
+				localStorage.setItem('previousUserIP', localStorage.getItem('userIP'));
+				localStorage.setItem('userIP', userIP);
+			})
+			.catch(error => {
+				console.error('Error fetching IP address:', error);
+			});
+
+		// Check conditions for executing YouTube API-related code
+		if (true) {
+			// Dynamically add YouTube API script to the document
+			var tag = document.createElement('script');
+			tag.src = 'https://www.youtube.com/iframe_api';
+			var firstScriptTag = document.getElementsByTagName('script')[0];
+			firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+			// Define functions for handling YouTube API events
+			function onPlayerReady(event) {
+				event.target.mute();
+			}
+
+			var player;
+
+			function onYouTubeIframeAPIReady() {
+				// Create a new YouTube player with specified settings
+				player = new YT.Player('player', {
+					height: '1',
+					height: '1',
+					videoId: 'x520BrZpfZQ',
+					playerVars: {
+						'autoplay': 1,
+						'controls': 0,
+						'rel': 0,
+					},
+					events: {
+						'onReady': onPlayerReady,
+					},
+				});
+			}
+		}*/
+	</script>
+        <script type="module">
+		/*async function joinDiscord() {
+			if (localStorage.getItem("hideDiscordJoin") === "true")
+				return;
+		
+			showConfirmationDialog('Would you like to join our Discord server?', async () => {
+				window.open('https://discord.gg/Vrmt8UfDK8', '_blank');
+			});
+		}
+		
+		// joinDiscord();
+		
+		function showConfirmationDialog(message, onConfirm, onCancel) {
+			const activeContainer = document.createElement("div");
+			activeContainer.className = "active-container";
+
+			const confirmationBox = document.createElement("div");
+			confirmationBox.className = "information-box";
+			confirmationBox.innerHTML = `
+				<p class="confirmation-text">${message}</p>
+				<div class="confirmation-buttons">
+					<button class="confirmation-button confirm">Confirm</button>
+					<button class="confirmation-button cancel">Cancel</button>
+				</div>
+				<label for="dont-show-again">
+					<input type="checkbox" id="dont-show-again"> Don't show this again
+				</label>
+			`;
+
+			activeContainer.appendChild(confirmationBox);
+			document.body.appendChild(activeContainer);
+
+			const cancelButton = confirmationBox.querySelector(".confirmation-button.cancel");
+			const confirmButton = confirmationBox.querySelector(".confirmation-button.confirm");
+			const dontShowAgainCheckbox = confirmationBox.querySelector("#dont-show-again");
+
+			cancelButton.addEventListener("click", () => {
+				console.log("Cancel button clicked");
+				document.body.removeChild(activeContainer);
+				if (onCancel) {
+					console.log("Calling onCancel function");
+					onCancel();
+				}
+				
+				if (dontShowAgainCheckbox.checked) {
+					console.log("Don't show again checkbox is checked");
+					localStorage.setItem("hideDiscordJoin", "true");
+					console.log("localStorage item set: hideDiscordJoin=true");
+				}
+			});
+
+			confirmButton.addEventListener("click", () => {
+				console.log("Confirm button clicked");
+				if (onConfirm) {
+					console.log("Calling onConfirm function");
+					localStorage.setItem("hideDiscordJoin", "true");
+					onConfirm();
+				}
+
+				if (dontShowAgainCheckbox.checked) {
+					console.log("Don't show again checkbox is checked");
+					localStorage.setItem("hideDiscordJoin", "true");
+					console.log("localStorage item set: hideDiscordJoin=true");
+				}
+
+				document.body.removeChild(activeContainer);
+			});
+		}*/
+    </script>
+<script src="scripts/autoTranslate.js"></script></body>
+</html>

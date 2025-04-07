@@ -11,7 +11,27 @@
 		<priority>0.8</priority>
 	</url>
 	<url>
+		<loc>https://deepany.ai/deepfake</loc>
+		<lastmod>2024-10-15T06:17:53+00:00</lastmod>
+		<priority>0.8</priority>
+	</url>
+	<url>
 		<loc>https://deepany.ai/inpaint</loc>
+		<lastmod>2024-10-15T06:17:53+00:00</lastmod>
+		<priority>0.8</priority>
+	</url>
+	<url>
+		<loc>https://deepany.ai/deepnude</loc>
+		<lastmod>2024-10-15T06:17:53+00:00</lastmod>
+		<priority>0.8</priority>
+	</url>
+	<url>
+		<loc>https://deepany.ai/nudifier</loc>
+		<lastmod>2024-10-15T06:17:53+00:00</lastmod>
+		<priority>0.8</priority>
+	</url>
+	<url>
+		<loc>https://deepany.ai/clothes-removal</loc>
 		<lastmod>2024-10-15T06:17:53+00:00</lastmod>
 		<priority>0.8</priority>
 	</url>
