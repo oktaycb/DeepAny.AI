@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat App</title>
+    <script src="libraries/socket.io.min.js"></script>
+</head>
+<body>
+    <h2>Chat App</h2>
+    <label>Select Room:</label>
+    <select id="roomSelect">
+        <option value="general">General</option>
+        <option value="support">Support</option>
+    </select>
+
+    <ul id="chat"></ul>
+
+    <input id="msgInput" placeholder="Type a message...">
+    <button onclick="sendMsg()">Send</button>
+
+    <script>
+        const socket = io('http://localhost:2852');
+        let currentRoom = 'general';
+
+        socket.emit('joinRoom', currentRoom);
+
+        document.getElementById('roomSelect').addEventListener('change', (e) => {
+            currentRoom = e.target.value;
+            socket.emit('joinRoom', currentRoom);
+            document.getElementById('chat').innerHTML = '';
+        });
+
+        socket.on('rateLimit', warning => {
+            alert(warning);
+        });
+
+        socket.on('chatHistory', history => {
+            const chat = document.getElementById('chat');
+            chat.innerHTML = '';
+            history.forEach(msg => {
+                const li = document.createElement('li');
+                li.textContent = msg;
+                chat.appendChild(li);
+            });
+        });
+
+        socket.on('chatMessage', msg => {
+            const li = document.createElement('li');
+            li.textContent = msg;
+            document.getElementById('chat').appendChild(li);
+        });
+
+        function sendMsg() {
+            const msg = document.getElementById('msgInput').value;
+            if (!msg.trim()) return;
+            socket.emit('chatMessage', { room: currentRoom, msg });
+            document.getElementById('msgInput').value = '';
+        }
+    </script>
+</body>
+</html>

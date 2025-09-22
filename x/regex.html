@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Clothing/Undress Regex Test (Revised)</title>
+</head>
+<body>
+<script>
+  // 1) Vocabulary lists
+  const upper = [ /* same as before */ 
+    'shirt','blouse','jacket','coat','top','sweater','hoodie',
+    'tank top','t-shirt','pullover','cardigan','vest','polo',
+    'crop top','anorak','blazer','parka','raincoat',
+    'button-up','kaftan','kimono','thermal shirt',
+    'mesh top','tube top','halter top',
+    'corset top','peplum top','wrap top',
+    'bandeau','cape','bra',
+    'jumper','tank','camisole','bodysuit','tunic','hooded sweatshirt',
+    'bralette','corset','bustier',
+    'windbreaker','fleece',
+    'sports bra','crop sweatshirt','jersey',
+    'undershirt','upper clothing','upper clothes'
+  ];
+  const bottom = [
+    'skirt','pants','panties','trousers','shorts','jeans',
+    'tights','stockings','socks','leggings','capris','culottes','overalls',
+    'joggers','chinos','sweatpants','bottom clothing','bottom clothes',
+    'shoes'
+  ];
+  const dresses = ['dress','bodycon','sundress','gown','clothes','clothing'];
+  const allClothes = [...upper, ...bottom, ...dresses]
+    .sort((a,b) => b.length - a.length)
+    .map(x => x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'))
+    .join('|');
+
+  // 2) Verb buckets
+  const undressVerbs = [
+    'undress(?:es|ing|ed)?',
+    'disrobe(?:s|d|ing)?',              // standalone disrobe
+    'slip(?:s|ped|ping)?\\s+out\\s+of'
+  ].join('|');
+
+  const pullDownVerbs = [
+    'pull(?:s|ed|ing)?',
+    'take(?:s|n|d|ing)?',
+    'lower(?:s|ed|ing)?',
+    'remove(?:s|d|ing)?',
+    'slide(?:s|d|ing)?',
+    'drop(?:s|ped|ping)?',
+    'yank(?:s|ed|ing)?'
+  ].join('|');
+
+  const liftUpVerbs = [
+    'lift(?:s|ed|ing)?',
+    'raise(?:d|s|ing)?',
+    'flip(?:s|ped|ping)?',
+    'pull(?:s|ed|ing)?',
+    'hike(?:s|d|ing)?',
+    'tug(?:s|ged|ging)?'
+  ].join('|');
+
+  const damageVerbs = [
+    'rip(?:ping|ped)?',
+    'tear(?:ing)?(?:\\s+off)?',
+    'torn',
+    'shred(?:ding|ded)?',
+    'break(?:ing|en)?',
+    'damage(?:d|s|ing)?'
+  ].join('|');
+
+  // 3) Regexes
+
+  // A) Undressing actions where VERB→clothing or clothing→off
+  const clothingOffRe = new RegExp(
+    `\\b(?:` +
+      // verb → clothing
+      `(?:${undressVerbs})` +
+      `(?:\\s+(?:her|his|their|the))?` +
+      `(?:\\s+\\w+){0,6}?` +
+      `\\s+(?:${allClothes})` +
+    `|` +
+      // clothing → off
+      `(?:${allClothes})` +
+      `(?:\\s+\\w+){0,3}?\\s+off` +
+    `)\\b`, 'i'
+  );
+
+  // B) Damage / rip / tear verbs on clothing
+  const clothingDamageRe = new RegExp(
+    `\\b(?:${damageVerbs})\\b` +
+    `(?:\\s+(?:the|my|your|his|her))?` +
+    `(?:\\s+\\w+){0,6}?\\s+(?:${allClothes})\\b`, 'i'
+  );
+
+  // C) pull‑down / yank‑off items (action→clothing)
+  const pullDownRe = new RegExp(
+    `\\b(?:${pullDownVerbs})\\b` +
+    `(?:\\s+(?:off|down|away|all|the|my|his|her))?` +
+    `(?:\\s+\\w+){0,6}?` +
+    `\\b(?:${bottom.join('|')})\\b`, 'i'
+  );
+
+  // D) lift‑up / flip‑up (clothing→action)
+  const liftUpRe = new RegExp(
+    `\\b(?:${bottom.concat(dresses).join('|')})\\b` +
+    `(?:\\s+\\w+){0,6}?` +
+    `\\s+(?:${liftUpVerbs})(?:\\s+up)?\\b`, 'i'
+  );
+
+  // E) action→clothing lift for *upper* clothes
+  const liftUpUpperRe = new RegExp(
+    `\\b(?:${upper.join('|')})\\b` +
+    `(?:\\s+\\w+){0,6}?` +
+    `\\s+(?:${liftUpVerbs})(?:\\s+up)?\\b`, 'i'
+  );
+
+  // F) state‑based nudity
+  const stateRe = /\bgets\s+naked\b/i;
+
+  // 4) Test sentences
+  const tests = [
+    "She slips out of her dress and stands there.",
+    "He pulled down his jeans slowly.",
+    "They tear off and completely remove all clothing.",
+    "She gets naked by the pool.",
+    "He ripped off the shirt.",
+    "They are vomiting. (should not match)",
+    "She unzipped her jacket then pulled off her shirt.",
+    "He yanks off his socks and shoes.",
+    "Her skirt flipped up in the wind.",
+    "They lift up their top to reveal a tattoo.",
+    "She disrobes elegantly.",
+    "He removes the bra.",
+    "She pulled her sweater off over her head."
+  ];
+
+  console.log('%c Sentence'.padEnd(60) + '→ Matches', 'font-weight:bold;');
+  tests.forEach(s => {
+    const hits = [];
+    if (clothingOffRe.test(s))    hits.push('clothingOff');
+    if (clothingDamageRe.test(s)) hits.push('clothingDamage');
+    if (pullDownRe.test(s))       hits.push('pullDown');
+    if (liftUpRe.test(s))         hits.push('liftUpBottom');
+    if (liftUpUpperRe.test(s))    hits.push('liftUpUpper');
+    if (stateRe.test(s))          hits.push('getsNaked');
+    console.log(s.padEnd(60), '→', hits.length? hits : ['—']);
+  });
+</script>
+</body>
+</html>

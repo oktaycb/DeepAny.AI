@@ -1,0 +1,6 @@
+# This is the robots.txt for deepany.ai
+Sitemap: https://deepany.ai/sitemap.xml
+
+User-agent: *
+Disallow: /admin/   # Prevents indexing of the admin area
+Disallow: /api/     # Prevents indexing of API endpoints

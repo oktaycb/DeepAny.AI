@@ -1,0 +1,314 @@
+﻿:root {
+    --input-size: calc(14vh * var(--scale-factor-h));
+    --input-margin: calc(4vh * var(--scale-factor-h));
+    --font-size: calc(2.4vh * var(--scale-factor-h));
+}
+
+.outputs {
+    display: none;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    overflow-y: visible;
+    overflow-x: hidden;
+    max-width: calc(5 * (var(--input-size) + var(--input-margin)));
+    max-height: calc(var(--input-size) + var(--input-margin) / 2);
+    margin: 0
+}
+
+.ar-4-3 .outputs {
+    max-width: unset;
+}
+
+.faces, .inputs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    overflow-y: visible;
+    overflow-x: hidden;
+    width: calc(2 * (var(--input-size) + var(--input-margin)));
+    max-height: calc(var(--input-size) + var(--input-margin) / 2);
+    margin: 0
+}
+
+    .faces:has(> *:nth-child(n+3)),
+    .inputs:has(> *:nth-child(n+3)) {
+        width: calc(2 * (var(--input-size) + var(--input-margin)) + var(--scrollbar-width));
+        margin-left: var(--scrollbar-width);
+    }
+
+.ar-4-3 .faces, .ar-4-3 .inputs {
+    width: unset;
+}
+
+    .ar-4-3 .faces:has(> *:nth-child(n+3)),
+    .ar-4-3 .inputs:has(> *:nth-child(n+3)) {
+        width: unset;
+        max-width: calc(2 *var(--input-size) + var(--input-margin) + var(--scrollbar-width));
+        margin-left: var(--scrollbar-width);
+    }
+
+.input {
+    width: var(--input-size);
+    height: var(--input-size);
+    margin: calc(var(--input-margin) / 4);
+    border-radius: 50%;
+    position: relative;
+    cursor: pointer;
+    background-color: rgba(var(--grey), 1);
+    opacity: 0.5
+}
+
+    .input.active {
+        border: var(--border) solid var(--orange);
+        opacity: 1
+    }
+
+    .input img, .input video {
+        height: 100%;
+        width: 100%;
+        object-fit: cover;
+        border-radius: 50%
+    }
+
+.question-mark, .settings-mark, .delete-icon {
+    font-weight: 400;
+    width: var(--input-margin);
+    height: var(--input-margin);
+    position: absolute;
+    bottom: 65%;
+    left: 65%;
+    font-size: var(--font-size);
+    cursor: pointer;
+    border: var(--border) solid #fff;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(var(--grey), 1);
+}
+
+    .question-mark:hover::after {
+        content: attr(title);
+        position: absolute;
+        left: 50%;
+        transform: translate(-50%, -100%);
+        top: calc(-1vh * var(--scale-factor-h));
+        background: rgba(var(--grey), 1);
+        padding: calc(1vh * var(--scale-factor-h)) calc(2vh * var(--scale-factor-h));
+        border-radius: var(--border-radius);
+        white-space: nowrap;
+        font-size: var(--font-size);
+        z-index: 1000;
+    }
+
+    .question-mark:hover, .settings-mark:hover, .delete-icon:hover {
+        background-color: grey;
+    }
+
+    .delete-icon:hover {
+        background-color: #ff6b6b;
+    }
+
+    .question-mark::before { content: "?" }
+    .settings-mark::before { content: "⚙" }
+    .delete-icon::before { content: "✖" }
+
+.circular-button {
+    font-weight: 400;
+    width: var(--input-size);
+    height: var(--input-size);
+    background: rgba(var(--grey), 1);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-size: var(--input-margin);
+    margin: calc(var(--input-margin) * 2) var(--input-margin) 0vh var(--input-margin);
+    position: relative
+}
+
+    .circular-button::before {
+        content: attr(title);
+        position: absolute;
+        bottom: 100%;
+        background: rgba(var(--grey), 1);
+        padding: calc(1vh * var(--scale-factor-h)) calc(2vh * var(--scale-factor-h));
+        border-radius: var(--border-radius);
+        white-space: nowrap;
+        margin-bottom: calc(1vh * var(--scale-factor-h));
+        font-size: var(--font-size)
+    }
+
+    .circular-button::after {
+        content: '+'
+    }
+
+    .circular-button:hover {
+        background: linear-gradient(45deg, var(--orange), var(--red));
+    }
+
+.section {
+    display: flex;
+    gap: calc(1vh* var(--scale-factor-h));
+    flex-direction: column;
+}
+
+.ar-4-3 .section {
+}
+
+label.checkbox {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    height: calc(6vh* var(--scale-factor-h));
+    padding: calc(1vh* var(--scale-factor-h));
+    border: var(--border) solid;
+    border-color: rgba(var(--grey), 1);
+    border-radius: var(--border-radius);
+    width: 100%;
+    white-space: nowrap;
+    font-weight: 400;
+    font-size: var(--font-size)
+}
+
+.item label.checkbox {
+    height: unset;
+    padding: unset;
+    border-color: transparent;
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: space-between;
+    padding-left: calc(1vh* var(--scale-factor-h));
+}
+
+    label.checkbox:hover {
+        border: var(--border) solid rgba(var(--grey), 1);
+        background-color: rgba(255, 128, 32, 0.1);
+    }
+
+    label.checkbox input[type="checkbox"]:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+
+    label.checkbox input[type="checkbox"] {
+        display: flex;
+        cursor: pointer;
+        appearance: none;
+        padding: 0;
+        width: calc(3vh* var(--scale-factor-h));
+        height: calc(3vh* var(--scale-factor-h));
+        border: var(--border) solid #ccc;
+        border-radius: calc(var(--border-radius) / 2);
+        margin-right: calc(1vh* var(--scale-factor-h));
+        align-items: center;
+        justify-content: center;
+    }
+
+    label.checkbox:has(input[type="checkbox"]:checked) {
+        border: var(--border) solid rgba(var(--grey), 1);
+        background-color: rgba(255, 128, 32, 0.1);
+    }
+
+    label.checkbox input[type="checkbox"]:checked {
+        border: var(--border) solid var(--orange);
+    }
+
+
+            label.checkbox input[type="checkbox"]:checked::before {
+                content: "✔";
+                font-size: var(--font-size)
+            }
+
+.multibox {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: calc(6vh * var(--scale-factor-h));
+    cursor: pointer;
+    white-space: nowrap;
+    border: var(--border) solid;
+    border-radius: var(--border-radius);
+    border-color: rgba(var(--grey), 1);
+    background: #181818;
+    font-weight: 500;
+    max-width: 100%;
+    padding: 0 calc(2vh * var(--scale-factor-h));
+    position: relative; /* Make the multibox a positioned element */
+    font-size: calc((2.5vh* var(--scale-factor-h) + 5vw / 2* var(--scale-factor-w)));
+}
+
+.multibox-text {
+    font-weight: 400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    max-width: 100%; /* Adjust this to your specific needs */
+}
+
+.multibox .arrow-dwn {
+    display: flex;
+    height: calc(3vh * var(--scale-factor-h));
+    width: calc(3vh * var(--scale-factor-h));
+    font-size: calc(1vh * var(--scale-factor-h));
+    border-radius: 50%;
+    background: rgba(var(--grey), 1);
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-duration-2);
+    position: relative;
+}
+
+    .multibox .arrow-dwn::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        background: rgba(var(--grey), 1);
+        border-left: calc(1vh * var(--scale-factor-h)) solid transparent;
+        border-right: calc(1vh * var(--scale-factor-h)) solid transparent;
+        border-top: calc(1vh * var(--scale-factor-h)) solid white;
+        transform: translate(-50%, -50%); /* Center the arrow */
+        transition: transform var(--transition-duration-2); /* Smooth transition */
+    }
+
+.multibox.open .arrow-dwn::after {
+    transform: translate(-50%, -50%) rotate(-180deg); /* Rotate only the arrow */
+}
+
+.list-items {
+    position: absolute; /* Change to absolute for dropdown positioning */
+    left: 0;
+    margin-top: calc(1vh* var(--scale-factor-h)); /* Add some spacing between multiboxes */
+    top: 100%; /* Position it below the multibox */
+    width: 100%; /* Set width to 100% for full coverage */
+    border: var(--border) solid;
+    border-radius: var(--border-radius);
+    border-color: rgba(var(--grey), 1);
+    background: #181818;
+    display: none; /* Initially hidden */
+    z-index: 1000; /* Ensure it appears above other elements */
+    gap: calc(1vh* var(--scale-factor-h));
+    overflow: visible;
+}
+
+.multibox.open .list-items {
+    display: block; /* Show when open */
+}
+
+.list-items .item {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    padding: 0 calc(1vh* var(--scale-factor-h));
+}
+
+    .list-items .item:first-child {
+        padding-top: calc(1vh* var(--scale-factor-h));
+    }
+
+    .list-items .item:last-child {
+        padding-bottom: calc(1vh* var(--scale-factor-h));
+    }

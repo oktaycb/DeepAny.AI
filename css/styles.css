@@ -20,6 +20,10 @@ body, html {
     touch-action: none
 }
 
+overflow-hidden {
+    overflow: hidden;
+}
+
 main {
     overflow: auto;
     overflow-x: hidden;
@@ -243,8 +247,8 @@ h4 {
 }
 
 p {
-    font-size: calc((2vh * var(--scale-factor-h) ));
-    line-height: calc((2vh * 1.5 * var(--scale-factor-h) ))
+    font-size: calc((1.85vh * var(--scale-factor-h) ));
+    line-height: calc((1.85vh * 1.5 * var(--scale-factor-h) ))
 }
 
 a, a.button, button, input, li, select, textarea {
@@ -554,7 +558,7 @@ option {
     height: 100% !important
 }
 
-#upload-options-modal-face-upload, #upload-options-modal-input-upload {
+#upload-options-modal-face-upload, #upload-options-modal-input-upload, #upload-options-modal-start-frame-upload, #upload-options-modal-last-frame-upload {
     position: fixed;
     z-index: 1000;
     width: max-content;
@@ -917,7 +921,7 @@ ul {
     top: calc(-1vh * var(--scale-factor-h))
 }
 
-.faces, .inputs, .outputs {
+.faces, .inputs, .start-frames, .last-frames, .outputs {
     overflow-x: hidden;
     max-height: calc(var(--input-size) + var(--input-margin)/ 2)
 }
@@ -1126,6 +1130,7 @@ ul {
 }
 
 .adsense-wrapper {
+    position: absolute;
     filter: opacity(0) !important;
 }
 
@@ -1411,7 +1416,7 @@ ul {
     width: unset
 }
 
-.faces, .inputs {
+.faces, .inputs, .start-frames, .last-frames {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
@@ -1423,51 +1428,68 @@ ul {
     max-width: unset
 }
 
-.faces:has(>:nth-child(n+3)), 
-.inputs:has(>:nth-child(n+3)) {
+.faces:has(>:nth-child(n+3)),
+.inputs:has(>:nth-child(n+3)),
+.last-frames:has(>:nth-child(n+3)),
+.start-frames:has(>:nth-child(n+3)) {
     overflow-y: scroll !important;
     width: calc(2 * (var(--input-size) + var(--input-margin)) + var(--scrollbar-width));
 }
 
-.ar-4-3 .faces, 
-.ar-4-3 .inputs {
+.ar-4-3 .faces,
+.ar-4-3 .inputs,
+.ar-4-3 .last-frames,
+.ar-4-3 .start-frames {
     width: unset
 }
 
 
     .ar-4-3 .faces:has(>:nth-child(n+2)),
-    .ar-4-3 .inputs:has(>:nth-child(n+2)) {
+    .ar-4-3 .inputs:has(>:nth-child(n+2)),
+    .ar-4-3 .last-frames:has(>:nth-child(n+2)),
+    .ar-4-3 .start-frames:has(>:nth-child(n+2)) {
         overflow-y: scroll !important;
         width: unset;
         max-width: calc(2 *var(--input-size) + var(--input-margin) + var(--scrollbar-width));
     }
 
 .ar-4-3 .faces,
-.ar-4-3 .inputs {
+.ar-4-3 .inputs,
+.ar-4-3 .last-frames,
+.ar-4-3 .start-frames {
     width: unset
 }
 
-.upload-hidden .faces, 
-.upload-hidden .inputs {
+.upload-hidden .faces,
+.upload-hidden .inputs,
+.upload-hidden .last-frames,
+.upload-hidden .start-frames {
     width: calc(4 * (var(--input-size) + var(--input-margin)))
 }
 
-    .upload-hidden .faces:has(>:nth-child(n+3)), 
-    .upload-hidden .inputs:has(>:nth-child(n+3)) {
+    .upload-hidden .faces:has(>:nth-child(n+3)),
+    .upload-hidden .inputs:has(>:nth-child(n+3)),
+    .upload-hidden .last-frames:has(>:nth-child(n+3)),
+    .upload-hidden .start-frames:has(>:nth-child(n+3)) {
         width: calc(4 * (var(--input-size) + var(--input-margin)) + var(--scrollbar-width))
     }
 
 .ar-4-3 .upload-hidden .faces:has(>:nth-child(n+2)),
-.ar-4-3 .upload-hidden .inputs:has(>:nth-child(n+2)) {
+.ar-4-3 .upload-hidden .inputs:has(>:nth-child(n+2)),
+.ar-4-3 .upload-hidden .last-frames:has(>:nth-child(n+2)),
+.ar-4-3 .upload-hidden .start-frames:has(>:nth-child(n+2)) {
     max-width: calc(4 *var(--input-size) + var(--input-margin) + var(--scrollbar-width))
 }
 
 .ar-4-3 .upload-hidden .faces,
-.ar-4-3 .upload-hidden .inputs {
+.ar-4-3 .upload-hidden .inputs,
+.ar-4-3 .upload-hidden .last-frames,
+.ar-4-3 .upload-hidden .start-frames {
     width: unset
 }
 
 .data-container {
+    flex-shrink: 0;
     width: calc(var(--input-size));
     height: calc(var(--input-size));
     margin: calc(var(--input-margin)/ 4);
@@ -1755,6 +1777,34 @@ label.checkbox input[type=checkbox]:checked {
         padding-bottom: calc(1vh* var(--scale-factor-h))
     }
 
+/* make the label act like a horizontal row and let its children stretch */
+.list-items .item .checkbox {
+    display: flex;
+    align-items: center; /* vertically center checkbox + textarea inside the label */
+    width: 100%;
+    gap: calc(0.75vh * var(--scale-factor-h));
+    box-sizing: border-box;
+}
+
+/* textarea matches combobox height, centers single-line text, allows scrolling */
+.list-items textarea {
+    height: calc(6vh * var(--scale-factor-h));
+    width: 100%;
+    box-sizing: border-box;
+    resize: none;
+    font-size: calc(2.5vh * var(--scale-factor-h));
+    line-height: calc(2.5vh * var(--scale-factor-h));
+    /* (6vh - 2.5vh) / 2 = 1.75vh -> centers the first line vertically */
+    padding: calc(1.65vh * var(--scale-factor-h)) calc(1vh * var(--scale-factor-h));
+    overflow: auto; /* allow scrolling when content overflows */
+    white-space: pre-wrap; /* wrap lines, preserve newlines */
+    overflow-wrap: anywhere;
+    background: #181818; /* keep your combobox look */
+    border: var(--border) solid rgba(var(--grey),1);
+    border-radius: var(--border-radius);
+    color: inherit;
+}
+
 .feature-change, .notification-explanation {
     width: unset !important;
     height: unset !important
@@ -1816,6 +1866,13 @@ label.checkbox input[type=checkbox]:checked {
     margin-bottom: 0vh;
 }
 
+.unreversed {
+    display: flex;
+    flex-direction: row !important;
+    justify-content: flex-start !important;
+    align-items: center;
+}
+
 .small-box {
     padding: calc(0.6vh* var(--scale-factor-h)) calc(1.2vh* var(--scale-factor-h));
     border: var(--border) solid;
@@ -1824,6 +1881,7 @@ label.checkbox input[type=checkbox]:checked {
     cursor: pointer;
     transition: background 0.3s,color 0.3s;
     margin: 0;
+    gap: calc(1vh* var(--scale-factor-h));
     background-color: #181818;
     z-index: 1;
     display: flex;

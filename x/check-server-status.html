@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="dns-prefetch" href="//deepany.ai">
+    <link rel="preconnect" href="https://deepany.ai" crossorigin>
+
+    <title>Check Server Processes</title>
+    <link rel="canonical" href="https://deepany.ai/Check Server Processes">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Manage your DeepAny.AI Check Server Processes. Update your account details, review your activity, and customize your AI experience to suit your needs.">
+    <meta name="keywords" content="AI, DeepAny, bodyswap, technology, services, solutions">
+    <meta name="apple-mobile-web-app-title" content="Check Server Processes" />
+
+    <script>
+        (() => {
+            if (!localStorage.getItem('version')) {
+                localStorage.setItem('version', '5.3.5');
+                return;
+            }
+
+            let version = localStorage.getItem('version');
+            let url = new URL(window.location.href);
+            let urlParams = url.searchParams;
+            let urlVersionEncoded = urlParams.get('v');
+
+            if (!urlVersionEncoded || urlVersionEncoded !== version) {
+                urlParams.set('v', version);
+                url.search = urlParams.toString();
+                window.history.replaceState(null, '', url.toString());
+            }
+
+            let checkEnabled = true;
+            let isInitialLoad = true;
+
+            const checkVersion = async () => {
+                if (!checkEnabled) return;
+
+                try {
+                    version = localStorage.getItem('version');
+
+                    const response = await fetch(`${window.location.origin}/version?nocache=${Math.random()}`, { cache: 'no-store' });
+                    const fetchedVersion = (await response.text()).trim();
+
+                    localStorage.setItem('version', fetchedVersion);
+
+                    if (!urlVersionEncoded || urlVersionEncoded != fetchedVersion || version != fetchedVersion) {
+                        if (isInitialLoad) {
+                            urlParams.set('v', fetchedVersion);
+                            url.search = urlParams.toString();
+                            window.location.href = url.toString();
+                        } else {
+                            const confirmed = confirm(`New version available (${fetchedVersion}). Would you like to reload now?`);
+                            if (confirmed) {
+                                urlParams.set('v', fetchedVersion);
+                                url.search = urlParams.toString();
+                                window.location.href = url.toString();
+                            } else {
+                                checkEnabled = false;
+                            }
+                        }
+                    }
+                } catch (err) {
+                    console.error('Version check failed:', err);
+                }
+
+                isInitialLoad = false;
+            };
+
+            checkVersion(); //.then(() => history.replaceState(null, '', location.pathname + location.search.replace(/([?&])v=[^&]*(&|$)/, (m, sep, end) => sep === '?' && end ? '?' : sep === '&' && end ? '' : '')));
+            setInterval(checkVersion, 1 * 60 * 1000);
+        })();
+    </script>
+</head>
+<body>
+    <h2 id="serverStatus">Checking server status...</h2>
+    <div id="serverList"></div>
+
+    <script type="module" defer>
+        const version = new URLSearchParams(window.location.search).get('version')
+            || localStorage.getItem('version')
+            || '5.3.5';
+        const pageName = 'check-server-status'; // Adjust if different
+
+        async function loadModule(url) {
+            console.log('[ServerStatus] Loading module:', url);
+            return import(`${url}?v=${version}`);
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('[ServerStatus] DOM content loaded');
+            const fn = await loadModule('./scripts/functions.js');
+            console.log('[ServerStatus] Module loaded:', fn);
+
+            const {
+                fetchWithRandom,
+                getFetchableServerAdresses,
+                setFetchableServerAdresses,
+                getUserData,
+                getCache,
+                setCache,
+                findServerWithUserRequest,
+                getDocsSnapshot,
+                calculateNewTime,
+            } = fn;
+
+            const userData = await getUserData();
+            console.log('[ServerStatus] User data:', userData);
+
+            async function cancelProcess(showAlertion, userSrv) {
+                try {
+                    const processToken = localStorage.getItem('processToken');
+                    console.log(userData.uid);
+                    console.log(processToken);
+                    console.log(userSrv);
+
+                    try {
+                        const response = await fetchWithRandom(`${userSrv}/cancel-process`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                userId: userData.uid,
+                                processToken
+                            })
+                        });
+                        if (showAlertion) {
+                            if (response.ok) {
+                                const result = await response.json();
+                                console.log('[cancelProcess] Cancellation response:', result);
+                                alert('Request Cancelled')
+                            } else {
+                                alert('Cancel Denied')
+                            }
+                        }
+                    } catch (error) {
+                        alert(error.message, 'Warning - Process Cancellation', 'warning');
+                        console.error(`Error on server ${server}:`, error)
+                    }
+                } catch (error) {
+                    alert(error.message, 'Warning - Process Cancellation', 'warning');
+                    console.error('Error checking processes:', error)
+                }
+            }
+
+            async function fetchServerAddresses(snapshotPromise, serverType) {
+                const ttl = 6 * 60 * 60 * 1000;
+                const cacheKey = `${pageName}-serverAddresses-${version}`;
+
+                let cached = getCache(cacheKey, ttl);
+                if (cached &&
+                    (cached.some(a => a == null) || cached.length < 1)
+                ) {
+                    console.log('[fetchServerAddresses] Clearing bad cache');
+                    localStorage.removeItem(cacheKey);
+                    cached = null;
+                }
+                if (cached) {
+                    console.log('[fetchServerAddresses] Cache hit for', serverType);
+                    return cached;
+                }
+
+                console.log('[fetchServerAddresses] Cache miss for', serverType);
+                const snapshot = await snapshotPromise();
+                const addrs = snapshot.docs.map(doc => {
+                    console.log('[fetchServerAddresses] doc:', doc.id);
+                    return doc.data()[serverType];
+                });
+                console.log('[fetchServerAddresses] fetched for', serverType, addrs);
+                setCache(cacheKey, addrs, ttl);
+                return addrs;
+            }
+
+            const STATUS_OK = 200;
+
+            async function checkServerStatus() {
+                console.log('[ServerStatus] Checking server status...');
+                const cacheKey = `${pageName}-serverData-${version}`;
+                const ttl = 6 * 60 * 60 * 1000;
+                const serverListContainer = document.getElementById('serverList');
+                const serverStatusH2 = document.getElementById('serverStatus');
+
+                // 1) Show any cached list
+                if (serverListContainer) {
+                    serverListContainer.innerHTML = '';
+                    const cachedData = getCache(cacheKey, ttl);
+                    if (cachedData) {
+                        console.log('[ServerStatus] Loaded cached server data:', cachedData);
+                        cachedData.forEach((srv, idx) => {
+                            const t = calculateNewTime(srv.remainingTime, srv.queueAmount);
+                            const div = document.createElement('div');
+                            div.innerHTML = `<p>Server ${idx + 1} (${srv.SERVER_1}) – Queue: ${srv.queueAmount || Infinity} – ${srv.frameCount || 0}/${srv.totalFrames || 0} (%${srv.processingAmount || 0}) – ${t}</p>`;
+                            serverListContainer.appendChild(div);
+                        });
+                    } else {
+                        console.log('[ServerStatus] No valid cached data found.');
+                    }
+                }
+
+                // 2) Fetch & combine addresses if needed
+                if (!getFetchableServerAdresses()?.length) {
+                    try {
+                        console.log('[ServerStatus] Fetching server addresses...');
+                        const snapshotPromise = () => getDocsSnapshot('servers');
+                        const [dv, df, dn, da] = await Promise.all([
+                            fetchServerAddresses(snapshotPromise, 'serverAdress-DV'),
+                            fetchServerAddresses(snapshotPromise, 'serverAdress-DF'),
+                            fetchServerAddresses(snapshotPromise, 'serverAdress-DN'),
+                            fetchServerAddresses(snapshotPromise, 'serverAdress-DA'),
+                        ]);
+
+                        let all = [...dv, ...df, ...dn, ...da]
+                            .filter(Boolean);
+                        all = [...new Set(all)]; // dedupe
+                        console.log('[ServerStatus] Combined addresses:', all);
+
+                        setFetchableServerAdresses(all.reverse());
+                    } catch (err) {
+                        console.error('[ServerStatus] Error fetching server addresses:', err);
+                        alert(`Error fetching server addresses: ${err.message}`);
+                        return;
+                    }
+                }
+
+                const fetchable = getFetchableServerAdresses();
+                console.log('[ServerStatus] Final server list:', fetchable);
+                if (!fetchable) return;
+
+                // 3) Poll each server
+                const serverPromises = fetchable.map(async server => {
+                    try {
+                        console.log(`[ServerStatus] Checking server: ${server}`);
+                        const res = await fetchWithRandom(`${server}/get-online`);
+                        if (res.status === STATUS_OK) {
+                            const d = await res.json();
+                            console.log(`[ServerStatus] Data from ${server}:`, d);
+                            return {
+                                queueAmount: d.server,
+                                remainingTime: d.remainingTime,
+                                elapsedTime: d.elapsedTime,
+                                frameCount: d.frameCount,
+                                totalFrames: d.totalFrames,
+                                requestQueue: d.requestQueue,
+                                uniqueId: d.uniqueId,
+                                processingAmount: d.processingAmount,
+                                SERVER_1: d.SERVER_1,
+                                serverUrl: server // <-- keep the full origin you polled
+                            };
+                        } else {
+                            return { queueAmount: Infinity, remainingTime: 0, SERVER_1: 'Unknown', serverUrl: server };
+                        }
+                    } catch (err) {
+                        console.error(`[ServerStatus] Error on ${server}:`, err);
+                        return { queueAmount: Infinity, remainingTime: 0, SERVER_1: 'Offline', serverUrl: server };
+                    }
+                });
+
+
+                const results = await Promise.all(serverPromises);
+                console.log('[ServerStatus] All server results:', results);
+
+                // 4) Render and cache
+                if (serverListContainer) {
+                    serverListContainer.innerHTML = '';
+                    results.forEach((srv, idx) => {
+                        const t = calculateNewTime(srv.remainingTime, srv.queueAmount);
+                        const div = document.createElement('div');
+                        div.innerHTML = `<p>Server ${idx + 1} (${srv.SERVER_1}) – Queue: ${srv.queueAmount} – ${srv.frameCount || 0}/${srv.totalFrames || 0} (%${srv.processingAmount || 0}) – ${t}</p>`;
+                        serverListContainer.appendChild(div);
+                    });
+                    setCache(cacheKey, results, ttl);
+                    console.log('[ServerStatus] Server list updated and cached.');
+                }
+
+                // 2) when a userSrv is found, use its serverUrl for cancelling
+                let userSrv = findServerWithUserRequest(results, userData.uid);
+                if (userSrv) {
+                    serverStatusH2.textContent = `You are processing on ${userSrv.SERVER_1}`;
+                    const wantCancel = confirm('You are processing on ' + userSrv.SERVER_1 + '.\n\nDo you want to cancel the process?');
+                    if (wantCancel) {
+                        // Prefer the exact origin the status check used:
+                        const cancelBase = userSrv.serverUrl || `https://${userSrv.SERVER_1}-df.deepany.top`;
+                        // ensure no trailing slash:
+                        const cancelOrigin = cancelBase.replace(/\/$/, '');
+                        await cancelProcess(true, cancelOrigin);
+                    }
+                }
+                else {
+                    serverStatusH2.textContent = `You aren't processing on any server`;
+                    console.log('[ServerStatus] User is not processing on any server.');
+                }
+            }
+
+            checkServerStatus();
+        });
+    </script>
+</body>
+</html>
