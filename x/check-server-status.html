@@ -16,7 +16,7 @@
     <script>
         (() => {
             if (!localStorage.getItem('version')) {
-                localStorage.setItem('version', '5.3.5');
+                localStorage.setItem('version', '5.4.7');
                 return;
             }
 
@@ -80,7 +80,7 @@
     <script type="module" defer>
         const version = new URLSearchParams(window.location.search).get('version')
             || localStorage.getItem('version')
-            || '5.3.5';
+            || '5.4.7';
         const pageName = 'check-server-status'; // Adjust if different
 
         async function loadModule(url) {

@@ -4,7 +4,7 @@
 function encodeValue(email) {
     return btoa(unescape(encodeURIComponent(email)));
 }
-const storedVersion = localStorage.getItem('version') || '5.3.5';
+const storedVersion = localStorage.getItem('version') || '5.4.7';
 const urlVersion = new URLSearchParams(window.location.search).get('version');
 const version = urlVersion || storedVersion;
 
@@ -6232,7 +6232,7 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
 				<nav class="navbar">
 					<div class="container">
 						<div class="logo">
-							<img src="/favicon.ico?v=5.3.5" onclick="location.href='.?v=${version}'" style="cursor: pointer;" alt="DeepAny.AI Logo" width="6.5vh" height="auto">
+							<img src="/favicon.ico?v=5.4.7" onclick="location.href='.?v=${version}'" style="cursor: pointer;" alt="DeepAny.AI Logo" width="6.5vh" height="auto">
 							<h2 onclick="location.href='.?v=${version}'" style="cursor: pointer;" translate="no">DeepAny.<span class="text-gradient" translate="no">AI</span></h2>
 						</div>
 					</div>

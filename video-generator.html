@@ -53,15 +53,15 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="css/styles.css?v=5.3.5">
+    <link rel="stylesheet" href="css/styles.css?v=5.4.7">
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-    <link rel="shortcut icon" href="/favicon.ico?v=5.3.5" />
+    <link rel="shortcut icon" href="/favicon.ico?v=5.4.7" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <script>
         (() => {
             if (!localStorage.getItem('version')) {
-                localStorage.setItem('version', '5.3.5');
+                localStorage.setItem('version', '5.4.7');
                 return;
             }
 
@@ -126,7 +126,7 @@
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '5.3.5';
+        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '5.4.7';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -2497,10 +2497,8 @@
                 const downloadOutput = document.getElementById('downloadOutput');
                 if (downloadOutput) {
                     const activeDataContainer = document.querySelector(".outputs .data-container.active");
-                    if (!activeDataContainer) {
-                        downloadOutput.disabled = true;
-                        //showNotification(`Maintaince for IOS downloads (Not important if you are not IOS).`, 'Warning - Download', 'warning');
-                    }
+                    downloadOutput.disabled = !!activeDataContainer;
+                    //showNotification(`Maintaince for IOS downloads (Not important if you are not IOS).`, 'Warning - Download', 'warning');
 
                     downloadOutput.addEventListener('click', async () => {
                         const activeDataContainer = document.querySelector(".outputs .data-container.active");
@@ -2509,7 +2507,7 @@
                             return;
                         }
 
-                        const activeInput = activeDataContainer.querySelector('img, video, initial');
+                        const activeInput = activeDataContainer.querySelector('img, video');
                         if (!activeInput) {
                             showNotification(`No active input element found.`, 'Warning - Download', 'warning');
                             return;
@@ -2545,6 +2543,7 @@
                             return await handleDownload(selectedOutputInfo);
                         }
 
+                        console.log(activeInput);
                         if (activeInput) {
                             const id = activeInput.getAttribute('id');
                             const fileName = 'output_' + `${id}.${activeInput.tagName === 'VIDEO' ? 'mp4' : 'png'}`;
@@ -2656,11 +2655,10 @@
                 const viewOutput = document.getElementById('viewOutput');
                 if (viewOutput) {
                     const activeDataContainer = document.querySelector(".outputs .data-container.active");
-                    if (!activeDataContainer) viewOutput.disabled = true;
-
+                    viewOutput.disabled = !!activeDataContainer;
                     viewOutput.addEventListener('click', async () => {
                         const activeDataContainer = document.querySelector(".outputs .data-container.active");
-                        const activeInput = activeDataContainer.querySelector('img, video, initial');
+                        const activeInput = activeDataContainer.querySelector('img, video');
 
                         if (activeInput) {
                             if (viewOutput.textContent === 'Fetch') {

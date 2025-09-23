@@ -4,7 +4,7 @@
 function encodeValue(email) {
     return btoa(unescape(encodeURIComponent(email)));
 }
-const storedVersion = localStorage.getItem('version') || '5.3.5';
+const storedVersion = localStorage.getItem('version') || '5.4.7';
 const urlVersion = new URLSearchParams(window.location.search).get('version');
 const version = urlVersion || storedVersion;
 
@@ -1966,14 +1966,80 @@ async function displayStoredData(element, dataBaseObjectStoreName) {
     const videoOrImg = videoElement || imgElement;
     const targetElement = videoOrImg || frameElement;
     const isVideo = !!videoElement;
+    async function awaitMediaLoadedWithRetries(element, maxRetries = 30, retryDelay = 1000) {
+        if (!element) return;
+
+        let attempt = 0;
+
+        while (attempt < maxRetries) {
+            // Wait until user is viewing the page (forever if hidden)
+            while (document.visibilityState !== "visible") {
+                await new Promise(resolve => {
+                    const onVisible = () => {
+                        if (document.visibilityState === "visible") {
+                            document.removeEventListener("visibilitychange", onVisible);
+                            resolve();
+                        }
+                    };
+                    document.addEventListener("visibilitychange", onVisible);
+                });
+            }
+
+            try {
+                await new Promise((resolve, reject) => {
+                    if (
+                        (element.tagName === 'VIDEO' && element.readyState >= 2) ||
+                        (element instanceof HTMLVideoElement && element.readyState >= 2) ||
+                        (element.tagName === 'IMG' && element.complete && element.naturalWidth !== 0) ||
+                        (element instanceof HTMLImageElement && element.complete && element.naturalWidth !== 0)
+                    ) return resolve();
+
+                    const onLoaded = () => resolve();
+                    const onError = (e) => reject(e);
+
+                    if (element.tagName === 'VIDEO' || element instanceof HTMLVideoElement) {
+                        element.addEventListener('loadeddata', onLoaded, { once: true });
+                        element.addEventListener('error', onError, { once: true });
+                        element.load();
+                    } else if (element.tagName === 'IMG' || element instanceof HTMLImageElement) {
+                        element.addEventListener('load', onLoaded, { once: true });
+                        element.addEventListener('error', onError, { once: true });
+                    }
+                });
+
+                return; // success
+            } catch (err) {
+                attempt++;
+                if (attempt >= maxRetries) {
+                    console.warn(`${element.tagName} failed to load after ${maxRetries} attempts.`);
+                    console.error('Final load failure:', err);
+                    return;
+                }
+
+                // Wait retryDelay only while page is visible
+                await new Promise(resolve => {
+                    const timeoutId = setTimeout(resolve, retryDelay);
+                    const onHidden = () => {
+                        if (document.visibilityState !== "visible") {
+                            clearTimeout(timeoutId);
+                            document.removeEventListener("visibilitychange", onHidden);
+                            resolve();
+                        }
+                    };
+                    document.addEventListener("visibilitychange", onHidden);
+                });
+            }
+        }
+    }
+    await awaitMediaLoadedWithRetries(targetElement);
     let fps = 0;
     if (isVideo)
         fps = videoElement.getAttribute('data-fps');
     let container, fgClone, bgClone;
-    function createClonedInput(maxRetries = 3, retryDelay = 1000) {
+    async function createClonedInput(maxRetries = 10, retryDelay = 1000) {
         let retries = 0;
 
-        function attemptInputLoad() {
+        async function attemptInputLoad() {
             container = document.createElement('div');
             container.style.position = 'relative';
             container.style.width = '100%';
@@ -1993,7 +2059,7 @@ async function displayStoredData(element, dataBaseObjectStoreName) {
             fgClone.style.zIndex = '2';
 
             if (isVideo) {
-                fgClone.preload = 'auto';
+                fgClone.preload = "metadata";
                 fgClone.controls = false;
                 fgClone.autoplay = true;
                 fgClone.playsInline = true;
@@ -2002,7 +2068,8 @@ async function displayStoredData(element, dataBaseObjectStoreName) {
                 fgClone.removeAttribute('keepmuted');
                 fgClone.addEventListener('error', handleError);
                 fgClone.load();
-                fgClone.play();
+                // fgClone.play();
+                fgClone.pause();
 
                 /*const unmuteOnInteraction = () => {
                     fgClone.muted = false;
@@ -2034,7 +2101,7 @@ async function displayStoredData(element, dataBaseObjectStoreName) {
                 bgClone.style.zIndex = '1';
 
                 if (isVideo) {
-                    bgClone.preload = 'auto';
+                    bgClone.preload = "metadata";
                     bgClone.controls = false;
                     bgClone.autoplay = true;
                     bgClone.muted = true;
@@ -2042,13 +2109,16 @@ async function displayStoredData(element, dataBaseObjectStoreName) {
                     bgClone.playsInline = true;
                     bgClone.addEventListener('error', handleError);
                     bgClone.load();
-                    bgClone.play();
+                    // bgClone.play();
+                    bgClone.pause();
                 }
 
                 container.appendChild(bgClone);
             }
 
             container.appendChild(fgClone);
+
+            //await awaitMediaLoadedWithRetries(fgClone, 3, 1000);
 
             if (isVideo) {
                 const isPlaying = video =>
@@ -2101,9 +2171,13 @@ async function displayStoredData(element, dataBaseObjectStoreName) {
             }
         }
 
-        attemptInputLoad();
+        await attemptInputLoad();
         return container;
     }
+
+    let loadingSpinner = document.createElement('div');
+    loadingSpinner.className = 'loading-screen';
+    loadingSpinner.style.position = 'absolute';
 
     async function replaceInput() {
         const existingTimeline = document.querySelector(`.${dataBaseObjectStoreName}_timelineContainer`);
@@ -2121,9 +2195,10 @@ async function displayStoredData(element, dataBaseObjectStoreName) {
         const beforeInputInit = document.getElementById(`${dataBaseObjectStoreName}_beforeInit`);
         if (beforeInputInit) 
             beforeInputInit.style.display = 'none';
-        
+        beforeInputInit.parentElement.appendChild(loadingSpinner);
+
         // Create a new cloned input container
-        container = createClonedInput();
+        container = await createClonedInput();
 
         const afterInitContainer = document.getElementById(`${dataBaseObjectStoreName}_afterInit`);
         if (afterInitContainer) {
@@ -2134,11 +2209,17 @@ async function displayStoredData(element, dataBaseObjectStoreName) {
     }
 
     async function initInput() {
-        fgClone.addEventListener('error', (e) => {
-            const src = fgClone.currentSrc || fgClone.src || 'unknown source';
-            alert((isVideo ? 'Video' : 'Image') + ` failed to load. Source: ${src}`);
-            console.error('Media error event:', e, 'Source:', src);
-        });
+        fgClone.addEventListener(isVideo ? 'loadeddata' : 'load', () => {
+            if (loadingSpinner) {
+                loadingSpinner.remove();
+            } else {
+                alert('Loading screen element not found in wrapper.');
+            }
+        }, { once: true });
+
+        fgClone.addEventListener('error', () => {
+            alert(isVideo ? 'Video failed to load.' : 'Image failed to load.');
+        }, { once: true });
 
         if (isVideo) {
             function updateSlider(video) {
@@ -2221,7 +2302,7 @@ async function displayStoredData(element, dataBaseObjectStoreName) {
             handle.style.display = "flex";
             handle.style.alignItems = "center";
             handle.style.justifyContent = "center";
-            handle.style.pointerEvents = "auto";
+            handle.style.pointerEvents = "metadata";
 
             const tooltip = document.createElement("div");
             tooltip.className = "tooltip tooltip-fast";
@@ -2310,7 +2391,26 @@ async function displayStoredData(element, dataBaseObjectStoreName) {
         generateTimeline();
     }
 }
-export function handleContextMenu(div) {
+function waitForMediaLoad(mediaElement) {
+    return new Promise((resolve, reject) => {
+        if (mediaElement.tagName === 'IMG') {
+            if (mediaElement.complete && mediaElement.naturalWidth > 0) {
+                return resolve();
+            }
+            mediaElement.addEventListener('load', () => resolve(), { once: true });
+            mediaElement.addEventListener('error', () => reject(new Error('Image failed to load')), { once: true });
+        } else if (mediaElement.tagName === 'VIDEO') {
+            if (mediaElement.readyState >= 2) { // HAVE_CURRENT_DATA
+                return resolve();
+            }
+            mediaElement.addEventListener('loadeddata', () => resolve(), { once: true });
+            mediaElement.addEventListener('error', () => reject(new Error('Video failed to load')), { once: true });
+        } else {
+            resolve();
+        }
+    });
+}
+export function handleContextMenu(div) { 
     // Create custom context menu
     const contextMenu = document.createElement('div');
     contextMenu.className = 'background-container background-container-absolute';
@@ -2394,12 +2494,56 @@ export function handleContextMenu(div) {
 
     // Menu logic
     let currentTarget = null;
-    let activeInput = null;
+    let element = null;
     let touchTimer = null;
-    let isTouchInteraction = false;
+    let parentParentClass = '';
+    let parentParentClassNoS = '';
 
     // Touch device detection
     const isTouchDevice = false;
+    const loadMedia = (element, blob) => {
+        return new Promise((resolve, reject) => {
+            if (!blob) return reject('No blob provided');
+
+            const url = URL.createObjectURL(blob);
+            element.src = url;
+
+            const cleanup = () => {
+                element.removeEventListener('loadeddata', onLoadedData);
+                element.removeEventListener('load', onLoad);
+                element.removeEventListener('error', onError);
+            };
+
+            const onLoadedData = () => {
+                cleanup();
+                resolve(element);
+            };
+
+            const onLoad = () => {
+                cleanup();
+                resolve(element);
+            };
+
+            const onError = (e) => {
+                cleanup();
+                reject(e);
+            };
+
+            if (element.tagName === 'VIDEO' || element instanceof HTMLVideoElement) {
+                element.addEventListener('loadeddata', onLoadedData, { once: true });
+            } else if (element.tagName === 'IMG' || element instanceof HTMLImageElement) {
+                element.addEventListener('load', onLoad, { once: true });
+            } else {
+                return reject('Unsupported element type');
+            }
+
+            element.addEventListener('error', onError, { once: true });
+
+            if (element.tagName === 'VIDEO' || element instanceof HTMLVideoElement) {
+                element.load();
+            }
+        });
+    };
 
     // Close all context menus
     function closeAllContextMenus() {
@@ -2409,9 +2553,9 @@ export function handleContextMenu(div) {
     // Show context menu at position
     function showContextMenu(e) {
         currentTarget = div;
-        activeInput = currentTarget.querySelector('img, video, initial');
+        element = currentTarget.querySelector('img, video, initial');
 
-        const downloadUrl = activeInput?.getAttribute('url');
+        const downloadUrl = element?.getAttribute('url');
         if (!downloadUrl || downloadUrl === 'null') {
             contextMenu.querySelector('.small-box[data-action="use-generation-data"]').style.display = 'none';
             contextMenu.querySelector('.small-box[data-action="copy-download-url"]').style.display = 'none';
@@ -2448,7 +2592,6 @@ export function handleContextMenu(div) {
     });
 
     div.addEventListener('touchstart', (e) => {
-        isTouchInteraction = true;
         touchTimer = setTimeout(() => {
             showContextMenu(e);
         }, 250); // 500ms long press
@@ -2481,9 +2624,33 @@ export function handleContextMenu(div) {
         const menuItem = e.target.closest('.small-box');
         if (!menuItem) return;
 
+        parentParentClass = element?.parentElement?.parentElement?.className;
+        if (parentParentClass) {
+            parentParentClassNoS = parentParentClass.replace(/s$/, '');
+        }
+
+        console.log(parentParentClass);
+        const idx = parseInt(element.getAttribute('id'));
+        const db = await openDB(parentParentClassNoS + `DB-${pageName}`, parentParentClass);
+        const items = await getFromDB(db);
+        const item = items.find(item => item.id === idx);
+        if (!item || !item.blob) {
+            throw new Error(`No blob found for ID: ${idx}`);
+        }
+
+        if (!element.classList.contains('active')) {
+            if (item?.blob) {
+                try {
+                    await loadMedia(element, item.blob);
+                } catch (err) {
+                    console.error('Media failed to load:', err);
+                }
+            }
+        }
+
         const action = menuItem.getAttribute('data-action');
-        const url = activeInput?.querySelector('source')?.src || activeInput?.src;
-        const downloadUrl = activeInput?.getAttribute('url');
+        const url = element?.querySelector('source')?.src || element?.src;
+        const downloadUrl = element?.getAttribute('url');
 
         // Your existing switch case for actions remains exactly the same
         switch (action) {
@@ -2514,17 +2681,17 @@ export function handleContextMenu(div) {
 
                 let mediaElement;
 
-                if (activeInput.tagName === 'VIDEO') {
+                if (element.tagName === 'VIDEO') {
                     mediaElement = document.createElement('video');
                     mediaElement.controls = true;
-                    mediaElement.src = activeInput?.querySelector('source')?.src || activeInput?.src;
+                    mediaElement.src = element?.querySelector('source')?.src || element?.src;
                     mediaElement.style.maxWidth = '100vw';
                     mediaElement.style.maxHeight = '94vh';
                     mediaElement.style.borderRadius = 'var(--border-radius)';
                     mediaElement.style.objectFit = 'cover';
-                } else if (activeInput.tagName === 'IMG') {
+                } else if (element.tagName === 'IMG') {
                     mediaElement = document.createElement('img');
-                    mediaElement.src = activeInput.src;
+                    mediaElement.src = element.src;
                     mediaElement.style.maxWidth = '100vw';
                     mediaElement.style.maxHeight = '94vh';
                     mediaElement.style.borderRadius = 'var(--border-radius)';
@@ -2534,6 +2701,14 @@ export function handleContextMenu(div) {
                 if (!mediaElement.src) {
                     wrapper.remove();
                     alert('Media source not found.');
+                    return;
+                }
+
+                try {
+                    await waitForMediaLoad(mediaElement);
+                } catch (e) {
+                    wrapper.remove();
+                    alert(e.message);
                     return;
                 }
 
@@ -2605,23 +2780,15 @@ export function handleContextMenu(div) {
                 document.body.appendChild(wrapper);
                 break;
             case 'save':
-                if (activeInput) {
-                    const id = activeInput.getAttribute('id');
-                    const fileName = 'output_' + `${id}.${activeInput.tagName === 'VIDEO' ? 'mp4' : 'png'}`;
-
-                    const domIndex = parseInt(activeInput.getAttribute('id'));
-                    const db = await openDB(`outputDB-${pageName}`, 'outputs');
-                    const items = await getFromDB(db);
-                    const item = items.find(item => item.id === domIndex);
-                    if (!item || !item.blob) {
-                        throw new Error(`No blob found for ID: ${domIndex}`);
-                    }
+                if (element) {
+                    const id = element.getAttribute('id');
+                    const fileName = 'output_' + `${id}.${element.tagName === 'VIDEO' ? 'mp4' : 'png'}`;
 
                     let type = '';
-                    if (activeInput) {
-                        if (activeInput.tagName === 'IMG') {
+                    if (element) {
+                        if (element.tagName === 'IMG') {
                             type = 'image/png';
-                        } else if (activeInput.tagName === 'VIDEO') {
+                        } else if (element.tagName === 'VIDEO') {
                             type = 'video/mp4';
                         } else {
                             showNotification('Error: Unsupported element type for download.', 'Error - Download', 'error');
@@ -2861,7 +3028,30 @@ export function handleContextMenu(div) {
                 }
 
                 break;
+        }
 
+        if (element?.src?.startsWith('blob:') && !element.classList.contains('active')) {
+            const revoke = () => {
+                setTimeout(() => {
+                    URL.revokeObjectURL(element.src);
+                    element.removeEventListener('load', revoke);
+                    element.removeEventListener('loadeddata', revoke);
+                }, 1000);
+            };
+
+            if (element.tagName === 'IMG') {
+                if (element.complete) {
+                    revoke();
+                } else {
+                    element.addEventListener('load', revoke, { once: true });
+                }
+            } else if (element.tagName === 'VIDEO') {
+                if (element.readyState >= 2) {
+                    revoke();
+                } else {
+                    element.addEventListener('loadeddata', revoke, { once: true });
+                }
+            }
         }
 
         closeAllContextMenus();
@@ -2986,7 +3176,7 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
         if (mediaCount > 0) {
             const mediaItems = await getFromDB(db);
             const inputElements = mediaContainer.querySelectorAll('.data-container');
-
+            //mediaItems.reverse();
             for (const [indexInBatch, item] of mediaItems.entries()) {
                 const { blob, base64, url, id, timestamp, active } = item;
                 let element = inputElements[indexInBatch];
@@ -3074,6 +3264,9 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
                 }
 
                 if (src && (isVideo || isImage || isGif)) {
+                    // image or GIF
+                    let img;
+                    let video;
                     // If it's video and not gif
                     if (isVideo && !isGif) {
                         if (dataBaseObjectStoreName === 'inputs') {
@@ -3091,11 +3284,11 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
                             element.appendChild(tooltip);
                         }
 
-                        const video = document.createElement('video');
+                        video = document.createElement('video');
                         video.setAttribute('url', url || '');
                         video.setAttribute('timestamp', timestamp || '');
                         video.id = id;
-                        video.preload = 'auto';
+                        video.preload = "metadata";
                         video.autoplay = true;
                         video.muted = true;
                         video.playsInline = true;
@@ -3146,18 +3339,12 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
                             });
                         }
 
-                        if (pageName !== 'face-swap') {
-                            try {
-                                video.load();
-                                const playPromise = video.play();
-                                if (playPromise && typeof playPromise.then === 'function') {
-                                    playPromise.catch(() => { });
-                                }
-                            } catch (e) { }
-                        }
+                        try {
+                            video.load();
+                            video.pause();
+                        } catch (e) { }
                     } else {
-                        // image or GIF
-                        const img = document.createElement('img');
+                        img = document.createElement('img');
                         img.setAttribute('url', url || '');
                         img.id = id;
                         img.setAttribute('timestamp', timestamp || '');
@@ -3211,6 +3398,16 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
                         if (pageName === 'face-swap' || dataBaseObjectStoreName === 'outputs')
                             displayStoredData(element, dataBaseObjectStoreName);
                     }
+
+                    if (!active && blob) {
+                        if (img) {
+                            img.addEventListener('load', () => URL.revokeObjectURL(img.src), { once: true });
+                        } else if (video) {
+                            video.addEventListener('loadeddata', () => {
+                                URL.revokeObjectURL(video.src);
+                            }, { once: true });
+                        }
+                    }
                 } else if (url) {
                     element.innerHTML = `<initial url="${url}" id="${id}" timestamp="${timestamp}" active="${active}"/></initial><div class="process-text">Fetching...</div><div class="delete-icon"></div>`;
                     const data = await fetchProcessState(url);
@@ -3260,7 +3457,7 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
             timestamp="${timestamp}"
             id="${id}"
             src="${url}"
-            preload="auto" autoplay muted keepmuted playsinline disablePictureInPicture
+            preload="metadata" autoplay muted keepmuted playsinline disablePictureInPicture
             style="
               width: calc(var(--input-size) - 2px);
               height: calc(var(--input-size) - 2px);
@@ -3747,10 +3944,13 @@ async function loadGoogleAdScript(_0x18b7dc, userData, userDoc, hideAds) {
             }
             if (userDoc === null || userDoc?.paid || userData === null || !userData?.emailVerified || hideAds) {
                 function wrapAdElement(node) {
-                    if (!node.parentElement || !node.parentElement.classList.contains('adsense-wrapper')) {
+                    const parent = node.parentNode;
+                    if (!parent) return;
+
+                    if (!parent.classList.contains('adsense-wrapper')) {
                         const wrapper = document.createElement('div');
                         wrapper.className = 'adsense-wrapper';
-                        node.parentNode.insertBefore(wrapper, node);
+                        parent.insertBefore(wrapper, node);
                         wrapper.appendChild(node);
                     }
                 }
@@ -6399,7 +6599,7 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
 				<nav class="navbar">
 					<div class="container">
 						<div class="logo">
-							<img src="/favicon.ico?v=5.3.5" onclick="location.href='.?v=${version}'" style="cursor: pointer;" alt="DeepAny.AI Logo" width="6.5vh" height="auto">
+							<img src="/favicon.ico?v=5.4.7" onclick="location.href='.?v=${version}'" style="cursor: pointer;" alt="DeepAny.AI Logo" width="6.5vh" height="metadata">
 							<h2 onclick="location.href='.?v=${version}'" style="cursor: pointer;" translate="no">DeepAny.<span class="text-gradient" translate="no">AI</span></h2>
 						</div>
 					</div>
@@ -7279,17 +7479,12 @@ export const handleDownload = async ({
     const chunks = entry ? entry.chunks : [];
     while (!downloadCancelled) {
         try {
-            const headers = downloadedBytes ? {
-                'Range': `bytes=${downloadedBytes}-`
-            } : {};
-            const res = await fetchWithRandom(url, {
-                headers,
-                signal
-            });
+            const headers = downloadedBytes ? { 'Range': `bytes=${downloadedBytes}-` } : {};
+            const res = await fetchWithRandom(url, { headers, signal });
             if (![200, 206, 416].includes(res.status)) {
                 await updateChunksInDB(db, url, []);
                 deleteDownloadData(timestamp, id);
-                throw new Error('Server does not support resumable downloads.')
+                throw new Error('Server does not support resumable downloads.');
             }
             const contentLength = res.headers.get('Content-Range')?.split('/')[1] || res.headers.get('Content-Length');
             totalBytes ||= parseInt(contentLength);
@@ -7297,118 +7492,166 @@ export const handleDownload = async ({
             const reader = res.body.getReader();
             const contentType = res.headers.get('Content-Type');
             let lastSavedProgress = 0;
+
             while (!downloadCancelled) {
-                const {
-                    done,
-                    value
-                } = await reader.read();
+                const { done, value } = await reader.read();
                 if (done) break;
                 downloadedBytes += value.length;
                 chunks.push(value);
+
                 if (viewOutput && isMobile) {
-                    if (viewOutput.textContent !== "View")
-                        viewOutput.textContent = "View";
-                    if (!viewOutput.disabled)
-                        viewOutput.disabled = !0
+                    if (viewOutput.textContent !== "View") viewOutput.textContent = "View";
+                    if (!viewOutput.disabled) viewOutput.disabled = true;
                 }
+
                 lastProgress = (downloadedBytes / totalBytes) * 100;
                 if (Math.floor(lastProgress) % 10 === 0 && Math.floor(lastProgress) > lastSavedProgress) {
                     await appendChunkToDB(db, url, value);
                     localStorage.setItem(`${pageName}_${timestamp}_downloadedBytes_${id}`, downloadedBytes);
                     lastSavedProgress = Math.floor(lastProgress);
-                    progressMap[id] = lastProgress
+                    progressMap[id] = lastProgress;
                 }
-                processText(`Downloaded: ${lastProgress.toFixed(0)}%`)
+                processText(`Downloaded: ${lastProgress.toFixed(0)}%`);
             }
             if (downloadCancelled) return;
-            const blob = new Blob(chunks.map(chunk => new Uint8Array(chunk)), {
-                type: contentType
-            });
+
+            const blob = new Blob(chunks.map(chunk => new Uint8Array(chunk)), { type: contentType });
             const blobUrl = URL.createObjectURL(blob);
+
             if (Math.abs(blob.size - totalBytes) > totalBytes * 0.01) {
                 alert(`Warning: The downloaded file size (${blob.size} bytes) differs significantly from expected size (${totalBytes} bytes).`);
                 await updateChunksInDB(db, url, []);
                 deleteDownloadData(timestamp, id);
-                break
+                break;
             }
+
             if (active && !element.classList.contains('active'))
                 element.classList.add('active');
+
             const isGif = contentType === 'image/gif';
             const isVideo = url.slice(-1) === '0' && !isGif;
+            const initialEl = element.querySelector('initial');
 
-            if (isVideo)
-                element.innerHTML =  `<video url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" preload="auto" autoplay muted keepmuted playsinline disablePictureInPicture><source src="${blobUrl}" type="${contentType}">Your browser does not support the video tag.</video><div class="delete-icon"></div>`;
-            else element.innerHTML = `<img url="${url}" id="${id}" timestamp="${timestamp}" active="${active}" src="${blobUrl}" alt="Uploaded Photo"/><div class="delete-icon"></div>`;
+            const media = isVideo ? document.createElement('video') : document.createElement('img');
+            media.setAttribute('url', url || '');
+            media.setAttribute('timestamp', timestamp || '');
+            media.setAttribute('active', active || '');
+            media.id = id;
+
+            if (isVideo) {
+                media.preload = "metadata";
+                media.autoplay = true;
+                media.muted = true;
+                media.playsInline = true;
+                try { media.disablePictureInPicture = true; } catch (e) { }
+            } else {
+                media.alt = 'Uploaded Photo';
+            }
+            if (blobUrl) media.src = blobUrl;
+
+            const del = document.createElement('div');
+            del.className = 'delete-icon';
+
+            const frag = document.createDocumentFragment();
+            frag.appendChild(media);
+            frag.appendChild(del);
+
+            if (initialEl) {
+                element.replaceChild(frag, initialEl);
+            } else {
+                element.appendChild(media);
+                element.appendChild(del);
+            }
 
             const fallbackToBase64 = async () => {
                 const base64Url = chunksToBase64(chunks, contentType);
-
-                if (video) {
-                    element.innerHTML = `
-        <video id="${id}" url="${url}" timestamp="${timestamp}" active="${active}"
-               preload="auto" autoplay muted keepmuted playsinline disablePictureInPicture>
-            <source src="${base64Url}" type="${contentType}">
-            Your browser does not support the video tag.
-        </video>
-        <div class="delete-icon"></div>`;
-                } else if (img) {
-                    element.innerHTML = `
-        <img id="${id}" url="${url}" timestamp="${timestamp}" active="${active}"
-             src="${base64Url}" alt="Uploaded Photo"/>
-        <div class="delete-icon"></div>`;
-                }
+                media.src = base64Url;
             };
 
-            const video = element.querySelector('video');
-            const img = element.querySelector('img');
-
-            if (video) {
-                video.onerror = fallbackToBase64;
-                video.onloadeddata = () => {
-                    if (video.videoWidth === 0 || video.videoHeight === 0) fallbackToBase64();
+            if (isVideo) {
+                media.load();
+                media.pause();
+                media.onerror = fallbackToBase64;
+                media.onloadeddata = () => {
+                    if (media.videoWidth === 0 || media.videoHeight === 0) fallbackToBase64();
                 };
-            } else if (img) {
-                img.onerror = fallbackToBase64;
+            } else {
+                media.onerror = fallbackToBase64;
             }
 
             const activeContainers = document.querySelectorAll('.outputs .data-container.active');
             if (activeContainers.length > 0) {
                 for (const container of activeContainers) {
                     container.classList.remove('active');
-                    const element = container.querySelector('img, iframe, video, initial');
-                    const id = parseInt(element.getAttribute('id'));
-                    if (id) {
-                        await updateActiveState(db, id, !1).catch(err => {
-                            alert(`Update failed for id ${id}:`, err)
-                        })
+                    const el = container.querySelector('img, iframe, video, initial');
+                    const elId = parseInt(el.getAttribute('id'));
+                    if (elId) {
+                        await updateActiveState(db, elId, false).catch(err => {
+                            alert(`Update failed for id ${elId}: ${err}`);
+                        });
                     }
                 }
             }
+
             element.classList.add('active');
-            displayStoredData(element, 'outputs');
             if (id) {
-                await updateActiveState(db, id, !0).catch(err => {
-                    alert(`Update failed for id ${id}: ${err}`)
-                })
+                await updateActiveState(db, id, true).catch(err => {
+                    alert(`Update failed for id ${id}: ${err}`);
+                });
             }
+
             if (blob.size === 0) {
                 alert('Warning: Media not displayable');
                 await updateChunksInDB(db, url, []);
                 deleteDownloadData(timestamp, id);
-                break
+                break;
             }
-            setDownloadCancelled(!0);
+
+            setDownloadCancelled(true);
             await Promise.all([updateInDB(db, url, blob), saveCountIndex(databases)]);
             deleteDownloadData(timestamp, id);
+
             const snapshotPromise = () => getDocsSnapshot('servers');
             setFetchableServerAdresses((await fetchServerAddresses(snapshotPromise)).reverse());
-            return
+            displayStoredData(element, 'outputs');
+
+            const container = document.querySelectorAll('.outputs .data-container');
+            if (container.length > 0) {
+                for (const activeEl of container) {
+                    const el = activeEl.querySelector('img, iframe, video, initial');
+                    if (el !== element && el.src !== blobUrl && el.src?.startsWith('blob:')) {
+                        if (el?.tagName.toLowerCase() === 'video') el.pause();
+                        const revoke = () => {
+                            URL.revokeObjectURL(el.src);
+                            el.removeEventListener('load', revoke);
+                            el.removeEventListener('loadeddata', revoke);
+                        };
+
+                        if (el.tagName === 'IMG') {
+                            if (el.complete) {
+                                revoke();
+                            } else {
+                                el.addEventListener('load', revoke, { once: true });
+                            }
+                        } else if (el.tagName === 'VIDEO') {
+                            if (el.readyState >= 2) {
+                                revoke();
+                            } else {
+                                el.addEventListener('loadeddata', revoke, { once: true });
+                            }
+                        }
+                    }
+                }
+            }
+
+            processText(``);
+            return;
         } catch (error) {
             if (error.name === 'AbortError') {
                 processText(`Paused`);
-                return
+                return;
             }
-            processText(`Error: ${error.message}. Retrying...`)
+            processText(`Error: ${error.message}. Retrying...`);
         }
     }
 };
@@ -7417,13 +7660,13 @@ export const handleDelete = async (dataBaseIndexName, dataBaseObjectStoreName, p
         console.log('[handleDelete] call');
         const element = parent.querySelector('img, iframe, video, initial');
 
-        const domIndex = parseInt(element?.getAttribute('id'));
+        const idx = parseInt(element?.getAttribute('id'));
         const timestamp = element?.getAttribute('timestamp');
         const id = element?.getAttribute('id');
 
         const db = await openDB(dataBaseIndexName, dataBaseObjectStoreName);
         const items = await getFromDB(db);
-        let itemToDelete = element ? items.find(item => item.id === domIndex) : null;
+        let itemToDelete = element ? items.find(item => item.id === idx) : null;
 
         if (!itemToDelete) {
             const domTimestamp = parseInt(timestamp);
@@ -7474,7 +7717,7 @@ let lastClickTime = 0;
 
 export const handleFileContainerEvents = async (event, dataBaseIndexName, dataBaseObjectStoreName, container, databases) => {
     const now = Date.now();
-    if (now - lastClickTime < 100) return;
+    if (now - lastClickTime < 250) return;
     lastClickTime = now;
 
     console.log('[handleFileContainerEvents] call');
@@ -7498,6 +7741,15 @@ export const handleFileContainerEvents = async (event, dataBaseIndexName, dataBa
 
     let db = openDB(dataBaseIndexName, dataBaseObjectStoreName);
 
+    for (const activeEl of container.querySelectorAll('.data-container')) {
+        const el = activeEl.querySelector('img, video, iframe, initial');
+        if (el.src?.startsWith('blob:') && !el.classList.contains('active')) {
+            if (el?.tagName.toLowerCase() === 'video')
+                el.pause();
+            URL.revokeObjectURL(el.src);
+        }
+    }
+
     // Deactivate if already active
     if (parent.classList.contains('active')) {
         parent.classList.remove('active');
@@ -7505,6 +7757,13 @@ export const handleFileContainerEvents = async (event, dataBaseIndexName, dataBa
         if (element.tagName.toLowerCase() === 'iframe') {
             element.style.width = 'calc(var(--input-size))';
             element.style.height = 'calc(var(--input-size))';
+        }
+
+        // Free memory
+        if (element.src?.startsWith('blob:')) {
+            if (element.tagName.toLowerCase() === 'video')
+                element.pause();
+            URL.revokeObjectURL(element.src);
         }
 
         const idx = parseInt(element.getAttribute('id'));
@@ -7528,6 +7787,12 @@ export const handleFileContainerEvents = async (event, dataBaseIndexName, dataBa
             el.style.height = 'calc(var(--input-size))';
         }
 
+        if (el.src?.startsWith('blob:')) {
+            if (el?.tagName.toLowerCase() === 'video')
+                el.pause();
+            URL.revokeObjectURL(el.src);
+        }
+
         const idx = parseInt(el?.getAttribute('id'));
         if (!isNaN(idx)) {
             await updateActiveState(db, idx, false);
@@ -7543,8 +7808,65 @@ export const handleFileContainerEvents = async (event, dataBaseIndexName, dataBa
         element.style.height = 'calc(var(--input-size) - 2px)';
     }
 
-    if (!isNaN(idx))
+    if (!isNaN(idx)) {
+        const loadMedia = (element, blob) => {
+            return new Promise((resolve, reject) => {
+                if (!blob) return reject('No blob provided');
+
+                const url = URL.createObjectURL(blob);
+                element.src = url;
+
+                const cleanup = () => {
+                    element.removeEventListener('loadeddata', onLoadedData);
+                    element.removeEventListener('load', onLoad);
+                    element.removeEventListener('error', onError);
+                };
+
+                const onLoadedData = () => {
+                    cleanup();
+                    resolve(element);
+                };
+
+                const onLoad = () => {
+                    cleanup();
+                    resolve(element);
+                };
+
+                const onError = (e) => {
+                    cleanup();
+                    reject(e);
+                };
+
+                if (element.tagName === 'VIDEO' || element instanceof HTMLVideoElement) {
+                    element.addEventListener('loadeddata', onLoadedData, { once: true });
+                } else if (element.tagName === 'IMG' || element instanceof HTMLImageElement) {
+                    element.addEventListener('load', onLoad, { once: true });
+                } else {
+                    return reject('Unsupported element type');
+                }
+
+                element.addEventListener('error', onError, { once: true });
+
+                if (element.tagName === 'VIDEO' || element instanceof HTMLVideoElement) {
+                    element.load();
+                }
+            });
+        };
+
+        const mediaItems = await getFromDB(db);
+        const item = mediaItems.find(i => i.id === idx);
+        if (item?.blob) {
+            try {
+                await loadMedia(element, item.blob);
+                if (element.tagName === 'VIDEO') element.play();
+            } catch (err) {
+                console.error('Media failed to load:', err);
+            }
+        }
+
+
         await updateActiveState(db, idx, true);
+    }
 
     if (pageName === 'face-swap' || dataBaseObjectStoreName === 'outputs')
         displayStoredData(parent, dataBaseObjectStoreName);
@@ -7558,6 +7880,31 @@ export async function showFrameSelector(element) {
     const targetElement = videoElement || imgElement;
     const isVideo = targetElement && targetElement.tagName === "VIDEO" || targetElement instanceof HTMLVideoElement;
 
+    async function awaitMediaLoaded(element) {
+        if (!element) return;
+
+        if (element.tagName === 'VIDEO' || element instanceof HTMLVideoElement) {
+            await new Promise((resolve, reject) => {
+                if (element.readyState >= 2) {
+                    resolve();
+                } else {
+                    element.addEventListener('loadeddata', () => resolve(), { once: true });
+                    element.addEventListener('error', (e) => reject(e), { once: true });
+                }
+            });
+        } else if (element.tagName === 'IMG' || element instanceof HTMLImageElement) {
+            await new Promise((resolve, reject) => {
+                if (element.complete && element.naturalWidth !== 0) {
+                    resolve();
+                } else {
+                    element.addEventListener('load', () => resolve(), { once: true });
+                    element.addEventListener('error', (e) => reject(e), { once: true });
+                }
+            });
+        }
+    }
+
+    await awaitMediaLoaded(targetElement);
     const fps = parseFloat(targetElement.getAttribute('data-fps')) || 0;
 
     if (isVideo) {
@@ -7742,7 +8089,7 @@ export async function showFrameSelector(element) {
     let currentTime = 0;
     let clonedInput;
 
-    function createClonedInput(maxRetries = 3, retryDelay = 1000) {
+    function createClonedInput(maxRetries = 10, retryDelay = 1000) {
         let retries = 0;
 
         function attemptInputLoad() {
@@ -9687,7 +10034,7 @@ function testBlobUrl(blobUrl, mimeType) {
 
         if (isVideo) {
             media = document.createElement('video');
-            media.preload = 'auto';
+            media.preload = "metadata";
         } else if (isImage) {
             media = document.createElement('img');
         } else {
@@ -9820,7 +10167,9 @@ export const handleUpload = async (event, dataBaseIndexName, dataBaseObjectStore
 
         document.documentElement.appendChild(loadingSpinner);
 
-        await Promise.all(files.map(processFile));
+        for (const file of files) {
+            await processFile(file);
+        }
 
         loadingSpinner.remove();
         document.querySelectorAll('body main').forEach(main => {
@@ -9844,14 +10193,15 @@ export const handleUpload = async (event, dataBaseIndexName, dataBaseObjectStore
         }
 
         newMedia.reverse();
-        const videosToPlay = [];
-
         for (const { id, timestamp, blob, base64Data, isVideo } of newMedia) {
             const element = document.createElement('div');
             element.className = 'data-container';
             element.setAttribute('tooltip', '');
             element.setAttribute('oncontextmenu', 'return false;');
             handleContextMenu(element);
+
+            let video;
+            let img;
 
             if (isVideo) {
                 // tooltip logic for inputs
@@ -9871,11 +10221,11 @@ export const handleUpload = async (event, dataBaseIndexName, dataBaseObjectStore
                     element.appendChild(tooltip);
                 }
 
-                const video = document.createElement('video');
+                video = document.createElement('video');
                 video.controls = false;
                 video.setAttribute('timestamp', timestamp);
                 video.id = id;
-                video.preload = 'auto';
+                video.preload = "metadata";
                 video.autoplay = true;
                 video.muted = true;
                 video.playsInline = true;
@@ -9884,14 +10234,16 @@ export const handleUpload = async (event, dataBaseIndexName, dataBaseObjectStore
                 const playbackSrc = blob ? URL.createObjectURL(blob) : (base64Data != null ? base64Data : '');
                 if (playbackSrc) video.src = playbackSrc;
 
+                try {
+                    video.load();
+                    video.pause();
+                } catch (e) { }
+
                 const del = document.createElement('div');
                 del.className = 'delete-icon';
 
                 element.appendChild(video);
                 element.appendChild(del);
-
-                // store for later play call
-                videosToPlay.push({ video, objectUrl: playbackSrc, id });
 
                 // page-specific metadata
                 if (dataBaseObjectStoreName === 'inputs' && pageName === 'face-swap') {
@@ -9929,7 +10281,7 @@ export const handleUpload = async (event, dataBaseIndexName, dataBaseObjectStore
 
             } else {
                 // image logic
-                const img = document.createElement('img');
+                img = document.createElement('img');
                 img.setAttribute('timestamp', timestamp);
                 img.id = id;
                 img.src = blob ? URL.createObjectURL(blob) : (base64Data != null ? base64Data : '');
@@ -9974,7 +10326,7 @@ export const handleUpload = async (event, dataBaseIndexName, dataBaseObjectStore
 
             wrapper.appendChild(element);
 
-            if (id === newMedia[newMedia.length - 1].id) {
+            if (id === newMedia[0].id) {
                 element.classList.add('active');
                 if (id) {
                     if (pageName === 'face-swap') displayStoredData(element, dataBaseObjectStoreName);
@@ -9983,17 +10335,19 @@ export const handleUpload = async (event, dataBaseIndexName, dataBaseObjectStore
                     });
                 }
             }
+            else if (blob) {
+                if (img) {
+                    img.addEventListener('load', () => URL.revokeObjectURL(img.src), { once: true });
+                } else if (video) {
+                    video.addEventListener('loadeddata', () => {
+                        URL.revokeObjectURL(video.src);
+                    }, { once: true });
+                }
+            }
         }
 
         mediaContainer.insertBefore(wrapper, mediaContainer.firstChild);
         localStorage.setItem(`${pageName}_${dataBaseObjectStoreName}-count`, await countInDB(db));
-
-        // play videos
-        videosToPlay.forEach(({ video, objectUrl }) => {
-            video.load();
-            video.play().catch(() => { });
-        });
-
     } catch (error) {
         alert(`Upload failed: ${error.message || error}`);
     }
@@ -10094,10 +10448,22 @@ export const setupFileUpload = async ({
         handleContextMenu(wrapper);
 
         if (isDirectVideo) {
-            wrapper.innerHTML =
-                `<video timestamp="${timestamp}" id="${id}" preload="auto" autoplay muted playsinline disablePictureInPicture>` +
-                `<source src="${url}">Your browser does not support the video tag.</video>` +
-                `<div class="delete-icon"></div>`;
+            const video = document.createElement('video');
+            video.setAttribute('timestamp', timestamp || '');
+            video.id = id;
+            video.preload = 'metad';
+            video.autoplay = true;
+            video.muted = true;
+            video.playsInline = true;
+            try { video.disablePictureInPicture = true; } catch (e) { }
+
+            if (url) video.src = url;
+
+            const del = document.createElement('div');
+            del.className = 'delete-icon';
+
+            wrapper.appendChild(video);
+            wrapper.appendChild(del);
         } else if (isEmbedPath || ytMatch || tiktokMatch || igMatch || twitterMatch || deepanyMatch) {
             let embedSrc = url;
             if (ytMatch) {

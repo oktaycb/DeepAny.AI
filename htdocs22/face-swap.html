@@ -52,15 +52,15 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="css/styles.css?v=5.3.5">
+    <link rel="stylesheet" href="css/styles.css?v=5.4.7">
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-    <link rel="shortcut icon" href="/favicon.ico?v=5.3.5" />
+    <link rel="shortcut icon" href="/favicon.ico?v=5.4.7" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <script>
         (() => {
             if (!localStorage.getItem('version')) {
-                localStorage.setItem('version', '5.3.5');
+                localStorage.setItem('version', '5.4.7');
                 return;
             }
 
@@ -125,7 +125,7 @@
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '5.3.5';
+        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '5.4.7';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -1733,29 +1733,32 @@
 
                 const inputs = document.querySelector('.inputs');
                 if (inputs) {
-                    ['click', 'touchend'].forEach(evt =>
-                        inputs.addEventListener(evt, async function (event) {
-                            await handleFileContainerEvents(event, `inputDB-${pageName}`, 'inputs', inputs, databases);
-                        })
-                    );
+                    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+                    const eventType = isTouch ? 'touchend' : 'click';
+
+                    inputs.addEventListener(eventType, async (event) => {
+                        await handleFileContainerEvents(event, `inputDB-${pageName}`, 'inputs', inputs, databases);
+                    });
                 }
 
                 const faces = document.querySelector('.faces');
                 if (faces) {
-                    ['click', 'touchend'].forEach(evt =>
-                        faces.addEventListener(evt, async function (event) {
-                            await handleFileContainerEvents(event, `faceDB-${pageName}`, 'faces', faces, databases);
-                        })
-                    );
+                    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+                    const eventType = isTouch ? 'touchend' : 'click';
+
+                    faces.addEventListener(eventType, async (event) => {
+                        await handleFileContainerEvents(event, `faceDB-${pageName}`, 'faces', faces, databases);
+                    });
                 }
 
                 const outputs = document.querySelector('.outputs');
                 if (outputs) {
-                    ['click', 'touchend'].forEach(evt =>
-                        outputs.addEventListener(evt, async function (event) {
-                            await handleFileContainerEvents(event, `outputDB-${pageName}`, 'outputs', outputs, databases);
-                        })
-                    );
+                    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+                    const eventType = isTouch ? 'touchend' : 'click';
+
+                    outputs.addEventListener(eventType, async (event) => {
+                        await handleFileContainerEvents(event, `outputDB-${pageName}`, 'outputs', outputs, databases);
+                    });
                 }
 
                 document.querySelectorAll('.question-mark').forEach(questionMark => {
@@ -2609,7 +2612,7 @@
                             return;
                         }
 
-                        const activeInput = activeDataContainer.querySelector('img, video, initial');
+                        const activeInput = activeDataContainer.querySelector('img, video');
                         if (!activeInput) {
                             showNotification(`No active input element found.`, 'Warning - Download', 'warning');
                             return;
@@ -2760,7 +2763,7 @@
 
                     viewOutput.addEventListener('click', async () => {
                         const activeDataContainer = document.querySelector(".outputs .data-container.active");
-                        const activeInput = activeDataContainer.querySelector('img, video, initial');
+                        const activeInput = activeDataContainer.querySelector('img, video');
 
                         if (activeInput) {
                             if (viewOutput.textContent === 'Fetch') {
