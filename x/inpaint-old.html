@@ -52,15 +52,15 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="css/styles.css?v=5.4.7">
+    <link rel="stylesheet" href="css/styles.css?v=8.5.1.0">
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-    <link rel="shortcut icon" href="/favicon.ico?v=5.4.7" />
+    <link rel="shortcut icon" href="/favicon.ico?v=8.5.1.0" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <script>
         (() => {
             if (!localStorage.getItem('version')) {
-                localStorage.setItem('version', '5.4.7');
+                localStorage.setItem('version', '8.5.1.0');
                 return;
             }
 
@@ -113,7 +113,7 @@
             };
 
             checkVersion(); //.then(() => history.replaceState(null, '', location.pathname + location.search.replace(/([?&])v=[^&]*(&|$)/, (m, sep, end) => sep === '?' && end ? '?' : sep === '&' && end ? '' : '')));
-            setInterval(checkVersion, 1 * 60 * 1000);
+            setInterval(checkVersion, 3 * 60 * 1000);
         })();
     </script>
     <style>
@@ -132,7 +132,7 @@
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '5.4.7';
+        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '8.5.1.0';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -1111,7 +1111,7 @@
                             await saveCountIndex(databases);
 
                             const data = await getFromDB(db);
-                            const entry = data.find(item => item.url === url);
+                            const entry = data.find(item => item.url && item.url.toLowerCase() === url.toLowerCase());
                             firstChild.innerHTML = `<initial url="${entry.url}" id="${entry.id}" timestamp="${entry.timestamp}" processing></initial><div class="process-text">Indexing</div><div class="delete-icon"></div>`;
                         }
 
@@ -1139,7 +1139,7 @@
                             return;
                         }
 
-                        const activeInput = activeDataContainer.querySelector('img, video');
+                        const activeInput = activeDataContainer?.querySelector('[original="true"]');
                         if (!activeInput) {
                             showNotification(`No active input element found.`, 'Warning - Download', 'warning');
                             return;
@@ -1244,7 +1244,7 @@
 
                     viewOutput.addEventListener('click', async () => {
                         const activeDataContainer = document.querySelector(".outputs .data-container.active");
-                        const activeInput = activeDataContainer.querySelector('img, video');
+                        const activeInput = activeDataContainer?.querySelector('[original="true"]');
 
                         if (activeInput) {
                             if (viewOutput.textContent === 'Fetch') {
@@ -1386,8 +1386,9 @@
                 if (!shouldUpdate)
                     return;
 
-                loadPageState();
+                loadPageState(true);
                 loadPage();
+                loadPageState(false);
             }
 
             sizeBasedElements();

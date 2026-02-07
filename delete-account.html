@@ -37,15 +37,15 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="css/styles.css?v=5.4.7">
+    <link rel="stylesheet" href="css/styles.css?v=8.7.6.5">
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-    <link rel="shortcut icon" href="/favicon.ico?v=5.4.7" />
+    <link rel="shortcut icon" href="/favicon.ico?v=8.7.6.5" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <script>
         (() => {
             if (!localStorage.getItem('version')) {
-                localStorage.setItem('version', '5.4.7');
+                localStorage.setItem('version', '8.7.6.5');
                 return;
             }
 
@@ -98,13 +98,13 @@
             };
 
             checkVersion(); //.then(() => history.replaceState(null, '', location.pathname + location.search.replace(/([?&])v=[^&]*(&|$)/, (m, sep, end) => sep === '?' && end ? '?' : sep === '&' && end ? '' : '')));
-            setInterval(checkVersion, 1 * 60 * 1000);
+            setInterval(checkVersion, 3 * 60 * 1000);
         })();
     </script>
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '5.4.7';
+        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '8.7.6.5';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);

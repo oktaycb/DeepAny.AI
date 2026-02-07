@@ -37,15 +37,15 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="css/styles.css?v=5.4.7">
+    <link rel="stylesheet" href="css/styles.css?v=8.7.6.5">
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-    <link rel="shortcut icon" href="/favicon.ico?v=5.4.7" />
+    <link rel="shortcut icon" href="/favicon.ico?v=8.7.6.5" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <script>
         (() => {
             if (!localStorage.getItem('version')) {
-                localStorage.setItem('version', '5.4.7');
+                localStorage.setItem('version', '8.7.6.5');
                 return;
             }
 
@@ -98,13 +98,13 @@
             };
 
             checkVersion(); //.then(() => history.replaceState(null, '', location.pathname + location.search.replace(/([?&])v=[^&]*(&|$)/, (m, sep, end) => sep === '?' && end ? '?' : sep === '&' && end ? '' : '')));
-            setInterval(checkVersion, 1 * 60 * 1000);
+            setInterval(checkVersion, 3 * 60 * 1000);
         })();
     </script>
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '5.4.7';
+        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '8.7.6.5';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -223,13 +223,16 @@
                                                                                                                 <h4 style="font-weight: 300;">Email Address</h4>
                                                                                                                 <input translate="no" id="email" value="" readonly="">
                                                                                                             </div>
-                                                                                                            <div style="font-size: 0px;">
-                                                                                                                <h4 style="font-weight: 300;">Password</h4>
-                                                                                                                <input translate="no" id="password" type="password" value="******" readonly="">
+                                                                                                            <div class="line" style="margin: 0;"></div>
+                                                                                                            <div>
+                                                                                                                <label class="checkbox" tooltip>
+                                                                                                                    <input type="checkbox" id="disableAds"><span>Disable Ads</span>
+                                                                                                                    <div class="tooltip">Ads can be totally frustrating but if you want to support you can keep this off :)</div>
+                                                                                                                </label>
                                                                                                             </div>
                                                                                                             <button id="deleteAccount" style="width: 100%">Delete Account</button>
                                                                                                         </div>
-                                                                                                    <div class="line"></div>
+                                                                                                        <div class="line"></div>
                                                                                                         <h4>About Me</h4>
                                                                                                         <div style="margin-left: calc((2vh* var(--scale-factor-h) + 4vw / 2 * var(--scale-factor-w)));;margin-top: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));;">
                                                                                                             <h4 style="font-weight: 300;">About Me</h4>
@@ -295,7 +298,7 @@
                 } else {
                     pageContent.push(`
                                                                                 <div style="display: contents; height: 100%; gap: calc((2vh * var(--scale-factor-h) + 4vw / 2 * var(--scale-factor-w)));">
-                                                                                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: calc((2vh * var(--scale-factor-h) + 4vw / 2 * var(--scale-factor-w))); height: 100%;">
+                                                                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: calc((2vh * var(--scale-factor-h) + 4vw / 2 * var(--scale-factor-w))); height: 100%;">
                                                                                         <!-- Profile Section -->
                                                                                         <div class="background-container fill-room">
                                                                                             <div class="background-dot-container">
@@ -347,10 +350,13 @@
                                                                                                             <h4 style="font-weight: 300;">Email Address</h4>
                                                                                                             <input id="email" value="" readonly="">
                                                                                                         </div>
-                                                                                                               <div style="font-size: 0px;">
-                                                                                                            <h4 style="font-weight: 300;">Password</h4>
-                                                                                                            <input id="password" type="password" value="******" readonly="">
-                                                                                                        </div>
+                                                                                                            <div class="line"></div>
+                                                                                                            <div>
+                                                                                                                <label class="checkbox" tooltip>
+                                                                                                                    <input type="checkbox" id="disableAds"><span>Disable Ads</span>
+                                                                                                                    <div class="tooltip">Ads can be totally frustrating but if you want to support you can keep this off :)</div>
+                                                                                                                </label>
+                                                                                                            </div>
                                                                                                     <div class="line"></div>
                                                                                                         <button id="deleteAccount" style="width: 100%">Delete Account</button>
                                                                                                     </div>
@@ -358,7 +364,7 @@
                                                                                             </a>
                                                                                         </div>
 
-                                                                                        <div class="background-container fill-room">
+                                                                                        <div class="background-container fill-room" style="display: none;">
                                                                                             <a class="background-dot-container">
                                                                                                 <div class="background-dot-container-content">
                                                                                                     <div class="flex-column background-dot-container-header">
@@ -443,6 +449,23 @@
                 window.location.href = `/delete-account?v=${version}`;
             });
 
+            const checkbox = document.getElementById("disableAds");
+            const STORAGE_KEY = "globalDisableAdsState";
+
+            // Load saved value
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved !== null) {
+                checkbox.checked = saved === "true";
+            }
+
+            // Save on change
+            checkbox.addEventListener("change", () => {
+                localStorage.setItem(STORAGE_KEY, checkbox.checked.toString());
+                setTimeout(() => {
+                    location.reload(true);
+                }, 50);
+            });
+
             const userId = userData.uid;
 
             const linkElement = document.getElementById('referralLink');
@@ -466,7 +489,7 @@
 
             const serverDocSnapshot = () => getDocSnapshot('servers', '3090-1');
             const serverAddressAPI = await fetchServerAddress(serverDocSnapshot, 'API');
-            const MINUTES_MS = 1 * 60 * 1000;
+            const MINUTES_MS = 3 * 60 * 1000;
 
             function canClickAgain(buttonKey) {
                 const lastClicked = localStorage.getItem(buttonKey);

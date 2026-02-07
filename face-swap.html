@@ -52,15 +52,15 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="css/styles.css?v=5.4.7">
+    <link rel="stylesheet" href="css/styles.css?v=8.7.6.5">
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-    <link rel="shortcut icon" href="/favicon.ico?v=5.4.7" />
+    <link rel="shortcut icon" href="/favicon.ico?v=8.7.6.5" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <script>
         (() => {
             if (!localStorage.getItem('version')) {
-                localStorage.setItem('version', '5.4.7');
+                localStorage.setItem('version', '8.7.6.5');
                 return;
             }
 
@@ -113,7 +113,7 @@
             };
 
             checkVersion(); //.then(() => history.replaceState(null, '', location.pathname + location.search.replace(/([?&])v=[^&]*(&|$)/, (m, sep, end) => sep === '?' && end ? '?' : sep === '&' && end ? '' : '')));
-            setInterval(checkVersion, 1 * 60 * 1000);
+            setInterval(checkVersion, 3 * 60 * 1000);
         })();
     </script>
     <style>
@@ -125,7 +125,7 @@
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '5.4.7';
+        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '8.7.6.5';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -133,61 +133,10 @@
 
         document.addEventListener('DOMContentLoaded', async function () {
             const functions = await loadModule('./scripts/functions.js');
-            const { serverID, fetchWithRandom, cannotBeBanned, hasSubscriptionPlan, showFrameSelector, getSelectedInputId, setDownloadCancelled, getAbortController, resetAbortController, pageName, setFetchableServerAdresses, getFetchableServerAdresses, checkServerStatus, setDynamicInterval, updateDownloadFile, cancelProcess, fetchUploadedChunks, processDataToFile, createSectionAndElements, setMaxWidth, saveCountIndex, handleDownload, handleFileContainerEvents, handleUpload, setupFileUpload, setClientStatus, customFetch, checkServerQueue, showNotification, openDB, addToDB, getFromDB, initDB, setUser, getUserData, getUserDoc, setAuthentication, getFirebaseModules, getDocSnapshot, getDocsSnapshot, getScreenMode, getCurrentMain, updateContent, ScreenMode, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol, fetchServerAddresses } = functions;
+            const { savePageState, restoreAllScrollPositions, revertDefaultSettingsFunc, getCheckedCheckboxIdFromCombobox, serverID, fetchWithRandom, cannotBeBanned, hasSubscriptionPlan, showFrameSelector, getSelectedInputId, setDownloadCancelled, getAbortController, resetAbortController, pageName, setFetchableServerAdresses, getFetchableServerAdresses, checkServerStatus, setDynamicInterval, updateDownloadFile, cancelProcess, fetchUploadedChunks, processDataToFile, createSectionAndElements, setMaxWidth, saveCountIndex, handleDownload, handleFileContainerEvents, handleUpload, setupFileUpload, setClientStatus, customFetch, checkServerQueue, showNotification, openDB, addToDB, getFromDB, initDB, getCachedFromDB, openMultipleDBs, setUser, getUserData, getUserDoc, setAuthentication, handleLoggedOutState, getFirebaseModules, getDocSnapshot, getDocsSnapshot, getScreenMode, getCurrentMain, updateContent, ScreenMode, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol, fetchServerAddresses } = functions;
 
             if (!window.indexedDB) {
                 alert('Your browser does not support IndexedDB.');
-            }
-
-            function savePageState() {
-                const requiredIds = [
-                    'emailOutput',
-                    'enableOccluder',
-                    'enableEnhancedAnalyzer',
-                    'enableEnhancedLandmarks',
-                    'removeBanner',
-                    'showServers',
-                    'keepFPS',
-                    'ageModifier',
-                    'fps-slider'
-                ];
-
-                if (!requiredIds.every(id => document.getElementById(id))) {
-                    return;
-                }
-
-                const getCheckboxState = id => document.getElementById(id)?.checked || false; const activeLinks = Array.from(document.querySelectorAll('.nav-links .active')).map(link => link.getAttribute('for') || '');
-
-                const state = {
-                    enableOccluder: getCheckboxState('enableOccluder'),
-                    enableEnhancedAnalyzer: getCheckboxState('enableEnhancedAnalyzer'),
-                    enableEnhancedLandmarks: getCheckboxState('enableEnhancedLandmarks'),
-                    removeBanner: getCheckboxState('removeBanner'),
-                    emailOutput: getCheckboxState('emailOutput'),
-                    showServers: getCheckboxState('showServers'),
-                    keepFPS: getCheckboxState('keepFPS'),
-                    fpsValue: document.getElementById('fps-slider').value,
-                    ageModifier: getCheckboxState('ageModifier'),
-                    ageModifierValue: document.getElementById('age-modifier').value,
-                    enhancerBlendValue: document.getElementById('enhancerBlendValue').value,
-                    activeLinks: activeLinks,
-                    multiboxes: Array.from(document.querySelectorAll('.multibox')).map(multibox => ({
-                        text: multibox.querySelector('.multibox-text')?.innerText || '',
-                        open: multibox.classList.contains('open'),
-                        items: Array.from(multibox.querySelectorAll('.item')).map(item => ({
-                            checked: item.querySelector('input[type="checkbox"]')?.checked || false,
-                        })),
-                    })),
-                    comboboxes: Array.from(document.querySelectorAll('.combobox')).map(combobox => ({
-                        text: combobox.querySelector('.combobox-text')?.innerText || '',
-                        open: combobox.classList.contains('open'),
-                        items: Array.from(combobox.querySelectorAll('.item')).map(item => ({
-                            checked: item.querySelector('input[type="checkbox"]')?.checked || false,
-                        })),
-                    })),
-                };
-
-                localStorage.setItem(pageName, JSON.stringify(state));
             }
 
             let userData = await getUserData();
@@ -247,10 +196,15 @@
                                                                     </div>
                                                                     <div>
                                                                         <div id="modelSelection" class="combobox searchable" tooltip style="gap: calc(1vh* var(--scale-factor-h));">
-                                                                            <div class="tooltip">List of available ready-to-use public DFL face models. These persons do not exists. Similarities with real people are accidental.</div>
-                                                                            <span class="combobox-text" title="Model" default="Default (128x128)"></span>
+                                                                            <div class="tooltip">List of available ready-to-use public DFL face models. Similarities with real people are accidental.</div>
+                                                                            <span class="combobox-text" title="Model" default="General (128x128)"></span>
                                                                             <span class="arrow-dwn"></span>
                                                                             <ul class="list-items" style="max-height: calc(24vh * var(--scale-factor-h));overflow: auto;display: none;">
+                                                                                <li class="item">
+                                                                                  <label class="checkbox" tooltip>
+                                                                                    <input type="checkbox" id="model_256"><span>General (256x256)</span>
+                                                                                  </label>
+                                                                                </li>
                                                                                 <li class="item">
                                                                                   <label class="checkbox" tooltip>
                                                                                     <input type="checkbox" id="ana_de_armas_320"><span>Ana de Armas (320x320)</span>
@@ -1126,10 +1080,10 @@
                                                                                     <div class="card remove-border card-dash-outline" style="position: relative;">
                                                                                         <div class="card-content card-remove-hover" style="--degree: 45deg;justify-content: center;border-color: white;">
                                                                                             <input type="file" accept="video/*,image/*" id="input-upload" style="display: none" multiple>
-                                                                                                        <div style="display: flex;width: 100%;">
-                                                                                                            <div><div class="circular-button circular-button-no-text circular-button-input-upload" style="margin: calc(var(--input-margin)/ 4);"></div></div>
-                                                                                                            <div style="display: flex;width: 100%;overflow-x: auto;overflow-y: hidden;"><div class="inputs" style="min-width: 100%;display: flex;flex-wrap: nowrap;flex-direction: row;justify-content: flex-start;overflow-x: auto;overflow-y: hidden !important;align-items: center;"></div></div>
-                                                                                                        </div>
+                                                                                                <div style="display: flex;width: 100%;">
+                                                                                                    <div><div class="circular-button circular-button-no-text circular-button-input-upload" style="margin: calc(var(--input-margin)/ 4);"></div></div>
+                                                                                                    <div style="display: flex;width: 100%;overflow-x: auto;overflow-y: hidden;"><div class="inputs" style="min-width: 100%;display: flex;flex-wrap: nowrap;flex-direction: row;justify-content: flex-start;overflow-x: auto;overflow-y: hidden !important;align-items: center;"></div></div>
+                                                                                                </div>
                                                                                         </div>
                                                                                     </div>
                                                                                 </div>
@@ -1230,25 +1184,19 @@
                                                                             <div class="tooltip">
                                                                                 The addition of a "model upscaler" option enhances the resolution of swapped faces, making results more realistic and detailed.
                                                                             </div>
-                                                                            <span class="combobox-text" title="Model upscaler" default="128x128"></span>
+                                                                            <span class="combobox-text" title="Model upscaler" default="1x"></span>
                                                                             <span class="arrow-dwn"></span>
                                                                             <ul class="list-items">
                                                                                 <li class="item">
                                                                                     <label class="checkbox" tooltip>
-                                                                                        <input type="checkbox" id="pixelBoost256x256"><span>256x256</span>
+                                                                                        <input type="checkbox" id="pixelBoost256x256"><span>2x</span>
                                                                                         <div class="tooltip">Takes 2x longer, but the quality and detail improves.</div>
                                                                                     </label>
                                                                                 </li>
                                                                                 <li class="item">
                                                                                     <label class="checkbox" tooltip>
-                                                                                        <input type="checkbox" id="pixelBoost512x512"><span>512x512</span>
+                                                                                        <input type="checkbox" id="pixelBoost512x512"><span>4x</span>
                                                                                         <div class="tooltip">Takes 4x longer, with significantly improved quality and details.</div>
-                                                                                    </label>
-                                                                                </li>
-                                                                                <li class="item">
-                                                                                    <label class="checkbox" tooltip>
-                                                                                        <input type="checkbox" id="pixelBoost1024x1024"><span>1024x1024</span>
-                                                                                        <div class="tooltip">Takes 8x longer, resulting in the highest quality and details.</div>
                                                                                     </label>
                                                                                 </li>
                                                                             </ul>
@@ -1277,7 +1225,7 @@
                                                             </div>
                                                             <div class="background-dot-container">
                                                                 <div class="background-dot-container-content" style="max-height: calc(29vh * var(--scale-factor-h));overflow-y: auto;overflow-x: hidden">
-                                                                    <h4 style="font-weight: 400;">Facial Analyzer</h4>
+                                                                    <h4 style="font-weight: 400;">Face Analyzer</h4>
                                                                     <div>
                                                                         <div class="multibox" tooltip>
                                                                             <div class="tooltip">Select regions to customize in the new face. If an area is not enabled, it will remain unchanged from the original face.</div>
@@ -1551,137 +1499,235 @@
             const STATUS_OK = 200;
             const STATUS_NOTFOUND = 404;
 
-            function loadPageState() {
-                setMaxWidth();
+            const checkboxIds = [
+                'skin',
+                'eyebrow',
+                'eye',
+                'glasses',
+                'nose',
+                'mouth',
+                'lip',
+                'emailOutput',
+                'enableEnhancedAnalyzer',
+                'enableEnhancedLandmarks',
+                'enableOccluder',
+                'natural_face_enhancer_1024',
+                'pixelBoost256x256',
+                'keepFPS'
+            ];
+
+
+            function loadPageState(beforePageLoad = false) {
+                if (beforePageLoad) {
+                    setMaxWidth();
+
+                    document.querySelectorAll('.tab-container').forEach((container, containerIndex) => {
+                        const tabs = container.querySelectorAll('.tab');
+                        const storageKey = `activeTab_${containerIndex}_${pageName}`;
+
+                        let defaultTabId = localStorage.getItem(storageKey);
+                        if (!defaultTabId) {
+                            const activeTab = container.querySelector('.tab.active');
+                            defaultTabId = activeTab ? activeTab.getAttribute('for') : tabs[0].getAttribute('for');
+                        }
+
+                        tabs.forEach(tab => {
+                            const tabFor = tab.getAttribute('for');
+                            tab.classList.toggle('active', tabFor === defaultTabId);
+                        });
+
+                        container.querySelectorAll('.content-section').forEach(section => {
+                            section.style.display = (section.id === defaultTabId) ? 'flex' : 'none';
+                        });
+
+                        tabs.forEach(tab => {
+                            tab.onclick = () => {
+                                tabs.forEach(t => t.classList.remove('active'));
+                                tab.classList.add('active');
+
+                                const targetId = tab.getAttribute('for');
+                                container.querySelectorAll('.content-section').forEach(section => {
+                                    section.style.display = (section.id === targetId) ? 'flex' : 'none';
+                                });
+
+                                localStorage.setItem(storageKey, targetId);
+                            };
+                        });
+                    });
+                }
 
                 const pageData = localStorage.getItem(pageName) || null;
                 if (pageData) {
                     const state = JSON.parse(pageData || '{}') || {};
 
-                    const enableOccluder = document.getElementById('enableOccluder');
-                    if (enableOccluder) enableOccluder.checked = state.enableOccluder || false;
-
-                    const enableEnhancedAnalyzer = document.getElementById('enableEnhancedAnalyzer');
-                    if (enableEnhancedAnalyzer) enableEnhancedAnalyzer.checked = state.enableEnhancedAnalyzer || false;
-
-                    const enableEnhancedLandmarks = document.getElementById('enableEnhancedLandmarks');
-                    if (enableEnhancedLandmarks) enableEnhancedLandmarks.checked = state.enableEnhancedLandmarks || false;
-
-                    const removeBanner = document.getElementById('removeBanner');
-                    if (removeBanner) removeBanner.checked = state.removeBanner || false;
-
-                    const emailOutput = document.getElementById('emailOutput');
-                    if (emailOutput) emailOutput.checked = state.emailOutput || false;
-
-                    const showServers = document.getElementById('showServers');
-                    if (showServers) showServers.checked = state.showServers || false;
-
-                    const keepFPS = document.getElementById('keepFPS');
-                    if (keepFPS) keepFPS.checked = state.keepFPS || false;
-
-                    const fpsSlider = document.getElementById('fps-slider');
-                    if (fpsSlider) fpsSlider.value = state.fpsValue || 30;
-
-                    const ageModifier = document.getElementById('ageModifier');
-                    if (ageModifier) ageModifier.checked = state.ageModifier || false;
-
-                    const ageModifierSlider = document.getElementById('age-modifier');
-                    if (ageModifierSlider) ageModifierSlider.value = state.ageModifierValue || 30;
-
-                    const enhancerBlendValue = document.getElementById('enhancerBlendValue');
-                    if (enhancerBlendValue) enhancerBlendValue.value = state.enhancerBlendValue || 30;
-
-                    const fpsValue = document.getElementById('fps-value');
-                    if (fpsValue) fpsValue.textContent = (state.fpsValue || 30) + ' FPS';
-
-                    document.querySelectorAll('.nav-links .text').forEach(link => {
-                        if (state.activeLinks.includes(link.getAttribute('for'))) {
-                            link.classList.add('active');
-
-                            const targetSection = document.getElementById(link.getAttribute('for'));
-                            if (targetSection) {
-                                targetSection.style.display = 'flex';
-                            }
+                    if (beforePageLoad) {
+                        if (state.selectedRectangles) {
+                            state.selectedRectangles.forEach(selectedId => {
+                                const rectangle = document.getElementById(selectedId);
+                                if (rectangle) rectangle.classList.add('selected');
+                            });
                         }
-                    });
 
-                    const multiboxQuery = document.querySelectorAll('.multibox');
-                    multiboxQuery.forEach((multibox, id) => {
-                        const btnText = multibox.querySelector('.multibox-text');
-                        const items = multibox.querySelectorAll('.item');
+                        const rectangleQuery = document.querySelectorAll('.rectangle');
+                        rectangleQuery.forEach((rectangle, id) => {
+                            const btnText = rectangle.querySelector('h4');
+                            const items = rectangle.querySelectorAll('.item');
 
-                        if (state.multiboxes && state.multiboxes[id]) {
-                            if (btnText) btnText.innerText = state.multiboxes[id].text || '';
+                            if (state.rectangles && state.rectangles[id]) {
+                                if (btnText) btnText.innerText = state.rectangles[id].text || '';
 
-                            if (state.multiboxes[id].open) {
-                                multibox.classList.add('open');
-                                const listItems = multibox.querySelector('.list-items');
-                                if (listItems) listItems.style.display = 'flex';
-                            } else {
-                                multibox.classList.remove('open');
-                                const listItems = multibox.querySelector('.list-items');
-                                if (listItems) listItems.style.display = 'none';
-                            }
+                                if (state.rectangles[id].open) {
+                                    rectangle.classList.add('open');
+                                    const listItems = rectangle.querySelector('.list-items');
+                                    if (listItems) listItems.style.display = 'flex';
+                                } else {
+                                    rectangle.classList.remove('open');
+                                    const listItems = rectangle.querySelector('.list-items');
+                                    if (listItems) listItems.style.display = 'none';
+                                }
 
-                            state.multiboxes[id].items.forEach((itemState, itemIndex) => {
-                                if (itemIndex < items.length) {
-                                    const checkbox = items[itemIndex].querySelector('input[type="checkbox"]');
-                                    if (checkbox) {
-                                        checkbox.checked = itemState.checked;
-                                        items[itemIndex].classList.toggle('checked', checkbox.checked);
+                                state.rectangles[id].items.forEach((itemState, itemIndex) => {
+                                    if (itemIndex < items.length) {
+                                        const checkbox = items[itemIndex].querySelector('input[type="checkbox"]');
+                                        if (checkbox) {
+                                            checkbox.checked = itemState.checked;
+                                            items[itemIndex].classList.toggle('checked', checkbox.checked);
+                                        }
                                     }
+                                });
+                            }
+                        });
+
+                        // Restore checkboxes
+                        document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                            const id = cb.id;
+                            if (!id) return;
+                            cb.checked = state[id] || false;
+                            cb.dispatchEvent(new Event('change', { bubbles: true }));
+                        });
+
+                        // Restore text inputs
+                        document.querySelectorAll('input[type="text"], textarea').forEach(inp => {
+                            const id = inp.id;
+                            if (!id) return;
+                            inp.value = state[id] || '';
+                            inp.dispatchEvent(new Event('input', { bubbles: true }));
+                        });
+
+                        // Restore active navigation
+                        document.querySelectorAll('.nav-links .text').forEach(link => {
+                            if (state.activeLinks?.includes(link.getAttribute('for'))) {
+                                link.classList.add('active');
+                                const targetSection = document.getElementById(link.getAttribute('for'));
+                                if (targetSection) targetSection.style.display = 'flex';
+                            }
+                        });
+
+                        // Restore multiboxes
+                        const multiboxQuery = document.querySelectorAll('.multibox');
+                        multiboxQuery.forEach((multibox, id) => {
+                            const btnText = multibox.querySelector('.multibox-text');
+                            const items = multibox.querySelectorAll('.item');
+
+                            if (state.multiboxes && state.multiboxes[id]) {
+                                if (btnText) btnText.innerText = state.multiboxes[id].text || '';
+
+                                if (state.multiboxes[id].open) {
+                                    multibox.classList.add('open');
+                                    const listItems = multibox.querySelector('.list-items');
+                                    if (listItems) listItems.style.display = 'flex';
+                                } else {
+                                    multibox.classList.remove('open');
+                                    const listItems = multibox.querySelector('.list-items');
+                                    if (listItems) listItems.style.display = 'none';
+                                }
+
+                                state.multiboxes[id].items.forEach((itemState, itemIndex) => {
+                                    if (itemIndex < items.length) {
+                                        const checkbox = items[itemIndex].querySelector('input[type="checkbox"]');
+                                        if (checkbox) {
+                                            checkbox.checked = itemState.checked;
+                                            items[itemIndex].classList.toggle('checked', checkbox.checked);
+                                        }
+                                    }
+                                });
+                            }
+                        });
+
+                        // Restore comboboxes
+                        const comboboxQuery = document.querySelectorAll('.combobox');
+                        comboboxQuery.forEach((combobox, id) => {
+                            const btnText = combobox.querySelector('.combobox-text');
+                            const items = combobox.querySelectorAll('.item');
+
+                            if (state.comboboxes && state.comboboxes[id]) {
+                                if (btnText) btnText.innerText = state.comboboxes[id].text || '';
+
+                                if (state.comboboxes[id].open) {
+                                    combobox.classList.add('open');
+                                    const listItems = combobox.querySelector('.list-items');
+                                    if (listItems) listItems.style.display = 'flex';
+                                } else {
+                                    combobox.classList.remove('open');
+                                    const listItems = combobox.querySelector('.list-items');
+                                    if (listItems) listItems.style.display = 'none';
+                                }
+
+                                state.comboboxes[id].items.forEach((itemState, itemIndex) => {
+                                    if (itemIndex < items.length) {
+                                        const checkbox = items[itemIndex].querySelector('input[type="checkbox"]');
+                                        if (checkbox) {
+                                            checkbox.checked = itemState.checked;
+                                            items[itemIndex].classList.toggle('checked', checkbox.checked);
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                        // ------------------ Restore sliders (robust) ------------------
+                        if (state.sliders && Array.isArray(state.sliders)) {
+                            state.sliders.forEach(({ id, value }) => {
+                                if (!id) return;
+
+                                // 1) Try wrapper container by id
+                                let wrapper = document.getElementById(id);
+
+                                // 2) Resolve slider element
+                                let slider = null;
+                                if (wrapper) {
+                                    if (wrapper.tagName === 'INPUT' && wrapper.type === 'range') {
+                                        slider = wrapper;
+                                    } else {
+                                        slider = wrapper.querySelector('input[type="range"]');
+                                    }
+                                }
+
+                                // 3) Fallbacks: input by id, name, data attribute
+                                if (!slider) {
+                                    slider = document.querySelector(`input[type="range"]#${CSS.escape(id)}`)
+                                        || document.querySelector(`input[type="range"][name="${CSS.escape(id)}"]`)
+                                        || document.querySelector(`input[type="range"][data-slider-id="${CSS.escape(id)}"]`);
+                                }
+
+                                // 4) Final fallback: any input whose closest .slider wrapper has that id
+                                if (!slider) {
+                                    slider = Array.from(document.querySelectorAll('input[type="range"]'))
+                                        .find(s => s.closest('.slider')?.id === id) || null;
+                                }
+
+                                // Apply value and update visible value
+                                if (slider) {
+                                    slider.value = value;
+                                    const valueDisplay = slider.closest('.slider')?.querySelector('.slider-value')
+                                        || slider.parentElement?.querySelector('.slider-value');
+                                    if (valueDisplay) valueDisplay.textContent = value;
+                                    slider.dispatchEvent(new Event('input', { bubbles: true }));
                                 }
                             });
                         }
-                    });
-
-                    const comboboxQuery = document.querySelectorAll('.combobox');
-                    comboboxQuery.forEach((combobox, id) => {
-                        const btnText = combobox.querySelector('.combobox-text');
-                        const items = combobox.querySelectorAll('.item');
-
-                        if (state.comboboxes && state.comboboxes[id]) {
-                            if (btnText) btnText.innerText = state.comboboxes[id].text || '';
-
-                            if (state.comboboxes[id].open) {
-                                combobox.classList.add('open');
-                                const listItems = combobox.querySelector('.list-items');
-                                if (listItems) listItems.style.display = 'flex';
-                            } else {
-                                combobox.classList.remove('open');
-                                const listItems = combobox.querySelector('.list-items');
-                                if (listItems) listItems.style.display = 'none';
-                            }
-
-                            state.comboboxes[id].items.forEach((itemState, itemIndex) => {
-                                if (itemIndex < items.length) {
-                                    const checkbox = items[itemIndex].querySelector('input[type="checkbox"]');
-                                    if (checkbox) {
-                                        checkbox.checked = itemState.checked;
-                                        items[itemIndex].classList.toggle('checked', checkbox.checked);
-                                    }
-                                }
-                            });
-                        }
-                    });
-                } else {
-                    const checkboxIds = [
-                        'skin',
-                        'eyebrow',
-                        'eye',
-                        'glasses',
-                        'nose',
-                        'mouth',
-                        'lip',
-                        'emailOutput',
-                        'enableEnhancedAnalyzer',
-                        'enableEnhancedLandmarks',
-                        'enableOccluder',
-                        'natural_face_enhancer_1024',
-                        'pixelBoost256x256',
-                        'keepFPS'
-                    ];
-
+                    }
+                    else restoreAllScrollPositions({ retries: 10, retryDelay: 200 });
+                } else if (beforePageLoad) {
                     checkboxIds.forEach(id => {
                         const checkbox = document.getElementById(id);
                         if (checkbox) {
@@ -1690,6 +1736,9 @@
                         }
                     });
                 }
+
+                if (!beforePageLoad)
+                    revertDefaultSettingsFunc();
             }
 
             const databases = [
@@ -1713,6 +1762,29 @@
             setDynamicInterval(databases, userData?.uid);
 
             async function loadPage() {
+                createSectionAndElements();
+                fileUploads.forEach(config => setupFileUpload({ ...config, changeHandler: handleUpload }));
+
+                (async () => {
+                    databases.forEach(db => initDB(db.indexName, db.objectStore, handleDownload, databases, false));
+
+                    await openMultipleDBs(databases.map(db => ({
+                        name: db.indexName,
+                        store: db.objectStore
+                    })));
+
+                    await Promise.all(
+                        databases.map(db =>
+                            getCachedFromDB(
+                                db.indexName,
+                                () => openDB(db.indexName, db.objectStore)
+                            )
+                        )
+                    );
+
+                    databases.forEach(db => initDB(db.indexName, db.objectStore, handleDownload, databases, true));
+                })();
+
                 const removeDataButton = document.getElementById('removeData');
                 if (removeDataButton)
                     removeDataButton.addEventListener('click', () => cleanSiteData(false));
@@ -1729,43 +1801,25 @@
                     serverListContainer.style.display = showServers.checked ? 'block' : 'none';
                 });
 
-                databases.forEach(db => initDB(db.indexName, db.objectStore, handleDownload, databases));
+                const isTouch = 'ontouchstart' in window;
 
-                const inputs = document.querySelector('.inputs');
-                if (inputs) {
-                    ['click', 'touchend'].forEach(evt =>
-                        inputs.addEventListener(evt, async function (event) {
-                            await handleFileContainerEvents(event, `inputDB-${pageName}`, 'inputs', inputs, databases);
-                        })
-                    );
-                }
+                const attachHandler = (container, dbName, storeName) => {
+                    if (!container) return;
+                    const eventName = isTouch ? 'touchend' : 'click';
+                    container.addEventListener(eventName, async event => {
+                        await handleFileContainerEvents(event, dbName, storeName, container, databases);
+                    });
+                };
 
-                const faces = document.querySelector('.faces');
-                if (faces) {
-                    ['click', 'touchend'].forEach(evt =>
-                        faces.addEventListener(evt, async function (event) {
-                            await handleFileContainerEvents(event, `faceDB-${pageName}`, 'faces', faces, databases);
-                        })
-                    );
-                }
-
-                const outputs = document.querySelector('.outputs');
-                if (outputs) {
-                    ['click', 'touchend'].forEach(evt =>
-                        outputs.addEventListener(evt, async function (event) {
-                            await handleFileContainerEvents(event, `outputDB-${pageName}`, 'outputs', outputs, databases);
-                        })
-                    );
-                }
+                attachHandler(document.querySelector('.inputs'), `inputDB-${pageName}`, 'inputs');
+                attachHandler(document.querySelector('.faces'), `faceDB-${pageName}`, 'faces');
+                attachHandler(document.querySelector('.outputs'), `outputDB-${pageName}`, 'outputs');
 
                 document.querySelectorAll('.question-mark').forEach(questionMark => {
                     questionMark.addEventListener('click', (event) => {
                         event.stopPropagation();
                     });
                 });
-
-                fileUploads.forEach(config => setupFileUpload({ ...config, changeHandler: handleUpload }));
-                createSectionAndElements();
 
                 const keepFPS = document.getElementById('keepFPS');
                 const keepFPSContainer = document.getElementById('keepFPSContainer');
@@ -1885,6 +1939,7 @@
                             openSignInContainer.click();
                         setClientStatus('Sign in required');
                         showNotification(`Error, no user id found, sign in please.`, 'Warning - No User ID', 'warning-important');
+                        handleProcessBtn.disabled = false;
                         return;
                     }
 
@@ -1900,18 +1955,12 @@
                     try {
                         showNotification(`Starting the process...`, 'Process - Information', 'information');
 
-                        function getCheckedCheckboxIdFromCombobox(comboboxId) {
-                            const container = document.getElementById(comboboxId);
-                            if (!container) return null;
-
-                            const checkedItem = container.querySelector('li.item.checked');
-                            if (!checkedItem) return null;
-
-                            const checkbox = checkedItem.querySelector('input[type="checkbox"]');
-                            return checkbox ? checkbox.id : null;
-                        }
-
-                        const modelSelection = getCheckedCheckboxIdFromCombobox('modelSelection');
+                        let modelSelection = getCheckedCheckboxIdFromCombobox('modelSelection');
+                        let isFaceNeeded = true;
+                        if (!modelSelection)
+                            modelSelection = 'model_128';
+                        if (modelSelection && !modelSelection.includes('model'))
+                            isFaceNeeded = false;
                         const dataContainer = document.createElement('div');
                         dataContainer.className = 'data-container';
 
@@ -1934,18 +1983,17 @@
                             userDoc = await getUserDoc();
                         }
 
-                        const activeVideoInput = document.querySelector(".inputs .data-container.active video");
-                        const activePhotoInput = document.querySelector(".inputs .data-container.active img");
-                        const activePhoto = document.querySelector(".faces .data-container.active img");
+                        const activeInput = document.querySelector(".inputs .data-container.active")?.querySelector('[original="true"]');
+                        const activePhoto = document.querySelector(".faces .data-container.active")?.querySelector('[original="true"]');
 
-                        if (!activeVideoInput && !activePhotoInput) {
+                        if (!activeInput) {
                             setClientStatus(`Click Your Uploaded Input Above`);
                             showNotification(`Click your uploaded input above to select it.`, 'Warning - No Input Selected', 'warning-important');
                             handleProcessBtn.disabled = false;
                             return;
                         }
 
-                        if (!activePhoto && modelSelection === null) {
+                        if (!activePhoto && isFaceNeeded === true) {
                             setClientStatus(`Click Your Uploaded Face Above`);
                             showNotification(`Click your uploaded face above to select it.`, 'Warning - No Face Selected', 'warning-important');
                             handleProcessBtn.disabled = false;
@@ -1956,10 +2004,18 @@
                         let calculatedFrameRate = null;
                         let actualFPS = 0;
 
-                        if (activeVideoInput) {
-                            actualFPS = activeVideoInput ? activeVideoInput?.getAttribute('data-fps') : null;
+                        if (activeInput.tagName.toLowerCase() === 'video') {
+                            if (!hasId) {
+                                setClientStatus(`Not Allowed`);
+                                showNotification(`Video processing not allowed without an account, try an image instead or create an account.`, 'Warning - No Frame Detected', 'warning-important');
+                                handleProcessBtn.disabled = false;
+                                return;
+                            }
+                            actualFPS = activeInput.tagName.toLowerCase() === 'video' ? activeInput?.getAttribute('data-fps') : null;
+                            if (!actualFPS)
+                                actualFPS = 30;
                             calculatedFrameRate = (!keepFPS.checked ? Math.min(actualFPS, document.getElementById("fps-slider").value) : actualFPS);
-                            videoDurationTotalFrames = Math.floor(activeVideoInput.duration * calculatedFrameRate);
+                            videoDurationTotalFrames = Math.floor(activeInput.duration * calculatedFrameRate);
                             if (videoDurationTotalFrames <= 0 && !hasSubscriptionPlan(userDoc)) {
                                 setClientStatus(`No Frame Detected`);
                                 showNotification(`Your video has incorrect metadata. Try using a online MP4 converter for you video or contact us.`, 'Warning - No Frame Detected', 'warning-important');
@@ -1972,7 +2028,6 @@
 
                                 let message = `Your video has ${videoDurationTotalFrames} frames, exceeding the limit of ${maximumAllowedFrames}. Make an account to be able to upload longer videos.`;
 
-                                console.log('hasId: ', hasId);
                                 if (hasId) {
                                     if (!keepFPS.checked) {
                                         message = `Your video has ${videoDurationTotalFrames} frames, exceeding the limit of ${maximumAllowedFrames}. If your video has less than 60 FPS, please specify by disabling the "Keep FPS" option. Lowering the settings will also increase the allowed frame limit.`;
@@ -1994,10 +2049,10 @@
 
                         let neededCredits = 0;
 
-                        if (activeVideoInput) {
-                            const resolutionMultiplier = Math.max(1, 1 + Math.floor((activeVideoInput.videoWidth + activeVideoInput.videoHeight - 2500) / 1000) * 0.5);
+                        if (activeInput.tagName.toLowerCase() === 'video') {
+                            const resolutionMultiplier = Math.max(1, 1 + Math.floor((activeInput.videoWidth + activeInput.videoHeight - 2500) / 1000) * 0.5);
                             neededCredits = Math.floor(Math.max(1, videoDurationTotalFrames / creditPerTotalFrames) * resolutionMultiplier * removeBannerStateMultiplier);
-                        } else if (activePhotoInput) {
+                        } else {
                             neededCredits = removeBannerStateMultiplier;
                         }
 
@@ -2018,11 +2073,23 @@
 
                         async function getServerAddresses() {
                             try {
-                                const snapshotPromise = getDocsSnapshot('servers');
+                                const snapshotPromise = () => getDocsSnapshot('servers');
                                 const keepSlowServers = true;
 
-                                return await fetchServerAddresses(snapshotPromise, keepSlowServers);
+                                let addresses = await fetchServerAddresses(snapshotPromise, keepSlowServers, null, true);
+                                if (!addresses || !Array.isArray(addresses) || addresses.length === 0) {
+                                    console.warn('[getServerAddresses] Cached version failed, retrying without cache...');
+                                    addresses = await fetchServerAddresses(snapshotPromise, keepSlowServers, null, false);
+                                }
+
+                                if (!addresses || !Array.isArray(addresses) || addresses.length === 0) {
+                                    showNotification(`No server addresses available.`, 'Warning', 'warning-important');
+                                    return null;
+                                }
+
+                                return addresses;
                             } catch (error) {
+                                console.error('[getServerAddresses] Failed to get server addresses:', error);
                                 showNotification(`Failed to get server addresses.`, 'Warning', 'warning');
                                 return null;
                             }
@@ -2030,35 +2097,63 @@
 
                         let userInternetProtocol, userUniqueBrowserId, serverAddresses;
 
-                        const timeoutDuration = 15000;
-                        let remainingTime = timeoutDuration / 1000;
+                        function withTimeoutAndCountdown(promise, ms, name, updateText) {
+                            let remaining = ms / 1000;
+                            const interval = setInterval(() => {
+                                updateText(remaining);
+                                remaining--;
 
-                        const countdownInterval = setInterval(() => {
-                            if (!cannotBeBanned(userDoc)) {
-                                setClientStatus(`Creating ID... ${remainingTime}`);
-                                remainingTime--;
-                            }
-                        }, 1000);
+                                if (remaining < 0) clearInterval(interval);
+                            }, 1000);
 
-                        const timeout = new Promise((_, reject) =>
-                            setTimeout(() => reject(new Error('Process took longer than 15 seconds.')), timeoutDuration)
-                        );
+                            return Promise.race([
+                                promise.finally(() => clearInterval(interval)),
+                                new Promise((_, reject) =>
+                                    setTimeout(() => {
+                                        clearInterval(interval);
+                                        reject(new Error(`${name} took longer than ${ms / 1000}s`));
+                                    }, ms)
+                                )
+                            ]);
+                        }
 
                         try {
                             if (!cannotBeBanned(userDoc)) {
-                                setClientStatus('Creating ID...');
+                                const serversPromise = withTimeoutAndCountdown(
+                                    getServerAddresses(),
+                                    5000,
+                                    "getServerAddresses",
+                                    (sec) => setClientStatus(`Fetching Servers... ${sec}`)
+                                );
 
-                                [userInternetProtocol, userUniqueBrowserId, serverAddresses] = await Promise.race([
-                                    Promise.all([
-                                        getUserInternetProtocol(),
-                                        ensureUniqueId(),
-                                        getServerAddresses()
-                                    ]),
-                                    timeout
+                                const ipPromise = withTimeoutAndCountdown(
+                                    getUserInternetProtocol(),
+                                    5000,
+                                    "getUserInternetProtocol",
+                                    (sec) => setClientStatus(`Creating ID... ${sec}`)
+                                );
+
+                                const uidPromise = withTimeoutAndCountdown(
+                                    ensureUniqueId(),
+                                    5000,
+                                    "ensureUniqueId",
+                                    (sec) => setClientStatus(`Getting UID... ${sec}`)
+                                );
+
+                                [userInternetProtocol, userUniqueBrowserId, serverAddresses] = await Promise.all([
+                                    ipPromise,
+                                    uidPromise,
+                                    serversPromise
                                 ]);
                             } else {
                                 setClientStatus('Fetching Servers...');
-                                serverAddresses = await getServerAddresses();
+
+                                serverAddresses = await withTimeoutAndCountdown(
+                                    getServerAddresses(),
+                                    5000,
+                                    "getServerAddresses",
+                                    (sec) => setClientStatus(`Fetching Servers... ${sec}`)
+                                );
                             }
                         } catch (error) {
                             setClientStatus('IDs Creation Failed');
@@ -2067,9 +2162,8 @@
                                 'Warning',
                                 'warning'
                             );
+                            handleProcessBtn.disabled = false;
                             return;
-                        } finally {
-                            clearInterval(countdownInterval);
                         }
 
                         if (!cannotBeBanned(userDoc)) {
@@ -2107,6 +2201,17 @@
                         const suffixOrder = ["s", "d", "f", "g", "h", "j", "k", "l"];
                         const serverId = serverID().toLowerCase();
 
+                        if (!serverAddresses || !Array.isArray(serverAddresses)) {
+                            setClientStatus("No server addresses found.");
+                            showNotification(
+                                "Could not retrieve server addresses. Please check your network connection or try again later.",
+                                "Warning - Process Failed",
+                                "warning-important"
+                            );
+                            handleProcessBtn.disabled = false;
+                            return;
+                        }
+
                         let parsedServers = serverAddresses.map(addr => {
                             const regex = new RegExp(`https:\/\/([^/]+)-(\\d+)-${serverId}\\.deepany\\.top`, "i");
                             const match = addr.match(regex);
@@ -2125,7 +2230,7 @@
                             return { addr, major, minor, index, suffix };
                         });
 
-                        if (modelSelection !== null) {
+                        if (isFaceNeeded === false) {
                             parsedServers = parsedServers.filter(p => !["h", "f", "d", "g"].includes(p.suffix));
                         }
 
@@ -2209,6 +2314,7 @@
                                 "Warning - Process Failed",
                                 "warning-important"
                             );
+                            handleProcessBtn.disabled = false;
                             return;
                         }
 
@@ -2241,71 +2347,159 @@
                         const serverAddress = pickRandomServerFromSameGroupWithLowestQueue(sortedServerAddresses[minQueueIndex]); // "https://4090-1-df.deepany.top";
                         setFetchableServerAdresses([serverAddress]);
                         setClientStatus(`Connecting`);
+                        showNotification(`Connecting to ${serverAddress}...`, 'Upload', 'information');
 
-                        const extension = activeVideoInput ? 'mp4' : 'png';
-                        const timestamp = activeVideoInput?.getAttribute('timestamp') || activePhotoInput?.getAttribute('timestamp');
-                        const id = activeVideoInput?.getAttribute('id') || activePhotoInput?.getAttribute('id');
+                        const extension = activeInput.tagName.toLowerCase() === 'video' ? 'mp4' : 'png';
+                        const timestamp = activeInput?.getAttribute('timestamp');
+                        const id = activeInput?.getAttribute('id');
 
                         if (!timestamp || !id) {
                             setClientStatus(`Timestamp or id is missing.`);
                             showNotification(`Timestamp or id is missing. Cannot create input file name. Please contact an administrator.`, 'Warning - Process Failed', 'warning-important');
+                            handleProcessBtn.disabled = false;
                             return;
                         }
 
+                        setClientStatus(`Connecting.`);
+                        showNotification(`File has correct data...`, 'Upload', 'information');
+
                         function sanitizeFilenamePart(str) {
+                            showNotification(`Sanitizing filename: ${str}...`, 'Upload', 'information');
                             return String(str).replace(/[^a-zA-Z0-9_-]/g, '');
                         }
 
                         const userName = sanitizeFilenamePart(userDoc?.username || userId);
-                        const fileType = activeVideoInput ? 'video/mp4' : 'image/png';
+                        const fileType = activeInput.tagName.toLowerCase() === 'video' ? 'video/mp4' : 'image/png';
                         const timestampStr = sanitizeFilenamePart(timestamp);
                         const idStr = sanitizeFilenamePart(id);
-                        const typeIndicator = activeVideoInput ? '0' : '1';
+                        const typeIndicator = activeInput.tagName.toLowerCase() === 'video' ? '0' : '1';
                         const specialFileID = `${userName}_${neededCredits}_${timestampStr}_${idStr}_${typeIndicator}`;
                         const inputFileName = `input_${specialFileID}.${extension}`;
-                        const activeInput = activePhotoInput ? activePhotoInput : activeVideoInput;
-                        const src = activeInput.querySelector('source')?.src ? activeInput.querySelector('source')?.src : activeInput?.src;
-                        const inputFile = await processDataToFile(src, inputFileName);
-                        const faceFile = modelSelection === null ? await processDataToFile(activePhoto.src, `face_${specialFileID}.png`) : new File([new Uint8Array(0)], `face_${specialFileID}.png`, { type: 'image/png' });
+                        const src = activeInput?.src;
                         const fileOutputId = `${Math.random().toString(36).substring(2, 15)}_${specialFileID}`;
 
-                        if (!inputFile || !faceFile) {
+                        showNotification(`Created ID: ${fileOutputId}...`, 'Upload', 'information');
+
+                        let inputFile;
+                        let faceFile;
+
+                        try {
+                            showNotification(`Processing data to file (input)...`, 'Upload', 'information');
+                            inputFile = await processDataToFile(src, inputFileName);
+                            showNotification(`Processed data to file (input)...`, 'Upload', 'information');
+                        } catch (err) {
+                            setClientStatus(`Failed Input Data To File`);
+                            showNotification(`Failed input data to file, ${error.message}`, 'Warning - Process Failed', 'warning-important');
                             handleProcessBtn.disabled = false;
-                            setClientStatus(`Blob to file failed`);
-                            showNotification(`Failed to create files.`, 'Warning - Process Failed', 'warning-important');
                             return;
                         }
 
-                        const MAX_FILE_SIZE_MB = hasId ? 2048 : 8;
+                        try {
+                            showNotification(`Processing data to file (face)...`, 'Upload', 'information');
+                            faceFile = isFaceNeeded === true ? await processDataToFile(activePhoto.src, `face_${specialFileID}.png`) : new File([new Uint8Array(0)], `face_${specialFileID}.png`, { type: 'image/png' });
+                            showNotification(`Processed data to file (face)...`, 'Upload', 'information');
+                        } catch (err) {
+                            setClientStatus(`Failed Face Data To File`);
+                            showNotification(`Failed face data to file, ${error.message}`, 'Warning - Process Failed', 'warning-important');
+                            handleProcessBtn.disabled = false;
+                            return;
+                        }
+
+                        if (!inputFile || !faceFile) {
+                            setClientStatus(`Blob to file failed`);
+                            showNotification(`Failed to create files.`, 'Warning - Process Failed', 'warning-important');
+                            handleProcessBtn.disabled = false;
+                            return;
+                        }
+
+                        if (!inputFile) {
+                            handleProcessBtn.disabled = false;
+                            setClientStatus(`Blob to file failed. Retrying...`);
+                            showNotification(`Failed to create files. Trying again automatically...`, 'Warning - Process Failed', 'warning-important');
+
+                            if (!window._blobRetryDoneInput) {
+                                window._blobRetryDoneInput = true;
+                                const activeContainer = document.querySelector(".inputs .data-container.active");
+                                if (activeContainer) {
+                                    activeContainer.click();
+
+                                    setTimeout(() => {
+                                        activeContainer.click();
+                                    }, 25);
+
+                                    setTimeout(() => {
+                                        const handleProcessBtn = document.getElementById('handleProcessBtn');
+                                        handleProcessBtn.click();
+                                    }, 1);
+                                }
+                            } else {
+                                location.reload(true);
+                            }
+                            return;
+                        }
+
+                        if (!faceFile) {
+                            handleProcessBtn.disabled = false;
+                            setClientStatus(`Blob to file failed. Retrying...`);
+                            showNotification(`Failed to create files. Trying again automatically...`, 'Warning - Process Failed', 'warning-important');
+
+                            if (!window._blobRetryDoneFace) {
+                                window._blobRetryDoneFace = true;
+                                const activeContainer = document.querySelector(".faces .data-container.active");
+                                if (activeContainer) {
+                                    activeContainer.click();
+
+                                    setTimeout(() => {
+                                        activeContainer.click();
+                                    }, 25);
+
+                                    setTimeout(() => {
+                                        const handleProcessBtn = document.getElementById('handleProcessBtn');
+                                        handleProcessBtn.click();
+                                    }, 1);
+                                }
+                            } else {
+                                location.reload(true);
+                            }
+                            return;
+                        }
+
+                        setClientStatus(`Connecting..`);
+                        showNotification(`Managed to create file uploads...`, 'Upload', 'information');
+
+                        const MAX_FILE_SIZE_MB = hasId ? 2048 : 5;
                         const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
                         if ((faceFile.size + inputFile.size) > MAX_FILE_SIZE_BYTES) {
-                            setClientStatus(`Size exceeds ${MAX_FILE_SIZE_MB}MB limit`);
-                            handleProcessBtn.disabled = false;
                             if (hasId) {
+                                setClientStatus(`Size exceeds ${MAX_FILE_SIZE_MB}MB limit`);
                                 showNotification(`Size exceeds ${MAX_FILE_SIZE_MB}MB limit`, 'Process - Information', 'warning-important');
                             }
                             else {
-                                showNotification(`Size exceeds ${MAX_FILE_SIZE_MB}MB limit, Login for 2GB limit`, 'Process - Information', 'warning-important');
+                                setClientStatus(`Exceeds ${MAX_FILE_SIZE_MB}MB limit, Login for 2GB limit`);
+                                showNotification(`Exceeds ${MAX_FILE_SIZE_MB}MB limit, Login for 2GB limit`, 'Process - Information', 'warning-important');
                             }
+                            handleProcessBtn.disabled = false;
                             return;
                         }
+
+                        showNotification(`File size is correct...`, 'Upload', 'information');
 
                         let width = 0;
                         let height = 0;
 
-                        if (activeVideoInput) {
-                            activeVideoInput.addEventListener('loadedmetadata', function () {
-                                width = activeVideoInput.videoWidth;
-                                height = activeVideoInput.videoHeight;
+                        if (activeInput.tagName.toLowerCase() === 'video') {
+                            activeInput.addEventListener('loadedmetadata', function () {
+                                width = activeInput.videoWidth;
+                                height = activeInput.videoHeight;
                             });
 
-                            if (activeVideoInput.readyState >= 1) {
-                                width = activeVideoInput.videoWidth;
-                                height = activeVideoInput.videoHeight;
+                            if (activeInput.readyState >= 1) {
+                                width = activeInput.videoWidth;
+                                height = activeInput.videoHeight;
                             }
-                        } else if (activePhotoInput) {
-                            const img = activePhotoInput;
+                        } else if (activeInput) {
+                            const img = activeInput;
 
                             img.onload = function () {
                                 width = img.naturalWidth;
@@ -2343,6 +2537,9 @@
                             return Math.round((25 * pixelCount) / lowPixelCount);
                         };
 
+                        showNotification(`File loaded correctly...`, 'Upload', 'information');
+                        setClientStatus(`Connecting...`);
+
                         let enableEnhancer = false;
                         let enabledEnhancer = '';
                         let enhancerBlendValue = calculateEnhancerBlendValue();
@@ -2367,6 +2564,7 @@
                             return element && element.checked ? id : null;
                         });
 
+                        showNotification(`Extra verification process for file...`, 'Upload', 'information');
                         setClientStatus("File verification...");
 
                         async function checkFileExist(serverAddress, inputFile, maxRetries = 3, delay = 1000) {
@@ -2444,6 +2642,7 @@
                                 } catch (error) {
                                     console.error(`Error uploading chunk ${chunkNumber}:`, error);
                                     showNotification(`Error uploading chunk ${chunkNumber}`, 'Upload Error', 'error');
+                                    handleProcessBtn.disabled = false;
                                     return;
                                 }
                             }
@@ -2451,7 +2650,10 @@
 
                         let fileResult = await checkFileExist(serverAddress, inputFile);
                         if (fileResult?.isCorrupt) {
+                            showNotification(`File check completed, starting file upload...`, 'Upload', 'information');
                             await uploadFileInChunks(true);
+                            showNotification(`Upload finished, sending configuration...`, 'Upload', 'information');
+
                             fileResult = await checkFileExist(serverAddress, inputFile);
 
                             if (fileResult?.isCorrupt) {
@@ -2461,7 +2663,9 @@
                                 showNotification("File not found: Resuming... If process fails refresh the page and try re-uploading.", 'Upload Not Found', 'warning');
                             }
                         } else if (!fileResult?.exists) {
+                            showNotification(`File check completed, starting file upload...`, 'Upload', 'information');
                             await uploadFileInChunks(false);
+                            showNotification(`Upload finished, sending configuration...`, 'Upload', 'information');
 
                             fileResult = await checkFileExist(serverAddress, inputFile);
                             if (!fileResult?.exists || fileResult?.isCorrupt) {
@@ -2475,17 +2679,37 @@
                                     showNotification("File not found: Resuming... If process fails refresh the page and try re-uploading.", 'Upload Not Found', 'warning');
                                 }
                             }
+                        } else {
+                            showNotification(`Skipping uploading process as file exists in the server...`, 'Upload', 'information');
                         }
 
                         const referencePosition = localStorage.getItem(`${timestamp}_${id}_position`) || null;
                         const referenceRace = localStorage.getItem(`${timestamp}_${id}_race`) || null;
                         const referenceGender = localStorage.getItem(`${timestamp}_${id}_gender`) || null;
                         const trackFace = localStorage.getItem(`${timestamp}_${id}_track`) || null;
-                        const referenceFrame = activeVideoInput ? (localStorage.getItem(`${timestamp}_${id}_frame`) || null) : null;
-                        const calculatedFrame = activeVideoInput ? (Math.floor(referenceFrame * calculatedFrameRate) || 0) : null;
+                        const referenceFrame = activeInput.tagName.toLowerCase() === 'video' ? (localStorage.getItem(`${timestamp}_${id}_frame`) || null) : null;
+                        const calculatedFrame = activeInput.tagName.toLowerCase() === 'video' ? (Math.floor(referenceFrame * calculatedFrameRate) || 0) : null;
 
-                        const processToken = localStorage.getItem('processToken') || crypto.randomUUID();
-                        localStorage.setItem('processToken', processToken);
+                        const userToken = localStorage.getItem('userToken');
+                        if (userToken === 'null') {
+                            showNotification(
+                                `Authentication token expired, please login again to confirm ownership of the account.`,
+                                'Authentication',
+                                'information'
+                            );
+
+                            await handleLoggedOutState(null, getFirebaseModules);
+
+                            const openSignInContainer = document.getElementById('openSignInContainer');
+                            if (openSignInContainer) {
+                                openSignInContainer.style.display = 'block';
+                                openSignInContainer.click();
+                            }
+
+                            localStorage.setItem('userToken', null);
+                            handleProcessBtn.disabled = true;
+                            return;
+                        }
 
                         const removeBannerChecked = hasId && removeBanner.checked;
 
@@ -2493,8 +2717,8 @@
                         formData.append('face', faceFile);
                         formData.append('inputFileName', inputFile.name);
                         formData.append('userId', userId);
-                        formData.append('hasId', hasId ? true : false);
-                        formData.append('processToken', processToken);
+                        formData.append('processToken', userToken);
+                        formData.append('og', localStorage.getItem('og') || false);
                         formData.append('modelSelection', modelSelection);
                         formData.append('userInternetProtocolAddress', userInternetProtocol?.userInternetProtocolAddress);
                         formData.append('userUniqueInternetProtocolId', userInternetProtocol?.userUniqueInternetProtocolId);
@@ -2510,9 +2734,9 @@
                         formData.append('enableEnhancer', enableEnhancer);
                         formData.append('enabledEnhancer', enabledEnhancer);
                         formData.append('enhancerBlendValue', parseInt(document.getElementById('enhancerBlendValue').value) < 25 ? parseInt(enhancerBlendValue) : parseInt(document.getElementById('enhancerBlendValue').value));
-                        formData.append('enabledPixelBoost', enabledPixelBoost);
+                        formData.append('enabledPixelBoost', '256x256'); // enabledPixelBoost
                         formData.append('removeBanner', removeBannerChecked);
-                        formData.append('emailOutput', emailOutput);
+                        formData.append('emailOutput', false);//emailOutput);
                         formData.append('skipFaceSwap', false);
                         formData.append('keepFPS', document.getElementById("keepFPS").checked);
                         formData.append('fpsValue', document.getElementById("fps-slider").value);
@@ -2525,12 +2749,12 @@
                         formData.append('nose', document.getElementById("nose").checked);
                         formData.append('mouth', document.getElementById("mouth").checked);
                         formData.append('lip', document.getElementById("lip").checked);
-                        formData.append('frontalRotation', document.getElementById("frontalRotation").checked);
-                        formData.append('rightRotation', document.getElementById("rightRotation").checked);
-                        formData.append('invertedRotation', document.getElementById("invertedRotation").checked);
-                        formData.append('leftRotation', document.getElementById("leftRotation").checked);
+                        formData.append('frontalRotation', true);//document.getElementById("frontalRotation").checked);
+                        formData.append('rightRotation', false);//document.getElementById("rightRotation").checked);
+                        formData.append('invertedRotation', false);//document.getElementById("invertedRotation").checked);
+                        formData.append('leftRotation', false);//document.getElementById("leftRotation").checked);
                         formData.append('faceAnalyserAge', 'none');
-                        formData.append('faceAnalyserGender', faceAnalyserGender);
+                        formData.append('faceAnalyserGender', 'none');
                         formData.append('faceAnalyserOrder', 'none');
                         formData.append('enableEnhancedLandmarks', document.getElementById("enableEnhancedLandmarks").checked);
                         formData.append('enableEnhancedAnalyzer', document.getElementById("enableEnhancedAnalyzer").checked);
@@ -2569,7 +2793,7 @@
                             await saveCountIndex(databases);
 
                             const data = await getFromDB(db);
-                            const entry = data.find(item => item.url === url);
+                            const entry = data.find(item => item.url && item.url.toLowerCase() === url.toLowerCase());
                             firstChild.innerHTML = `<initial url="${entry.url}" id="${entry.id}" timestamp="${entry.timestamp}" processing></initial><div class="process-text">Indexing</div><div class="delete-icon"></div>`;
                         }
 
@@ -2580,6 +2804,7 @@
                         return result;
                     } catch (error) {
                         if (error.message === 'Max Usage Reached') {
+                            showNotification(`You reached your daily limit. You can sign up for more.`, 'Upload', 'information');
                             const openSignInContainer = document.getElementById('openSignInContainer');
                             if (openSignInContainer)
                                 openSignInContainer.click();
@@ -2609,7 +2834,7 @@
                             return;
                         }
 
-                        const activeInput = activeDataContainer.querySelector('img, video');
+                        const activeInput = activeDataContainer?.querySelector('[original="true"]');
                         if (!activeInput) {
                             showNotification(`No active input element found.`, 'Warning - Download', 'warning');
                             return;
@@ -2761,7 +2986,7 @@
 
                     viewOutput.addEventListener('click', async () => {
                         const activeDataContainer = document.querySelector(".outputs .data-container.active");
-                        const activeInput = activeDataContainer.querySelector('img, video');
+                        const activeInput = activeDataContainer?.querySelector('[original="true"]');
 
                         if (activeInput) {
                             if (viewOutput.textContent === 'Fetch') {
@@ -2980,23 +3205,12 @@
                 }
 
                 const modelSelection = document.getElementById('modelSelection');
-                if (!modelSelection || !fourthBaseContainer) return;
 
-                const checkedItem = modelSelection.querySelector('li.item.checked');
-                if (checkedItem) {
-                    document.body.classList.add('upload-hidden');
-                    fourthBaseContainer.style.display = 'flex';
-                    fourthBaseContainer.style.flexDirection = 'column';
-                    faceSection.style.display = 'none';
-                    showNotification(`The pre-trained model is active. Please do not select a model from the top of the page if you want to upload your own face images.`, "Model - Information", "information");
-                } else {
-                    fourthBaseContainer.style.display = 'grid';
-                    fourthBaseContainer.style.flexDirection = '';
-                    faceSection.style.display = 'grid';
-                }
-
-                modelSelection.addEventListener('change', function () {
-                    const checkedItem = modelSelection.querySelector('li.item.checked');
+                if (modelSelection && fourthBaseContainer) {
+                    let checkedItem = modelSelection.querySelector('li.item.checked');
+                    let modelSelectionId = getCheckedCheckboxIdFromCombobox('modelSelection');
+                    if (checkedItem && modelSelectionId && modelSelectionId.includes('model'))
+                        checkedItem = null;
                     if (checkedItem) {
                         document.body.classList.add('upload-hidden');
                         fourthBaseContainer.style.display = 'flex';
@@ -3008,7 +3222,25 @@
                         fourthBaseContainer.style.flexDirection = '';
                         faceSection.style.display = 'grid';
                     }
-                });
+
+                    modelSelection.addEventListener('change', function () {
+                        let checkedItem = modelSelection.querySelector('li.item.checked');
+                        let modelSelectionId = getCheckedCheckboxIdFromCombobox('modelSelection');
+                        if (checkedItem && modelSelectionId && modelSelectionId.includes('model'))
+                            checkedItem = null;
+                        if (checkedItem) {
+                            document.body.classList.add('upload-hidden');
+                            fourthBaseContainer.style.display = 'flex';
+                            fourthBaseContainer.style.flexDirection = 'column';
+                            faceSection.style.display = 'none';
+                            showNotification(`The pre-trained model is active. Please do not select a model from the top of the page if you want to upload your own face images.`, "Model - Information", "information");
+                        } else {
+                            fourthBaseContainer.style.display = 'grid';
+                            fourthBaseContainer.style.flexDirection = '';
+                            faceSection.style.display = 'grid';
+                        }
+                    });
+                }
             }
 
             let previousScreenMode = null;
@@ -3021,8 +3253,9 @@
                 if (!shouldUpdate)
                     return;
 
-                loadPageState();
+                loadPageState(true);
                 loadPage();
+                loadPageState(false);
             }
 
             sizeBasedElements();

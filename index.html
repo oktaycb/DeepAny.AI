@@ -78,15 +78,15 @@
             localStorage.setItem('preloadDone', 'true');
         })();
     </script>
-    <link rel="stylesheet" href="css/styles.css?v=5.4.7">
+    <link rel="stylesheet" href="css/styles.css?v=8.7.6.5">
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-    <link rel="shortcut icon" href="/favicon.ico?v=5.4.7" />
+    <link rel="shortcut icon" href="/favicon.ico?v=8.7.6.5" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <script>
         (() => {
             if (!localStorage.getItem('version')) {
-                localStorage.setItem('version', '5.4.7');
+                localStorage.setItem('version', '8.7.6.5');
                 return;
             }
 
@@ -139,7 +139,7 @@
             };
 
             checkVersion(); //.then(() => history.replaceState(null, '', location.pathname + location.search.replace(/([?&])v=[^&]*(&|$)/, (m, sep, end) => sep === '?' && end ? '?' : sep === '&' && end ? '' : '')));
-            setInterval(checkVersion, 1 * 60 * 1000);
+            setInterval(checkVersion, 3 * 60 * 1000);
         })();
     </script>
     <style>
@@ -567,7 +567,7 @@
                     "name": "What services does Deepany offer?",
                     "acceptedAnswer": {
                         "@type": "Answer",
-                        "text": "Deepany offers AI-powered tools for face swapping, inpainting images, generating arts, and more."
+                        "text": "Deepany offers AI-powered tools for face swapping, inpainting images & videos, generating arts, and more."
                     }
                 },
                 {
@@ -656,7 +656,7 @@
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '5.4.7';
+        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '8.7.6.5';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -691,7 +691,7 @@
                                                                                                 <li><strong>Security & Support:</strong><span>&nbsp;</span><span>Your data is protected, with 24/7 support available.</span></li>
                                                                                                 <li><strong>High Ratings:</strong><span>&nbsp;</span><span>Trusted by users with high rating on<span>&nbsp;</span><a class="trusted-link" href="https://www.trustpilot.com/review/deepany.ai" target="_blank" rel="noopener noreferrer" translate="no">Trustpilot</a>.</li>
                                                                                                 <li><strong>Cost-Effective:</strong><span>&nbsp;</span><span>Only 1 credit per image & 120 frames.</li>
-                                                                                                <li><strong>Fast Processing:</strong><span>&nbsp;</span><span>RTX 4090 GPUs in our servers for optimal performance.</span></li>
+                                                                                                <li><strong>Fast Processing:</strong><span>&nbsp;</span><span>RTX PRO 6000 GPUs in our servers for optimal performance.</span></li>
                                                                                                 <li><strong>Pricing:</strong><span>&nbsp;</span><span>Dynamic plans tailored to every budget.</span></li>
                                                                                             </ul>
                                                                                             <p class="subtext" style="padding-bottom: 0.5vh;">Unlock the potential of AI for your projects with our reliable and affordable services.</p>
@@ -746,7 +746,7 @@
                                                                                                 <li><strong>Security & Support:</strong><span>&nbsp;</span><span>Your data is protected, with 24/7 support available.</span></li>
                                                                                                 <li><strong>High Ratings:</strong><span>&nbsp;</span><span>Trusted by users with high rating on</span><span>&nbsp;</span><a class="trusted-link" href="https://www.trustpilot.com/review/deepany.ai" target="_blank" rel="noopener noreferrer">Trustpilot</a>.</li>
                                                                                                 <li><strong>Cost-Effective:</strong><span>&nbsp;</span><span>1 credit for 2 seconds of face swap or image processes.</span></span></li>
-                                                                                                <li><strong>Fast Processing:</strong><span>&nbsp;</span><span>RTX 4090 GPUs in our servers for optimal performance.</span></li>
+                                                                                                <li><strong>Fast Processing:</strong><span>&nbsp;</span><span>RTX PRO 6000 GPUs in our servers for optimal performance.</span></li>
                                                                                                 <li><strong>Pricing:</strong><span>&nbsp;</span>Dynamic plans tailored to every budget.</span></li>
                                                                                             </ul>
                                                                                             <p class="subtext" style="padding-bottom: 0.5vh;">Unlock the potential of AI for your projects with our reliable and affordable services.</p>
@@ -787,7 +787,7 @@
                                                                                                 <div class="card-content card-content-small">
                                                                                                     <div>
                                                                                                         <div class="card-title">Inpaint Anything</div>
-                                                                                                        <div class="card-description">Remove, add or change elements in your images.</div>
+                                                                                                        <div class="card-description">Remove, add or change elements in your images & videos.</div>
                                                                                                     </div>
                                                                                                     <div class="card-link">Try Inpaint</div>
                                                                                                 </div>

@@ -1,61 +1,6 @@
-﻿// Call: window.isMobileDevice()             -> true for phones (and tablets by default)
-//       window.isMobileDevice({ tablets: false }) -> true only for phones (not tablets)
-window.isMobileDevice = function ({ tablets = true } = {}) {
-    // 1) Prefer UA Client Hints (most reliable when available)
-    try {
-        const uaData = navigator.userAgentData;
-        if (uaData && typeof uaData === 'object' && 'mobile' in uaData) {
-            // uaData.mobile is a boolean indicating mobile vs desktop
-            return Boolean(uaData.mobile) && (tablets || !isTabletByHints());
-        }
-    } catch (e) {
-        // ignore and fall back
-    }
-
-    const ua = navigator.userAgent || '';
-    const platform = navigator.platform || '';
-    const hasTouch = (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) || ('ontouchstart' in window);
-
-    // 2) Detect iPadOS (iPadOS 13+ reports MacIntel but has touch)
-    const isIPadOS = (platform === 'MacIntel' && hasTouch);
-
-    // 3) Common regexes
-    const phoneRegex = /Mobi|Android.*Mobile|iPhone|IEMobile|Windows Phone|BlackBerry|Opera Mini/i;
-    const tabletRegex = /Tablet|iPad|PlayBook|Silk|Android(?!.*Mobile)/i;
-
-    // 4) Quick checks
-    if (phoneRegex.test(ua)) return true;
-    if (isIPadOS) return Boolean(tablets);
-
-    if (tabletRegex.test(ua)) return Boolean(tablets);
-
-    // 5) Fallback heuristics: touch + reasonably small screen = mobile
-    const maxDim = Math.max(screen.width || 0, screen.height || 0);
-    if (hasTouch && maxDim <= 1366) {
-        // treat typical tablet/phone sizes as mobile; tweak threshold if needed
-        return Boolean(tablets);
-    }
-
-    // 6) Otherwise treat as desktop
-    return false;
-
-    // Helper for UA Client Hints tablet detection (best-effort)
-    function isTabletByHints() {
-        try {
-            // UA Client Hints may list brands/models in some browsers; this is a non-blocking heuristic.
-            const brands = navigator.userAgentData?.brands || navigator.userAgentData?.mobile || null;
-            // we don't have a portable direct tablet flag here, so return false (caller uses `tablets` param to decide)
-            return false;
-        } catch {
-            return false;
-        }
-    }
-};
-
-const FORCE_BASE64_KEY = 'mediaFileForceBase64';
-const BLOB_FAIL_KEY = 'mediaFileBlobFailCount';
-const stopCountingKey = 'mediaFileBlobFailStop';
-
+﻿window.isMobileDevice = function () {
+    return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
 window.isLowEndDevice = function () {
     const lowCpu = navigator.hardwareConcurrency ? navigator.hardwareConcurrency <= 4 : false;
     const lowMemory = navigator.deviceMemory ? navigator.deviceMemory <= 4 : false;
@@ -283,7 +228,7 @@ export function showSidebar(sidebar, hamburgerMenu, setUser = null, setAuthentic
             return;
         createUserData(sidebar, screenMode, setAuthentication, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
         createSideBarData(sidebar);
-        ['exploreButton', 'profileButton', 'premiumButton', 'faceSwapButton', 'inpaintButton', 'artGeneratorButton', 'videoGeneratorButton', 'videoExtenderButton', 'userLayout', 'faqLink', 'policiesLink', 'guidelinesLink', 'contactUsLink'].forEach(id => {
+        ['exploreButton', 'profileButton', 'premiumButton', 'faceSwapButton', 'inpaintButton', 'artGeneratorButton', 'videoGeneratorButton', 'userLayout', 'faqLink', 'policiesLink', 'guidelinesLink', 'contactUsLink'].forEach(id => {
             const element = document.getElementById(id);
             if (element) {
                 element.addEventListener('click', () => localStorage.setItem('sidebarState', 'removeSidebar'))
@@ -580,6 +525,7 @@ export async function fetchWithRandom(url, options = {}) {
     const urlWithParam = `${url}${separator}random=${randomParam}`;
 
     try {
+        //console.log("fetching: " + urlWithParam)
         const response = await fetch(urlWithParam, options);
         return response;
     } catch (error) {
@@ -1129,7 +1075,7 @@ export function serverID() {
     if (pageName.includes('face-swap')) return 'DF';
     if (pageName.includes('inpaint')) return 'DN';
     if (pageName.includes('art-generator')) return 'DA';
-    if (pageName.includes('video-generator') || pageName.includes('video-extender')) return 'DV';
+    if (pageName.includes('video-generator')) return 'DV';
     return null;
 }
 
@@ -1140,7 +1086,6 @@ export function documentID() {
 
     return 'serverAdress-' + serverId;
 }
-let fetchAllServerAddressesInFlight = null;
 
 export async function fetchAllServerAddresses(snapshotPromise, useCache = true) {
     const ttl = 7 * 24 * 60 * 60 * 1000;
@@ -1161,40 +1106,28 @@ export async function fetchAllServerAddresses(snapshotPromise, useCache = true) 
         return cachedAddresses;
     }
 
-    // ✅ Already fetching → await same promise
-    if (fetchAllServerAddressesInFlight) {
-        console.log('[fetchAllServerAddresses] awaiting in-flight request');
-        return fetchAllServerAddressesInFlight;
-    }
-
     console.log('[fetchAllServerAddresses] cache miss → fetching snapshot');
+    const snapshot = await snapshotPromise();
 
-    fetchAllServerAddressesInFlight = (async () => {
-        const snapshot = await snapshotPromise();
-
-        const serverAddresses = [];
-        snapshot.docs.forEach(doc => {
-            const data = doc.data();
-            for (const key in data) {
-                if (data.hasOwnProperty(key)) {
-                    const value = data[key];
-                    if (typeof value === 'string' && value.includes('://')) {
-                        serverAddresses.push(value);
-                    }
+    // Extract all server fields from each doc
+    const serverAddresses = [];
+    snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        for (const key in data) {
+            if (data.hasOwnProperty(key)) {
+                const value = data[key];
+                // Optional: filter by string containing your domain or /download-output/
+                if (typeof value === 'string' && value.includes('://')) {
+                    serverAddresses.push(value);
                 }
             }
-        });
+        }
+    });
 
-        console.log('[fetchAllServerAddresses] fetched addresses (all servers):', serverAddresses);
-        setCache(cacheKey, serverAddresses, ttl);
-        return serverAddresses;
-    })();
+    console.log('[fetchAllServerAddresses] fetched addresses (all servers):', serverAddresses);
 
-    try {
-        return await fetchAllServerAddressesInFlight;
-    } finally {
-        fetchAllServerAddressesInFlight = null;
-    }
+    setCache(cacheKey, serverAddresses, ttl);
+    return serverAddresses;
 }
 
 export async function fetchServerAddresses(snapshotPromise, filter = true, serverType = null, useCache = true, pageNameCustom = null) {
@@ -1735,9 +1668,6 @@ export function showNotification(message, featureChange, type) {
     }, 250);
 }
 
-let persistentRequested = false;
-let persistentAllowed = false;
-
 const dbCache = Object.create(null);
 const dbOpenPromises = Object.create(null);
 
@@ -1763,12 +1693,12 @@ export const openMultipleDBs = async (configs) => {
 
         dbOpenPromises[name] = openDB(name, store)
             .then(db => {
-                dbCache[name] = db;
-                delete dbOpenPromises[name];
+                dbCache[name] = db;         
+                delete dbOpenPromises[name]; 
                 return db;
             })
             .catch(err => {
-                delete dbOpenPromises[name];
+                delete dbOpenPromises[name]; 
                 throw err;
             });
 
@@ -1822,65 +1752,11 @@ export const closeDB = (databaseName) => {
     }
 };
 
-/*let deferredPrompt = null;
-
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-});*/
-
-const requestPersistentStorage = async () => {
-    if (!navigator.storage?.persist) return false;
-
-    persistentAllowed = await navigator.storage.persisted();
-    if (persistentAllowed) return true;
-
-    persistentAllowed = await navigator.storage.persist();
-    console.log(`Persistent storage granted: ${persistentAllowed}`);
-
-    //if (!persistentAllowed && deferredPrompt) {
-        //showPwaInstallPrompt();
-    //}
-
-    return persistentAllowed;
-};
-
-/*const showPwaInstallPrompt = async () => {
-    if (!deferredPrompt) return;
-
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    deferredPrompt = null;
-};*/
-
-const checkStorageQuota = async () => {
-    if (navigator.storage && navigator.storage.estimate) {
-        const estimate = await navigator.storage.estimate();
-        const percentUsed = (estimate.usage / estimate.quota) * 100;
-        const mbUsed = (estimate.usage / (1024 * 1024)).toFixed(2);
-        const mbQuota = (estimate.quota / (1024 * 1024)).toFixed(2);
-
-        console.log(`Storage: ${percentUsed.toFixed(2)}% used (${mbUsed}MB / ${mbQuota}MB)`);
-
-        if (percentUsed > 95) {
-            alert(`Storage critically low: ${percentUsed.toFixed(1)}% used (${mbUsed}MB / ${mbQuota}MB). Please delete old media.`);
-            return false;
-        } else if (percentUsed > 75) {
-            alert(`Storage warning: ${percentUsed.toFixed(1)}% used (${mbUsed}MB / ${mbQuota}MB). Consider deleting old media soon.`);
-        }
-    }
-    return true;
-};
-
 export const openDB = (databaseName, objectStoreName, useCache = false) => {
-    if (dbCache[databaseName] && useCache)
+    if (dbCache[databaseName] && useCache) 
         return Promise.resolve(dbCache[databaseName]);
 
-    return new Promise(async (resolve, reject) => {
-        if (!persistentRequested) {
-            persistentRequested = true;
-             await requestPersistentStorage();
-        }
+    return new Promise((resolve, reject) => {
         if (!window.indexedDB) return reject("IndexedDB is not supported.");
 
         const openRequest = indexedDB.open(databaseName, 1);
@@ -1932,7 +1808,7 @@ export const openDB = (databaseName, objectStoreName, useCache = false) => {
             }
             // Quota exceeded
             else if (error?.name === "QuotaExceededError") {
-                reject("Storage quota exceeded. Clear space and try again. | IMPORTANT: Make sure your browser is up to date!");
+                reject("Storage quota exceeded. Clear space and try again.");
             }
             // Security restrictions
             else if (error?.name === "SecurityError") {
@@ -1946,13 +1822,20 @@ export const openDB = (databaseName, objectStoreName, useCache = false) => {
     });
 };
 
-export const countInDB = (db) => {
-    return new Promise(async (resolve, reject) => {
-        // Request persistence once
-        if (!persistentRequested) {
-            persistentRequested = true;
-            await requestPersistentStorage();
+function blobToDataURL(blob) {
+    return new Promise((resolve, reject) => {
+        try {
+            const fr = new FileReader();
+            fr.onload = () => resolve(fr.result);
+            fr.onerror = err => reject(err);
+            fr.readAsDataURL(blob);
+        } catch (err) {
+            reject(err);
         }
+    });
+}
+export const countInDB = (db) => {
+    return new Promise((resolve, reject) => {
         const transaction = db.transaction([db.objectStoreNames[0]], 'readonly');
         const objectStore = transaction.objectStore(db.objectStoreNames[0]);
         const request = objectStore.count();
@@ -1964,21 +1847,8 @@ export const countInDB = (db) => {
         }
     })
 };
-
 export const addToDB = (db, data, active = false) => {
-    return new Promise(async (resolve, reject) => {
-        // Request persistence once
-        if (!persistentRequested) {
-            persistentRequested = true;
-            await requestPersistentStorage();
-        }
-
-        // Check quota before writing
-        const hasSpace = await checkStorageQuota();
-        if (!hasSpace) {
-            return reject(new Error('Storage quota exceeded'));
-        }
-
+    return new Promise((resolve, reject) => {
         const storeName = db.objectStoreNames[0];
         const tx = db.transaction([storeName], 'readwrite');
         const store = tx.objectStore(storeName);
@@ -2041,73 +1911,43 @@ export const addToDB = (db, data, active = false) => {
         req.onsuccess = () => resolve({ id: req.result, timestamp });
         req.onerror = e => {
             const err = e.target.error;
-            let errorMsg = 'Error adding to DB: ';
-
-            if (err.name === 'QuotaExceededError') {
-                errorMsg += 'Storage quota exceeded. Please delete old media. | IMPORTANT: Make sure your browser is up to date!';
-            } else if (err.name === 'UnknownError') {
-                errorMsg += 'Storage unavailable (possibly private browsing or quota issue) | IMPORTANT: Make sure your browser is up to date!';
-            } else if (String(err).includes('Blob')) {
-                errorMsg += err + ' | (possible private/incognito limitation) | IMPORTANT: Make sure your browser is up to date!';
-            } else {
-                errorMsg += err;
-            }
-
-            alert(errorMsg);
+            alert(
+                'Error adding to DB: ' +
+                err +
+                (String(err).includes('Blob')
+                    ? ' | (possible private/incognito limitation)'
+                    : '')
+            );
             reject(err?.message || 'Unknown IDB error');
         };
     });
 };
-
-export const getFromDB = (db, limit = null, offset = 0, includeBase64 = true) => {
-    return new Promise(async (resolve, reject) => {
+export const getFromDB = (db, limit = null, offset = 0) => {
+    return new Promise((resolve, reject) => {
         try {
-            if (!persistentRequested) {
-                persistentRequested = true;
-                await requestPersistentStorage();
-            }
-
-            const tx = db.transaction([db.objectStoreNames[0]], 'readonly');
-            const store = tx.objectStore(db.objectStoreNames[0]);
-
-            const results = [];
-            let skipped = 0;
-
-            const request = store.openCursor(null, 'prev'); // newest first
+            const store = db.transaction([db.objectStoreNames[0]], 'readonly')
+                .objectStore(db.objectStoreNames[0]);
+            const request = store.getAll();
 
             request.onsuccess = (event) => {
-                const cursor = event.target.result;
-
-                if (!cursor) {
-                    resolve(results);
-                    return;
+                let results = event.target.result;
+                results.sort((a, b) => (b.id || 0) - (a.id || 0));
+                if (limit !== null) {
+                    results = results.slice(offset, offset + limit);
                 }
+                const mappedResults = results.map(item => ({
+                    blob: item.blob || null,
+                    thumbnailBlob: item.thumbnailBlob || null,
+                    url: item.url || null,
+                    base64: item.base64 || null,
+                    thumbnailBase64: item.thumbnailBase64 || null,
+                    id: item.id || null,
+                    chunks: Array.isArray(item.chunks) ? item.chunks : [],
+                    timestamp: item.timestamp || null,
+                    active: !!item.active
+                }));
 
-                if (offset && skipped < offset) {
-                    skipped++;
-                    cursor.continue();
-                    return;
-                }
-
-                if (limit !== null && results.length >= limit) {
-                    resolve(results);
-                    return;
-                }
-
-                const v = cursor.value;
-
-                results.push({
-                    blob: v.blob || null,
-                    thumbnailBlob: v.thumbnailBlob || null,
-                    url: v.url || null,
-                    base64: includeBase64 ? (v.base64 || null) : null, // 🚫 skipped if false
-                    id: v.id || null,
-                    chunks: Array.isArray(v.chunks) ? v.chunks : [],
-                    timestamp: v.timestamp || null,
-                    active: !!v.active
-                });
-
-                cursor.continue();
+                resolve(mappedResults);
             };
 
             request.onerror = (event) => {
@@ -2119,13 +1959,23 @@ export const getFromDB = (db, limit = null, offset = 0, includeBase64 = true) =>
     });
 };
 
+/*export const getFromDB = (db, limit = null) => {
+    return new Promise((resolve, reject) => {
+        const storeName = db.objectStoreNames[0];
+        const tx = db.transaction(storeName, 'readonly');
+        const store = tx.objectStore(storeName);
+
+        const request = limit === null
+            ? store.getAll()
+            : store.getAll(null, limit);
+
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+};*/
+
 export const updateActiveState = async (db, id, active) => {
-    return new Promise(async (resolve, reject) => {
-        // Request persistence once
-        if (!persistentRequested) {
-            persistentRequested = true;
-            await requestPersistentStorage();
-        }
+    return new Promise((resolve, reject) => {
         const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
         const objectStore = transaction.objectStore(db.objectStoreNames[0]);
         const request = objectStore.get(id);
@@ -2148,127 +1998,6 @@ export const updateActiveState = async (db, id, active) => {
         }
     })
 };
-
-export const updateChunksInDB = (db, url, chunks) => {
-    return new Promise(async (resolve, reject) => {
-        // Request persistence once
-        if (!persistentRequested) {
-            persistentRequested = true;
-            await requestPersistentStorage();
-        }
-        const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
-        const objectStore = transaction.objectStore(db.objectStoreNames[0]);
-        const request = objectStore.openCursor();
-        request.onsuccess = (event) => {
-            const cursor = event.target.result;
-            if (!cursor) {
-                return resolve()
-            }
-            const {
-                value
-            } = cursor;
-            if (value.url === url) {
-                value.chunks = chunks;
-                const updateRequest = objectStore.put(value);
-                updateRequest.onsuccess = () => resolve();
-                updateRequest.onerror = () => reject('Error updating chunks.')
-            } else {
-                cursor.continue()
-            }
-        };
-        request.onerror = () => reject('Error accessing cursor.')
-    })
-};
-
-export const appendChunkToDB = (db, url, chunk) => {
-    return new Promise(async (resolve, reject) => {
-        // Request persistence once
-        if (!persistentRequested) {
-            persistentRequested = true;
-            await requestPersistentStorage();
-        }
-        const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
-        const objectStore = transaction.objectStore(db.objectStoreNames[0]);
-        const request = objectStore.openCursor();
-        request.onsuccess = (event) => {
-            const cursor = event.target.result;
-            if (!cursor) return resolve();
-            const value = cursor.value;
-            if (value.url === url) {
-                if (!value.chunks) value.chunks = [];
-                value.chunks.push(chunk);
-                const updateRequest = objectStore.put(value);
-                updateRequest.onsuccess = () => resolve();
-                updateRequest.onerror = () => reject('Error appending chunk.');
-            } else {
-                cursor.continue();
-            }
-        };
-        request.onerror = () => reject('Error accessing cursor.');
-    });
-};
-
-export const updateInDB = async (db, matcher, updates = {}) => {
-    if (!persistentRequested) {
-        persistentRequested = true;
-        await requestPersistentStorage();
-    }
-
-    const hasSpace = await checkStorageQuota();
-    if (!hasSpace) throw new Error('Storage quota exceeded');
-
-    return new Promise((resolve, reject) => {
-        const tx = db.transaction([db.objectStoreNames[0]], 'readwrite');
-        const store = tx.objectStore(db.objectStoreNames[0]);
-        const req = store.openCursor();
-
-        req.onerror = e => reject(e.target.error);
-
-        req.onsuccess = e => {
-            const cursor = e.target.result;
-            if (!cursor) return reject(new Error('No matching record found'));
-
-            const { value } = cursor;
-
-            if (
-                value.url === matcher ||
-                value.timestamp === matcher ||
-                value.id === matcher
-            ) {
-                if (updates.blob instanceof Blob) { value.blob = updates.blob; value.chunks = []; }
-                if (updates.thumbnailBlob instanceof Blob) value.thumbnailBlob = updates.thumbnailBlob;
-                if (typeof updates.base64 === 'string' && updates.base64.startsWith('data:')) value.base64 = updates.base64;
-
-                const updateReq = cursor.update(value);
-                updateReq.onsuccess = () => resolve();
-                updateReq.onerror = e => reject(e.target.error);
-                return;
-            }
-
-            cursor.continue();
-        };
-    });
-};
-
-export const deleteFromDB = async (db, id) => {
-    return new Promise(async (resolve, reject) => {
-        // Request persistence once
-        if (!persistentRequested) {
-            persistentRequested = true;
-            await requestPersistentStorage();
-        }
-        const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
-        const photosObjectStore = transaction.objectStore(db.objectStoreNames[0]);
-        const deleteRequest = photosObjectStore.delete(id);
-        deleteRequest.onsuccess = async () => {
-            resolve()
-        };
-        deleteRequest.onerror = (event) => {
-            reject(`Error deleting photo from database: ${event.target.error}`)
-        }
-    })
-};
-
 export async function fetchProcessState(url) {
     try {
         const processURL = url.replace('download-output', 'get-process-state');
@@ -2486,111 +2215,39 @@ export async function customFetch(url, options, onProgress) {
     })
 }
 
-
-async function awaitMediaLoadedWithRetries(element, maxRetries = 3, retryDelay = 3000) {
-    if (!element) return { success: false, reason: 'No element provided' };
-    let attempt = 0;
-
-    while (attempt < maxRetries) {
-        while (document.visibilityState !== "visible") {
-            await new Promise(resolve => {
-                const onVisible = () => {
-                    if (document.visibilityState === "visible") {
-                        document.removeEventListener("visibilitychange", onVisible);
-                        resolve();
-                    }
-                };
-                document.addEventListener("visibilitychange", onVisible);
-            });
-        }
-
-        try {
-            await new Promise((resolve, reject) => {
-                if (
-                    (element.tagName.toLowerCase() === "video" && element.readyState >= 2) ||
-                    (element instanceof HTMLVideoElement && element.readyState >= 2) ||
-                    (element.tagName.toLowerCase() === "img" && element.complete && element.naturalWidth !== 0) ||
-                    (element instanceof HTMLImageElement && element.complete && element.naturalWidth !== 0)
-                ) return resolve();
-
-                const onLoaded = () => resolve();
-                const onError = (e) => reject(e);
-
-                if (element.tagName.toLowerCase() === "video" || element instanceof HTMLVideoElement) {
-                    element.addEventListener('loadeddata', onLoaded, { once: true });
-                    element.addEventListener('error', onError, { once: true });
-                    try { element.load(); } catch (e) { /* ignore */ }
-                } else if (element.tagName.toLowerCase() === "img" || element instanceof HTMLImageElement) {
-                    element.addEventListener('load', onLoaded, { once: true });
-                    element.addEventListener('error', onError, { once: true });
-                }
-            });
-
-            return { success: true };
-        } catch (err) {
-            attempt++;
-            if (attempt >= maxRetries) {
-                let extraInfo = {
-                    src: element.src || element.currentSrc || null,
-                    tag: element.tagName,
-                    error: err?.message || err,
-                };
-
-                if (element instanceof HTMLVideoElement) {
-                    extraInfo.networkState = element.networkState;
-                    extraInfo.readyState = element.readyState;
-                    if (element.error) {
-                        extraInfo.videoError = {
-                            code: element.error.code,
-                            message: element.error.message
-                        };
-                    }
-                }
-
-                if (element instanceof HTMLImageElement) {
-                    extraInfo.complete = element.complete;
-                    extraInfo.naturalWidth = element.naturalWidth;
-                }
-
-                console.warn(`${element.tagName} failed to load after ${maxRetries} attempts.`, extraInfo);
-                return { success: false, reason: extraInfo };
-            }
-
-            await new Promise(resolve => {
-                const timeoutId = setTimeout(resolve, retryDelay);
-                const onHidden = () => {
-                    if (document.visibilityState !== "visible") {
-                        clearTimeout(timeoutId);
-                        document.removeEventListener("visibilitychange", onHidden);
-                        resolve();
-                    }
-                };
-                document.addEventListener("visibilitychange", onHidden);
-            });
-        }
-    }
-}
+let currentDisplayedElement = [];
 
 async function displayStoredData(element, dataBaseObjectStoreName) {
-    if (pageName !== 'face-swap' && pageName !== 'video-generator' && pageName !== 'video-extender' && pageName !== 'inpaint' && pageName !== 'art-generator')
+    if (pageName !== 'face-swap' && pageName !== 'video-generator' && pageName !== 'inpaint' && pageName !== 'art-generator')
+        return;
+
+    const frameElement = element.querySelector('iframe');
+    const videoElement = element.querySelector('video');
+    const imgElement = element.querySelector('img');
+    const videoOrImg = videoElement || imgElement;
+    const targetElement = videoOrImg || frameElement;
+    const isVideo = !!videoElement;
+
+    if (currentDisplayedElement[dataBaseObjectStoreName] === targetElement)
         return;
 
     if (element === 'loader') {
-        document.querySelectorAll('[video-loader]').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('[video-loader]').forEach(el => el.remove());
 
         const existingTimeline = document.querySelector(`.${dataBaseObjectStoreName}_timelineContainer`);
         if (existingTimeline)
-            existingTimeline.style.display = 'none';
+            existingTimeline.remove();
 
         [`${dataBaseObjectStoreName}_leftClampHandle`, `${dataBaseObjectStoreName}_midHandle`, `${dataBaseObjectStoreName}_rightClampHandle`].forEach((handle) => {
             const existingHandle = document.querySelector(`[data-frame][data-handle="${handle}"]`);
             if (existingHandle) {
-                existingHandle.style.display = 'none';
+                existingHandle.remove();
             }
         });
 
         const afterInitContainer = document.getElementById(`${dataBaseObjectStoreName}_afterInit`);
         if (afterInitContainer) {
+            afterInitContainer.innerHTML = '';
             afterInitContainer.style.display = 'none';
         }
 
@@ -2607,16 +2264,16 @@ async function displayStoredData(element, dataBaseObjectStoreName) {
         return;
     }
 
-    document.querySelectorAll('[video-loader]').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('[video-loader]').forEach(el => el.remove());
 
     const existingTimeline = document.querySelector(`.${dataBaseObjectStoreName}_timelineContainer`);
     if (existingTimeline)
-        existingTimeline.style.display = 'none';
+        existingTimeline.remove();
 
     [`${dataBaseObjectStoreName}_leftClampHandle`, `${dataBaseObjectStoreName}_midHandle`, `${dataBaseObjectStoreName}_rightClampHandle`].forEach((handle) => {
         const existingHandle = document.querySelector(`[data-frame][data-handle="${handle}"]`);
         if (existingHandle) {
-            existingHandle.style.display = 'none';
+            existingHandle.remove();
         }
     });
 
@@ -2627,6 +2284,7 @@ async function displayStoredData(element, dataBaseObjectStoreName) {
 
         const afterInitContainer = document.getElementById(`${dataBaseObjectStoreName}_afterInit`);
         if (afterInitContainer) {
+            afterInitContainer.innerHTML = '';
             afterInitContainer.style.display = 'none';
         }
         return;
@@ -2643,52 +2301,95 @@ async function displayStoredData(element, dataBaseObjectStoreName) {
         beforeInputInit.parentElement.appendChild(loadingSpinner);
     }
 
-    const videoElement = element.querySelector('video');
-    const targetElement = element.querySelector('[original="true"]');
-    const isVideo = !!videoElement;
+    async function awaitMediaLoadedWithRetries(element, maxRetries = 3, retryDelay = 3000) {
+        if (!element) return { success: false, reason: 'No element provided' };
 
-    const afterInitContainer = document.getElementById(`${dataBaseObjectStoreName}_afterInit`);
-    if (afterInitContainer) {
-        const frameElement = afterInitContainer.querySelector('iframe');
-        const videoElement = afterInitContainer.querySelector('video');
-        const imgElement = afterInitContainer.querySelector('img');
-        const videoOrImg = videoElement || imgElement;
-        const containerElement = videoOrImg || frameElement;
-        if (containerElement?.getAttribute('src') && targetElement?.getAttribute('src') && containerElement?.getAttribute('src') === targetElement?.getAttribute('src')) {
-            if (loadingSpinner) loadingSpinner.remove();
-            afterInitContainer.style.display = 'flex';
-            const existingTimeline = document.querySelector(`.${dataBaseObjectStoreName}_timelineContainer`);
-            if (existingTimeline)
-                existingTimeline.style.display = 'unset';
+        let attempt = 0;
 
-            [`${dataBaseObjectStoreName}_leftClampHandle`, `${dataBaseObjectStoreName}_midHandle`, `${dataBaseObjectStoreName}_rightClampHandle`].forEach((handle) => {
-                const existingHandle = document.querySelector(`[data-frame][data-handle="${handle}"]`);
-                if (existingHandle) {
-                    existingHandle.style.display = 'unset';
+        while (attempt < maxRetries) {
+            while (document.visibilityState !== "visible") {
+                await new Promise(resolve => {
+                    const onVisible = () => {
+                        if (document.visibilityState === "visible") {
+                            document.removeEventListener("visibilitychange", onVisible);
+                            resolve();
+                        }
+                    };
+                    document.addEventListener("visibilitychange", onVisible);
+                });
+            }
+
+            try {
+                await new Promise((resolve, reject) => {
+                    if (
+                        (element.tagName.toLowerCase() === "video" && element.readyState >= 2) ||
+                        (element instanceof HTMLVideoElement && element.readyState >= 2) ||
+                        (element.tagName.toLowerCase() === "img" && element.complete && element.naturalWidth !== 0) ||
+                        (element instanceof HTMLImageElement && element.complete && element.naturalWidth !== 0)
+                    ) return resolve();
+
+                    const onLoaded = () => resolve();
+                    const onError = (e) => reject(e);
+
+                    if (element.tagName.toLowerCase() === "video" || element instanceof HTMLVideoElement) {
+                        element.addEventListener('loadeddata', onLoaded, { once: true });
+                        element.addEventListener('error', onError, { once: true });
+                        element.load();
+                    } else if (element.tagName.toLowerCase() === "img" || element instanceof HTMLImageElement) {
+                        element.addEventListener('load', onLoaded, { once: true });
+                        element.addEventListener('error', onError, { once: true });
+                    }
+                });
+
+                return { success: true };
+            } catch (err) {
+                attempt++;
+                if (attempt >= maxRetries) {
+                    let extraInfo = {
+                        src: element.src || element.currentSrc || null,
+                        tag: element.tagName,
+                        error: err?.message || err,
+                    };
+
+                    if (element instanceof HTMLVideoElement) {
+                        extraInfo.networkState = element.networkState;
+                        extraInfo.readyState = element.readyState;
+                        if (element.error) {
+                            extraInfo.videoError = {
+                                code: element.error.code,
+                                message: element.error.message
+                            };
+                        }
+                    }
+
+                    if (element instanceof HTMLImageElement) {
+                        extraInfo.complete = element.complete;
+                        extraInfo.naturalWidth = element.naturalWidth;
+                    }
+
+                    console.warn(`${element.tagName} failed to load after ${maxRetries} attempts.`, extraInfo);
+                    return { success: false, reason: extraInfo };
                 }
-            });
 
-            return;
+                await new Promise(resolve => {
+                    const timeoutId = setTimeout(resolve, retryDelay);
+                    const onHidden = () => {
+                        if (document.visibilityState !== "visible") {
+                            clearTimeout(timeoutId);
+                            document.removeEventListener("visibilitychange", onHidden);
+                            resolve();
+                        }
+                    };
+                    document.addEventListener("visibilitychange", onHidden);
+                });
+            }
         }
     }
 
     const result = await awaitMediaLoadedWithRetries(targetElement);
     if (!result.success) {
-        alert(`Media could not be loaded.
-
-Possible fixes:
-• Update your browser
-• Try different browser
-• Third-party cookie/storage blocking
-• Open disk space on the device
-• Clear site data (Application → Storage → Clear site data)
-• Enable persistent storage
-• Avoid incognito/private mode
-• OS/browser storage restrictions (enterprise policies, iOS limits)
-• Close other tabs using heavy storage
-• Try another browser/profile.\n` + JSON.stringify(result.reason, null, 2)
-        );
-        //location.reload();
+        alert('Media could not be loaded.\n' + JSON.stringify(result.reason, null, 2));
+        location.reload();
         return;
     }
 
@@ -2701,10 +2402,6 @@ Possible fixes:
     let fgClone, bgClone;
     async function createClonedInput(maxRetries = 10, retryDelay = 1000) {
         let container;
-
-        async function loadMedia(element) {
-            return await awaitMediaLoadedWithRetries(element, 3, 1000);
-        }
 
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
             try {
@@ -2727,15 +2424,13 @@ Possible fixes:
                 fgClone.style.borderRadius = 'var(--border-radius)';
                 fgClone.style.zIndex = '2';
 
-                // If we have a cached blob URL use it; otherwise keep the cloned src (network or existing)
-                try { fgClone.src = targetElement.src; } catch (e) { /* ignore */ }
-
                 if (isVideo) {
                     fgClone.preload = "auto";
                     fgClone.controls = false;
                     fgClone.playsInline = true;
                     fgClone.muted = true;
-                    try { fgClone.load(); fgClone.pause(); } catch (e) { /* ignore */ }
+                    fgClone.load();
+                    fgClone.pause();
 
                     const unmuteOnInteraction = () => {
                         fgClone.muted = false;
@@ -2752,7 +2447,7 @@ Possible fixes:
 
                 container.appendChild(fgClone);
 
-                const loaded = await loadMedia(fgClone);
+                const loaded = await awaitMediaLoadedWithRetries(fgClone);
                 if (!loaded) throw new Error('Foreground failed to load');
 
                 if (isLowEndDevice() && shouldCreateBG) {
@@ -2760,7 +2455,7 @@ Possible fixes:
                     canvas.width = 16;
                     canvas.height = 16;
                     const ctx = canvas.getContext('2d');
-                    try { ctx.drawImage(fgClone, 0, 0, canvas.width, canvas.height); } catch (e) { /* ignore */ }
+                    ctx.drawImage(fgClone, 0, 0, canvas.width, canvas.height);
 
                     bgClone = document.createElement('img');
                     bgClone.src = canvas.toDataURL();
@@ -2779,10 +2474,6 @@ Possible fixes:
                 if (!isLowEndDevice() && shouldCreateBG) {
                     if (!frameElement) {
                         bgClone = targetElement.cloneNode(true);
-
-                        // ensure bgClone uses cached blob URL if available
-                        try { bgClone.src = targetElement.src; } catch (e) { /* ignore */ }
-
                         bgClone.style.position = 'absolute';
                         bgClone.style.top = '0';
                         bgClone.style.left = '0';
@@ -2794,12 +2485,12 @@ Possible fixes:
                         bgClone.style.zIndex = '1';
 
                         if (isVideo) {
-                            // ensure video properties consistent on background copy
-                            bgClone.preload = "auto";
-                            bgClone.controls = false;
-                            bgClone.playsInline = true;
-                            bgClone.muted = true;
-                            try { bgClone.load(); bgClone.pause(); } catch (e) { /* ignore */ }
+                            fgClone.preload = "auto";
+                            fgClone.controls = false;
+                            fgClone.playsInline = true;
+                            fgClone.muted = true;
+                            fgClone.load();
+                            fgClone.pause();
                         }
 
                         container.appendChild(bgClone);
@@ -2809,6 +2500,7 @@ Possible fixes:
                 if (isVideo) {
                     fgClone.addEventListener('click', async () => {
                         try {
+                            console.log(fgClone.paused);
                             if (fgClone.paused) {
                                 fgClone.play();
                                 if (bgClone instanceof HTMLVideoElement) {
@@ -2852,6 +2544,7 @@ Possible fixes:
         return; // stop further execution if needed
     }
 
+    const afterInitContainer = document.getElementById(`${dataBaseObjectStoreName}_afterInit`);
     if (afterInitContainer) {
         afterInitContainer.innerHTML = '';
         afterInitContainer.appendChild(clonedInput);
@@ -3287,24 +2980,91 @@ Possible fixes:
         }
         generateTimeline();
     }
+    currentDisplayedElement[dataBaseObjectStoreName] = targetElement;
 }
+
+function waitForMediaLoad(mediaElement) {
+    return new Promise((resolve, reject) => {
+        if (mediaElement.tagName.toLowerCase() === "img") {
+            if (mediaElement.complete && mediaElement.naturalWidth > 0) {
+                return resolve();
+            }
+            mediaElement.addEventListener('load', () => resolve(), { once: true });
+            mediaElement.addEventListener('error', () => reject(new Error('Image failed to load')), { once: true });
+        } else if (mediaElement.tagName.toLowerCase() === "video") {
+            if (mediaElement.readyState >= 2) { // HAVE_CURRENT_DATA
+                return resolve();
+            }
+            mediaElement.addEventListener('loadeddata', () => resolve(), { once: true });
+            mediaElement.addEventListener('error', () => reject(new Error('Video failed to load')), { once: true });
+        } else {
+            resolve();
+        }
+    });
+}
+
+export const handleFileContainerEvents = async (event, dataBaseIndexName, dataBaseObjectStoreName, container, databases) => {
+    const now = Date.now();
+    if (now - lastClickTime < 25) {
+        const seconds = ((now - lastClickTime) / 1000).toFixed(1);
+        showNotification(
+            `Please wait before clicking again (${seconds}s).`,
+            'Loading in progress',
+            'warning'
+        );
+        return;
+    }
+
+    lastClickTime = now;
+
+    console.log('[handleFileContainerEvents] call');
+    let parent = event.target.closest('.data-container');
+    if (!parent) return;
+    if (event.target.classList.contains('settings-mark')) return;
+    if (event.target.classList.contains('delete-icon')) return await handleDelete(dataBaseIndexName, dataBaseObjectStoreName, parent, container, databases);
+
+    // Use per-store loading lock
+    if (isMediaLoading[dataBaseObjectStoreName] === true) {
+        showNotification('Please wait until current media finishes loading.', 'Loading in progress', 'warning');
+        return;
+    }
+
+    if (dataBaseObjectStoreName === 'outputs') {
+        const viewOutput = document.getElementById('viewOutput');
+        if (viewOutput) viewOutput.disabled = false;
+
+        const downloadOutput = document.getElementById('downloadOutput');
+        if (downloadOutput) downloadOutput.disabled = false;
+    }
+
+    let element = parent.querySelector('img, video, iframe, initial');
+    if (!element) return;
+
+    const timestamp = element?.getAttribute('timestamp');
+    const activate = document.getElementById(`${timestamp}_activate`);
+    if (activate)
+        simulateFullClick(activate);
+};
 let addedContextCSS = false;
-export function handleContextMenu(parent, previous = true) {
-    let element = parent.querySelector('[original="true"]') || parent.querySelector('initial');
-    let isBadFile = element === parent.querySelector('initial');
-    let thumbnail = parent.querySelector('[original="false"]');
-    let timestamp = element?.getAttribute('timestamp');
-    let container = parent?.parentElement;
+export function handleContextMenu(div) {
+    // Menu logic
+    let currentTarget = null;
+    let element = null;
+    let timestamp = null;
+    let touchTimer = null;
+    let parentParentClass = '';
+    let parentParentClassNoS = '';
 
-    const old = document.getElementById(timestamp + 'previous');
-    if (old) old.remove();
+    currentTarget = div;
+    element = currentTarget.querySelector('img, video, initial');
+    timestamp = element?.getAttribute('timestamp');
 
+    // Create custom context menu
     const contextMenu = document.createElement('div');
     contextMenu.className = 'background-container background-container-absolute';
-    contextMenu.id = timestamp + 'previous';
     contextMenu.innerHTML = `
   <div class="background-dot-container overflow-hidden">
-    <div class="background-dot-container-content" style='overflow: auto;padding-right: calc(1vh * var(--scale-factor-h));'>
+    <div class="background-dot-container-content" style='overflow: auto;justify-content: space-between;padding-right: calc(1vh * var(--scale-factor-h));'>
       <div class="small-box unreversed" data-action="display" id="${timestamp}_display">
         <span class="menu-icon">↗</span>
         <span>Display</span>
@@ -3315,7 +3075,7 @@ export function handleContextMenu(parent, previous = true) {
       </div>
       <div class="small-box unreversed" data-action="activate" id="${timestamp}_activate">
         <span class="menu-icon">↗</span>
-        <span>Toggle</span>
+        <span>Activate</span>
       </div>
       <div class="small-box unreversed" data-action="delete" id="${timestamp}_delete">
         <span class="menu-icon">×</span>
@@ -3326,42 +3086,24 @@ export function handleContextMenu(parent, previous = true) {
         <span>Save</span>
       </div>
       <div class="small-box unreversed" data-action="download-browser" id="${timestamp}_download-browser">
-        <span class="menu-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-        </span>
-        <span>Download</span>
+        …
       </div>
       <div class="small-box unreversed" data-action="download-server" id="${timestamp}_download-server">
-        <span class="menu-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-        </span>
-        <span>Fetch</span>
+        …
       </div>
       <div class="small-box unreversed" data-action="copy-browser-url" id="${timestamp}_copy-browser-url">
-        <span class="menu-icon">⎘</span>
-        <span>Copy URL</span>
+        …
       </div>
       <div class="small-box unreversed" data-action="copy-download-url" id="${timestamp}_copy-download-url">
-        <span class="menu-icon">⎘</span>
-        <span>Copy Download URL</span>
+        …
       </div>
       <div class="small-box unreversed" data-action="use-generation-data" id="${timestamp}_use-generation-data">
-        <span class="menu-icon">⚙</span>
-        <span>Copy Generation Data</span>
+        …
       </div>
     </div>
   </div>
 `;
     document.body.appendChild(contextMenu);
-
 
     // Add mobile-friendly styles
     const style = document.createElement('style');
@@ -3388,34 +3130,19 @@ export function handleContextMenu(parent, previous = true) {
         addedContextCSS = true;
     }
 
-    let touchTimer = null;
-    let dataBaseObjectStoreName = container?.className;
-    let dataBaseIndexName = dataBaseObjectStoreName ? dataBaseObjectStoreName.replace(/s$/, '') + `DB-${pageName}` : '';
+    // Touch device detection
+    const isTouchDevice = false;
 
+    // Close all context menus
     function closeAllContextMenus() {
         contextMenu.style.display = 'none';
     }
 
+    // Show context menu at position
     function showContextMenu(e) {
-        if (!element) element = parent.querySelector('[original="true"]') || parent.querySelector('initial');
-        isBadFile = element === parent.querySelector('initial');
-        if (!thumbnail) thumbnail = parent.querySelector('[original="false"]');
-        if (!timestamp) timestamp = element?.getAttribute('timestamp');
-        if (!container) container = parent?.parentElement;
-        if (!dataBaseObjectStoreName) dataBaseObjectStoreName = container?.className;
-        if (!dataBaseIndexName) dataBaseIndexName = dataBaseObjectStoreName ? dataBaseObjectStoreName.replace(/s$/, '') + `DB-${pageName}` : '';
-
-        if (isBadFile) {
-            contextMenu.querySelector('.small-box[data-action="copy-browser-url"]').style.display = 'none';
-            contextMenu.querySelector('.small-box[data-action="download-browser"]').style.display = 'none';
-            contextMenu.querySelector('.small-box[data-action="save"]').style.display = 'none';
-            contextMenu.querySelector('.small-box[data-action="activate"]').style.display = 'none';
-            contextMenu.querySelector('.small-box[data-action="open"]').style.display = 'none';
-            contextMenu.querySelector('.small-box[data-action="display"]').style.display = 'none';
-        }
-
         const downloadUrl = element?.getAttribute('url');
         if (!downloadUrl || downloadUrl === 'null') {
+            contextMenu.querySelector('.small-box[data-action="use-generation-data"]').style.display = 'none';
             contextMenu.querySelector('.small-box[data-action="copy-download-url"]').style.display = 'none';
             contextMenu.querySelector('.small-box[data-action="download-server"]').style.display = 'none';
         }
@@ -3428,6 +3155,7 @@ export function handleContextMenu(parent, previous = true) {
 
         closeAllContextMenus();
 
+        // Get position (works for both mouse and touch)
         const posX = e.pageX || e.touches?.[0]?.pageX;
         const posY = e.pageY || e.touches?.[0]?.pageY;
 
@@ -3435,32 +3163,37 @@ export function handleContextMenu(parent, previous = true) {
         contextMenu.style.left = `${Math.min(posX, window.innerWidth - contextMenu.offsetWidth - 10)}px`;
         contextMenu.style.top = `${Math.min(posY, window.innerHeight - contextMenu.offsetHeight - 10)}px`;
 
+        // Prevent default for touch events
         if (e.touches) {
             e.preventDefault();
         }
     }
 
-    parent.addEventListener('contextmenu', (e) => {
+    // Event handlers for desktop
+    div.addEventListener('contextmenu', (e) => {
+        if (isTouchDevice) return;
         e.preventDefault();
         showContextMenu(e);
     });
 
-    parent.addEventListener('touchstart', (e) => {
+    div.addEventListener('touchstart', (e) => {
         touchTimer = setTimeout(() => {
             showContextMenu(e);
-        }, 250);
+        }, 250); // 500ms long press
     });
 
-    parent.addEventListener('touchend', () => {
+    div.addEventListener('touchend', () => {
         clearTimeout(touchTimer);
     });
 
-    parent.addEventListener('touchmove', () => {
+    div.addEventListener('touchmove', () => {
         clearTimeout(touchTimer);
     });
 
+    // Prevent scrolling when menu is open
     contextMenu.addEventListener('touchmove', (e) => {
         const scrollArea = contextMenu.querySelector('.background-dot-container-content');
+
         if (!scrollArea) return;
 
         const isInsideScrollArea = scrollArea.contains(e.target);
@@ -3473,13 +3206,14 @@ export function handleContextMenu(parent, previous = true) {
         e.preventDefault();
     }, { passive: false });
 
+    // Close menu when clicking elsewhere
     document.addEventListener('click', (e) => {
         if (!contextMenu.contains(e.target)) {
             closeAllContextMenus();
         }
     });
 
-    parent.addEventListener('click', (e) => {
+    div.addEventListener('click', (e) => {
         const sm = e.target.closest('.settings-mark');
         if (!sm) return;
 
@@ -3488,14 +3222,20 @@ export function handleContextMenu(parent, previous = true) {
         showContextMenu(e);
     });
 
+    // Handle menu actions (keep your existing action handler)
     contextMenu.addEventListener('click', async (e) => {
         const menuItem = e.target.closest('.small-box');
         if (!menuItem) return;
 
+        parentParentClass = element?.parentElement?.parentElement?.className;
+        if (parentParentClass) {
+            parentParentClassNoS = parentParentClass.replace(/s$/, '');
+        }
+
         const idx = parseInt(element.getAttribute('id'));
-        const db = await openDB(dataBaseIndexName, dataBaseObjectStoreName);
+        const db = await openDB(parentParentClassNoS + `DB-${pageName}`, parentParentClass);
         const items = await getFromDB(db);
-        let item = items.find(item => item.id === idx);
+        const item = items.find(item => item.id === idx);
 
         if (!item) {
             const domTimestamp = parseInt(element.getAttribute('timestamp'));
@@ -3512,66 +3252,32 @@ export function handleContextMenu(parent, previous = true) {
             }
         }
 
-        const originalSrc = element?.src;
-        const originalPoster = element?.poster;
+        if (!item) {
+            showNotification('Could not find media data.', 'Error', 'error');
+            return;
+        }
 
-        const action = menuItem.getAttribute('data-action');
-        const url = element?.querySelector('source')?.src || element?.getAttribute('src');
-        const downloadUrl = element?.getAttribute('url');
+        let action = menuItem.getAttribute('data-action');
+        let url = element?.querySelector('source')?.src || element?.src;
+        let downloadUrl = element?.getAttribute('url');
 
-        if (action !== 'use-generation-data' && action !== 'copy-download-url' && action !== 'delete' && action !== 'download-server') {
-            if (!element.getAttribute('src')) {
+        // Use per-store loading lock
+        if (isMediaLoading[parentParentClass]) {
+            showNotification('Please wait until current media finishes loading.', 'Loading in progress', 'warning');
+            return;
+        }
+
+        if (!element.parentElement.classList.contains('active')) {
+            if (item?.blob) {
                 try {
-                    element = await loadMedia(element, item?.blob);
+                    console.log('Loading media element:', item);
+                    isMediaLoading[parentParentClass] = true;
+                    //element = await replaceElementForData(element, parentParentClass, item);
+                    await loadMedia(element, item?.blob);
                 } catch (err) {
-                    if (item?.base64) {
-                        element = await loadMedia(element, item?.base64);
-                    }
-                    else if (item?.blob) {
-                        try {
-                            console.log('Creating base64 from blob...');
-                            const base64 = await blobToBase64(item?.blob);
-                            await updateInDB(db, url, { base64 });
-                            item.base64 = base64;
-                            element = await loadMedia(element, base64);
-                        } catch (err2) {
-                            console.error('Failed to create base64 from blob, reloading page', err2);
-                            location.reload();
-                        }
-                    } else {
-                        location.reload();
-                    }
-                }
-            }
-
-            if (!thumbnail.getAttribute('src')) {
-                try {
-                    thumbnail = await loadMedia(thumbnail, item?.thumbnailBlob);
-                } catch (err) {
-                    if (item?.thumbnailBase64) {
-                        thumbnail = await loadMedia(thumbnail, item?.thumbnailBase64);
-                    }
-                    else if (item?.thumbnailBlob) {
-                        try {
-                            console.log('Creating thumbnail...');
-                            const thumb = await createThumbnail(item?.thumbnailBlob);
-                            if (thumb) {
-                                thumbnail.src = URL.createObjectURL(thumb);
-                                await updateInDB(db, url, { thumbnailBlob: thumb });
-                            }
-
-                            console.log('Creating base64 from blob...');
-                            const base64Thumb = await blobToBase64(item?.thumbnailBlob);
-                            item.thumbnailBase64 = base64Thumb;
-                            await updateInDB(db, url, { base64: base64Thumb });
-                            thumbnail = await loadMedia(thumbnail, base64Thumb);
-                        } catch (err2) {
-                            console.error('Failed to create thumbnail/base64, reloading page', err2);
-                            location.reload();
-                        }
-                    } else {
-                        location.reload();
-                    }
+                    console.error('Media failed to load:', err);
+                } finally {
+                    isMediaLoading[parentParentClass] = false;
                 }
             }
         }
@@ -3579,54 +3285,69 @@ export function handleContextMenu(parent, previous = true) {
         // Your existing switch case for actions remains exactly the same
         switch (action) {
             case 'activate':
-                if (parent.classList.contains('active')) {
-                    parent.classList.remove('active');
-                    thumbnail.style.display = "unset";
-                    element.style.display = "none";
+                if (!item || !item.blob) {
+                    throw new Error(`No blob found for ID: ${idx}`);
+                }
 
-                    const idx = parseInt(element.getAttribute('id'));
-                    if (!isNaN(idx)) {
-                        if (pageName === 'inpaint' || pageName === 'art-generator' || pageName === 'face-swap' || pageName === 'video-extender' || dataBaseObjectStoreName === 'outputs') {
-                            displayStoredData(null, pageName === 'inpaint' ? 'outputs' : dataBaseObjectStoreName);
+                const activeEls = [...element.parentElement.parentElement.querySelectorAll('.data-container.active')];
+                for (const activeEl of activeEls) {
+                    const activeElement = activeEl.querySelector('img, video, iframe, initial');
+                    if (activeElement !== element) {
+                        activeEl.classList.remove('active');
+
+                        if (activeElement?.tagName.toLowerCase() === 'iframe') {
+                            activeElement.style.width = 'calc(var(--input-size))';
+                            activeElement.style.height = 'calc(var(--input-size))';
                         }
 
-                        updateActiveState(db, idx, false).catch(err => {
-                            console.error(`Failed to update active state for id=${elId}`, err);
-                        });
+                        if (activeElement?.src?.startsWith('blob:')) {
+                            if (activeElement.tagName.toLowerCase() === 'video') activeElement.pause();
+                            URL.revokeObjectURL(activeElement.src);
+                        }
+
+                        const idx = parseInt(activeElement?.getAttribute('id'));
+                        if (!isNaN(idx)) {
+                            (function () {
+                                (async () => {
+                                    await updateActiveState(db, idx, false);
+                                })();
+                            })();
+                        }
+                    }
+                    else {
+                        if (pageName === 'inpaint' || pageName === 'art-generator' || pageName === 'face-swap' || dataBaseObjectStoreName === 'outputs')
+                            displayStoredData(element.parentElement, pageName === 'inpaint' ? 'outputs' : parentParentClass);
                     }
                 }
-                else {
-                    parent.classList.add('active');
-                    thumbnail.style.display = "none";
-                    element.style.display = "unset";
+
+                if (!element.parentElement.classList.contains('active')) {
+                    element.parentElement.classList.add('active');
 
                     if (element.tagName.toLowerCase() === 'iframe') {
                         element.style.width = 'calc(var(--input-size) - 2px)';
                         element.style.height = 'calc(var(--input-size) - 2px)';
                     }
 
-                    const idx = parseInt(element.getAttribute('id'));
-                    if (!isNaN(idx)) {
-                        try {
-                            if (pageName === 'inpaint' || pageName === 'art-generator' || pageName === 'face-swap' || pageName === 'video-extender' || dataBaseObjectStoreName === 'outputs') {
-                                displayStoredData(parent, pageName === 'inpaint' ? 'outputs' : dataBaseObjectStoreName);
-                            }
-                        } catch (err) {
-                            showNotification(err.message, 'Error', 'error');
-                            location.reload();
-                        }
+                    (function () {
+                        (async () => {
+                            await updateActiveState(db, idx, true);
+                        })();
+                    })();
 
-                        updateActiveState(db, idx, true).catch(err => {
-                            console.error(`Failed to update active state for id=${elId}`, err);
-                        });
-                    }
+                    if (pageName === 'inpaint' || pageName === 'art-generator' || pageName === 'face-swap' || dataBaseObjectStoreName === 'outputs')
+                        displayStoredData(element.parentElement, pageName === 'inpaint' ? 'outputs' : parentParentClass);
                 }
                 break;
             case 'open':
                 if (!item || !item.blob) {
                     throw new Error(`No blob found for ID: ${idx}`);
                 }
-                window.open(url, '_blank');
+                if (pageName === 'inpaint' || pageName === 'art-generator' || pageName === 'face-swap' || dataBaseObjectStoreName === 'outputs')
+                    displayStoredData(parent, pageName === 'inpaint' ? 'outputs' : parentParentClass);
+                const ok = window.confirm("Do you want to open this in a new tab?");
+                if (ok) {
+                    window.open(url, "_blank", "noopener,noreferrer");
+                }
                 break;
             case 'display':
                 if (!item || !item.blob) {
@@ -3658,44 +3379,31 @@ export function handleContextMenu(parent, previous = true) {
                 if (element.tagName.toLowerCase() === "video") {
                     mediaElement = document.createElement('video');
                     mediaElement.controls = true;
-                    mediaElement.src = element?.querySelector('source')?.src || element?.getAttribute('src');
+                    mediaElement.src = element?.querySelector('source')?.src || element?.src;
                     mediaElement.style.maxWidth = '100vw';
                     mediaElement.style.maxHeight = '94vh';
                     mediaElement.style.borderRadius = 'var(--border-radius)';
                     mediaElement.style.objectFit = 'cover';
                 } else if (element.tagName.toLowerCase() === "img") {
                     mediaElement = document.createElement('img');
-                    mediaElement.src = element?.getAttribute('src');
+                    mediaElement.src = element.src;
                     mediaElement.style.maxWidth = '100vw';
                     mediaElement.style.maxHeight = '94vh';
                     mediaElement.style.borderRadius = 'var(--border-radius)';
                     mediaElement.style.objectFit = 'cover';
                 }
 
-                if (!mediaElement.getAttribute('src')) {
+                if (!mediaElement.src) {
                     wrapper.remove();
                     alert('Media source not found.');
                     return;
                 }
 
-                const result = await awaitMediaLoadedWithRetries(mediaElement);
-                if (!result.success) {
-                    alert(
-                        `Media could not be loaded.
-
-Possible fixes:
-• Update your browser
-• Try different browser
-• Third-party cookie/storage blocking
-• Open disk space on the device
-• Clear site data (Application → Storage → Clear site data)
-• Enable persistent storage
-• Avoid incognito/private mode
-• OS/browser storage restrictions (enterprise policies, iOS limits)
-• Close other tabs using heavy storage
-• Try another browser/profile.\n` + JSON.stringify(result.reason, null, 2)
-                    );
+                try {
+                    await waitForMediaLoad(mediaElement);
+                } catch (e) {
                     wrapper.remove();
+                    alert(e.message);
                     return;
                 }
 
@@ -3821,7 +3529,7 @@ Possible fixes:
                             document.body.appendChild(a);
                             simulateFullClick(a);
                             document.body.removeChild(a);
-                            //URL.revokeObjectURL(objectURL);
+                            URL.revokeObjectURL(objectURL);
                             showNotification(`File downloaded successfully: ${fileName}`, 'Download - Success', 'success');
                         }
                     } catch (error) {
@@ -3842,7 +3550,7 @@ Possible fixes:
                                     document.body.appendChild(a);
                                     simulateFullClick(a);
                                     document.body.removeChild(a);
-                                    //URL.revokeObjectURL(objectURL);
+                                    URL.revokeObjectURL(objectURL);
                                     showNotification(`File downloaded successfully: ${fileName}`, 'Download - Success', 'success');
                                 } catch (error) {
                                     showNotification(`Failed to download the file (Error: ${error.message})`, 'Error - Download', 'error');
@@ -3855,7 +3563,7 @@ Possible fixes:
                                         showNotification(`Failed to open the file in a new tab for: ${fileName}`, 'Error - Open Tab', 'error');
                                     } else {
                                         setTimeout(() => {
-                                            //URL.revokeObjectURL(objectURL);
+                                            URL.revokeObjectURL(objectURL);
                                         }, 1000);
                                     }
                                 } catch (tabError) {
@@ -3918,7 +3626,7 @@ Possible fixes:
                 safeDownload(downloadUrl, 'output');
                 break;
             case 'delete':
-                const deleteIconParent = parent.querySelector('.delete-icon');
+                const deleteIconParent = currentTarget.querySelector('.delete-icon');
                 if (deleteIconParent) {
                     simulateFullClick(deleteIconParent);
                 }
@@ -3955,46 +3663,27 @@ Possible fixes:
                 break;
         }
 
-        if (action !== 'use-generation-data' && action !== 'copy-download-url' && action !== 'delete' && action !== 'download-server') { 
-        const allElements = [...container.querySelectorAll('.data-container img, .data-container video')]
-            .filter(el => el.getAttribute('id') !== element.getAttribute('id'));
+        if (element?.src?.startsWith('blob:') && !element.classList.contains('active')) {
+            const revoke = () => {
+                setTimeout(() => {
+                    URL.revokeObjectURL(element.src);
+                    element.removeEventListener('load', revoke);
+                    element.removeEventListener('loadeddata', revoke);
+                }, 1000);
+            };
 
-            for (const otherElements of allElements) {
-                if (otherElements?.parentElement?.classList.contains('active')) {
-                    otherElements?.parentElement?.classList.remove('active');
-                    const idx = parseInt(otherElements?.getAttribute('id'));
-                    if (!isNaN(idx)) {
-                        updateActiveState(db, idx, false).catch(err => {
-                            console.error(`Failed to update active state for id=${idx}`, err);
-                        });
-                    }
+            if (element.tagName.toLowerCase() === "img") {
+                if (element.complete) {
+                    revoke();
+                } else {
+                    element.addEventListener('load', revoke, { once: true });
                 }
-                /*if (otherElements && otherElements?.src?.startsWith('blob:')) {
-                    const revoke = () => {
-                        setTimeout(() => {
-                            if (otherElements.getAttribute('blobRevoke') === 'false') {
-                                //URL.revokeObjectURL(otherElements.src);
-                                //otherElements.setAttribute('blobRevoke', 'true');
-                            }
-                            otherElements.removeEventListener('load', revoke);
-                            otherElements.removeEventListener('loadeddata', revoke);
-                        }, 100);
-                    };
-    
-                    if (otherElements.tagName.toLowerCase() === "img") {
-                        if (otherElements.complete) {
-                            revoke();
-                        } else {
-                            otherElements.addEventListener('load', revoke, { once: true });
-                        }
-                    } else if (otherElements.tagName.toLowerCase() === "video") {
-                        if (otherElements.readyState >= 2) {
-                            revoke();
-                        } else {
-                            otherElements.addEventListener('loadeddata', revoke, { once: true });
-                        }
-                    }
-                }*/
+            } else if (element.tagName.toLowerCase() === "video") {
+                if (element.readyState >= 2) {
+                    revoke();
+                } else {
+                    element.addEventListener('loadeddata', revoke, { once: true });
+                }
             }
         }
 
@@ -4134,29 +3823,22 @@ Possible fixes:
         }
 
         const parseId = filename => filename.split('_')[3];
-        const clickTarget = (selector, filename) => {
+        const toggleActive = (selector, filename) => {
             if (typeof filename !== 'string') return;
             const targetId = parseId(filename);
-
             document.querySelectorAll(selector).forEach(dc => {
-                const originalEl = dc.querySelector('[original="true"]');
-                if (!originalEl) return;
-
-                const id = originalEl.getAttribute('id');
-                const isParentActive = dc.classList.contains('active');
-
-                // Click only if this is the target and not already active
-                if (id === targetId && !isParentActive) {
-                    originalEl.click();
-                }
+                const img = dc.querySelector('img');
+                const id = img?.getAttribute('id');
+                const active = id === targetId;
+                dc.classList.toggle('active', active);
+                if (img) img.setAttribute('active', active.toString());
             });
         };
 
-        // Example usage:
-        clickTarget('.inputs .data-container', config.portraitFileName);
-        clickTarget('.inputs .data-container', config.inputFileName);
-        clickTarget('.start-frames .data-container', config.startFrameFileName);
-        clickTarget('.last-frames .data-container', config.lastFrameFileName);
+        toggleActive('.inputs .data-container', config.portraitFileName);
+        toggleActive('.inputs .data-container', config.inputFileName);
+        toggleActive('.start-frames .data-container', config.startFrameFileName);
+        toggleActive('.last-frames .data-container', config.lastFrameFileName);
     }
 
     // Client-side: extract generationData (no external deps)
@@ -4330,13 +4012,27 @@ const detectMimeFromBlob = (blob) => {
 };
 
 // helper: convert blob to base64 (return only base64 string without data: prefix)
-const blobToBase64 = blob =>
-    new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
+const blobToBase64 = (blob) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const fr = new FileReader();
+            fr.onload = () => {
+                const result = fr.result; // data:*/*;base64,AAAA...
+                if (typeof result === 'string') {
+                    const idx = result.indexOf(',');
+                    if (idx !== -1) resolve(result.slice(idx + 1));
+                    else resolve(result);
+                } else {
+                    reject(new Error('Unexpected FileReader result'));
+                }
+            };
+            fr.onerror = (err) => reject(err);
+            fr.readAsDataURL(blob);
+        } catch (e) {
+            reject(e);
+        }
     });
+};
 
 /*async function cleanupLocalStorage(snapshotPromise) {
     const allServers = await fetchAllServerAddresses(snapshotPromise);
@@ -4440,653 +4136,14 @@ async function cleanupStaleDownloadOutput(serverList) {
     }
 }*/
 
-let _webpSupported;
-async function supportsWebP() {
-    if (_webpSupported !== undefined) return _webpSupported;
-    try {
-        const c = typeof OffscreenCanvas !== 'undefined'
-            ? new OffscreenCanvas(1, 1)
-            : document.createElement('canvas');
-        await new Promise((res, rej) =>
-        (c.convertToBlob
-            ? c.convertToBlob({ type: 'image/webp' }).then(res).catch(rej)
-            : c.toBlob(b => b ? res() : rej(), 'image/webp'))
-        );
-        _webpSupported = true;
-    } catch {
-        _webpSupported = false;
-    }
-    return _webpSupported;
-}
-
-async function createThumbnail(fileOrBlob, arrayBuffer = null, options = {}) {
-    const { maxWidth = 128, maxHeight = 128, quality = 0.5 } = options;
-
-    const mimeType = fileOrBlob.type;
-
-    const useWebP = await supportsWebP();
-    const outputType = useWebP ? 'image/webp' : 'image/jpeg';
-
-    // Helper: draw an image or video frame to a resized canvas and convert to Blob
-    async function drawToBlob(sourceWidth, sourceHeight, drawFn) {
-        const scale = Math.min(1, maxWidth / sourceWidth, maxHeight / sourceHeight);
-        const targetW = Math.max(1, Math.round(sourceWidth * scale));
-        const targetH = Math.max(1, Math.round(sourceHeight * scale));
-
-        const canvas =
-            typeof OffscreenCanvas !== 'undefined'
-                ? new OffscreenCanvas(targetW, targetH)
-                : Object.assign(document.createElement('canvas'), {
-                    width: targetW,
-                    height: targetH,
-                });
-
-        const ctx = canvas.getContext('2d');
-        drawFn(ctx, targetW, targetH);
-
-        return canvas.convertToBlob
-            ? await canvas.convertToBlob({ type: outputType, quality })
-            : await new Promise((res) => canvas.toBlob(res, outputType, quality));
-    }
-
-    if (mimeType.startsWith('image/')) {
-        // Get bitmap
-        let bitmap;
-        if (arrayBuffer) {
-            try {
-                const blob = new Blob([arrayBuffer], { type: mimeType });
-                bitmap = await createImageBitmap(blob);
-            } catch {
-                const dataURL = `data:${mimeType};base64,${arrayBufferToBase64(arrayBuffer)}`;
-                bitmap = await new Promise((res, rej) => {
-                    const img = new Image();
-                    img.onload = () => res(img);
-                    img.onerror = rej;
-                    img.src = dataURL;
-                });
-            }
-        } else if (fileOrBlob instanceof Blob) {
-            bitmap = await createImageBitmap(fileOrBlob);
-        } else {
-            throw new Error('Invalid input for image thumbnail');
-        }
-
-        const thumbBlob = await drawToBlob(bitmap.width ?? bitmap.naturalWidth, bitmap.height ?? bitmap.naturalHeight, (ctx, w, h) =>
-            ctx.drawImage(bitmap, 0, 0, w, h)
-        );
-
-        // Only return if smaller than original
-        const originalSize = arrayBuffer ? arrayBuffer.byteLength : fileOrBlob.size;
-        return thumbBlob && thumbBlob.size < originalSize ? thumbBlob : null;
-    }
-
-    if (mimeType.startsWith('video/')) {
-        return new Promise((resolve, reject) => {
-            const url = URL.createObjectURL(fileOrBlob);
-            const video = document.createElement('video');
-
-            video.preload = 'metadata';
-            video.muted = true;
-            video.playsInline = true;
-            video.src = url;
-            //video.setAttribute('blobRevoke', 'false');
-
-            const cleanup = () => {
-                //URL.revokeObjectURL(url);
-                //video.setAttribute('blobRevoke', 'true');
-                video.remove();
-            };
-
-            video.onerror = () => {
-                cleanup();
-                reject(new Error('Video load error'));
-            };
-
-            video.onloadedmetadata = () => {
-                try {
-                    video.currentTime = Math.min(0.1, video.duration || 0.1);
-                } catch {
-                    cleanup();
-                    reject(new Error('Seek failed'));
-                }
-            };
-
-            video.onseeked = async () => {
-                try {
-                    const thumbBlob = await drawToBlob(video.videoWidth, video.videoHeight, (ctx, w, h) =>
-                        ctx.drawImage(video, 0, 0, w, h)
-                    );
-                    cleanup();
-                    resolve(thumbBlob && thumbBlob.size < fileOrBlob.size ? thumbBlob : null);
-                } catch (err) {
-                    cleanup();
-                    reject(err);
-                }
-            };
-        });
-    }
-
-    return null;
-}
-
 let loadingSpinnerInitWrapper = null;
 let skipBtn = null;
 let loadingSpinnerInit = null;
 let activeDBInits = 0;
 let startedDBInits = 0;
 
-async function resolveMediaSource({ blob = null, base64 = null, url = null } = {}) {
-    let src = null;
-    let mime = null;
-
-    try {
-        if (blob instanceof Blob) {
-            mime = blob.type || null;
-
-            if (!mime && typeof detectMimeFromBlob === 'function') {
-                try {
-                    const detected = await detectMimeFromBlob(blob);
-                    if (detected) mime = detected;
-                } catch { }
-            }
-
-            try {
-                src = URL.createObjectURL(blob);
-            } catch { }
-
-            if (!src) {
-                try {
-                    const b64 = await blobToBase64(blob);
-                    const fallbackMime = mime || 'application/octet-stream';
-                    src = `data:${fallbackMime};base64,${b64}`;
-                    mime = mime || fallbackMime;
-                } catch { }
-            }
-        }
-        else if (typeof base64 === 'string' && base64.startsWith('data:')) {
-            src = base64;
-            const idx = base64.indexOf(';');
-            if (idx > 5) mime = base64.slice(5, idx);
-        }
-        else if (url) {
-            src = url;
-        }
-    } catch {
-        src = null;
-        mime = null;
-    }
-
-    // Extension-based fallback
-    if (!mime && typeof src === 'string' && src.startsWith('http')) {
-        const extMatch = src.split('?')[0].match(/\.([a-zA-Z0-9]+)$/);
-        if (extMatch) {
-            const ext = extMatch[1].toLowerCase();
-            if (ext === 'gif') mime = 'image/gif';
-            else if (ext === 'png') mime = 'image/png';
-            else if (ext === 'jpg' || ext === 'jpeg') mime = 'image/jpeg';
-            else if (ext === 'webp') mime = 'image/webp';
-            else if (ext === 'mp4' || ext === 'mov') mime = 'video/mp4';
-            else if (ext === 'webm') mime = 'video/webm';
-        }
-    }
-
-    const isGif = mime === 'image/gif' || blob?.type === 'image/gif';
-    const isVideo = (mime && mime.startsWith('video')) || blob?.type?.startsWith('video');
-    const isImage = (mime && mime.startsWith('image')) || blob?.type?.startsWith('image');
-
-    return {
-        src,
-        mime,
-        isGif,
-        isVideo,
-        isImage,
-        blob,
-        base64,
-        url
-    };
-}
-
-export const handleUpload = async (event, dataBaseIndexName, dataBaseObjectStoreName, databases) => {
-    try {
-        if (!window.indexedDB) {
-            alert('Your browser does not support IndexedDB.');
-            return;
-        }
-
-        const db = await openDB(dataBaseIndexName, dataBaseObjectStoreName).catch((error) => {
-            if (error.name === 'QuotaExceededError') {
-                alert('Storage limit exceeded. Please free up space or clear cache.');
-            } else if (error.name === 'SecurityError') {
-                alert('Database access is restricted. Please check browser settings or disable private mode.');
-            } else if (error.message && error.message.includes('BlobURLs')) {
-                alert(
-                    'It seems there is an issue with Blob URLs not being supported in your browser or environment.\n\n' +
-                    'To resolve this:\n' +
-                    '- Ensure your browser is updated to the latest version (Chrome, Firefox, Edge).\n' +
-                    '- Avoid using the application in private/incognito mode.\n' +
-                    '- Disable browser extensions that may block IndexedDB or Blob URLs.\n\n' +
-                    'If the problem persists, try switching to a different browser or device.'
-                );
-            } else if (error.message && error.message.includes('backing store')) {
-                alert(
-                    'It seems there is an issue with the browser\'s IndexedDB storage. Please follow these steps to resolve it:\n\n' +
-                    '1. Open Chrome Developer Tools:\n   - Right-click anywhere on the page and select "Inspect", or press "Ctrl+Shift+I" (Windows) / "Cmd+Option+I" (Mac).\n' +
-                    '2. Go to the "Application" tab.\n' +
-                    '3. Under "Storage", click on "IndexedDB".\n' +
-                    '4. Right-click on the database causing the issue and select "Delete".\n\n' +
-                    'Additional Suggestions:\n' +
-                    '- Disable any browser extensions that might restrict IndexedDB access.\n' +
-                    '- Ensure your browser is updated to the latest version.\n' +
-                    '- If the problem persists, try using a fresh Chrome profile or a different browser.'
-                );
-            } else {
-                alert(`Opening media database failed: ${error.message || error}`);
-            }
-            return null;
-        });
-        if (!db) return;
-
-        const files = Array.from(event.target.files).filter((file) => {
-            if (dataBaseObjectStoreName === 'faces')
-                return file.type.startsWith('image/') && file.type !== 'image/gif';
-            return file.type.startsWith('image/') || file.type.startsWith('video/');
-        });
-
-        if (files.length === 0) {
-            alert('No valid files found for upload.');
-            return;
-        }
-
-        const mediaContainer = document.querySelector(`.${dataBaseObjectStoreName}`);
-        const newMedia = [];
-
-        const processFile = async (file) => {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = async (e) => {
-                    try {
-                        const arrayBuffer = e.target.result;
-                        const blob = new Blob([arrayBuffer], { type: file.type });
-                        const payload = { blob };
-
-                        let thumb = null;
-                        try {
-                            thumb = await createThumbnail(file, arrayBuffer);
-                        } catch (err) { }
-                        if (thumb) payload.thumbnailBlob = thumb;
-
-                        const { id, timestamp } = await addToDB(db, payload);
-
-                        newMedia.push({
-                            id,
-                            timestamp,
-                            blobData: blob,
-                            thumbnailBlob: payload.thumbnailBlob || null,
-                            base64Data: payload.base64 || null,
-                            thumbnailBase64: payload.thumbnailBase64 || null,
-                        });
-
-                        resolve({ id, timestamp });
-                    } catch (err) {
-                        reject(err);
-                    }
-                };
-                reader.onerror = reject;
-                reader.readAsArrayBuffer(file);
-            });
-        };
-        
-        let progressOverlay = null;
-
-        if (files.length === 1) {
-            const simpleSpinner = document.createElement('div');
-            simpleSpinner.className = 'loading-screen';
-            document.documentElement.appendChild(simpleSpinner);
-            document.querySelectorAll('body main').forEach(main => {
-                if (main) main.style.filter = 'brightness(50%)';
-            });
-
-            progressOverlay = {
-                element: simpleSpinner,
-                setProgress: () => { },
-                remove: () => {
-                    simpleSpinner.remove();
-                    document.querySelectorAll('body main').forEach(main => {
-                        if (main) main.style.filter = 'none';
-                    });
-                }
-            };
-        } else if (files.length > 1) {
-            // Multi-file ring-style progress circle with smooth interpolation
-            const overlay = document.createElement('div');
-            overlay.style.position = 'fixed';
-            overlay.style.left = '50%';
-            overlay.style.top = '50%';
-            overlay.style.transform = 'translate(-50%, -50%)';
-            overlay.style.width = '50px';
-            overlay.style.height = '50px';
-            overlay.style.zIndex = '999999';
-            overlay.style.background = 'transparent';
-
-            const canvas = document.createElement('canvas');
-            canvas.width = 50;
-            canvas.height = 50;
-            overlay.appendChild(canvas);
-            document.documentElement.appendChild(overlay);
-
-            // Dim page
-            document.querySelectorAll('body main').forEach(main => {
-                if (main) main.style.filter = 'brightness(50%)';
-            });
-
-            const ctx = canvas.getContext('2d');
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
-            const radius = 22;
-            const lineWidth = 3;
-
-            let currentProgress = 0;   // internal interpolated value
-            let targetProgress = 0;    // progress we want to reach
-
-            function drawRing(progressFraction) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                // Background circle
-                ctx.beginPath();
-                ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
-                ctx.strokeStyle = '#f3f3f3';
-                ctx.lineWidth = lineWidth;
-                ctx.stroke();
-
-                // Foreground progress
-                const startAngle = -Math.PI / 2;
-                const endAngle = startAngle + progressFraction * 2 * Math.PI;
-                ctx.beginPath();
-                ctx.arc(cx, cy, radius, startAngle, endAngle);
-                ctx.strokeStyle = '#ff7300';
-                ctx.lineWidth = lineWidth;
-                ctx.lineCap = 'round';
-                ctx.stroke();
-            }
-
-            // Animation loop for interpolation
-            function animate() {
-                if (currentProgress < targetProgress) {
-                    // simple linear easing
-                    currentProgress += (targetProgress - currentProgress) * 0.2;
-                    if (Math.abs(currentProgress - targetProgress) < 0.001) currentProgress = targetProgress;
-                    drawRing(currentProgress);
-                } else if (currentProgress > targetProgress) {
-                    currentProgress += (targetProgress - currentProgress) * 0.2;
-                    drawRing(currentProgress);
-                }
-                if (currentProgress !== targetProgress) requestAnimationFrame(animate);
-            }
-
-            // Set progress smoothly
-            function setProgress(fraction) {
-                targetProgress = Math.max(0, Math.min(1, fraction));
-                requestAnimationFrame(animate);
-            }
-
-            // initial draw
-            drawRing(0);
-
-            progressOverlay = {
-                element: overlay,
-                setProgress, // use setProgress(fraction)
-                remove: () => {
-                    overlay.remove();
-                    document.querySelectorAll('body main').forEach(main => {
-                        if (main) main.style.filter = 'none';
-                    });
-                }
-            };
-        }
-
-        for (let i = 0; i < files.length; i++) {
-            await processFile(files[i]);
-            if (progressOverlay && files.length > 1) {
-                progressOverlay.setProgress((i + 1) / files.length);
-            }
-        }
-
-        if (progressOverlay) progressOverlay.remove();
-
-        (async () => {
-            await saveCountIndex(databases);
-        })();
-
-        if (progressOverlay) progressOverlay.remove();
-        document.querySelectorAll('body main').forEach(main => {
-            if (main) main.style.filter = 'none';
-        });
-        event.target.value = null;
-
-        // -- the remainder of your original DOM-build and insertion logic follows unchanged --
-        const activeContainers = mediaContainer.querySelectorAll('.data-container.active');
-        if (activeContainers.length > 0) {
-            for (const container of activeContainers) {
-                container.classList.remove('active');
-                const element = container.querySelector('img, iframe, video, initial');
-                const id = element ? parseInt(element.getAttribute('id'), 10) : null;
-                if (id) {
-                    (async () => {
-                        updateActiveState(db, id, false).catch(err => {
-                            console.error(`Failed to update active state for id=${idx}`, err);
-                        });
-                    })();
-                }
-            }
-        }
-
-        for (const { id, timestamp, blobData, thumbnailBlob, thumbnailBase64, base64Data } of newMedia) {
-            const active = id === newMedia[newMedia.length - 1].id;
-            const blob = blobData && (active || !thumbnailBlob) ? blobData : thumbnailBlob;
-            const base64 = base64Data && (active || !thumbnailBase64) ? base64Data : thumbnailBase64;
-
-            const container = document.createElement('div');
-            container.className = 'data-container';
-            container.setAttribute('tooltip', '');
-            container.setAttribute('oncontextmenu', 'return false;');
-
-            // Always
-            let vars = null;
-            vars = await resolveMediaSource({ blob, base64 });
-
-            // Only if not active
-            let inactiveVars = null;
-            if (!active) {
-                inactiveVars = await resolveMediaSource({ blob: blobData, base64: base64Data });
-            } else inactiveVars = vars;
-
-            // now create DOM element(s) as before if we have a valid src and type
-            if (vars.src && (vars.isVideo || vars.isImage || vars.isGif)) {
-                let thumbnail;
-                let img;
-                let video;
-
-                video = document.createElement('video');
-                video.style.display = "none";
-                video.setAttribute('timestamp', timestamp || '');
-                video.id = id;
-
-                img = document.createElement('img');
-                img.style.display = "none";
-                img.setAttribute('timestamp', timestamp || '');
-                img.id = id;
-
-                thumbnail = document.createElement('img');
-                thumbnail.style.display = "none";
-                thumbnail.setAttribute('original', "false");
-                thumbnail.setAttribute('timestamp', timestamp || '');
-                thumbnail.id = id;
-
-                if (vars.isVideo && !vars.isGif) {
-                    if (pageName === 'face-swap' && dataBaseObjectStoreName === 'inputs') {
-                        const tooltip = document.createElement('div');
-                        tooltip.className = 'tooltip tooltip-fast cursor';
-                        tooltip.textContent = 'Loading...';
-                        tooltip.style.display = 'none';
-                        tooltip.style.position = 'fixed';
-                        function updateTooltipPosition(event) {
-                            tooltip.style.left = `${event.clientX}px`;
-                            tooltip.style.top = `${event.clientY - 15}px`;
-                        }
-                        container.addEventListener('mouseenter', () => document.addEventListener('mousemove', updateTooltipPosition));
-                        container.addEventListener('mouseleave', () => document.removeEventListener('mousemove', updateTooltipPosition));
-                        container.appendChild(tooltip);
-                    }
-                    video.preload = "auto";
-                    video.muted = true;
-                    video.playsInline = true;
-                    video.style.display = "unset";
-                    try { video.disablePictureInPicture = true; } catch (e) { }
-                    if (vars.src) video.src = vars.src;
-
-                    if (pageName === 'face-swap' && dataBaseObjectStoreName === 'inputs') {
-                        const keepFPS = document.getElementById('keepFPS');
-                        const fpsSlider = document.getElementById("fps-slider");
-                        const removeBanner = document.getElementById("removeBanner");
-
-                        function handleMetadataUpdate(dataFps, dataDuration) {
-                            if (pageName === 'face-swap') {
-                                const tooltip = container.querySelector('.tooltip');
-                                if (tooltip && dataFps) {
-                                    tooltip.style.display = 'flex';
-                                    const fpsSliderValue = keepFPS && !keepFPS.checked ? fpsSlider.value : 60;
-                                    const fps = Math.min(fpsSliderValue, dataFps);
-                                    const videoDurationTotalFrames = Math.floor(dataDuration * fps);
-                                    const singleCreditForTotalFrameAmount = 120;
-                                    const removeBannerStateMultiplier = removeBanner && removeBanner.checked ? 2 : 1;
-                                    const neededCredits = Math.floor(
-                                        Math.max(1, videoDurationTotalFrames / singleCreditForTotalFrameAmount) *
-                                        removeBannerStateMultiplier
-                                    );
-                                    if (pageName === 'face-swap')
-                                        tooltip.textContent = `${neededCredits} Credits`;
-                                }
-                            }
-                        }
-
-                        calculateMetadata(video, handleMetadataUpdate);
-
-                        video.addEventListener('loadedmetadata', async () => {
-                            await calculateMetadata(video, handleMetadataUpdate);
-                        });
-
-                        [keepFPS, fpsSlider, removeBanner].forEach(el => {
-                            if (el) {
-                                el.addEventListener('change', async () => {
-                                    const dataFps = video.getAttribute('data-fps');
-                                    handleMetadataUpdate(dataFps, video.duration);
-                                });
-                            }
-                        });
-                    }
-
-                    try {
-                        video.load();
-                        video.pause();
-                    } catch (e) { }
-                } else {
-                    if (active) {
-                        img.style.display = "unset";
-                        if (vars.src) img.src = vars.src;
-                    } else {
-                        thumbnail.style.display = "unset";
-                        if (vars.src) thumbnail.src = vars.src;
-                    }
-
-                    if (pageName === 'face-swap' && dataBaseObjectStoreName === 'inputs') {
-                        const tooltip = document.createElement('div');
-                        tooltip.className = 'tooltip tooltip-fast cursor';
-                        tooltip.textContent = 'Loading...';
-                        tooltip.style.display = 'none';
-                        tooltip.style.position = 'fixed';
-
-                        function updateTooltipPosition(event) {
-                            tooltip.style.left = `${event.clientX}px`;
-                            tooltip.style.top = `${event.clientY - 15}px`;
-                        }
-
-                        container.addEventListener('mouseenter', () => document.addEventListener('mousemove', updateTooltipPosition));
-                        container.addEventListener('mouseleave', () => document.removeEventListener('mousemove', updateTooltipPosition));
-                        container.appendChild(tooltip);
-
-                        if (pageName === 'face-swap') {
-                            const removeBanner = document.getElementById("removeBanner");
-                            function handleMetadataUpdate() {
-                                const t = container.querySelector('.tooltip');
-                                if (t && pageName !== 'video-generator' && pageName !== 'video-extender' && pageName !== 'inpaint' && pageName !== 'art-generator') {
-                                    t.style.display = 'flex';
-                                    let neededCredits = removeBanner && removeBanner.checked ? 2 : 1;
-                                    if (pageName === 'face-swap')
-                                        t.textContent = `${neededCredits} Credits`;
-                                }
-                            }
-                            handleMetadataUpdate();
-                            if (removeBanner) {
-                                removeBanner.addEventListener('change', () => handleMetadataUpdate());
-                            }
-                            calculateMetadata(img, null);
-                        }
-                    }
-                }
-
-                if (inactiveVars.isVideo && !inactiveVars.isGif) {
-                    video.setAttribute('original', "true");
-                    container.appendChild(video);
-                } else {
-                    img.setAttribute('original', "true");
-                    container.appendChild(img);
-                }
-
-                container.appendChild(thumbnail);
-
-                const del = document.createElement('div');
-                del.className = 'delete-icon';
-                container.appendChild(del);
-
-                const settings = document.createElement('div');
-                settings.className = 'settings-mark';
-                container.appendChild(settings);
-
-                if (active) {
-                    container.classList.add('active');
-                    if (pageName === 'face-swap' || pageName === 'video-extender' || pageName === 'inpaint') displayStoredData(container, dataBaseObjectStoreName);
-                    (async () => {
-                        updateActiveState(db, id, true).catch(err => {
-                            console.error(`Failed to update active state for id=${idx}`, err);
-                        });
-                    })();
-                }
-                else if (blob) {
-                    if (thumbnail) {
-                        //img.addEventListener('load', () => URL.revokeObjectURL(img.src), { once: true });
-                        //thumbnail.setAttribute('blobRevoke', 'true');
-                    } else if (video) {
-                        video.addEventListener('loadeddata', () => {
-                            //URL.revokeObjectURL(video.src);
-                        }, { once: true });
-                        //video.setAttribute('blobRevoke', 'true');
-                    }
-                }
-            }
-
-            mediaContainer.insertBefore(container, mediaContainer.firstChild);
-            handleContextMenu(container);
-        }
-
-        localStorage.setItem(`${pageName}_${dataBaseObjectStoreName}-count`, await countInDB(db));
-    } catch (error) {
-        alert(`Upload failed: ${error.message || error}`);
-        console.error(error);
-    }
-};
-
-
 export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleDownload, databases, cacheAvailable = false) => {
+    //console.time(`db-await_${dataBaseObjectStoreName}`);
     try {
         let db = openDB(dataBaseIndexName, dataBaseObjectStoreName, true);
         let mediaCount = localStorage.getItem(`${pageName}_${dataBaseObjectStoreName}-count`);
@@ -5111,9 +4168,14 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
                     div.setAttribute('oncontextmenu', 'return false;');
                     div.innerHTML = `<div class="process-text">Loading...</div><div class="delete-icon"></div><div class="settings-mark"></div>`;
                     wrapper.appendChild(div);
+                    //handleContextMenu(div);
                 }
 
                 if (activeDBInits === 0) {
+                    //let handleProcessBtn = document.getElementById('handleProcessBtn');
+                    //if (handleProcessBtn)
+                    //handleProcessBtn.disabled = true;
+                    //didCallStatus = false;
                     document.querySelectorAll('body main').forEach(main => {
                         if (main)
                             main.style.filter = 'brightness(50%)';
@@ -5165,246 +4227,338 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
                 localStorage.setItem(`${pageName}_${dataBaseObjectStoreName}-count`, mediaCount);
             })();
 
+            //console.timeEnd(`db-await_${dataBaseObjectStoreName}`);
+
             if (mediaCount > 0) {
                 const mediaItems = await getCachedFromDB(
                     dataBaseIndexName,
                     () => openDB(dataBaseIndexName, dataBaseObjectStoreName)
                 );
                 const inputElements = mediaContainer.querySelectorAll('.data-container');
-
+                //mediaItems.reverse();
                 for (const [indexInBatch, item] of mediaItems.entries()) {
-                    let { thumbnailBlob, thumbnailBase64, url, id, timestamp, active } = item;
-                    const blob = item.blob && (active || !thumbnailBlob) ? item.blob : thumbnailBlob;
-                    const base64 = item.base64 && (active || !thumbnailBase64) ? item.base64 : thumbnailBase64;
+                    const { thumbnailBlob, thumbnailBase64, url, id, timestamp, active } = item;
 
+                    // Keep the original media blob separate from the display blob (thumbnail fallback).
+                    const originalBlob = item.blob || null;
+                    const displayBlob = originalBlob && (active || !thumbnailBlob) ? originalBlob : thumbnailBlob;
+                    const displayBase64 = item.base64 && (active || !thumbnailBase64) ? item.base64 : thumbnailBase64;
+
+                    // helper to convert blob -> src (objectURL preferred, fallback to base64)
+                    async function blobToSrc(blobObj) {
+                        if (!blobObj) return null;
+                        try {
+                            // prefer object URL
+                            try {
+                                return URL.createObjectURL(blobObj);
+                            } catch (e) {
+                                // fall through
+                            }
+                            // fallback to base64
+                            const b64 = await blobToBase64(blobObj);
+                            const fallbackMime = blobObj.type || 'application/octet-stream';
+                            return `data:${fallbackMime};base64,${b64}`;
+                        } catch (e) {
+                            return null;
+                        }
+                    }
+
+                    // compute src and mime for display blob (thumbnail or media depending on active) and for original media blob
+                    let srcDisplay = null;
+                    let mimeDisplay = null;
+                    let srcMedia = null;
+                    let mimeMedia = null;
+
+                    try {
+                        // Display blob -> srcDisplay, mimeDisplay
+                        if (displayBlob) {
+                            mimeDisplay = displayBlob.type || null;
+                            if (!mimeDisplay) {
+                                const detected = await detectMimeFromBlob(displayBlob);
+                                if (detected) mimeDisplay = detected;
+                            }
+                            srcDisplay = await blobToSrc(displayBlob);
+                        } else if (displayBase64 && typeof displayBase64 === 'string' && displayBase64.startsWith('data:')) {
+                            srcDisplay = displayBase64;
+                            const idx = displayBase64.indexOf(';');
+                            if (idx > 5) mimeDisplay = displayBase64.slice(5, idx);
+                        } else if (url) {
+                            srcDisplay = url;
+                            mimeDisplay = null;
+                        }
+
+                        // Original media blob -> srcMedia, mimeMedia (if present)
+                        if (originalBlob) {
+                            mimeMedia = originalBlob.type || null;
+                            if (!mimeMedia) {
+                                const detected = await detectMimeFromBlob(originalBlob);
+                                if (detected) mimeMedia = detected;
+                            }
+                            // only create media src now — we might not set as video.src if not active
+                            srcMedia = await blobToSrc(originalBlob);
+                        } else {
+                            // if no original blob, maybe url points to the media
+                            srcMedia = url || null;
+                        }
+                    } catch (e) {
+                        srcDisplay = srcDisplay || null;
+                        mimeDisplay = mimeDisplay || null;
+                        srcMedia = srcMedia || null;
+                        mimeMedia = mimeMedia || null;
+                    }
+
+                    // if mime still null but src exists, try to guess from src extension (best-effort)
+                    function guessMimeFromUrl(u) {
+                        if (!u || typeof u !== 'string') return null;
+                        const extMatch = u.split('?')[0].match(/\.([a-zA-Z0-9]+)$/);
+                        if (!extMatch) return null;
+                        const ext = extMatch[1].toLowerCase();
+                        if (ext === 'gif') return 'image/gif';
+                        if (ext === 'png') return 'image/png';
+                        if (ext === 'jpg' || ext === 'jpeg') return 'image/jpeg';
+                        if (ext === 'webp') return 'image/webp';
+                        if (ext === 'mp4' || ext === 'mov' || ext === 'm4v') return 'video/mp4';
+                        if (ext === 'webm') return 'video/webm';
+                        return null;
+                    }
+
+                    if (!mimeDisplay && srcDisplay) {
+                        const guessed = guessMimeFromUrl(srcDisplay);
+                        if (guessed) mimeDisplay = guessed;
+                    }
+                    if (!mimeMedia && srcMedia) {
+                        const guessed = guessMimeFromUrl(srcMedia);
+                        if (guessed) mimeMedia = guessed;
+                    }
+
+                    const isGifDisplay = mimeDisplay === 'image/gif' || (displayBlob && displayBlob.type === 'image/gif');
+                    // Decide whether the *original media* is video (important change: base detection on originalBlob / mimeMedia / url extension)
+                    const isVideoMedia = (mimeMedia && mimeMedia.startsWith('video')) ||
+                        (originalBlob && originalBlob.type && originalBlob.type.startsWith('video')) ||
+                        (!originalBlob && srcMedia && (/\.mp4$|\.mov$|\.webm$|\.m4v$/i).test(srcMedia || ''));
+
+                    const isImageDisplay = (mimeDisplay && mimeDisplay.startsWith('image')) || (displayBlob && displayBlob.type && displayBlob.type.startsWith('image'));
+
+                    // If srcMedia is missing but originalBlob exists, try objectURL fallback (blobToSrc already attempted)
+                    if (!srcMedia && originalBlob) {
+                        try { srcMedia = await blobToSrc(originalBlob); }
+                        catch (e) { srcMedia = null; }
+                    }
+
+                    // ensure we have a container
                     let container = inputElements[indexInBatch];
                     if (!container) {
                         container = document.createElement('div');
                         container.className = 'data-container';
                         container.setAttribute('tooltip', '');
                         container.setAttribute('oncontextmenu', 'return false;');
+                        //handleContextMenu(container);
                         mediaContainer.appendChild(container);
                     }
                     container.innerHTML = '';
 
-                    // Always
-                    let vars = null;
-                    vars = await resolveMediaSource({ blob, base64, url });
-
-                    // Only if not active
-                    let inactiveVars = null;
-                    if (!active) {
-                        inactiveVars = await resolveMediaSource({ blob: item.blob, base64: item.base64, url });
-                    } else inactiveVars = vars;
-
-                    (async () => {
-                        const originalBlob = item.blob;
-                        if (originalBlob && !thumbnailBlob) {
-                            const blob = item.blob;
-
-                            try {
-                                let thumb = thumbnailBlob || null;
-
-                                // create thumbnail if missing
-                                if (!thumb) {
-                                    try {
-                                        thumb = await createThumbnail(blob);
-                                    } catch (err) {
-                                        console.warn('Failed to create thumbnail:', err);
-                                    }
-                                }
-
-                                // persist to DB when we created at least one new field
-                                if (thumb) {
-                                    if (timestamp) {
-                                        try {
-                                            await updateInDB(db, timestamp, { blob, thumbnailBlob: thumb });
-                                        } catch (updErr) {
-                                            // fallback to id
-                                            if (id != null) {
-                                                await updateInDB(db, id, { blob, thumbnailBlob: thumb });
-                                            }
-                                        }
-                                    }
-                                }
-                            } catch (err) {
-                                console.error('Error during thumbnail/base64 creation:', err);
+                    // If media is a video (originally), create a <video> element even if display blob is an image thumbnail.
+                    if (isVideoMedia) {
+                        // Add tooltip for inputs same as original code
+                        if (dataBaseObjectStoreName === 'inputs') {
+                            const tooltip = document.createElement('div');
+                            tooltip.className = 'tooltip tooltip-fast cursor';
+                            tooltip.textContent = 'Loading...';
+                            tooltip.style.display = 'none';
+                            tooltip.style.position = 'fixed';
+                            function updateTooltipPosition(event) {
+                                tooltip.style.left = `${event.clientX}px`;
+                                tooltip.style.top = `${event.clientY - 15}px`;
                             }
+                            container.addEventListener('mouseenter', () => document.addEventListener('mousemove', updateTooltipPosition));
+                            container.addEventListener('mouseleave', () => document.removeEventListener('mousemove', updateTooltipPosition));
+                            container.appendChild(tooltip);
                         }
-                    })();
 
-                    // now create DOM element(s) as before if we have a valid src and type
-                    if (vars.src && (vars.isVideo || vars.isImage || vars.isGif)) {
-                        let thumbnail;
-                        let img;
-                        let video;
-
-                        video = document.createElement('video');
-                        video.style.display = "none";
+                        const video = document.createElement('video');
                         video.setAttribute('url', url || '');
                         video.setAttribute('timestamp', timestamp || '');
+                        video.setAttribute('active', active ? 'true' : 'false');
+                        // If not active, mark as resized to indicate we're not loading full size / playing yet
+                        video.setAttribute('resized', !active ? 'true' : 'false');
                         video.id = id;
+                        video.preload = "auto";
+                        video.muted = true;
+                        video.playsInline = true;
+                        try { video.disablePictureInPicture = true; } catch (e) { }
 
-                        img = document.createElement('img');
-                        img.style.display = "none";
-                        img.setAttribute('url', url || '');
-                        img.setAttribute('timestamp', timestamp || '');
-                        img.id = id;
-
-                        thumbnail = document.createElement('img');
-                        thumbnail.style.display = "none";
-                        thumbnail.setAttribute('original', "false");
-                        thumbnail.setAttribute('url', url || '');
-                        thumbnail.setAttribute('timestamp', timestamp || '');
-                        thumbnail.id = id;
-
-                        if (vars.isVideo && !vars.isGif) {
-                            if (dataBaseObjectStoreName === 'inputs') {
-                                const tooltip = document.createElement('div');
-                                tooltip.className = 'tooltip tooltip-fast cursor';
-                                tooltip.textContent = 'Loading...';
-                                tooltip.style.display = 'none';
-                                tooltip.style.position = 'fixed';
-                                function updateTooltipPosition(event) {
-                                    tooltip.style.left = `${event.clientX}px`;
-                                    tooltip.style.top = `${event.clientY - 15}px`;
-                                }
-                                container.addEventListener('mouseenter', () => document.addEventListener('mousemove', updateTooltipPosition));
-                                container.addEventListener('mouseleave', () => document.removeEventListener('mousemove', updateTooltipPosition));
-                                container.appendChild(tooltip);
-                            }
-                            video.preload = "auto";
-                            video.muted = true;
-                            video.playsInline = true;
-                            video.style.display = "unset";
-                            try { video.disablePictureInPicture = true; } catch (e) { }
-                            if (vars.src) video.src = vars.src;
-
-                            if (dataBaseObjectStoreName === 'inputs') {
-                                const keepFPS = document.getElementById('keepFPS');
-                                const fpsSlider = document.getElementById("fps-slider");
-                                const removeBanner = document.getElementById("removeBanner");
-
-                                function handleMetadataUpdate(dataFps, dataDuration) {
-                                    if (pageName === 'face-swap') {
-                                        const tooltip = container.querySelector('.tooltip');
-                                        if (tooltip && dataFps) {
-                                            tooltip.style.display = 'flex';
-                                            const fpsSliderValue = keepFPS && !keepFPS.checked ? fpsSlider.value : 60;
-                                            const fps = Math.min(fpsSliderValue, dataFps);
-                                            const videoDurationTotalFrames = Math.floor(dataDuration * fps);
-                                            const singleCreditForTotalFrameAmount = 120;
-                                            const removeBannerStateMultiplier = removeBanner && removeBanner.checked ? 2 : 1;
-                                            const neededCredits = Math.floor(
-                                                Math.max(1, videoDurationTotalFrames / singleCreditForTotalFrameAmount) *
-                                                removeBannerStateMultiplier
-                                            );
-                                            if (pageName === 'face-swap')
-                                            tooltip.textContent = `${neededCredits} Credits`;
-                                        }
-                                    }
-                                }
-
-                                calculateMetadata(video, handleMetadataUpdate);
-
-                                video.addEventListener('loadedmetadata', async () => {
-                                    await calculateMetadata(video, handleMetadataUpdate);
-                                });
-
-                                [keepFPS, fpsSlider, removeBanner].forEach(el => {
-                                    if (el) {
-                                        el.addEventListener('change', async () => {
-                                            const dataFps = video.getAttribute('data-fps');
-                                            handleMetadataUpdate(dataFps, video.duration);
-                                        });
-                                    }
-                                });
-                            }
-
+                        // If we have a thumbnail (display blob) that is an image and the item is NOT active, use it as poster.
+                        if (!active && srcDisplay && isImageDisplay) {
+                            // use poster instead of setting src (prevents heavy download)
                             try {
-                                video.load();
-                                video.pause();
-                            } catch (e) { }
-                        } else {
-                            if (active) {
-                                img.style.display = "unset";
-                                if (vars.src) img.src = vars.src;
-                            } else {
-                                thumbnail.style.display = "unset";
-                                if (vars.src) thumbnail.src = vars.src;
+                                video.poster = srcDisplay;
+                                // if poster is an objectURL we should revoke it after it has been used.
+                                if (displayBlob && srcDisplay.startsWith('blob:')) {
+                                    // create an Image to detect when poster has been loaded so we can revoke
+                                    const imgLoader = new Image();
+                                    imgLoader.onload = () => {
+                                        try { URL.revokeObjectURL(srcDisplay); } catch (e) { }
+                                    };
+                                    imgLoader.onerror = () => {
+                                        try { URL.revokeObjectURL(srcDisplay); } catch (e) { }
+                                    };
+                                    imgLoader.src = srcDisplay;
+                                }
+                            } catch (e) {
+                                console.warn('Setting poster failed:', e);
                             }
-
-                            if (dataBaseObjectStoreName === 'inputs') {
-                                const tooltip = document.createElement('div');
-                                tooltip.className = 'tooltip tooltip-fast cursor';
-                                tooltip.textContent = 'Loading...';
-                                tooltip.style.display = 'none';
-                                tooltip.style.position = 'fixed';
-
-                                function updateTooltipPosition(event) {
-                                    tooltip.style.left = `${event.clientX}px`;
-                                    tooltip.style.top = `${event.clientY - 15}px`;
-                                }
-
-                                container.addEventListener('mouseenter', () => document.addEventListener('mousemove', updateTooltipPosition));
-                                container.addEventListener('mouseleave', () => document.removeEventListener('mousemove', updateTooltipPosition));
-                                container.appendChild(tooltip);
-
-                                if (pageName === 'face-swap') {
-                                    const removeBanner = document.getElementById("removeBanner");
-                                    function handleMetadataUpdate() {
-                                        const t = container.querySelector('.tooltip');
-                                        if (t && pageName !== 'video-generator' && pageName !== 'video-extender' && pageName !== 'inpaint' && pageName !== 'art-generator') {
-                                            t.style.display = 'flex';
-                                            let neededCredits = removeBanner && removeBanner.checked ? 2 : 1;
-                                            if (pageName === 'face-swap')
-                                            t.textContent = `${neededCredits} Credits`;
-                                        }
-                                    }
-                                    handleMetadataUpdate();
-                                    if (removeBanner) {
-                                        removeBanner.addEventListener('change', () => handleMetadataUpdate());
-                                    }
-                                    calculateMetadata(img, null);
-                                }
+                        } else {
+                            // If active (or no image thumbnail), set the video src so it loads/display normally.
+                            if (srcMedia) {
+                                try { video.src = srcMedia; }
+                                catch (e) { /* ignore */ }
+                            } else if (url) {
+                                // fallback to url if available
+                                try { video.src = url; }
+                                catch (e) { /* ignore */ }
                             }
                         }
-
-                        if (inactiveVars.isVideo && !inactiveVars.isGif) {
-                            video.setAttribute('original', "true");
-                            container.appendChild(video);
-                        } else {
-                            img.setAttribute('original', "true");
-                            container.appendChild(img);
-                        }
-
-                        container.appendChild(thumbnail);
 
                         const del = document.createElement('div');
                         del.className = 'delete-icon';
-                        container.appendChild(del);
 
                         const settings = document.createElement('div');
                         settings.className = 'settings-mark';
+
+                        container.appendChild(video);
+                        container.appendChild(del);
                         container.appendChild(settings);
+                        handleContextMenu(container);
+
+                        // If inputs store, compute metadata as before but only if the video actually has a source to load
+                        if (dataBaseObjectStoreName === 'inputs') {
+                            const keepFPS = document.getElementById('keepFPS');
+                            const fpsSlider = document.getElementById("fps-slider");
+                            const removeBanner = document.getElementById("removeBanner");
+
+                            function handleMetadataUpdate(dataFps, dataDuration) {
+                                if (pageName === 'face-swap') {
+                                    const tooltip = container.querySelector('.tooltip');
+                                    if (tooltip && dataFps) {
+                                        tooltip.style.display = 'flex';
+                                        const fpsSliderValue = keepFPS && !keepFPS.checked ? fpsSlider.value : 60;
+                                        const fps = Math.min(fpsSliderValue, dataFps);
+                                        const videoDurationTotalFrames = Math.floor(dataDuration * fps);
+                                        const singleCreditForTotalFrameAmount = 120;
+                                        const removeBannerStateMultiplier = removeBanner && removeBanner.checked ? 2 : 1;
+                                        const neededCredits = Math.floor(
+                                            Math.max(1, videoDurationTotalFrames / singleCreditForTotalFrameAmount) *
+                                            removeBannerStateMultiplier
+                                        );
+                                        tooltip.textContent = `${neededCredits} Credits`;
+                                    }
+                                }
+                            }
+
+                            // Only call calculateMetadata if the element has a source that can load metadata
+                            if (video.src) {
+                                calculateMetadata(video, handleMetadataUpdate);
+                                video.addEventListener('loadedmetadata', async () => {
+                                    await calculateMetadata(video, handleMetadataUpdate);
+                                });
+                            }
+
+                            [keepFPS, fpsSlider, removeBanner].forEach(el => {
+                                if (el) {
+                                    el.addEventListener('change', async () => {
+                                        const dataFps = video.getAttribute('data-fps');
+                                        handleMetadataUpdate(dataFps, video.duration);
+                                    });
+                                }
+                            });
+                        }
+
+                        // If video was set from an objectURL (srcMedia) and it's not active (we set src only if active),
+                        // we revoke objectUrl on loadeddata once it has been used. If we set src and used an objectURL, revoke afterwards.
+                        if (video.src && video.src.startsWith && video.src.startsWith('blob:')) {
+                            video.addEventListener('loadeddata', () => {
+                                //try { URL.revokeObjectURL(video.src); } catch (e) { }
+                            }, { once: true });
+                            try { video.load(); video.pause(); } catch (e) { }
+                        } else {
+                            // if no src (we're showing poster only), do not attempt to load video
+                        }
+
+                        // Mark active state and display stored data as original code
+                        if (active) {
+                            container.classList.add('active');
+                            if (pageName === 'face-swap' || dataBaseObjectStoreName === 'outputs')
+                                displayStoredData(container, dataBaseObjectStoreName);
+                        }
+                    } else if (srcDisplay && (isImageDisplay || isGifDisplay)) {
+                        // It's an image / gif display (original media not video).
+                        const img = document.createElement('img');
+                        img.setAttribute('url', url || '');
+                        img.id = id;
+                        img.setAttribute('timestamp', timestamp || '');
+                        img.setAttribute('active', active ? 'true' : 'false');
+                        img.setAttribute('resized', !active ? 'true' : 'false');
+                        img.alt = isGifDisplay ? 'Loading...' : 'Loading...';
+                        if (srcDisplay) img.src = srcDisplay;
+
+                        const del = document.createElement('div');
+                        del.className = 'delete-icon';
+
+                        const settings = document.createElement('div');
+                        settings.className = 'settings-mark';
+
+                        if (dataBaseObjectStoreName === 'inputs') {
+                            const tooltip = document.createElement('div');
+                            tooltip.className = 'tooltip tooltip-fast cursor';
+                            tooltip.textContent = 'Loading...';
+                            tooltip.style.display = 'none';
+                            tooltip.style.position = 'fixed';
+
+                            function updateTooltipPosition(event) {
+                                tooltip.style.left = `${event.clientX}px`;
+                                tooltip.style.top = `${event.clientY - 15}px`;
+                            }
+
+                            container.addEventListener('mouseenter', () => document.addEventListener('mousemove', updateTooltipPosition));
+                            container.addEventListener('mouseleave', () => document.removeEventListener('mousemove', updateTooltipPosition));
+                            container.appendChild(tooltip);
+
+                            if (pageName === 'face-swap') {
+                                const removeBanner = document.getElementById("removeBanner");
+                                function handleMetadataUpdate() {
+                                    const t = container.querySelector('.tooltip');
+                                    if (t && pageName !== 'video-generator' && pageName !== 'inpaint' && pageName !== 'art-generator') {
+                                        t.style.display = 'flex';
+                                        let neededCredits = removeBanner && removeBanner.checked ? 2 : 1;
+                                        t.textContent = `${neededCredits} Credits`;
+                                    }
+                                }
+                                handleMetadataUpdate();
+                                if (removeBanner) {
+                                    removeBanner.addEventListener('change', () => handleMetadataUpdate());
+                                }
+                                calculateMetadata(img, null);
+                            }
+                        }
+
+                        container.appendChild(img);
+                        container.appendChild(del);
+                        container.appendChild(settings);
+                        handleContextMenu(container);
 
                         if (active) {
                             container.classList.add('active');
-                            if (pageName === 'face-swap' || pageName === 'video-extender' || dataBaseObjectStoreName === 'outputs')
+                            if (pageName === 'face-swap' || dataBaseObjectStoreName === 'outputs')
                                 displayStoredData(container, dataBaseObjectStoreName);
-                        }
-                        else if (blob) {
-                            if (thumbnail) {
-                                //img.addEventListener('load', () => URL.revokeObjectURL(img.src), { once: true });
-                                //thumbnail.setAttribute('blobRevoke', 'true');
-                            } else if (video) {
-                                video.addEventListener('loadeddata', () => {
-                                    //URL.revokeObjectURL(video.src);
-                                }, { once: true });
-                                //video.setAttribute('blobRevoke', 'true');
-                            }
+                        } else if (displayBlob) {
+                            img.addEventListener('load', () => {
+                                if (img.src && img.src.startsWith('blob:')) {
+                                    try { URL.revokeObjectURL(img.src); } catch (e) { }
+                                }
+                            }, { once: true });
                         }
                     } else if (url) {
+                        // Fallback: url-only handling (same as original)
                         container.innerHTML = `<initial url="${url}" id="${id}" timestamp="${timestamp}" active="${active}"/></initial><div class="process-text">Fetching...</div><div class="delete-icon"></div><div class="settings-mark"></div>`;
                         (async () => {
                             try {
@@ -5422,7 +4576,7 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
 
                                         try {
                                             await handleDownload(
-                                                { db, url, container, id, timestamp, active },
+                                                { db, url, element: container, id, timestamp, active },
                                                 databases
                                             );
                                         } catch (downloadErr) {
@@ -5456,28 +4610,110 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
                         container.appendChild(placeholder);
                         container.appendChild(del);
                         container.appendChild(set);
+                        handleContextMenu(container);
                     }
 
-                    handleContextMenu(container);
+                    // --- THUMBNAIL CREATION / PERSISTENCE (unchanged except using originalBlob variable) ---
+                    // If originalBlob exists but there is no thumbnailBlob persisted yet, create & persist one.
+                    if (originalBlob && !thumbnailBlob) {
+                        try {
+                            const thumb = await createThumbnail(originalBlob);
+                            if (thumb) {
+                                if (url) {
+                                    try {
+                                        await updateInDB(db, url, originalBlob, thumb);
+                                    } catch (updErr) {
+                                        if (id != null) {
+                                            try {
+                                                await new Promise((resolve, reject) => {
+                                                    const tx = db.transaction([db.objectStoreNames[0]], 'readwrite');
+                                                    const store = tx.objectStore(db.objectStoreNames[0]);
+                                                    const getReq = store.get(id);
+                                                    getReq.onsuccess = () => {
+                                                        const rec = getReq.result;
+                                                        if (rec) {
+                                                            rec.thumbnailBlob = thumb;
+                                                            rec.blob = originalBlob;
+                                                            rec.chunks = [];
+                                                            const putReq = store.put(rec);
+                                                            putReq.onsuccess = () => resolve();
+                                                            putReq.onerror = (ev) => reject(ev.target.error);
+                                                        } else {
+                                                            reject(new Error('Record not found for id ' + id));
+                                                        }
+                                                    };
+                                                    getReq.onerror = (ev) => reject(ev.target.error);
+                                                });
+                                            } catch (e) {
+                                                console.warn('Failed to update thumbnail by id:', e);
+                                            }
+                                        } else {
+                                            console.warn('Could not persist thumbnail: no url and no id.');
+                                        }
+                                    }
+                                } else if (id != null) {
+                                    try {
+                                        await new Promise((resolve, reject) => {
+                                            const tx = db.transaction([db.objectStoreNames[0]], 'readwrite');
+                                            const store = tx.objectStore(db.objectStoreNames[0]);
+                                            const getReq = store.get(id);
+                                            getReq.onsuccess = () => {
+                                                const rec = getReq.result;
+                                                if (rec) {
+                                                    rec.thumbnailBlob = thumb;
+                                                    rec.blob = originalBlob;
+                                                    rec.chunks = [];
+                                                    const putReq = store.put(rec);
+                                                    putReq.onsuccess = () => resolve();
+                                                    putReq.onerror = (ev) => reject(ev.target.error);
+                                                } else {
+                                                    reject(new Error('Record not found for id ' + id));
+                                                }
+                                            };
+                                            getReq.onerror = (ev) => reject(ev.target.error);
+                                        });
+                                    } catch (e) {
+                                        console.warn('Failed to update thumbnail by id:', e);
+                                    }
+                                } else {
+                                    console.warn('Thumbnail created but could not be persisted: missing url & id');
+                                }
+                            }
+                        } catch (err) {
+                            console.error('createThumbnail failed in initDB:', err);
+                        }
+                    }
                 }
 
                 mediaContainer.style.display = mediaCount > 0 ? 'flex' : 'none';
+                //updateGenerateButtonText();
             }
         }
 
     } catch (error) {
-        console.error(`Database initialization failed: ${error.message || error}`);
+        console.error(`Database initialization failed: ${error.message}`);
     } finally {
         if (cacheAvailable) {
             activeDBInits--;
             startedDBInits--;
         }
-
         if (startedDBInits === 0) {
-            if (loadingSpinnerInitWrapper) loadingSpinnerInitWrapper?.remove();
-            if (loadingSpinnerInit) loadingSpinnerInit?.remove();
-            if (skipBtn) skipBtn?.remove();
+            //let handleProcessBtn = document.getElementById('handleProcessBtn');
+            //if (handleProcessBtn)
+            //handleProcessBtn.disabled = false;
+
+            if (loadingSpinnerInitWrapper)
+                loadingSpinnerInitWrapper?.remove();
+            if (loadingSpinnerInit)
+                loadingSpinnerInit?.remove();
+            if (skipBtn)
+                skipBtn?.remove();
             document.querySelectorAll('body main').forEach(main => main.style.filter = 'none');
+
+            //const snapshotPromise = () => getDocsSnapshot('servers');
+            //const serverList = await fetchServerAddresses(snapshotPromise);
+            //cleanupStaleDownloadOutput(serverList);
+            //cleanupLocalStorage(snapshotPromise);
         }
 
         if (startedDBInits === 0)
@@ -5485,12 +4721,178 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
     }
 };
 
+/*else if (url) {
+                    const isEmbedPath = /\/embed\//.test(url);
+                    const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+                    const tiktokMatch = url.match(/(?:tiktok\.com\/@[^/]+\/video\/(\d+))/);
+                    const igMatch = url.match(/(?:instagram\.com\/(?:p|reel|tv)\/([^/?#]+))/);
+                    const twitterMatch = url.match(/(?:twitter\.com|x\.com)\/[^/]+\/status\/(\d+)/);
+                    const deepanyMatch = url.match(/pornhub\.com\/view_video\.php\?viewkey=([\w]+)/);
+                    const videoExtensions = /\.(mp4|webm|ogg|mov|mkv|avi)(\?.*)?$/i;
+                    const isDirectVideo = videoExtensions.test(url);
+
+                    if (isDirectVideo) {
+                        element.innerHTML =
+                            `<video
+            timestamp="${timestamp}"
+            id="${id}"
+            src="${url}"
+            preload="auto" autoplay muted keepmuted playsinline disablePictureInPicture
+            style="
+              width: calc(var(--input-size) - 2px);
+              height: calc(var(--input-size) - 2px);
+              border-radius: 50%;
+              position: relative;
+            ">
+         </video>` +
+                            `<div class="delete-icon"></div><div class="settings-mark"></div>`;
+                    }
+                    else if (isEmbedPath || ytMatch || tiktokMatch || igMatch || twitterMatch || deepanyMatch) {
+                        let embedSrc = '';
+                        if (isEmbedPath) {
+                            embedSrc = url;
+                        } else if (ytMatch) {
+                            embedSrc = `https://www.youtube.com/embed/${ytMatch[1]}`;
+                        } else if (tiktokMatch) {
+                            embedSrc = `https://www.tiktok.com/embed/v2/${tiktokMatch[1]}`;
+                        } else if (igMatch) {
+                            embedSrc = `https://www.instagram.com/p/${igMatch[1]}/embed`;
+                        } else if (twitterMatch) {
+                            embedSrc = `https://twitframe.com/show?url=https://twitter.com/i/status/${twitterMatch[1]}`;
+                        } else if (deepanyMatch) {
+                            embedSrc = `https://www.deepany.ai/embed/${deepanyMatch[1]}`;
+                        }
+
+                        element.innerHTML =
+                            `<iframe
+            timestamp="${timestamp}"
+            id="${id}"
+            src="${embedSrc}"
+            frameborder="0"
+            scrolling="no"
+            allowfullscreen
+            style="
+              width: calc(var(--input-size) - 2px);
+              height: calc(var(--input-size) - 2px);
+              border-radius: 50%;
+              position: relative;
+            ">
+         </iframe>` +
+                            `<div class="delete-icon"></div><div class="settings-mark"></div>`;
+                    } else {
+                        element.innerHTML =
+                            `<initial url="${url}" id="${id}" timestamp="${timestamp}" active="${active}"/>` +
+                            `<div class="process-text">Broken URL...</div>` +
+                            `<div class="delete-icon"></div><div class="settings-mark"></div>`;
+                    }
+
+
+                    if (active) {
+                        element.classList.add('active');
+                        displayStoredData(element, dataBaseObjectStoreName);
+                    }
+                }*/
+export const updateChunksInDB = (db, url, chunks) => {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
+        const objectStore = transaction.objectStore(db.objectStoreNames[0]);
+        const request = objectStore.openCursor();
+        request.onsuccess = (event) => {
+            const cursor = event.target.result;
+            if (!cursor) {
+                return resolve()
+            }
+            const {
+                value
+            } = cursor;
+            if (value.url === url) {
+                value.chunks = chunks;
+                const updateRequest = objectStore.put(value);
+                updateRequest.onsuccess = () => resolve();
+                updateRequest.onerror = () => reject('Error updating chunks.')
+            } else {
+                cursor.continue()
+            }
+        };
+        request.onerror = () => reject('Error accessing cursor.')
+    })
+};
+export const appendChunkToDB = (db, url, chunk) => {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
+        const objectStore = transaction.objectStore(db.objectStoreNames[0]);
+        const request = objectStore.openCursor();
+        request.onsuccess = (event) => {
+            const cursor = event.target.result;
+            if (!cursor) return resolve();
+            const value = cursor.value;
+            if (value.url === url) {
+                if (!value.chunks) value.chunks = [];
+                value.chunks.push(chunk);
+                const updateRequest = objectStore.put(value);
+                updateRequest.onsuccess = () => resolve();
+                updateRequest.onerror = () => reject('Error appending chunk.');
+            } else {
+                cursor.continue();
+            }
+        };
+        request.onerror = () => reject('Error accessing cursor.');
+    });
+};
+export const updateInDB = (db, url, blob, thumbnailBlob = null) => {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
+        const objectStore = transaction.objectStore(db.objectStoreNames[0]);
+        const request = objectStore.openCursor();
+
+        request.onsuccess = async (event) => {
+            const cursor = event.target.result;
+            if (cursor) {
+                if (cursor.value.url === url) {
+                    // Update blob and optional thumbnail
+                    cursor.value.blob = blob;
+                    if (thumbnailBlob instanceof Blob) {
+                        cursor.value.thumbnailBlob = thumbnailBlob;
+                    }
+                    cursor.value.chunks = []; // reset chunks if needed
+
+                    const updateRequest = cursor.update(cursor.value);
+                    updateRequest.onsuccess = () => resolve();
+                    updateRequest.onerror = (event) =>
+                        reject(`Error updating photo in database: ${event.target.error}`);
+                } else {
+                    cursor.continue();
+                }
+            } else {
+                reject(`No record found with url: ${url}`);
+            }
+        };
+
+        request.onerror = (event) => {
+            reject(`Error opening cursor in database: ${event.target.error}`);
+        };
+    });
+};
+export const deleteFromDB = async (db, id) => {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
+        const photosObjectStore = transaction.objectStore(db.objectStoreNames[0]);
+        const deleteRequest = photosObjectStore.delete(id);
+        deleteRequest.onsuccess = async () => {
+            resolve()
+        };
+        deleteRequest.onerror = (event) => {
+            reject(`Error deleting photo from database: ${event.target.error}`)
+        }
+    })
+};
+
 const _0x2c8895 = Math.floor(Math.random() * 0xA) + 0x1;
 const _0x2c8896 = _0x2c8895 <= 0;
 
 async function loadGoogleAdScript(_0x18b7dc, userData, userDoc, hideAds) {
     //if (pageName !== 'rewarded-ads' && pageName !== 'art-generator')
-    //return;
+        //return;
 
     const hideAdsBefore = hideAds;
 
@@ -5508,6 +4910,7 @@ async function loadGoogleAdScript(_0x18b7dc, userData, userDoc, hideAds) {
             break;
     }
 
+    console.log(hideAds);
     if (hideAds)
         return;
 
@@ -5531,7 +4934,7 @@ async function loadGoogleAdScript(_0x18b7dc, userData, userDoc, hideAds) {
                     localStorage.removeItem("google_adsense_settings");
                     localStorage.removeItem("google_ama_config");
                     localStorage.removeItem("offerwallDismissedAt");
-                    location.reload();
+                    location.reload(true);
                 }, 0x9c4);
             }
         }
@@ -6038,48 +5441,16 @@ async function loadGoogleAdScript(_0x18b7dc, userData, userDoc, hideAds) {
 })();
 
 (async () => {
-    let userData = await getUserData();
-    if (!userData) {
-        return;
-    }
-
-    if (localStorage.getItem('og') !== 'true') {
-        const userDocData = await getUserDoc();
-        const totalProcessCount =
-            (userDocData?.successfulDA || 0) +
-            (userDocData?.successfulDV || 0) +
-            (userDocData?.successfulDN || 0) +
-            (userDocData?.successfulDF || 0);
-
-        const accountTimestamp = userDocData?.createdAt || userDocData?.currentTime;
-
-        let accountCreatedAt;
-
-        if (accountTimestamp) {
-            if (typeof accountTimestamp.toDate === 'function') {
-                accountCreatedAt = accountTimestamp.toDate();
-            } else if (typeof accountTimestamp === 'number') {
-                accountCreatedAt = new Date(accountTimestamp);
-            } else if (accountTimestamp.seconds) {
-                accountCreatedAt = new Date(accountTimestamp.seconds * 1000);
-            } else {
-                accountCreatedAt = null;
-            }
-        }
-
-        const threeMonthsAgo = new Date();
-        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-
-        const isOlderThanThreeMonths = accountCreatedAt && accountCreatedAt <= threeMonthsAgo;
-        const isSafe = (userDocData?.paid >= 25 && totalProcessCount >= 100) || isOlderThanThreeMonths;
-        localStorage.setItem('og', isSafe);
-    }
-
     const params = new URLSearchParams(window.location.search);
     const paymentSuccess = params.has('payment-redirect');
     const orderId = params.get('orderId');
 
     if (!paymentSuccess || !orderId) return;
+
+    let userData = await getUserData();
+    if (!userData) {
+        return;
+    }
 
     const storageKey = `payment-verified-${orderId}`;
     const alreadyVerified = localStorage.getItem(storageKey);
@@ -6469,7 +5840,6 @@ export async function createVerificationFormSection(getFirebaseModules) {
                 </button>
             `;
     const sendVerificationEmail = document.getElementById("sendVerificationEmail");
-    simulateFullClick(sendVerificationEmail);
 
     sendVerificationEmail.addEventListener('click', async () => {
         sendVerificationEmail.disabled = true;
@@ -6477,7 +5847,7 @@ export async function createVerificationFormSection(getFirebaseModules) {
         const isResend = !(/receive/i.test(sendVerificationEmail.textContent));
 
         try {
-            if (!isResend) {
+            if (isResend) {
                 const server = await getServerAddressAPI();
                 const { auth } = await getFirebaseModules(true);
                 const user = auth.currentUser;
@@ -6573,7 +5943,6 @@ function loadGoogleOAuth2Library() {
         document.head.appendChild(script);
     });
 }
-
 async function handleUserLoggedIn(userData, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getDocSnapshot, getFirebaseModules) {
     if (!userData)
         return;
@@ -7541,7 +6910,6 @@ async function createSignFormSection(registerForm, retrieveImageFromURL, getFire
         showPasswordIcon.innerHTML = isPasswordVisible ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path><circle cx="12" cy="12" r="3"></circle></svg>` : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye-off"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"></path><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"></path><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"></path><path d="m2 2 20 20"></path></svg>`
     })
 }
-
 async function createForm(createFormSection) {
     const existingFormWrapper = document.getElementById('wrapper');
     if (existingFormWrapper) return;
@@ -7597,7 +6965,7 @@ export async function getStoredEmail() {
     }
 }
 
-export async function handleLoggedOutState(retrieveImageFromURL, getFirebaseModules) {
+async function handleLoggedOutState(retrieveImageFromURL, getFirebaseModules) {
     const userLayoutContainer = document.getElementById("userLayoutContainer");
     if (userLayoutContainer)
         userLayoutContainer.style.display = 'none';
@@ -8018,7 +7386,7 @@ export function createOverlay(userDoc = null, innerHTML = null) {
         return null;
     const overlay = document.createElement('div');
     overlay.classList.add('overlay');
-    if (innerHTML !== null)
+    if (innerHTML !== null) 
         overlay.innerHTML = innerHTML;
 
     else if (userDoc?.isBanned) {
@@ -8318,7 +7686,7 @@ export async function createUserData(sidebar, screenMode, setAuthentication, ret
                 return
             }
             sidebar.insertAdjacentHTML('afterbegin', `
-                    <div id="signContainer" style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: row;">
+                    <div id="signContainer" style="display: flex; gap: 1vh; flex-direction: row;">
                         <button style="justify-content: center;" class="openSignUpContainer" id="openSignUpContainer">
                             <svg style="width: 3vh;margin-right: 0.3vh;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M296.591495 650.911274c-12.739762 0-23.555429 10.629793-23.555429 23.766886 0 13.226033 10.558841 23.757892 23.555429 23.757892l428.151713 0c12.764346 0 23.579013-10.620799 23.579013-23.757892 0-13.232029-10.531859-23.766886-23.579013-23.766886L296.591495 650.911274zM724.743208 532.090235l-428.151713 0c-12.739762 0-23.555429 10.630792-23.555429 23.768885 0 13.222035 10.558841 23.757892 23.555429 23.757892l428.151713 0c12.764346 0 23.579013-10.629793 23.579013-23.757892C748.322222 542.627091 737.790362 532.090235 724.743208 532.090235zM296.728402 460.793774l166.485723 0c13.090125 0 23.694935-10.646781 23.694935-23.771883 0-13.218438-10.60481-23.762889-23.694935-23.762889l-166.485723 0c-13.086128 0-23.692337 10.642784-23.692337 23.762889C273.036066 450.240929 283.642474 460.793774 296.728402 460.793774zM655.311483 270.894925c0 12.820708 10.630792 23.545036 23.741903 23.545036l19.717631 0c13.206046 0 23.741903-10.535857 23.741903-23.545036L722.51292 175.40047c0-12.823306-10.629793-23.545036-23.741903-23.545036l-19.717631 0c-13.205047 0-23.741903 10.537256-23.741903 23.545036L655.311483 270.894925zM298.847565 270.894925c0 12.820708 10.629793 23.545036 23.738905 23.545036l19.718031 0c13.229031 0 23.741303-10.535857 23.741303-23.545036L366.045805 175.40047c0-12.823306-10.629793-23.545036-23.741303-23.545036l-19.718031 0c-13.226432 0-23.738905 10.537256-23.738905 23.545036L298.847565 270.894925zM843.331405 199.38361l-71.242498 0 0 61.060401 57.759839 0 0 543.285253L191.512139 803.729264 191.512139 260.444011l57.760638 0L249.272777 199.38361 178.028681 199.38361c-26.433078 0-47.577143 21.186635-47.577143 37.087255l0 570.740038c0 36.173474 21.280972 57.574764 47.577143 57.574764l665.302725 0c26.458061 0 47.576543-21.207421 47.576543-57.574764L890.907948 236.470865C890.908148 220.767112 869.601594 199.38361 843.331405 199.38361zM415.616996 199.38361 605.739293 199.38361l0 61.060401-190.122097 0L415.617196 199.38361zM744.23899 346.039777c-9.332672-9.342066-24.297526-9.294698-33.553251-0.042971l-83.874933 83.856945-34.807401-34.845775c-9.286704-9.273113-24.276541-9.342066-33.609213 0.007995-9.278709 9.273113-9.373645 24.250958-0.017988 33.605615l49.010571 48.99778c0.72251 1.000722 1.531961 1.951677 2.43435 2.859461 9.334671 9.327676 24.299525 9.286104 33.558048 0.042971l100.907385-100.923774C753.42776 370.466216 753.520697 355.321484 744.23899 346.039777z"/></svg>
                             Sign Up
@@ -8338,7 +7706,7 @@ function createSideBarData(sidebar) {
     const exploreButton = document.getElementById("exploreButton");
     if (!exploreButton) {
         let sideBar = `
-				<div style="flex: 1; justify-content: space-between;gap: calc(2vh );">
+				<div style="flex: 1; justify-content: space-between;">
                     <div style="display: flex;gap: 1vh;">
                         <a class="button" id="exploreButton" href=".?v=${version}">
                             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -8360,38 +7728,26 @@ function createSideBarData(sidebar) {
                             Premium
                         </a>
                     </div>
-                    <div style="display: flex;flex-direction: row;margin: 0;">
-                        <small style="white-space: nowrap;padding-right: 1vh;">Services</small>
-                        <div class="line"></div>
+                    <div class="line" style="margin: 0;"></div>
+                    <div style="display: flex;gap: 1vh;">
+                        <a class="button" id="faceSwapButton" href="face-swap?v=${version}">
+                            <svg style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M848 64h-84c-7.2 0-14.3 2.7-19.8 8.2-5.5 5.5-8.2 12.6-8.2 19.8 0 7.2 2.7 14.3 8.2 19.8 5.5 5.5 12.6 8.2 19.8 8.2h84v84c0 7.2 2.7 14.3 8.2 19.8 5.5 5.5 12.6 8.2 19.8 8.2s14.3-2.7 19.8-8.2c5.5-5.5 8.2-12.6 8.2-19.8v-84c0-30.9-25.1-56-56-56zM876 512c-7.2 0-14.3 2.7-19.8 8.2-5.5 5.5-8.2 12.6-8.2 19.8v84h-84c-7.2 0-14.3 2.7-19.8 8.2-1.5 1.5-2.3 3.4-3.4 5.2-31.6-30.4-67.1-55.4-106.4-72C714.2 517.7 764.7 426 749.2 323c-14.6-96.7-89.6-177.5-185.3-197.5-17.6-3.7-35-5.4-51.9-5.4-132.6 0-240 107.4-240 240 0 87.6 47.5 163.5 117.6 205.4-39.2 16.6-74.8 41.6-106.4 72-1.1-1.8-1.9-3.7-3.4-5.2-5.5-5.5-12.6-8.2-19.8-8.2h-84v-84c0-7.2-2.7-14.3-8.2-19.8-5.5-5.5-12.6-8.2-19.8-8.2s-14.3 2.7-19.8 8.2c-5.5 5.5-8.2 12.6-8.2 19.8v84c0 30.9 25.1 56 56 56h69c-46.8 60.6-79.3 136.5-89.5 221.3-3.8 31.2 21.1 58.7 52.5 58.7h608c31.4 0 56.2-27.6 52.5-58.7-10.2-84.9-42.7-160.8-89.5-221.4h69c30.9 0 56-25.1 56-56v-84c0-7.2-2.7-14.3-8.2-19.8-5.5-5.5-12.6-8.2-19.8-8.2zM211.5 905c16.9-132.8 93.3-242.9 199.9-288 19.4-8.2 32.6-26.7 34.1-47.7 1.5-21.1-9-41.1-27.2-52C361.8 483.6 328 424.7 328 360c0-101.5 82.5-184 184-184 13.4 0 27 1.4 40.4 4.3 72.1 15.1 130.3 77.2 141.4 151.1 11.4 75.5-22.4 146.8-88.2 186-18.1 10.8-28.6 30.9-27.2 52 1.5 21.1 14.6 39.5 34.1 47.7C719 661.9 795.3 771.7 812.4 904l-600.9 1zM148 232c7.2 0 14.3-2.7 19.8-8.2 5.5-5.5 8.2-12.6 8.2-19.8v-84h84c7.2 0 14.3-2.7 19.8-8.2 5.5-5.5 8.2-12.6 8.2-19.8 0-7.2-2.7-14.3-8.2-19.8-5.5-5.5-12.6-8.2-19.8-8.2h-84c-30.9 0-56 25.1-56 56v84c0 7.2 2.7 14.3 8.2 19.8 5.5 5.5 12.6 8.2 19.8 8.2z" fill="white"/></svg>
+                            Face Swap
+                        </a>
+                        <a class="button" id="videoGeneratorButton" href="video-generator?v=${version}">
+                            <svg style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M512 1024C229.888 1024 0 794.112 0 512S229.888 0 512 0s512 229.888 512 512c0 104.96-44.544 180.736-132.096 225.28-52.736 26.624-109.056 29.696-159.232 31.744-60.928 3.072-99.328 6.144-117.76 37.376-13.312 22.528-3.584 41.984 12.8 71.68 15.36 27.136 36.352 65.024 7.168 100.352-33.28 40.448-82.944 45.568-122.88 45.568z m0-970.24c-252.928 0-458.24 205.824-458.24 458.24s205.824 458.24 458.24 458.24c41.984 0 66.56-7.68 81.408-26.112 5.12-6.144 2.56-13.312-12.288-40.448-16.384-29.696-41.472-74.752-12.288-124.928 33.792-57.856 98.304-60.928 161.28-63.488 46.592-2.048 94.72-4.608 137.216-26.112 69.12-35.328 102.912-93.184 102.912-177.664 0-252.416-205.312-457.728-458.24-457.728z" fill="white" /><path d="M214.016 455.68m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M384 244.736m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M645.12 229.376m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M804.352 426.496m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white"/></svg>
+                            Video Generator
+                        </a>
+                        <a class="button" id="inpaintButton" href="inpaint?v=${version}">
+                            <svg style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M991.776 535.2c0-25.632-9.984-49.76-28.064-67.872L588.992 92.128c-36.256-36.288-99.488-36.288-135.744-0.032L317.408 227.808c-37.408 37.408-37.44 98.336-0.032 135.776l374.656 375.136c18.144 18.144 42.24 28.128 67.936 28.128 25.632 0 49.728-9.984 67.84-28.096l35.328-35.296 26.112 26.144c12.512 12.512 12.512 32.768 1.856 43.584l-95.904 82.048c-12.448 12.544-32.736 12.48-45.248 0l-245.536-245.824 0 0-3.2-3.2c-37.44-37.408-98.336-37.472-135.744-0.096l-9.632 9.632L294.4 554.336c-6.24-6.24-14.432-9.376-22.624-9.376-8.192 0-16.384 3.136-22.656 9.376 0 0 0 0.032-0.032 0.032l-22.56 22.56c0 0 0 0 0 0l-135.872 135.712c-37.408 37.408-37.44 98.304-0.032 135.776l113.12 113.184c18.688 18.688 43.296 28.064 67.872 28.064 24.576 0 49.152-9.344 67.904-28.032l135.808-135.712c0.032-0.032 0.032-0.096 0.064-0.128l22.528-22.496c6.016-6.016 9.376-14.112 9.376-22.624 0-8.48-3.36-16.64-9.344-22.624l-96.896-96.96 9.6-9.6c12.48-12.544 32.768-12.48 45.248 0.032l0-0.032 3.2 3.2 0 0.032 245.568 245.856c18.944 18.912 43.872 28.256 68.544 28.256 24.032 0 47.808-8.896 65.376-26.56l95.904-82.048c37.44-37.408 37.472-98.336 0.032-135.808l-26.112-26.112 55.232-55.168C981.76 584.928 991.776 560.832 991.776 535.2zM362.144 848.544c-0.032 0.032-0.032 0.096-0.064 0.128l-67.776 67.712c-12.48 12.416-32.864 12.448-45.312 0L135.904 803.2c-12.48-12.48-12.48-32.768 0-45.28l67.904-67.84 0 0 67.936-67.84 158.336 158.432L362.144 848.544zM918.368 557.824l-135.808 135.68c-12.064 12.096-33.152 12.096-45.216-0.032L362.656 318.368c-12.48-12.512-12.48-32.8 0-45.28l135.84-135.712C504.544 131.328 512.576 128 521.12 128s16.608 3.328 22.624 9.344l374.688 375.2c6.016 6.016 9.344 14.048 9.344 22.592C927.776 543.712 924.448 551.744 918.368 557.824z" fill="white"/><path d="M544.448 186.72c-12.352-12.672-32.64-12.832-45.248-0.48-12.64 12.384-12.832 32.64-0.48 45.248l322.592 329.216c6.24 6.368 14.528 9.6 22.848 9.6 8.096 0 16.16-3.04 22.4-9.152 12.64-12.352 12.8-32.608 0.448-45.248L544.448 186.72z" fill="white"/></svg>
+                            Inpaint Anything
+                        </a>
+                        <a class="button" id="artGeneratorButton" href="art-generator?v=${version}">
+                            <svg style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M512 1024C229.888 1024 0 794.112 0 512S229.888 0 512 0s512 229.888 512 512c0 104.96-44.544 180.736-132.096 225.28-52.736 26.624-109.056 29.696-159.232 31.744-60.928 3.072-99.328 6.144-117.76 37.376-13.312 22.528-3.584 41.984 12.8 71.68 15.36 27.136 36.352 65.024 7.168 100.352-33.28 40.448-82.944 45.568-122.88 45.568z m0-970.24c-252.928 0-458.24 205.824-458.24 458.24s205.824 458.24 458.24 458.24c41.984 0 66.56-7.68 81.408-26.112 5.12-6.144 2.56-13.312-12.288-40.448-16.384-29.696-41.472-74.752-12.288-124.928 33.792-57.856 98.304-60.928 161.28-63.488 46.592-2.048 94.72-4.608 137.216-26.112 69.12-35.328 102.912-93.184 102.912-177.664 0-252.416-205.312-457.728-458.24-457.728z" fill="white" /><path d="M214.016 455.68m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M384 244.736m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M645.12 229.376m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M804.352 426.496m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white"/></svg>
+                            Art Generator
+                        </a>
                     </div>
-                    <div style="flex: unset;">
-                        <div style="display: flex;gap: 1vh;overflow: auto;max-height: calc(21vh );padding-right: calc(0.5vh );">
-                            <a class="button" id="faceSwapButton" href="face-swap?v=${version}">
-                                <svg style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M848 64h-84c-7.2 0-14.3 2.7-19.8 8.2-5.5 5.5-8.2 12.6-8.2 19.8 0 7.2 2.7 14.3 8.2 19.8 5.5 5.5 12.6 8.2 19.8 8.2h84v84c0 7.2 2.7 14.3 8.2 19.8 5.5 5.5 12.6 8.2 19.8 8.2s14.3-2.7 19.8-8.2c5.5-5.5 8.2-12.6 8.2-19.8v-84c0-30.9-25.1-56-56-56zM876 512c-7.2 0-14.3 2.7-19.8 8.2-5.5 5.5-8.2 12.6-8.2 19.8v84h-84c-7.2 0-14.3 2.7-19.8 8.2-1.5 1.5-2.3 3.4-3.4 5.2-31.6-30.4-67.1-55.4-106.4-72C714.2 517.7 764.7 426 749.2 323c-14.6-96.7-89.6-177.5-185.3-197.5-17.6-3.7-35-5.4-51.9-5.4-132.6 0-240 107.4-240 240 0 87.6 47.5 163.5 117.6 205.4-39.2 16.6-74.8 41.6-106.4 72-1.1-1.8-1.9-3.7-3.4-5.2-5.5-5.5-12.6-8.2-19.8-8.2h-84v-84c0-7.2-2.7-14.3-8.2-19.8-5.5-5.5-12.6-8.2-19.8-8.2s-14.3 2.7-19.8 8.2c-5.5 5.5-8.2 12.6-8.2 19.8v84c0 30.9 25.1 56 56 56h69c-46.8 60.6-79.3 136.5-89.5 221.3-3.8 31.2 21.1 58.7 52.5 58.7h608c31.4 0 56.2-27.6 52.5-58.7-10.2-84.9-42.7-160.8-89.5-221.4h69c30.9 0 56-25.1 56-56v-84c0-7.2-2.7-14.3-8.2-19.8-5.5-5.5-12.6-8.2-19.8-8.2zM211.5 905c16.9-132.8 93.3-242.9 199.9-288 19.4-8.2 32.6-26.7 34.1-47.7 1.5-21.1-9-41.1-27.2-52C361.8 483.6 328 424.7 328 360c0-101.5 82.5-184 184-184 13.4 0 27 1.4 40.4 4.3 72.1 15.1 130.3 77.2 141.4 151.1 11.4 75.5-22.4 146.8-88.2 186-18.1 10.8-28.6 30.9-27.2 52 1.5 21.1 14.6 39.5 34.1 47.7C719 661.9 795.3 771.7 812.4 904l-600.9 1zM148 232c7.2 0 14.3-2.7 19.8-8.2 5.5-5.5 8.2-12.6 8.2-19.8v-84h84c7.2 0 14.3-2.7 19.8-8.2 5.5-5.5 8.2-12.6 8.2-19.8 0-7.2-2.7-14.3-8.2-19.8-5.5-5.5-12.6-8.2-19.8-8.2h-84c-30.9 0-56 25.1-56 56v84c0 7.2 2.7 14.3 8.2 19.8 5.5 5.5 12.6 8.2 19.8 8.2z" fill="white"/></svg>
-                                Face Swap
-                            </a>
-                            <a class="button" id="videoGeneratorButton" href="video-generator?v=${version}">
-                                <svg style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M512 1024C229.888 1024 0 794.112 0 512S229.888 0 512 0s512 229.888 512 512c0 104.96-44.544 180.736-132.096 225.28-52.736 26.624-109.056 29.696-159.232 31.744-60.928 3.072-99.328 6.144-117.76 37.376-13.312 22.528-3.584 41.984 12.8 71.68 15.36 27.136 36.352 65.024 7.168 100.352-33.28 40.448-82.944 45.568-122.88 45.568z m0-970.24c-252.928 0-458.24 205.824-458.24 458.24s205.824 458.24 458.24 458.24c41.984 0 66.56-7.68 81.408-26.112 5.12-6.144 2.56-13.312-12.288-40.448-16.384-29.696-41.472-74.752-12.288-124.928 33.792-57.856 98.304-60.928 161.28-63.488 46.592-2.048 94.72-4.608 137.216-26.112 69.12-35.328 102.912-93.184 102.912-177.664 0-252.416-205.312-457.728-458.24-457.728z" fill="white" /><path d="M214.016 455.68m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M384 244.736m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M645.12 229.376m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M804.352 426.496m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white"/></svg>
-                                Video Generator
-                            </a>
-                            <a class="button" id="videoExtenderButton" href="video-extender?v=${version}">
-                                <svg style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M512 1024C229.888 1024 0 794.112 0 512S229.888 0 512 0s512 229.888 512 512c0 104.96-44.544 180.736-132.096 225.28-52.736 26.624-109.056 29.696-159.232 31.744-60.928 3.072-99.328 6.144-117.76 37.376-13.312 22.528-3.584 41.984 12.8 71.68 15.36 27.136 36.352 65.024 7.168 100.352-33.28 40.448-82.944 45.568-122.88 45.568z m0-970.24c-252.928 0-458.24 205.824-458.24 458.24s205.824 458.24 458.24 458.24c41.984 0 66.56-7.68 81.408-26.112 5.12-6.144 2.56-13.312-12.288-40.448-16.384-29.696-41.472-74.752-12.288-124.928 33.792-57.856 98.304-60.928 161.28-63.488 46.592-2.048 94.72-4.608 137.216-26.112 69.12-35.328 102.912-93.184 102.912-177.664 0-252.416-205.312-457.728-458.24-457.728z" fill="white" /><path d="M214.016 455.68m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M384 244.736m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M645.12 229.376m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M804.352 426.496m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white"/></svg>
-                                Video Extender
-                            </a>
-                            <a class="button" id="inpaintButton" href="inpaint?v=${version}">
-                                <svg style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M991.776 535.2c0-25.632-9.984-49.76-28.064-67.872L588.992 92.128c-36.256-36.288-99.488-36.288-135.744-0.032L317.408 227.808c-37.408 37.408-37.44 98.336-0.032 135.776l374.656 375.136c18.144 18.144 42.24 28.128 67.936 28.128 25.632 0 49.728-9.984 67.84-28.096l35.328-35.296 26.112 26.144c12.512 12.512 12.512 32.768 1.856 43.584l-95.904 82.048c-12.448 12.544-32.736 12.48-45.248 0l-245.536-245.824 0 0-3.2-3.2c-37.44-37.408-98.336-37.472-135.744-0.096l-9.632 9.632L294.4 554.336c-6.24-6.24-14.432-9.376-22.624-9.376-8.192 0-16.384 3.136-22.656 9.376 0 0 0 0.032-0.032 0.032l-22.56 22.56c0 0 0 0 0 0l-135.872 135.712c-37.408 37.408-37.44 98.304-0.032 135.776l113.12 113.184c18.688 18.688 43.296 28.064 67.872 28.064 24.576 0 49.152-9.344 67.904-28.032l135.808-135.712c0.032-0.032 0.032-0.096 0.064-0.128l22.528-22.496c6.016-6.016 9.376-14.112 9.376-22.624 0-8.48-3.36-16.64-9.344-22.624l-96.896-96.96 9.6-9.6c12.48-12.544 32.768-12.48 45.248 0.032l0-0.032 3.2 3.2 0 0.032 245.568 245.856c18.944 18.912 43.872 28.256 68.544 28.256 24.032 0 47.808-8.896 65.376-26.56l95.904-82.048c37.44-37.408 37.472-98.336 0.032-135.808l-26.112-26.112 55.232-55.168C981.76 584.928 991.776 560.832 991.776 535.2zM362.144 848.544c-0.032 0.032-0.032 0.096-0.064 0.128l-67.776 67.712c-12.48 12.416-32.864 12.448-45.312 0L135.904 803.2c-12.48-12.48-12.48-32.768 0-45.28l67.904-67.84 0 0 67.936-67.84 158.336 158.432L362.144 848.544zM918.368 557.824l-135.808 135.68c-12.064 12.096-33.152 12.096-45.216-0.032L362.656 318.368c-12.48-12.512-12.48-32.8 0-45.28l135.84-135.712C504.544 131.328 512.576 128 521.12 128s16.608 3.328 22.624 9.344l374.688 375.2c6.016 6.016 9.344 14.048 9.344 22.592C927.776 543.712 924.448 551.744 918.368 557.824z" fill="white"/><path d="M544.448 186.72c-12.352-12.672-32.64-12.832-45.248-0.48-12.64 12.384-12.832 32.64-0.48 45.248l322.592 329.216c6.24 6.368 14.528 9.6 22.848 9.6 8.096 0 16.16-3.04 22.4-9.152 12.64-12.352 12.8-32.608 0.448-45.248L544.448 186.72z" fill="white"/></svg>
-                                Inpaint Anything
-                            </a>
-                            <a class="button" id="artGeneratorButton" href="art-generator?v=${version}">
-                                <svg style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M512 1024C229.888 1024 0 794.112 0 512S229.888 0 512 0s512 229.888 512 512c0 104.96-44.544 180.736-132.096 225.28-52.736 26.624-109.056 29.696-159.232 31.744-60.928 3.072-99.328 6.144-117.76 37.376-13.312 22.528-3.584 41.984 12.8 71.68 15.36 27.136 36.352 65.024 7.168 100.352-33.28 40.448-82.944 45.568-122.88 45.568z m0-970.24c-252.928 0-458.24 205.824-458.24 458.24s205.824 458.24 458.24 458.24c41.984 0 66.56-7.68 81.408-26.112 5.12-6.144 2.56-13.312-12.288-40.448-16.384-29.696-41.472-74.752-12.288-124.928 33.792-57.856 98.304-60.928 161.28-63.488 46.592-2.048 94.72-4.608 137.216-26.112 69.12-35.328 102.912-93.184 102.912-177.664 0-252.416-205.312-457.728-458.24-457.728z" fill="white" /><path d="M214.016 455.68m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M384 244.736m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M645.12 229.376m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M804.352 426.496m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white"/></svg>
-                                Art Generator
-                            </a>
-                        </div>
-                    </div>
-                    <div style="display: flex;flex-direction: row;margin: 0;">
-                        <small style="white-space: nowrap;padding-right: 1vh;">Socials</small>
-                        <div class="line"></div>
-                    </div>
+                    <div class="line" style="margin: 0;"></div>
                     <div style="display: flex;gap: 1vh;">
 						<a class="button" id="discordButton" translate="no" href="https://discord.gg/VvHAj2eBCS" target="_blank">
 							<svg  viewBox="0 0 127.14 96.36" xmlns="http://www.w3.org/2000/svg">
@@ -8409,17 +7765,17 @@ function createSideBarData(sidebar) {
 							<svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24"><path d="M14.238 15.348c.085.084.085.221 0 .306-.465.462-1.194.687-2.231.687l-.008-.002-.008.002c-1.036 0-1.766-.225-2.231-.688-.085-.084-.085-.221 0-.305.084-.084.222-.084.307 0 .379.377 1.008.561 1.924.561l.008.002.008-.002c.915 0 1.544-.184 1.924-.561.085-.084.223-.084.307 0zm-3.44-2.418c0-.507-.414-.919-.922-.919-.509 0-.923.412-.923.919 0 .506.414.918.923.918.508.001.922-.411.922-.918zm13.202-.93c0 6.627-5.373 12-12 12s-12-5.373-12-12 5.373-12 12-12 12 5.373 12 12zm-5-.129c0-.851-.695-1.543-1.55-1.543-.417 0-.795.167-1.074.435-1.056-.695-2.485-1.137-4.066-1.194l.865-2.724 2.343.549-.003.034c0 .696.569 1.262 1.268 1.262.699 0 1.267-.566 1.267-1.262s-.568-1.262-1.267-1.262c-.537 0-.994.335-1.179.804l-2.525-.592c-.11-.027-.223.037-.257.145l-.965 3.038c-1.656.02-3.155.466-4.258 1.181-.277-.255-.644-.415-1.05-.415-.854.001-1.549.693-1.549 1.544 0 .566.311 1.056.768 1.325-.03.164-.05.331-.05.5 0 2.281 2.805 4.137 6.253 4.137s6.253-1.856 6.253-4.137c0-.16-.017-.317-.044-.472.486-.261.82-.766.82-1.353zm-4.872.141c-.509 0-.922.412-.922.919 0 .506.414.918.922.918s.922-.412.922-.918c0-.507-.413-.919-.922-.919z" fill="white"/></svg>
 							Reddit
 						</a>
-                        <div style="display: flex;gap: calc(1vh );flex-direction: row;justify-content: center;">
-                            <a id="faqLink" style="font-size: calc((1.75vh));" style="cursor: pointer;">
+                        <div style="display: flex;gap: 1vh;flex-direction: row;justify-content: center;">
+                            <a id="faqLink" style="font-size: calc((1.75vh* var(--scale-factor-h)));" style="cursor: pointer;">
                                 • FAQ
                             </a>
-                            <a id="policiesLink" style="font-size: calc((1.75vh));" style="cursor: pointer;">
+                            <a id="policiesLink" style="font-size: calc((1.75vh* var(--scale-factor-h)));" style="cursor: pointer;">
                                 • Policy
                             </a>
-                            <a id="guidelinesLink" style="font-size: calc((1.75vh));" style="cursor: pointer;">
+                            <a id="guidelinesLink" style="font-size: calc((1.75vh* var(--scale-factor-h)));" style="cursor: pointer;">
                                 • TOS
                             </a>
-                            <a id="contactUsLink" style="font-size: calc((1.75vh));" style="cursor: pointer;" onclick="window.location.href='mailto:official@deepany.ai';">
+                            <a id="contactUsLink" style="font-size: calc((1.75vh* var(--scale-factor-h)));" style="cursor: pointer;" onclick="window.location.href='mailto:official@deepany.ai';">
                                 • Help
                             </a>
 					    </div>
@@ -8485,7 +7841,7 @@ function snowEffect(options = {}) {
         const low = opsPerMs < cfg.lowEndThresholdOpsPerMs;
         try {
             localStorage.setItem(benchKey, JSON.stringify({ t: Date.now(), low }));
-        } catch (e) { }
+        } catch (e) {}
         return low;
     }
 
@@ -9253,12 +8609,11 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
 								<li><a class="text" href="character-swap?v=${version}" disabled>Full-Body Swap</a></li>
                                 <div style="display: flex;align-items: center;padding-top: 0.5vh;padding-left: 1vh;padding-right: 1vh;"><small style="white-space: nowrap;padding-right: 1vh;line-height: 0;">Video</small><div class="line" style=""></div></div>
 								<li><a class="text" href="video-generator?v=${version}">Generate</a></li>
-                                <li><a class="text" href="video-extender?v=${version}">Extend</a></li>
                                 <div style="display: flex;align-items: center;padding-top: 0.5vh;padding-left: 1vh;padding-right: 1vh;"><small style="white-space: nowrap;padding-right: 1vh;line-height: 0;">Inpaint</small><div class="line" style=""></div></div>
 								<li><a class="text" href="inpaint?v=${version}">Inpaint Anything</a></li>
 								<li><a class="text" href="qwen-editor?v=${version}" disabled>Qwen Edit</a></li>
                                 <div style="display: flex;align-items: center;padding-top: 0.5vh;padding-left: 1vh;padding-right: 1vh;"><small style="white-space: nowrap;padding-right: 1vh;line-height: 0;">Image</small><div class="line" style=""></div></div>
-								<li><a class="text" href="art-generator?v=${version}">Generate (Free!)</a></li>
+								<li><a class="text" href="art-generator?v=${version}">Generate</a></li>
 								<li><a class="text" href="image-editor?v=${version}" disabled>Edit</a></li>
 								<li><a class="text" href="image-upscaler?v=${version}" disabled>Upscale</a></li>
 								<li><a class="text" href="image-colorizer?v=${version}" disabled>Colorize</a></li>
@@ -10265,25 +9620,14 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
         }
     })();
 
-    function loadLZString() {
-        return new Promise((resolve, reject) => {
-            if (window.LZString) return resolve();
-            const script = document.createElement("script");
-            script.src = "https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js";
-            script.onload = () => resolve();
-            script.onerror = () => reject(new Error("Failed to load LZ-String"));
-            document.head.appendChild(script);
-        });
-    }
-
     async function autoComplete() {
         (async function () {
             const TEXTAREA_ID = "positivePrompt";
             const CSV_PATH = "./danbooru_tags.csv";
-            const TAGS_VERSION = "v1.3";
+            const TAGS_VERSION = "v1.0";
 
             const textarea = document.getElementById(TEXTAREA_ID);
-            if (!textarea || pageName === 'video-generator' || pageName === 'video-extender') {
+            if (!textarea || pageName === 'video-generator') {
                 return;
             }
 
@@ -10358,23 +9702,10 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
 
             async function getTags() {
                 const cacheKey = `danbooru_tags_${TAGS_VERSION}`;
-                let cached = null;
-
-                try {
-                    const compressed = localStorage.getItem(cacheKey);
-                    if (compressed) {
-                        const decompressed = LZString.decompress(compressed);
-                        if (decompressed) {
-                            cached = JSON.parse(decompressed);
-                        }
-                    }
-                } catch (e) {
-                    console.warn("Failed to load cached tags, will fetch CSV", e);
-                }
-
+                const cached = localStorage.getItem(cacheKey);
                 if (cached) {
                     console.log("✅ Loaded tags from localStorage");
-                    return cached; // Already parsed
+                    return JSON.parse(cached);
                 }
 
                 console.log("⬇️ Fetching tags from CSV...");
@@ -10398,16 +9729,7 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
                 }
 
                 arr.sort((a, b) => b.count - a.count);
-                try {
-                    localStorage.setItem(cacheKey, LZString.compress(JSON.stringify(arr)));
-                } catch (e) {
-                    console.warn("Failed to save tags", e);
-                    if (e.name === "QuotaExceededError") {
-                        console.warn("LocalStorage full, skipping cache.");
-                    } else {
-                        throw e;
-                    }
-                }
+                localStorage.setItem(cacheKey, JSON.stringify(arr));
                 return arr;
             }
 
@@ -10567,9 +9889,7 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
         })();
     }
 
-    loadLZString().then(() => {
-        autoComplete();
-    }).catch(err => console.error(err));
+    autoComplete();
 
     async function autoTranslate() {
         const CACHE_KEY = `translationCache_${pageName}_${version}`;
@@ -10725,6 +10045,7 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
     autoTranslate();
     pageUpdated = !0
 }
+
 export function revertDefaultSettingsFunc() {
     const btn = document.getElementById('resetSettingsBtn');
     if (btn) {
@@ -11046,6 +10367,7 @@ export function retrieveImages(id) {
 export function getSizeCache() {
     return sizeCache
 }
+
 function getValueBasedOnAspectRatio() {
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
@@ -11164,6 +10486,8 @@ export async function saveCountIndex(databases) {
         localStorage.setItem(`${pageName}_${dbConfig.objectStore}-count`, photoCount)
     }
 }
+// download-manager.js (replace your existing code with this)
+
 let globalDownloadCancelled = false; // fallback global flag (for compatibility)
 const downloadCancelledMap = new Map();   // id -> boolean
 const abortControllers = new Map();       // id -> AbortController
@@ -11314,40 +10638,36 @@ function chunksToBase64(chunks, mimeType) {
 export const handleDownload = async ({
     db,
     url,
-    container,
+    element,
     id,
     timestamp,
     active
 }, databases) => {
     console.log('[handleDownload] called from:\n', new Error().stack);
 
-    if (!(db && url && container && id && timestamp)) {
+    if (!(db && url && element && id && timestamp)) {
         console.error('Output not found!');
         return;
     }
 
     // initialize per-id state and controller
-    setDownloadCancelled(false, id);
+    //handleContextMenu(element);
+    setDownloadCancelled(false, id); // per-id explicit resume
     downloadCancelledMap.set(id, false);
-    const processText = msg => setProcessText(container, msg);
+    const processText = msg => setProcessText(element, msg);
 
-    if (active && !container.classList.contains('active')) {
-        container.classList.add('active');
+    if (active && !element.classList.contains('active')) {
+        element.classList.add('active');
     }
 
-    container.innerHTML = `<initial url="${url}" id="${id}" timestamp="${timestamp}" active="${active}">
-        <div class="process-text">Downloading...</div>
-        <div class="delete-icon"></div>
-        <div class="settings-mark"></div>
-    </initial>`;
+    element.innerHTML = `<initial url="${url}" id="${id}" timestamp="${timestamp}" active="${active}"><div class="process-text">Downloading...</div><div class="delete-icon"></div><div class="settings-mark"></div></initial>`;
 
-    container.querySelector('.delete-icon').addEventListener('click', async () => {
+    // delete icon should cancel this specific download (per-id)
+    element.querySelector('.delete-icon').addEventListener('click', async () => {
         setDownloadCancelled(true, id, true);
-        try { await updateChunksInDB(db, url, []); } catch { }
-        try { deleteDownloadData(timestamp, id, url); } catch { }
+        try { await updateChunksInDB(db, url, []); } catch (e) { console.warn('updateChunksInDB failed', e); }
+        try { deleteDownloadData(timestamp, id, url); } catch (e) { console.warn('deleteDownloadData failed', e); }
     });
-
-    handleContextMenu(container, false);
 
     if (!(id in progressMap)) progressMap[id] = 0;
     lastProgress = progressMap[id];
@@ -11355,7 +10675,6 @@ export const handleDownload = async ({
     let isMobile = null;
     const activeDataContainer = document.querySelector(".outputs .data-container.active");
     const dataContainerActive = activeDataContainer ? activeDataContainer : null;
-
     const downloadOutput = document.getElementById('downloadOutput');
     if (downloadOutput) {
         downloadOutput.textContent = "Pause";
@@ -11365,7 +10684,7 @@ export const handleDownload = async ({
     const viewOutput = document.getElementById('viewOutput');
     if (viewOutput) {
         viewOutput.textContent = "View";
-        isMobile = window.isMobileDevice();
+        isMobile = isMobileDevice();
         if (!isMobile) {
             viewOutput.textContent = "Fetch";
             viewOutput.classList.add("important");
@@ -11385,8 +10704,9 @@ export const handleDownload = async ({
 
     const previousData = await getFromDB(db);
     const entry = previousData.find(item => parseInt(item.id) === parseInt(id));
-    const chunks = entry ? entry.chunks.slice() : [];
+    const chunks = entry ? entry.chunks.slice() : []; // copy if present
 
+    // main loop (attempt/resume until cancelled)
     while (!downloadCancelledMap.get(id) && !signal.aborted) {
         try {
             const headers = downloadedBytes ? { 'Range': `bytes=${downloadedBytes}-` } : {};
@@ -11407,6 +10727,7 @@ export const handleDownload = async ({
 
             let lastSavedProgress = 0;
 
+            // inner streaming loop (read chunks)
             while (!downloadCancelledMap.get(id) && !signal.aborted) {
                 let readResult;
                 try {
@@ -11422,7 +10743,6 @@ export const handleDownload = async ({
 
                 const { done, value } = readResult;
                 if (done) break;
-
                 downloadedBytes += value.length;
                 chunks.push(value);
 
@@ -11434,6 +10754,7 @@ export const handleDownload = async ({
                 if (totalBytes > 0) {
                     lastProgress = (downloadedBytes / totalBytes) * 100;
                 } else {
+                    // unknown total - approximate progress as 0..100 by saved progress
                     lastProgress = progressMap[id] || 0;
                 }
 
@@ -11445,209 +10766,175 @@ export const handleDownload = async ({
                 }
 
                 processText(`Downloaded: ${lastProgress.toFixed(0)}%`);
-            }
+            } // end inner read loop
 
             if (downloadCancelledMap.get(id) || signal.aborted) {
-                try { reader.cancel(); } catch { }
+                // cleanup reader if necessary then return
+                try { reader.cancel(); } catch (e) { /* ignore */ }
                 return;
             }
 
             const isGif = contentType === 'image/gif';
             const isVideo = url.slice(-1) === '0' && !isGif;
-            const initialEl = container.querySelector('initial');
+            const initialEl = element.querySelector('initial');
 
-            processText(`Processing: Clearing memory...`);
-            const otherContainers = document.querySelectorAll('.outputs .data-container');
-            for (const otherContainer of otherContainers) {
-                if (otherContainer === container) continue;
-
-                const otherMedia = otherContainer.querySelector('[original="true"]');
-                if (otherMedia && otherMedia.src?.startsWith('blob:')) {
-                    if (otherMedia.tagName.toLowerCase() === 'video') {
-                        otherMedia.pause();
-                    }
-                    URL.revokeObjectURL(otherMedia.src);
-                    otherMedia.src = '';
-                    otherMedia.style.display = 'none';
-                    displayStoredData(null, 'outputs');
-                }
-                const otherThumb = otherContainer.querySelector('img[original="false"]');
-                if (otherThumb && !otherThumb.getAttribute('src')) {
-                    const entry = previousData.find(item => parseInt(item.id) === parseInt(otherThumb.id));
-                    const thumbnailBlob = entry?.thumbnailBlob;
-                    if (thumbnailBlob instanceof Blob) {
-                        const vars = await resolveMediaSource({ blob: thumbnailBlob });
-                        otherThumb.src = vars.src;
-                    }
-                }
-                if (otherThumb && otherThumb.src?.startsWith('blob:')) {
-                    otherThumb.style.display = 'unset';
-                }
-            }
-
-            processText(`Processing: Creating media...`);
-            const blob = new Blob(chunks, { type: contentType });
-
-            if (totalBytes > 0 && Math.abs(blob.size - totalBytes) > Math.max(1, totalBytes * 0.01)) {
-                alert(`Warning: The downloaded file size (${blob.size} bytes) differs significantly from expected size (${totalBytes} bytes).`);
-                chunks.length = 0; // release immediately
-                await updateChunksInDB(db, url, []);
-                deleteDownloadData(timestamp, id);
-                break;
-            }
-
-            if (blob.size === 0) {
-                alert('Warning: Media not displayable');
-                chunks.length = 0;
-                await updateChunksInDB(db, url, []);
-                deleteDownloadData(timestamp, id);
-                break;
-            }
-
-            chunks.length = 0;
-
-            const isMobileDevice = window.isMobileDevice() || window.isLowEndDevice();
-            if (isMobileDevice)
-                await new Promise(resolve => setTimeout(resolve, 1));
-
-            processText(`Processing: Preparing display...`);
-
-            const thumbnail = document.createElement('img');
-            thumbnail.setAttribute('url', url);
-            thumbnail.setAttribute('timestamp', timestamp);
-            thumbnail.setAttribute('original', 'false');
-            thumbnail.setAttribute('active', active);
-            thumbnail.id = id;
-            thumbnail.style.display = "none";
-
+            // create media element but do not set src until blobUrl/base64 is ready
             const media = isVideo ? document.createElement('video') : document.createElement('img');
             media.setAttribute('url', url || '');
             media.setAttribute('timestamp', timestamp || '');
-            media.setAttribute('original', 'true');
             media.setAttribute('active', active || '');
-            media.setAttribute('blobrevoke', 'false');
-            media.style.display = "unset";
             media.id = id;
 
             if (isVideo) {
-                media.preload = "metadata";
+                media.preload = "auto";
                 media.muted = true;
                 media.playsInline = true;
-                try { media.disablePictureInPicture = true; } catch { }
+                try { media.disablePictureInPicture = true; } catch (e) { /* ignore */ }
             }
 
             const del = document.createElement('div');
             del.className = 'delete-icon';
             const set = document.createElement('div');
             set.className = 'settings-mark';
-
             const frag = document.createDocumentFragment();
-            frag.appendChild(thumbnail);
             frag.appendChild(media);
             frag.appendChild(del);
             frag.appendChild(set);
 
-            if (initialEl) container.replaceChild(frag, initialEl);
-            else container.append(thumbnail, media, del, set);
-
-            if (active && !container.classList.contains('active')) {
-                container.classList.add('active');
+            if (initialEl) {
+                element.replaceChild(frag, initialEl);
+            } else {
+                element.appendChild(media);
+                element.appendChild(del);
+                element.appendChild(set);
+                handleContextMenu(element);
             }
 
-            processText(`Processing: Loading preview...`);
-            if (isMobileDevice)
-                await new Promise(resolve => setTimeout(resolve, 1));
-
+            // assembled blob
+            const blob = new Blob(chunks.map(chunk => new Uint8Array(chunk)), { type: contentType });
             const blobUrl = URL.createObjectURL(blob);
 
-            requestAnimationFrame(() => {
-                media.src = blobUrl;
-                //media.onerror = () => {
-                    //alert('Media failed to load from blob URL. Incognito?');
-                    //URL.revokeObjectURL(blobUrl);
-                //};
+            // size check
+            if (totalBytes > 0 && Math.abs(blob.size - totalBytes) > Math.max(1, totalBytes * 0.01)) {
+                alert(`Warning: The downloaded file size (${blob.size} bytes) differs significantly from expected size (${totalBytes} bytes).`);
+                await updateChunksInDB(db, url, []);
+                deleteDownloadData(timestamp, id);
+                break;
+            }
 
-                if (isVideo) {
-                    media.onloadeddata = () => {
-                        if (media.videoWidth === 0 || media.videoHeight === 0) {
-                            alert('Video decoded but has zero dimensions');
-                        }
-                    };
+            if (active && !element.classList.contains('active')) {
+                element.classList.add('active');
+            }
+
+            // set media src AFTER we have blobUrl
+            if (blobUrl) media.src = blobUrl;
+
+            const fallbackToBase64 = async () => {
+                try {
+                    const base64Url = chunksToBase64(chunks, contentType);
+                    media.src = base64Url;
+                } catch (e) {
+                    console.warn('fallbackToBase64 failed', e);
                 }
-            });
+            };
 
+            if (isVideo) {
+                media.load();
+                media.pause();
+                media.onerror = fallbackToBase64;
+                media.onloadeddata = () => {
+                    if (media.videoWidth === 0 || media.videoHeight === 0) fallbackToBase64();
+                };
+            } else {
+                media.onerror = fallbackToBase64;
+            }
+
+            // make other active containers inactive
             const activeContainers = document.querySelectorAll('.outputs .data-container.active');
             if (activeContainers.length > 0) {
-                for (const activeContainer of activeContainers) {
-                    activeContainer.classList.remove('active');
-                    const el = activeContainer.querySelector('img, iframe, video, initial');
+                for (const container of activeContainers) {
+                    container.classList.remove('active');
+                    const el = container.querySelector('img, iframe, video, initial');
                     const elId = el ? parseInt(el.getAttribute('id')) : NaN;
                     if (elId) {
-                        updateActiveState(db, elId, false).catch(err => {
-                            console.error(`Failed to update active state for id=${idx}`, err);
+                        await updateActiveState(db, elId, false).catch(err => {
+                            alert(`Update failed for id ${elId}: ${err}`);
                         });
                     }
                 }
             }
 
-            container.classList.add('active');
+            element.classList.add('active');
             if (id) {
-                updateActiveState(db, id, true).catch(err => {
-                    console.error(`Failed to update active state for id=${idx}`, err);
+                await updateActiveState(db, id, true).catch(err => {
+                    alert(`Update failed for id ${id}: ${err}`);
                 });
             }
 
-            (async () => {
-                console.log(`Processing: Updating DB...`);
-                await Promise.all([
-                    updateInDB(db, url, { blob }),
-                    saveCountIndex(databases)
-                ]);
-
-                try {
-                    if (isMobileDevice)
-                        await new Promise(r => setTimeout(r, 50));
-
-                    console.log(`Processing: Creating thumbnail...`);
-                    const thumb = await createThumbnail(blob);
-                    console.log(`Processing: Updating DB...`);
-                    await Promise.all([
-                        updateInDB(db, url, { thumbnailBlob: thumb }),
-                        saveCountIndex(databases)
-                    ]);
-
-                    if (thumb) {
-                        requestAnimationFrame(() => {
-                            thumbnail.src = URL.createObjectURL(thumb);
-                        });
-                    }
-                } catch (err) {
-                    console.warn('Failed to create thumbnail:', err);
-                }
-
+            if (blob.size === 0) {
+                alert('Warning: Media not displayable');
+                await updateChunksInDB(db, url, []);
                 deleteDownloadData(timestamp, id);
-            })();
+                break;
+            }
+
+            // persist final blob + bookkeeping
+            await Promise.all([updateInDB(db, url, blob), saveCountIndex(databases)]);
+            deleteDownloadData(timestamp, id);
 
             const snapshotPromise = () => getDocsSnapshot('servers');
             setFetchableServerAdresses((await fetchServerAddresses(snapshotPromise)).reverse());
-            displayStoredData(container, 'outputs');
+            displayStoredData(element, 'outputs');
+
+            // revoke other blob urls
+            const container = document.querySelectorAll('.outputs .data-container');
+            if (container.length > 0) {
+                for (const activeEl of container) {
+                    const el = activeEl.querySelector('img, iframe, video, initial');
+                    if (el !== element && el.src !== blobUrl && el.src?.startsWith('blob:')) {
+                        if (el?.tagName.toLowerCase() === "video") el.pause();
+                        const revoke = () => {
+                            try { URL.revokeObjectURL(el.src); } catch (e) { /* ignore */ }
+                            el.removeEventListener('load', revoke);
+                            el.removeEventListener('loadeddata', revoke);
+                        };
+
+                        if (el.tagName.toLowerCase() === 'img') {
+                            if (el.complete) {
+                                revoke();
+                            } else {
+                                el.addEventListener('load', revoke, { once: true });
+                            }
+                        } else if (el.tagName.toLowerCase() === 'video') {
+                            if (el.readyState >= 2) {
+                                revoke();
+                            } else {
+                                el.addEventListener('loadeddata', revoke, { once: true });
+                            }
+                        }
+                    }
+                }
+            }
+
+            // mark finished for this id + cleanup controller
             setDownloadCancelled(true, id);
-            resetAbortControllerFor(id);
+            resetAbortControllerFor(id); // remove controller and cancelled state (cleanup)
             processText(``);
             return;
+
         } catch (error) {
             if (error && error.name === 'AbortError') {
                 processText(`Paused: ${error.message || 'Operation was aborted'}`);
                 return;
             }
             console.warn('[handleDownload] error, will retry:', error);
-            processText(`Error: ${error.message}.`);
-            await new Promise(resolve => setTimeout(resolve, 1));
-        } finally {
-            handleContextMenu(container);
+            processText(`Error: ${error.message}. Retrying...`);
+            // small delay to avoid tight retry loop
+            await new Promise(resolve => setTimeout(resolve, 800));
         }
-    }
-};
+    } // end outer while
+}; // end handleDownload
+
 export const handleDelete = async (dataBaseIndexName, dataBaseObjectStoreName, parent, container, databases) => {
     try {
         console.log('[handleDelete] call');
@@ -11695,8 +10982,7 @@ export const handleDelete = async (dataBaseIndexName, dataBaseObjectStoreName, p
             if (element?.src?.startsWith('blob:')) {
                 const blobUrl = element.src;
                 element.src = '';
-                //URL.revokeObjectURL(blobUrl);
-                //element.setAttribute('blobRevoke', 'true');
+                URL.revokeObjectURL(blobUrl);
             }
 
             await deleteFromDB(db, itemToDelete.id);
@@ -11711,67 +10997,7 @@ export const handleDelete = async (dataBaseIndexName, dataBaseObjectStoreName, p
     }
 };
 
-async function replaceWithLowResolution(element, scale = 0.25, quality = 0.5) {
-    if (!element || !element.getAttribute('src') || element.getAttribute('resized') === 'true') return;
-
-    const tag = element.tagName.toLowerCase();
-
-    await new Promise(resolve => {
-        if (tag === 'img') {
-            if (element.complete && element.naturalWidth > 0) return resolve();
-            element.addEventListener('load', resolve, { once: true });
-            element.addEventListener('error', resolve, { once: true });
-        } else if (tag === 'video') {
-            if (element.readyState >= 4) return resolve();
-            element.addEventListener('loadeddata', resolve, { once: true });
-            element.addEventListener('canplaythrough', resolve, { once: true });
-            element.addEventListener('error', resolve, { once: true });
-        }
-    });
-
-    // Ensure dimensions exist
-    let w, h;
-
-    if (tag === 'img') {
-        await element.decode?.().catch(() => { });
-        w = element.naturalWidth;
-        h = element.naturalHeight;
-    } else {
-        // ensure real frame (avoid black zero frame)
-        if (element.currentTime === 0) {
-            try {
-                element.currentTime = 0.05;
-                await new Promise(r => element.addEventListener('seeked', r, { once: true }));
-            } catch { }
-        }
-        w = element.videoWidth;
-        h = element.videoHeight;
-    }
-
-    if (!w || !h) return;
-
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.max(1, Math.round(w * scale));
-    canvas.height = Math.max(1, Math.round(h * scale));
-
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(element, 0, 0, canvas.width, canvas.height);
-
-    const blob = await new Promise(resolve =>
-        canvas.toBlob(resolve, 'image/jpeg', quality)
-    );
-    if (!blob) return;
-
-    const url = URL.createObjectURL(blob);
-
-    if (tag === 'img') element.src = url;
-    else element.poster = url;
-
-    //element.setAttribute('posterBlobRevoke', 'false');
-    element.pause?.();
-    //element.setAttribute('resized', 'true');
-}
-const replaceContainerByDataType = async (el, dataBaseObjectStoreName, data = {}) => {
+const replaceElementForData = async (el, dataBaseObjectStoreName, data = {}) => {
     const { blob, base64, url, id, timestamp, active } = data;
 
     if (!el) throw new Error('No element provided');
@@ -11786,215 +11012,619 @@ const replaceContainerByDataType = async (el, dataBaseObjectStoreName, data = {}
     const desiredTag = mime?.startsWith('video/') ? 'video' : 'img';
     const currentTag = el.tagName.toLowerCase();
 
-    // If already correct type, just return it
-    if (desiredTag === currentTag) return el;
+    let newEl = el;
 
-    /* ---------- Hide old element ---------- */
-    el.style.display = 'none';
+    if (desiredTag !== currentTag) {
+        showNotification('Replacing the element format.', 'Loading in progress', 'normal');
 
-    /* ---------- Create new element ---------- */
-    const newEl = document.createElement(desiredTag);
+        if (desiredTag === 'video') {
+            newEl = document.createElement('video');
+            newEl.setAttribute('url', url || '');
+            newEl.setAttribute('timestamp', timestamp || '');
+            newEl.setAttribute('active', active ? 'true' : 'false');
+            newEl.setAttribute('resized', !active ? 'true' : 'false');
+            newEl.id = id;
+            newEl.muted = true;
+            newEl.playsInline = true;
+            newEl.setAttribute('playsinline', '');
+            newEl.setAttribute('webkit-playsinline', '');
+            newEl.preload = "metadata";
+            try { newEl.disablePictureInPicture = true; } catch { }
 
-    /* ---------- Copy everything automatically ---------- */
-    for (const attr of el.attributes) {
-        newEl.setAttribute(attr.name, attr.value);
-    }
-    Object.assign(newEl.dataset, el.dataset);
-    newEl.className = el.className;
-    newEl.style.cssText = el.style.cssText;
+            if (dataBaseObjectStoreName === 'inputs') {
+                const keepFPS = document.getElementById('keepFPS');
+                const fpsSlider = document.getElementById("fps-slider");
+                const removeBanner = document.getElementById("removeBanner");
 
-    // Ensure new element is visible
-    newEl.style.display = '';
-
-    /* ---------- Override / apply data-specific attrs ---------- */
-    if (url != null) newEl.setAttribute('url', url);
-    if (timestamp != null) newEl.setAttribute('timestamp', timestamp);
-    if (active != null) newEl.setAttribute('active', active ? 'true' : 'false');
-    //if (active != null) newEl.setAttribute('resized', !active ? 'true' : 'false');
-    if (id != null) newEl.id = id;
-
-    /* ---------- Tag-specific defaults ---------- */
-    if (desiredTag === 'video') {
-        newEl.muted = true;
-        newEl.playsInline = true;
-        newEl.setAttribute('playsinline', '');
-        newEl.setAttribute('webkit-playsinline', '');
-        newEl.preload = "metadata";
-        try { newEl.disablePictureInPicture = true; } catch { }
-
-        if (dataBaseObjectStoreName === 'inputs') {
-            const keepFPS = document.getElementById('keepFPS');
-            const fpsSlider = document.getElementById("fps-slider");
-            const removeBanner = document.getElementById("removeBanner");
-
-            function handleMetadataUpdate(dataFps, dataDuration) {
-                const tooltip = newEl.querySelector('.tooltip');
-                if (tooltip && dataFps) {
-                    tooltip.style.display = 'flex';
-                    const fpsSliderValue = keepFPS && !keepFPS.checked ? fpsSlider.value : 60;
-                    const fps = Math.min(fpsSliderValue, dataFps);
-                    const videoDurationTotalFrames = Math.floor(dataDuration * fps);
-                    const singleCreditForTotalFrameAmount = 120;
-                    const removeBannerStateMultiplier = removeBanner && removeBanner.checked ? 2 : 1;
-                    const neededCredits = Math.floor(
-                        Math.max(1, videoDurationTotalFrames / singleCreditForTotalFrameAmount) *
-                        removeBannerStateMultiplier
-                    );
-                    tooltip.textContent = pageName === 'art-generator' ? 'Free!' : `${neededCredits} Credits`;
+                function handleMetadataUpdate(dataFps, dataDuration) {
+                    const tooltip = newEl.querySelector('.tooltip');
+                    if (tooltip && dataFps) {
+                        tooltip.style.display = 'flex';
+                        const fpsSliderValue = keepFPS && !keepFPS.checked ? fpsSlider.value : 60;
+                        const fps = Math.min(fpsSliderValue, dataFps);
+                        const videoDurationTotalFrames = Math.floor(dataDuration * fps);
+                        const singleCreditForTotalFrameAmount = 120;
+                        const removeBannerStateMultiplier = removeBanner && removeBanner.checked ? 2 : 1;
+                        const neededCredits = Math.floor(
+                            Math.max(1, videoDurationTotalFrames / singleCreditForTotalFrameAmount) *
+                            removeBannerStateMultiplier
+                        );
+                        tooltip.textContent = pageName === 'art-generator' ? 'Free!' : `${neededCredits} Credits`;
+                    }
                 }
+
+                calculateMetadata(newEl, handleMetadataUpdate);
+                newEl.addEventListener('loadedmetadata', async () => {
+                    await calculateMetadata(newEl, handleMetadataUpdate);
+                });
+
+                [keepFPS, fpsSlider, removeBanner].forEach(el => {
+                    if (el) {
+                        el.addEventListener('change', async () => {
+                            const dataFps = newEl.getAttribute('data-fps');
+                            handleMetadataUpdate(dataFps, newEl.duration);
+                        });
+                    }
+                });
             }
+        } else {
+            newEl = document.createElement('img');
+            newEl.setAttribute('url', url || '');
+            newEl.id = id;
+            newEl.setAttribute('timestamp', timestamp || '');
+            newEl.setAttribute('active', active ? 'true' : 'false');
+            newEl.setAttribute('resized', !active ? 'true' : 'false');
 
-            calculateMetadata(newEl, handleMetadataUpdate);
-            newEl.addEventListener('loadedmetadata', async () => {
-                await calculateMetadata(newEl, handleMetadataUpdate);
-            });
-
-            [keepFPS, fpsSlider, removeBanner].forEach(ctrl => {
-                if (ctrl) {
-                    ctrl.addEventListener('change', async () => {
-                        const dataFps = newEl.getAttribute('data-fps');
-                        handleMetadataUpdate(dataFps, newEl.duration);
-                    });
+            if (dataBaseObjectStoreName === 'inputs' && pageName === 'face-swap') {
+                const removeBanner = document.getElementById("removeBanner");
+                function handleMetadataUpdate() {
+                    const t = newEl.querySelector('.tooltip');
+                    if (t) {
+                        t.style.display = 'flex';
+                        let neededCredits = removeBanner && removeBanner.checked ? 2 : 1;
+                        t.textContent = `${neededCredits} Credits`;
+                    }
                 }
-            });
-        }
-    } else {
-        // img
-        if (dataBaseObjectStoreName === 'inputs' && pageName === 'face-swap') {
-            const removeBanner = document.getElementById("removeBanner");
-            function handleMetadataUpdate() {
-                const t = newEl.querySelector('.tooltip');
-                if (t) {
-                    t.style.display = 'flex';
-                    let neededCredits = removeBanner && removeBanner.checked ? 2 : 1;
-                    t.textContent = `${neededCredits} Credits`;
-                }
+                handleMetadataUpdate();
+                if (removeBanner) removeBanner.addEventListener('change', () => handleMetadataUpdate());
+                calculateMetadata(newEl, null);
             }
-            handleMetadataUpdate();
-            if (removeBanner) removeBanner.addEventListener('change', () => handleMetadataUpdate());
-            calculateMetadata(newEl, null);
         }
-    }
 
-    /* ---------- Insert below old element ---------- */
-    el.insertAdjacentElement('afterend', newEl);
+        for (const [k, v] of Object.entries(el.dataset || {})) {
+            newEl.dataset[k] = v;
+        }
+
+        if (el.parentNode) el.parentNode.replaceChild(newEl, el);
+    }
 
     return newEl;
 };
-
-function blobToDataURL(blob) {
+const loadMedia = (element, blob) => {
     return new Promise((resolve, reject) => {
-        try {
-            const fr = new FileReader();
-            fr.onload = () => resolve(fr.result);
-            fr.onerror = err => reject(err);
-            fr.readAsDataURL(blob);
-        } catch (err) {
-            reject(err);
+        if (!blob) return reject('No blob provided');
+
+        const url = URL.createObjectURL(blob);
+        element.src = url;
+
+        const cleanup = () => {
+            element.removeEventListener('loadeddata', onLoadedData);
+            element.removeEventListener('load', onLoad);
+            element.removeEventListener('error', onError);
+        };
+
+        const onLoadedData = () => {
+            cleanup();
+            resolve(element);
+        };
+
+        const onLoad = () => {
+            cleanup();
+            resolve(element);
+        };
+
+        const onError = (e) => {
+            cleanup();
+            reject(e);
+        };
+
+        if (element.tagName === 'VIDEO' || element instanceof HTMLVideoElement) {
+            element.addEventListener('loadeddata', onLoadedData, { once: true });
+        } else if (element.tagName === 'IMG' || element instanceof HTMLImageElement) {
+            element.addEventListener('load', onLoad, { once: true });
+        } else {
+            return reject('Unsupported element type');
+        }
+
+        element.addEventListener('error', onError, { once: true });
+
+        if (element.tagName === 'VIDEO' || element instanceof HTMLVideoElement) {
+            element.load();
         }
     });
-}
+};
 
-const loadMedia = async (element, data) => {
-    if (!element) throw new Error('No element provided');
+/*const loadMedia = async (el, data, opts = {}) => {
+    if (!el) throw new Error('No element provided');
     if (!data) throw new Error('No data provided');
 
-    const load = (src, tag) => {
-        return new Promise((resolve, reject) => {
-            const testEl = document.createElement(tag);
-            const onLoad = () => resolve(src);
-            const onError = () => reject(new Error(`Failed to load ${src}`));
+    const {
+        timeoutPerAttempt = 20000,
+        initialDelay = 500,
+        maxDelay = 3000,
+        backoffFactor = 1.7,
+        maxAttempts = 3,
+        signal = null
+    } = opts;
 
-            if (tag === "img") {
-                testEl.onload = onLoad;
-                testEl.onerror = onError;
-            } else if (tag === "video") {
-                testEl.addEventListener('loadeddata', onLoad, { once: true });
-                testEl.addEventListener('error', onError, { once: true });
+    const tag = el.tagName.toLowerCase();
+    if (!['img', 'video'].includes(tag)) throw new Error('Element must be <img> or <video>');
+
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+    const diagnostics = {
+        tag: tag,
+        deviceInfo: {
+            userAgent: navigator.userAgent,
+            isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
+            platform: navigator.platform,
+            vendor: navigator.vendor
+        },
+        blobInfo: data.blob ? {
+            size: data.blob.size,
+            type: data.blob.type,
+            isValid: data.blob.size > 0
+        } : null,
+        hasBase64: !!data.base64,
+        attempts: [],
+        finalState: null
+    };
+
+    console.log('=== LOAD MEDIA DIAGNOSTICS START ===');
+    console.log('Device:', diagnostics.deviceInfo);
+    console.log('Blob Info:', diagnostics.blobInfo);
+
+    try {
+        if (el.src && el.src.startsWith('blob:')) {
+            //URL.revokeObjectURL(el.src);
+        }
+        el.removeAttribute('src');
+        el.src = '';
+    } catch (e) {
+        console.warn('Failed to clear src:', e);
+    }
+
+    if (tag === 'video' && data.blob) {
+        const codecChecks = {
+            'video/mp4; codecs="avc1.42E01E"': el.canPlayType('video/mp4; codecs="avc1.42E01E"'),
+            'video/mp4': el.canPlayType('video/mp4'),
+            'video/webm': el.canPlayType('video/webm'),
+            [data.blob.type]: el.canPlayType(data.blob.type)
+        };
+        diagnostics.codecSupport = codecChecks;
+        console.log('Codec Support:', codecChecks);
+
+        try {
+            const firstBytes = await data.blob.slice(0, 12).arrayBuffer();
+            const bytes = new Uint8Array(firstBytes);
+            const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(' ');
+            diagnostics.blobSignature = hex;
+            console.log('Blob signature (first 12 bytes):', hex);
+
+            const isMP4 = bytes[4] === 0x66 && bytes[5] === 0x74 && bytes[6] === 0x79 && bytes[7] === 0x70;
+            const isWebM = bytes[0] === 0x1A && bytes[1] === 0x45 && bytes[2] === 0xDF && bytes[3] === 0xA3;
+            diagnostics.formatDetected = isMP4 ? 'MP4' : (isWebM ? 'WebM' : 'Unknown');
+            console.log('Format detected:', diagnostics.formatDetected);
+        } catch (e) {
+            diagnostics.blobReadError = e.message;
+            console.error('Failed to read blob bytes:', e);
+        }
+    }
+
+    const attemptLoadSrc = (src, attemptNum) => {
+        return new Promise((resolve, reject) => {
+            const attemptLog = {
+                attemptNumber: attemptNum,
+                srcType: src.startsWith('blob:') ? 'blob' : 'base64',
+                srcPreview: src.substring(0, 60) + '...',
+                startTime: Date.now(),
+                events: [],
+                finalError: null
+            };
+
+            if (signal?.aborted) {
+                attemptLog.finalError = 'Aborted before start';
+                diagnostics.attempts.push(attemptLog);
+                return reject(new DOMException('Aborted', 'AbortError'));
             }
 
-            testEl.src = src;
-            if (tag === "video") testEl.load();
+            let timeoutId;
+            let loadedSuccessfully = false;
+
+            const logEvent = (eventName, details = {}) => {
+                attemptLog.events.push({
+                    time: Date.now() - attemptLog.startTime,
+                    event: eventName,
+                    ...details
+                });
+            };
+
+            const cleanup = () => {
+                if (timeoutId) clearTimeout(timeoutId);
+                try {
+                    if (tag === 'img') {
+                        el.onload = el.onerror = null;
+                    } else {
+                        el.removeEventListener('loadstart', onLoadStart);
+                        el.removeEventListener('progress', onProgress);
+                        el.removeEventListener('suspend', onSuspend);
+                        el.removeEventListener('stalled', onStalled);
+                        el.removeEventListener('loadeddata', onLoadedData);
+                        el.removeEventListener('loadedmetadata', onLoadedMetadata);
+                        el.removeEventListener('canplay', onCanPlay);
+                        el.removeEventListener('canplaythrough', onCanPlayThrough);
+                        el.removeEventListener('error', onError);
+                    }
+                } catch (e) { }
+            };
+
+            const fail = (err) => {
+                attemptLog.finalError = err.message;
+                attemptLog.duration = Date.now() - attemptLog.startTime;
+                attemptLog.finalElementState = getElementState();
+                diagnostics.attempts.push(attemptLog);
+                cleanup();
+                reject(err);
+            };
+
+            const succeed = () => {
+                if (loadedSuccessfully) return;
+                loadedSuccessfully = true;
+                attemptLog.success = true;
+                attemptLog.duration = Date.now() - attemptLog.startTime;
+                attemptLog.finalElementState = getElementState();
+                diagnostics.attempts.push(attemptLog);
+                cleanup();
+                resolve(src);
+            };
+
+            const getElementState = () => {
+                const state = {
+                    readyState: el.readyState,
+                    networkState: el.networkState
+                };
+
+                if (tag === 'video') {
+                    state.duration = el.duration;
+                    state.currentSrc = el.currentSrc?.substring(0, 60);
+                    if (el.error) {
+                        state.error = {
+                            code: el.error.code,
+                            message: el.error.message,
+                            codeNames: {
+                                1: 'MEDIA_ERR_ABORTED',
+                                2: 'MEDIA_ERR_NETWORK',
+                                3: 'MEDIA_ERR_DECODE',
+                                4: 'MEDIA_ERR_SRC_NOT_SUPPORTED'
+                            }[el.error.code]
+                        };
+                    }
+                } else {
+                    state.complete = el.complete;
+                    state.naturalWidth = el.naturalWidth;
+                    state.naturalHeight = el.naturalHeight;
+                }
+
+                return state;
+            };
+
+            const onLoadStart = () => logEvent('loadstart', getElementState());
+            const onProgress = () => logEvent('progress', getElementState());
+            const onSuspend = () => logEvent('suspend', getElementState());
+            const onStalled = () => logEvent('stalled', getElementState());
+
+            const onLoadedImage = () => {
+                logEvent('load', getElementState());
+                if (el.naturalWidth === 0) {
+                    return fail(new Error('Image loaded but naturalWidth is zero'));
+                }
+                succeed();
+            };
+
+            const onLoadedMetadata = () => {
+                logEvent('loadedmetadata', getElementState());
+            };
+
+            const onLoadedData = () => {
+                logEvent('loadeddata', getElementState());
+                if (el.readyState >= 2) {
+                    succeed();
+                }
+            };
+
+            const onCanPlay = () => {
+                logEvent('canplay', getElementState());
+                succeed();
+            };
+
+            const onCanPlayThrough = () => {
+                logEvent('canplaythrough', getElementState());
+                succeed();
+            };
+
+            const onError = (e) => {
+                logEvent('error', {
+                    ...getElementState(),
+                    errorType: e.type,
+                    errorMessage: e.message
+                });
+                fail(new Error(`Media error: ${el.error?.code} - ${el.error?.message || 'Unknown'}`));
+            };
+
+            if (tag === 'img') {
+                el.onload = onLoadedImage;
+                el.onerror = onError;
+                el.src = src;
+
+                if (typeof el.decode === 'function') {
+                    el.decode()
+                        .then(() => {
+                            logEvent('decode_success');
+                            onLoadedImage();
+                        })
+                        .catch(err => {
+                            logEvent('decode_failed', { error: err.message });
+                        });
+                }
+            } else {
+                el.addEventListener('loadstart', onLoadStart);
+                el.addEventListener('progress', onProgress);
+                el.addEventListener('suspend', onSuspend);
+                el.addEventListener('stalled', onStalled);
+                el.addEventListener('loadedmetadata', onLoadedMetadata);
+                el.addEventListener('loadeddata', onLoadedData);
+                el.addEventListener('canplay', onCanPlay);
+                el.addEventListener('canplaythrough', onCanPlayThrough);
+                el.addEventListener('error', onError, { once: true });
+
+                // CRITICAL FIX: Set src and call load() IMMEDIATELY, no setTimeout
+                el.src = src;
+                //el.poster = '';
+
+                try {
+                    logEvent('calling_load');
+                    el.load();
+                } catch (e) {
+                    logEvent('load_threw_error', { error: e.message });
+                    fail(e);
+                }
+            }
+
+            timeoutId = setTimeout(() => {
+                fail(new Error(`Timeout after ${timeoutPerAttempt}ms`));
+            }, timeoutPerAttempt);
+
+            if (signal) {
+                if (signal.aborted) return fail(new DOMException('Aborted', 'AbortError'));
+                signal.addEventListener('abort', () => fail(new DOMException('Aborted', 'AbortError')), { once: true });
+            }
         });
     };
 
-    let src = null;
-    const tag = element.tagName.toLowerCase();
+    let attempt = 0;
+    let delay = initialDelay;
+    let lastBlobUrl = null;
+    let lastError = null;
 
-    if (data instanceof Blob) {
-        let blobUrl = null;
-        try {
-            blobUrl = URL.createObjectURL(data);
-            src = await load(blobUrl, tag);
-        } catch {
-            URL.revokeObjectURL(blobUrl);
-            src = null;
+    while (true) {
+        if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+        attempt++;
 
-            const now = Date.now();
-            let fails = JSON.parse(localStorage.getItem(BLOB_FAIL_KEY) || '[]');
-
-            fails = fails.filter(ts => now - ts <= 5 * 60 * 1000);
-            fails.push(now);
-
-            const base64Forced = localStorage.getItem(FORCE_BASE64_KEY) === 'true';
-            const stopCounting = localStorage.getItem(stopCountingKey) === 'true';
-
-            if (!stopCounting) {
-                localStorage.setItem(BLOB_FAIL_KEY, JSON.stringify(fails));
-
-                if (fails.length > 1 && !base64Forced) {
-                    const accept = confirm(
-                        "Media failed to load several times. " +
-                        "Do you want to enable Base64 fallback to reduce errors?\n\n" +
-                        "It may slow down the website, but ensures fewer loading errors. " +
-                        "This cannot be disabled later."
-                    );
-
-                    if (accept) {
-                        localStorage.setItem(FORCE_BASE64_KEY, 'true');
-                    } else {
-                        localStorage.setItem(stopCountingKey, 'true');
-                        const fakeFails = Array(10).fill(now);
-                        localStorage.setItem(BLOB_FAIL_KEY, JSON.stringify(fakeFails));
-                    }
-                }
+        if (maxAttempts && attempt > maxAttempts) {
+            if (lastBlobUrl) {
+                //try { URL.revokeObjectURL(lastBlobUrl); } catch (e) { }
             }
+
+            diagnostics.finalState = {
+                elementState: {
+                    readyState: el.readyState,
+                    networkState: el.networkState,
+                    src: el.src?.substring(0, 60),
+                    error: el.error ? {
+                        code: el.error.code,
+                        message: el.error.message
+                    } : null
+                },
+                totalAttempts: attempt - 1,
+                lastError: lastError?.message
+            };
+
+            console.log('=== LOAD MEDIA DIAGNOSTICS END (FAILED) ===');
+            console.log('Full diagnostics:', diagnostics);
+
+            const error = new Error(`Failed to load after ${maxAttempts} attempts`);
+            error.diagnostics = diagnostics;
+            throw error;
         }
 
-        if (!src) {
+        if (data.blob instanceof Blob) {
+            if (lastBlobUrl) {
+                //try { URL.revokeObjectURL(lastBlobUrl); } catch (e) { }
+            }
+
             try {
-                const base64 = await blobToDataURL(data);
-                src = await load(base64, tag);
-            } catch {
-                src = null;
+                // Validate blob before creating URL
+                if (data.blob.size === 0) {
+                    throw new Error('Blob is empty (0 bytes)');
+                }
+
+                // Try to read first byte to ensure blob is accessible
+                try {
+                    const testRead = await data.blob.slice(0, 1).arrayBuffer();
+                    if (testRead.byteLength === 0) {
+                        throw new Error('Blob is not readable');
+                    }
+                } catch (readErr) {
+                    throw new Error('Blob read test failed: ' + readErr.message);
+                }
+
+                lastBlobUrl = URL.createObjectURL(data.blob);
+                console.log('[loadMedia] Created blob URL:', lastBlobUrl, 'for blob size:', data.blob.size);
+
+                await attemptLoadSrc(lastBlobUrl, attempt);
+
+                diagnostics.finalState = {
+                    success: true,
+                    method: 'blob',
+                    attempts: attempt
+                };
+
+                console.log('=== LOAD MEDIA DIAGNOSTICS END (SUCCESS) ===');
+                console.log('Success diagnostics:', diagnostics);
+
+                if (tag === 'video') {
+                    setTimeout(() => {
+                        try { el.pause(); } catch (e) { }
+                    }, 300);
+                }
+
+                return el;
+            } catch (err) {
+                lastError = err;
+                console.warn(`Attempt ${attempt} failed:`, err.message);
             }
         }
-    }
 
-    if (!src && typeof data === 'string' && data.startsWith('data:')) {
-        try {
-            src = await load(data, tag);
-        } catch {
-            src = null;
+        if (typeof data.base64 === 'string' && data.base64.startsWith('data:')) {
+            try {
+                await attemptLoadSrc(data.base64, attempt);
+
+                diagnostics.finalState = {
+                    success: true,
+                    method: 'base64',
+                    attempts: attempt
+                };
+
+                console.log('=== LOAD MEDIA DIAGNOSTICS END (SUCCESS) ===');
+                console.log('Success diagnostics:', diagnostics);
+
+                if (tag === 'video') {
+                    setTimeout(() => {
+                        try { el.pause(); } catch (e) { }
+                    }, 300);
+                }
+
+                if (lastBlobUrl) {
+                    //try { URL.revokeObjectURL(lastBlobUrl); } catch (e) { }
+                }
+
+                return el;
+            } catch (err) {
+                lastError = err;
+                console.warn(`Attempt ${attempt} (base64) failed:`, err.message);
+            }
         }
-    }
 
-    if (!src) throw new Error('Neither Blob nor base64 could be loaded', data.size);
-    element.src = src;
-    if (tag === 'video') {
-        element.load();
-        element.pause();
+        const jitter = Math.round(Math.random() * 200);
+        const waitTime = Math.min(maxDelay, Math.round(delay) + jitter);
+        await sleep(waitTime);
+        delay = Math.min(maxDelay, delay * backoffFactor);
     }
-    //element.setAttribute('resized', 'false');
-    //element.setAttribute('blobRevoke', 'false');
-    return element;
+};*/
+
+const removeMedia = async (el) => {
+    if (!el) return;
+
+    // Already detached / missing
+    if (!el.tagName) return;
+
+    try {
+        // Try to stop playback first
+        if (el.tagName.toLowerCase() === "video" || el.tagName.toLowerCase() === "audio") {
+            try { el.pause(); } catch { }
+            try { el.currentTime = 0; } catch { }
+        }
+
+        // Wait until media is actually paused if it can report state
+        if (typeof el.readyState !== "undefined") {
+            await Promise.resolve();
+        }
+
+        // Revoke blob URL if present
+        if (el.src && el.src.startsWith("blob:")) {
+            // try { URL.revokeObjectURL(el.src); } catch { }
+        }
+
+        // Clear source fully
+        el.removeAttribute("src");
+        el.src = "";
+        //el.poster = "";
+
+        // Force load reset (important!)
+        try {
+            el.load();
+        } catch { }
+
+        // Wait for browser to settle network state → EMPTY
+        await new Promise((resolve) => {
+            // If already empty, resolve immediately
+            if (el.networkState === el.NETWORK_EMPTY) {
+                return resolve();
+            }
+
+            // Fallback timer in case events never fire
+            const t = setTimeout(resolve, 300);
+
+            const handler = () => {
+                clearTimeout(t);
+                resolve();
+            };
+
+            el.addEventListener("emptied", handler, { once: true });
+        });
+
+        // Remove any src children (<source>)
+        [...el.querySelectorAll("source")].forEach(srcEl => {
+            srcEl.removeAttribute("src");
+        });
+
+        return el;
+    } catch (err) {
+        console.warn("removeMedia error:", err);
+    }
 };
 
-// Track last click time
-let deleteClickTimestamps = [];
 
-export const handleFileContainerEvents = async (event, dataBaseIndexName, dataBaseObjectStoreName, container, databases) => {
-    const parent = event.target.closest('.data-container');
+let lastClickTime = 0;
+let isMediaLoading = {}; // <-- object-based lock
+
+async function isDebug() {
+    let userDoc = await getUserDoc();
+    return userDoc.username == 'durieun02';
+}
+
+export const handleFileContainerEvents2 = async (event, dataBaseIndexName, dataBaseObjectStoreName, container, databases) => {
+    const now = Date.now();
+    if (now - lastClickTime < 10) {
+        const seconds = ((now - lastClickTime) / 1000).toFixed(1);
+        showNotification(
+            `Please wait before clicking again (${seconds}s).`,
+            'Loading in progress',
+            'warning'
+        );
+        return;
+    }
+
+    lastClickTime = now;
+
+    // Use per-store loading lock
+    if (isMediaLoading[dataBaseObjectStoreName]) {
+        showNotification('Please wait until current media finishes loading.', 'Loading in progress', 'warning');
+        return;
+    }
+
+    console.log('[handleFileContainerEvents] call');
+    let parent = event.target.closest('.data-container');
     if (!parent) return;
 
     if (event.target.classList.contains('settings-mark')) {
@@ -12002,40 +11632,7 @@ export const handleFileContainerEvents = async (event, dataBaseIndexName, dataBa
     }
 
     if (event.target.classList.contains('delete-icon')) {
-        const now = Date.now();
-        const TIME_WINDOW = 1000; // 1.5 seconds
-
-        // Remove timestamps older than TIME_WINDOW
-        deleteClickTimestamps = deleteClickTimestamps.filter(ts => now - ts < TIME_WINDOW);
-
-        // Add current click
-        deleteClickTimestamps.push(now);
-
-        // If 3 or more clicks in the window → confirm delete all
-        if (deleteClickTimestamps.length >= 5) {
-            const confirmAll = confirm(
-                'You are clicking rapidly!\nDo you want to delete ALL items in this database?'
-            );
-            if (confirmAll) {
-                const db = await openDB(dataBaseIndexName, dataBaseObjectStoreName);
-                const items = await getFromDB(db);
-                for (const item of items) {
-                    await deleteFromDB(db, item.id);
-                    deleteDownloadData(item.timestamp, item.id, item.url);
-                }
-                container.innerHTML = ''; // Clear all visually
-                updateGenerateButtonText();
-                deleteClickTimestamps = []; // reset counter
-                return;
-            } else {
-                // If canceled, also reset counter
-                deleteClickTimestamps = [];
-            }
-        }
-
-        // Normal delete
-        await handleDelete(dataBaseIndexName, dataBaseObjectStoreName, parent, container, databases);
-        return;
+        return await handleDelete(dataBaseIndexName, dataBaseObjectStoreName, parent, container, databases);
     }
 
     if (dataBaseObjectStoreName === 'outputs') {
@@ -12047,12 +11644,215 @@ export const handleFileContainerEvents = async (event, dataBaseIndexName, dataBa
     }
 
     let element = parent.querySelector('img, video, iframe, initial');
-    if (!element) return;
+    if (!element) {
+        return;
+    }
 
-    const timestamp = element?.getAttribute('timestamp');
-    const activate = document.getElementById(`${timestamp}_activate`);
-    if (activate)
-        simulateFullClick(activate);
+    // Show loader BEFORE any async operations
+    if (pageName === 'inpaint' || pageName !== 'art-generator' || pageName === 'art-generator' || pageName === 'face-swap' || dataBaseObjectStoreName === 'outputs') {
+        //await displayStoredData('loader', pageName === 'inpaint' ? 'outputs' : dataBaseObjectStoreName);
+    }
+
+    let db = openDB(dataBaseIndexName, dataBaseObjectStoreName);
+
+    const elements = [...container.querySelectorAll('.data-container img, .data-container video')]
+        .filter(element => !element.classList.contains('active'));
+
+    for (const element of elements) {
+        try {
+            const originalSrc = element.src;
+            if (element.getAttribute('resized') === 'false') {
+                //replaceWithLowRes(element);
+                element.setAttribute('resized', 'true');
+            }
+            if (originalSrc && originalSrc.startsWith('blob:')) {
+                //URL.revokeObjectURL(originalSrc);
+            }
+        } catch (err) {
+            console.error('Failed to process element:', err);
+        }
+    }
+
+    db = await db;
+
+    // Handle deactivation
+    if (parent.classList.contains('active')) {
+        parent.classList.remove('active');
+
+        if (element.tagName.toLowerCase() === 'iframe') {
+            element.style.width = 'calc(var(--input-size))';
+            element.style.height = 'calc(var(--input-size))';
+        }
+
+        if (pageName === 'inpaint' || pageName !== 'art-generator' || pageName === 'face-swap' || dataBaseObjectStoreName === 'outputs') {
+            await displayStoredData(null, pageName === 'inpaint' ? 'outputs' : dataBaseObjectStoreName);
+        }
+
+        const idx = parseInt(element.getAttribute('id'));
+        if (!isNaN(idx)) {
+            await updateActiveState(db, idx, false);
+        }
+
+        if (element.src?.startsWith('blob:')) {
+            if (element.tagName.toLowerCase() === 'video') element.pause();
+            URL.revokeObjectURL(element.src);
+        }
+        return;
+    }
+
+    // Deactivate other active elements
+    const activeEls = [...container.querySelectorAll('.data-container.active')];
+    for (const activeEl of activeEls) {
+        activeEl.classList.remove('active');
+
+        const element = activeEl.querySelector('img, video, iframe, initial');
+        if (element?.tagName.toLowerCase() === 'iframe') {
+            element.style.width = 'calc(var(--input-size))';
+            element.style.height = 'calc(var(--input-size))';
+        }
+        if (element?.src?.startsWith('blob:')) {
+            if (element.tagName.toLowerCase() === 'video') element.pause();
+            URL.revokeObjectURL(element.src);
+        }
+    }
+
+    for (const activeEl of activeEls) {
+        const element = activeEl.querySelector('img, video, iframe, initial');
+        const idx = parseInt(element?.getAttribute('id'));
+        if (!isNaN(idx)) await updateActiveState(db, idx, false);
+    }
+
+    // Activate current element
+    element.setAttribute('resized', 'false');
+    parent.classList.add('active');
+
+    if (element.tagName.toLowerCase() === 'iframe') {
+        element.style.width = 'calc(var(--input-size) - 2px)';
+        element.style.height = 'calc(var(--input-size) - 2px)';
+    }
+
+    const idx = parseInt(element.getAttribute('id'));
+    if (!isNaN(idx)) {
+        await updateActiveState(db, idx, true);
+        element = await removeMedia(element);
+
+        const items = await getFromDB(db);
+        let item = items.find(item => item.id === idx);
+
+        if (!item) {
+            const domTimestamp = parseInt(element.getAttribute('timestamp'));
+            item = items.find(item => item.timestamp === domTimestamp);
+        }
+
+        if (!item) {
+            const containers = Array.from(container.querySelectorAll('.data-container'));
+            const fallbackIndex = containers.indexOf(parent);
+            if (fallbackIndex !== -1) {
+                items.sort((a, b) => a.timestamp - b.timestamp);
+                const dbIndex = items.length - 1 - fallbackIndex;
+                item = items[dbIndex];
+            }
+        }
+
+        if (!item) {
+            showNotification('Could not find media data', 'Error', 'error');
+            return;
+        }
+
+        console.log('[handleFileContainerEvents] Found item:', {
+            id: item.id,
+            hasBlob: !!item.blob,
+            blobSize: item.blob?.size,
+            blobType: item.blob?.type,
+            hasBase64: !!item.base64
+        });
+
+        try {
+            isMediaLoading[dataBaseObjectStoreName] = true;
+
+            console.log('[handleFileContainerEvents] Replacing element...');
+            //element = await replaceElementForData(element, dataBaseObjectStoreName, item);
+
+            console.log('[handleFileContainerEvents] Loading media...');
+            //loadedElement = await loadMedia(element, item);
+            console.log('[handleFileContainerEvents] Media loaded successfully');
+
+            // Step 5: NOW call displayStoredData - media is already loaded
+            if (pageName === 'inpaint' || pageName === 'art-generator' || pageName === 'face-swap' || dataBaseObjectStoreName === 'outputs') {
+                console.log('[handleFileContainerEvents] Displaying stored data...');
+                showNotification('Loading the data to display section.', 'Loading in progress', 'normal');
+                await displayStoredData(parent, pageName === 'inpaint' ? 'outputs' : dataBaseObjectStoreName);
+                showNotification('Loaded the data to display section.', 'Loading complete', 'normal');
+            }
+            console.log('[handleFileContainerEvents] Complete!');
+
+        } catch (err) {
+            console.error('[handleFileContainerEvents] ERROR:', err);
+
+            let msg = '=== LOADING FAILED ===\n\n';
+            msg += 'Error: ' + err.message + '\n\n';
+
+            msg += '--- BLOB INFO ---\n';
+            msg += 'Has Blob: ' + (item?.blob ? 'YES' : 'NO') + '\n';
+            if (item?.blob) {
+                msg += 'Size: ' + Math.round(item.blob.size / 1024) + ' KB\n';
+                msg += 'Type: ' + item.blob.type + '\n';
+            }
+            msg += 'Has Base64: ' + (item?.base64 ? 'YES' : 'NO') + '\n\n';
+
+            msg += '--- ELEMENT STATE ---\n';
+            msg += 'Tag: ' + element?.tagName + '\n';
+            msg += 'Ready: ' + element?.readyState + '\n';
+            msg += 'Network: ' + element?.networkState + '\n';
+
+            if (element?.error) {
+                msg += '\n*** MEDIA ERROR ***\n';
+                msg += 'Code: ' + element.error.code + '\n';
+                const errorNames = {
+                    1: 'ABORTED',
+                    2: 'NETWORK',
+                    3: 'DECODE',
+                    4: 'NOT_SUPPORTED'
+                };
+                msg += 'Type: ' + (errorNames[element.error.code] || 'UNKNOWN') + '\n';
+            }
+
+            if (err.diagnostics?.codecSupport) {
+                msg += '\n--- CODEC SUPPORT ---\n';
+                const cs = err.diagnostics.codecSupport;
+                msg += 'MP4: ' + (cs['video/mp4'] || 'NO') + '\n';
+                msg += 'H.264: ' + (cs['video/mp4; codecs="avc1.42E01E"'] || 'NO') + '\n';
+                msg += 'WebM: ' + (cs['video/webm'] || 'NO') + '\n';
+                msg += 'Blob type support: ' + (cs[item?.blob?.type] || 'NO') + '\n';
+            }
+
+            if (err.diagnostics?.formatDetected) {
+                msg += '\nDetected: ' + err.diagnostics.formatDetected + '\n';
+            }
+
+            if (err.diagnostics?.blobSignature) {
+                msg += 'Signature: ' + err.diagnostics.blobSignature + '\n';
+            }
+
+            if (err.diagnostics?.attempts?.length > 0) {
+                msg += '\n--- ATTEMPTS ---\n';
+                err.diagnostics.attempts.forEach((a, i) => {
+                    msg += 'Attempt ' + (i + 1) + ': ';
+                    msg += a.events.map(e => e.event).join(', ') + '\n';
+                    if (a.finalError) msg += '  Error: ' + a.finalError + '\n';
+                });
+            }
+
+            msg += '\n--- DEVICE ---\n';
+            msg += navigator.userAgent.substring(0, 100) + '...\n';
+
+            console.log('DIAGNOSTIC REPORT:', msg);
+            alert(msg);
+            showNotification('Loading failed - check alert', 'Error', 'error');
+        } finally {
+            isMediaLoading[dataBaseObjectStoreName] = false;
+        }
+    }
 };
 
 export async function showFrameSelector(element) {
@@ -12063,26 +11863,31 @@ export async function showFrameSelector(element) {
     const targetElement = videoElement || imgElement;
     const isVideo = targetElement && targetElement.tagName.toLowerCase() === "video" || targetElement instanceof HTMLVideoElement;
 
-    const result = await awaitMediaLoadedWithRetries(targetElement);
-    if (!result.success) {
-        alert(
-            `Media could not be loaded.
+    async function awaitMediaLoaded(element) {
+        if (!element) return;
 
-Possible fixes:
-• Update your browser
-• Try different browser
-• Third-party cookie/storage blocking
-• Open disk space on the device
-• Clear site data (Application → Storage → Clear site data)
-• Enable persistent storage
-• Avoid incognito/private mode
-• OS/browser storage restrictions (enterprise policies, iOS limits)
-• Close other tabs using heavy storage
-• Try another browser/profile.\n` + JSON.stringify(result.reason, null, 2)
-        );
-        return;
+        if (element.tagName.toLowerCase() === "video" || element instanceof HTMLVideoElement) {
+            await new Promise((resolve, reject) => {
+                if (element.readyState >= 2) {
+                    resolve();
+                } else {
+                    element.addEventListener('loadeddata', () => resolve(), { once: true });
+                    element.addEventListener('error', (e) => reject(e), { once: true });
+                }
+            });
+        } else if (element.tagName.toLowerCase() === "img" || element instanceof HTMLImageElement) {
+            await new Promise((resolve, reject) => {
+                if (element.complete && element.naturalWidth !== 0) {
+                    resolve();
+                } else {
+                    element.addEventListener('load', () => resolve(), { once: true });
+                    element.addEventListener('error', (e) => reject(e), { once: true });
+                }
+            });
+        }
     }
 
+    await awaitMediaLoaded(targetElement);
     const fps = parseFloat(targetElement.getAttribute('data-fps')) || 0;
 
     if (isVideo) {
@@ -12340,7 +12145,6 @@ Possible fixes:
             multipleFacesBtn.textContent = 'Start Identification Process';
         });
 
-        console.log(clonedInput);
         clonedInput.addEventListener('error', () => {
             alert(isVideo ? 'Video failed to load.' : 'Image failed to load.');
         });
@@ -12457,8 +12261,8 @@ Possible fixes:
     const range = wrapper.querySelector('input[type="range"]');
     if (range) {
         range.addEventListener('input', () => {
-            multipleFacesBtn.disabled = false;
-            multipleFacesBtn.textContent = 'Start Identification Process';
+                multipleFacesBtn.disabled = false;
+                multipleFacesBtn.textContent = 'Start Identification Process';
             resetToInputContainer();
         });
     }
@@ -12882,7 +12686,6 @@ Possible fixes:
             formData.append('face', activeFile);
             formData.append('userId', userData.uid);
             formData.append('fileOutputId', fileOutputId);
-            formData.append('og', localStorage.getItem('og') || false);
             formData.append('enableEnhancedLandmarks', document.getElementById("enableEnhancedLandmarks").checked);
             formData.append('enableEnhancedAnalyzer', document.getElementById("enableEnhancedAnalyzer").checked);
             formData.append('referencePosition', selectedPerson);
@@ -12949,7 +12752,6 @@ Possible fixes:
                         imgElement.style.height = getScreenMode() === 1 ? '60vh' : '60vh';
                         imgElement.style.objectFit = getScreenMode() === 1 ? 'contain' : 'contain';
                         imgElement.style.borderRadius = 'var(--border-radius)';
-                        //imgElement.setAttribute('blobRevoke', 'false');
                         const outputContainer = wrapper.querySelector('[query="outputContainer"]');
                         if (outputContainer) {
                             outputContainer.style.display = "block";
@@ -12957,9 +12759,9 @@ Possible fixes:
                         }
 
                         const inputContainer = isVideo ? wrapper.querySelector('[query="videoContainer"]') : wrapper.querySelector('[query="imgContainer"]');
-                        if (inputContainer)
+                        if (inputContainer) 
                             inputContainer.style.display = "none";
-
+                        
                         localStorage.setItem(referencePosition, selectedPerson);
                         localStorage.setItem(referenceRace, selectedRace);
                         localStorage.setItem(referenceGender, selectedGender);
@@ -13073,15 +12875,15 @@ export async function showCanvas(imgElement) {
         <a class="background-dot-container">
             <div class="background-dot-container-content">
                 <div id="innerContainer" class="background-container" style="display: contents;">
-                    <div style="display: flex; flex-direction: column; justify-content: space-around; gap: calc(1vh * var(--scale-factor-h));">
+                    <div style="display: flex; flex-direction: column; justify-content: space-around; gap: 1vh;">
                          <div style="display: flex;flex-direction: row;justify-content: space-around;gap: calc(1.5vh* var(--scale-factor-h));">
                             <button class="wide" id="startProcessCanvas">Save Canvas & Start Process</button>
                          </div>
-                         <div id="colorMatchingSettings" style="display: flex !important; flex-direction: column !important; justify-content: space-around !important; gap: calc(1vh * var(--scale-factor-h)); !important">
+                         <div id="colorMatchingSettings" style="display: flex !important; flex-direction: column !important; justify-content: space-around !important; gap: 1vh; !important">
                              <div class="line"></div>
                              <div>
                                 <!-- Updated combobox HTML -->
-                                <div id="objectDetectionMethodComboBox" class="combobox" tooltip style="gap: calc(1vh * var(--scale-factor-h));">
+                                <div id="objectDetectionMethodComboBox" class="combobox" tooltip style="gap: 1vh;">
                                   <!-- Updated tooltip text -->
                                   <div class="tooltip">Select the object detection method (only one can be active at a time).</div>
                                   <!-- This span will display the currently selected method -->
@@ -13115,7 +12917,7 @@ export async function showCanvas(imgElement) {
                                   </ul>
                                 </div>
                             </div>
-                            <div style="display: flex;gap: calc(1vh * var(--scale-factor-h));">
+                            <div style="display: flex;gap: 1vh;">
                                 <label class="checkbox" style="display: flex; align-items: center; gap: calc(1vh); justify-content: space-between;">
                                     <div style="display: flex; flex-direction: row; gap: calc(1vh); width: 100%; align-items: center;">
                                         <input type="range" min="1" max="100" step="1" value="25" class="slider" id="tolerance-slider">
@@ -14308,7 +14110,29 @@ export async function showCanvas(imgElement) {
         });
     });
 }
+function testBlobUrl(blobUrl, mimeType) {
+    return new Promise((resolve) => {
+        let media;
+        const isVideo = mimeType.startsWith('video/');
+        const isImage = mimeType.startsWith('image/');
 
+        if (isVideo) {
+            media = document.createElement('video');
+            media.preload = "auto";
+        } else if (isImage) {
+            media = document.createElement('img');
+        } else {
+            resolve(false);
+            return;
+        }
+
+        media.src = blobUrl;
+        media.onloadeddata = () => resolve(true);
+        media.onload = () => resolve(true);
+        media.onerror = () => resolve(false);
+        setTimeout(() => resolve(false), 5000);
+    });
+}
 function arrayBufferToBase64(buffer) {
     let binary = '';
     const bytes = new Uint8Array(buffer);
@@ -14318,6 +14142,474 @@ function arrayBufferToBase64(buffer) {
     }
     return btoa(binary);
 }
+let _webpSupported;
+async function supportsWebP() {
+    if (_webpSupported !== undefined) return _webpSupported;
+    try {
+        const c = typeof OffscreenCanvas !== 'undefined'
+            ? new OffscreenCanvas(1, 1)
+            : document.createElement('canvas');
+        await new Promise((res, rej) =>
+        (c.convertToBlob
+            ? c.convertToBlob({ type: 'image/webp' }).then(res).catch(rej)
+            : c.toBlob(b => b ? res() : rej(), 'image/webp'))
+        );
+        _webpSupported = true;
+    } catch {
+        _webpSupported = false;
+    }
+    return _webpSupported;
+}
+async function createThumbnail(fileOrBlob, arrayBuffer = null, options = {}) {
+    const { maxWidth = 128, maxHeight = 128, quality = 0.5 } = options;
+
+    const mimeType = fileOrBlob.type;
+
+    const useWebP = await supportsWebP();
+    const outputType = useWebP ? 'image/webp' : 'image/jpeg';
+
+    // Helper: draw an image or video frame to a resized canvas and convert to Blob
+    async function drawToBlob(sourceWidth, sourceHeight, drawFn) {
+        const scale = Math.min(1, maxWidth / sourceWidth, maxHeight / sourceHeight);
+        const targetW = Math.max(1, Math.round(sourceWidth * scale));
+        const targetH = Math.max(1, Math.round(sourceHeight * scale));
+
+        const canvas =
+            typeof OffscreenCanvas !== 'undefined'
+                ? new OffscreenCanvas(targetW, targetH)
+                : Object.assign(document.createElement('canvas'), {
+                    width: targetW,
+                    height: targetH,
+                });
+
+        const ctx = canvas.getContext('2d');
+        drawFn(ctx, targetW, targetH);
+
+        return canvas.convertToBlob
+            ? await canvas.convertToBlob({ type: outputType, quality })
+            : await new Promise((res) => canvas.toBlob(res, outputType, quality));
+    }
+
+    if (mimeType.startsWith('image/')) {
+        // Get bitmap
+        let bitmap;
+        if (arrayBuffer) {
+            try {
+                const blob = new Blob([arrayBuffer], { type: mimeType });
+                bitmap = await createImageBitmap(blob);
+            } catch {
+                const dataURL = `data:${mimeType};base64,${arrayBufferToBase64(arrayBuffer)}`;
+                bitmap = await new Promise((res, rej) => {
+                    const img = new Image();
+                    img.onload = () => res(img);
+                    img.onerror = rej;
+                    img.src = dataURL;
+                });
+            }
+        } else if (fileOrBlob instanceof Blob) {
+            bitmap = await createImageBitmap(fileOrBlob);
+        } else {
+            throw new Error('Invalid input for image thumbnail');
+        }
+
+        const thumbBlob = await drawToBlob(bitmap.width ?? bitmap.naturalWidth, bitmap.height ?? bitmap.naturalHeight, (ctx, w, h) =>
+            ctx.drawImage(bitmap, 0, 0, w, h)
+        );
+
+        // Only return if smaller than original
+        const originalSize = arrayBuffer ? arrayBuffer.byteLength : fileOrBlob.size;
+        return thumbBlob && thumbBlob.size < originalSize ? thumbBlob : null;
+    }
+
+    if (mimeType.startsWith('video/')) {
+        return new Promise((resolve, reject) => {
+            const url = URL.createObjectURL(fileOrBlob);
+            const video = document.createElement('video');
+
+            video.preload = 'metadata';
+            video.muted = true;
+            video.playsInline = true;
+            video.src = url;
+
+            const cleanup = () => {
+                URL.revokeObjectURL(url);
+                video.remove();
+            };
+
+            video.onerror = () => {
+                cleanup();
+                reject(new Error('Video load error'));
+            };
+
+            video.onloadedmetadata = () => {
+                try {
+                    video.currentTime = Math.min(0.1, video.duration || 0.1);
+                } catch {
+                    cleanup();
+                    reject(new Error('Seek failed'));
+                }
+            };
+
+            video.onseeked = async () => {
+                try {
+                    const thumbBlob = await drawToBlob(video.videoWidth, video.videoHeight, (ctx, w, h) =>
+                        ctx.drawImage(video, 0, 0, w, h)
+                    );
+                    cleanup();
+                    resolve(thumbBlob && thumbBlob.size < fileOrBlob.size ? thumbBlob : null);
+                } catch (err) {
+                    cleanup();
+                    reject(err);
+                }
+            };
+        });
+    }
+
+    return null;
+}
+async function replaceWithLowRes(el, scale = 0.25, quality = 0.5) {
+    if (!el.src) return;
+
+    await new Promise(resolve => {
+        if (el.tagName.toLowerCase() === 'img') {
+            if (el.complete && el.naturalWidth > 0) return resolve();
+            el.addEventListener('load', resolve, { once: true });
+            el.addEventListener('error', resolve, { once: true }); // resolve even if broken
+        } else if (el.tagName.toLowerCase() === 'video') {
+            if (el.readyState >= 4) return resolve();
+            el.addEventListener('loadeddata', resolve, { once: true });
+            el.addEventListener('canplaythrough', resolve, { once: true });
+            el.addEventListener('error', resolve, { once: true });
+        }
+    });
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    if (el.tagName.toLowerCase() === 'img') {
+        canvas.width = el.naturalWidth * scale;
+        canvas.height = el.naturalHeight * scale;
+        ctx.drawImage(el, 0, 0, canvas.width, canvas.height);
+
+        const lowResUrl = await new Promise(resolve =>
+            canvas.toBlob(blob => resolve(URL.createObjectURL(blob)), 'image/jpeg', quality)
+        );
+
+        el.src = lowResUrl;
+    } else if (el.tagName.toLowerCase() === 'video') {
+        canvas.width = el.videoWidth * scale;
+        canvas.height = el.videoHeight * scale;
+        ctx.drawImage(el, 0, 0, canvas.width, canvas.height);
+
+        const posterUrl = await new Promise(resolve =>
+            canvas.toBlob(blob => resolve(URL.createObjectURL(blob)), 'image/jpeg', quality)
+        );
+
+        el.poster = posterUrl;
+        el.pause();
+    }
+}
+export const handleUpload = async (event, dataBaseIndexName, dataBaseObjectStoreName, databases) => {
+    try {
+        if (!window.indexedDB) {
+            alert('Your browser does not support IndexedDB.');
+            return;
+        }
+
+        const db = await openDB(dataBaseIndexName, dataBaseObjectStoreName).catch((error) => {
+            if (error.name === 'QuotaExceededError') {
+                alert('Storage limit exceeded. Please free up space or clear cache.');
+            } else if (error.name === 'SecurityError') {
+                alert('Database access is restricted. Please check browser settings or disable private mode.');
+            } else if (error.message && error.message.includes('BlobURLs')) {
+                alert(
+                    'It seems there is an issue with Blob URLs not being supported in your browser or environment.\n\n' +
+                    'To resolve this:\n' +
+                    '- Ensure your browser is updated to the latest version (Chrome, Firefox, Edge).\n' +
+                    '- Avoid using the application in private/incognito mode.\n' +
+                    '- Disable browser extensions that may block IndexedDB or Blob URLs.\n\n' +
+                    'If the problem persists, try switching to a different browser or device.'
+                );
+            } else if (error.message && error.message.includes('backing store')) {
+                alert(
+                    'It seems there is an issue with the browser\'s IndexedDB storage. Please follow these steps to resolve it:\n\n' +
+                    '1. Open Chrome Developer Tools:\n   - Right-click anywhere on the page and select "Inspect", or press "Ctrl+Shift+I" (Windows) / "Cmd+Option+I" (Mac).\n' +
+                    '2. Go to the "Application" tab.\n' +
+                    '3. Under "Storage", click on "IndexedDB".\n' +
+                    '4. Right-click on the database causing the issue and select "Delete".\n\n' +
+                    'Additional Suggestions:\n' +
+                    '- Disable any browser extensions that might restrict IndexedDB access.\n' +
+                    '- Ensure your browser is updated to the latest version.\n' +
+                    '- If the problem persists, try using a fresh Chrome profile or a different browser.'
+                );
+            } else {
+                alert(`Opening media database failed: ${error.message || error}`);
+            }
+            return null;
+        });
+        if (!db) return;
+
+        const files = Array.from(event.target.files).filter((file) => {
+            if (dataBaseObjectStoreName === 'faces')
+                return file.type.startsWith('image/') && file.type !== 'image/gif';
+            return file.type.startsWith('image/') || file.type.startsWith('video/');
+        });
+
+        if (files.length === 0) {
+            alert('No valid files found for upload.');
+            return;
+        }
+
+        const mediaContainer = document.querySelector(`.${dataBaseObjectStoreName}`);
+        const wrapper = document.createDocumentFragment();
+        const newMedia = [];
+
+        const processFile = async (file) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+
+                reader.onload = async (e) => {
+                    try {
+                        const arrayBuffer = e.target.result;
+                        const blob = new Blob([arrayBuffer], { type: file.type });
+                        const payload = { blob };
+                        let thumb = null;
+                        try {
+                            thumb = await createThumbnail(file, arrayBuffer);
+                        } catch (err) {
+                            console.error('Failed to create thumbnail:', err);
+                            // thumb remains null, DB update can still proceed
+                        }
+                        if (thumb) payload.thumbnailBlob = thumb;
+
+                        const { id, timestamp } = await addToDB(db, payload);
+                        await saveCountIndex(databases);
+
+                        newMedia.push({
+                            id,
+                            timestamp,
+                            blob,
+                            thumbnailBlob: payload.thumbnailBlob || null,
+                            base64Data: payload.base64 || null,
+                            isVideo: file.type.startsWith('video/')
+                        });
+
+                        resolve({ id, timestamp });
+                    } catch (err) {
+                        reject(err);
+                    }
+                };
+
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(file);
+            });
+        };
+
+        let loadingSpinner = document.createElement('div');
+        loadingSpinner.className = 'loading-screen';
+        loadingSpinner.style.position = 'absolute';
+
+        document.querySelectorAll('body main').forEach(main => {
+            if (main)
+                main.style.filter = 'brightness(50%)';
+        });
+
+        document.documentElement.appendChild(loadingSpinner);
+
+        for (const file of files) {
+            await processFile(file);
+        }
+
+        loadingSpinner.remove();
+        document.querySelectorAll('body main').forEach(main => {
+            if (main)
+                main.style.filter = 'none';
+        });
+        event.target.value = null;
+
+        const activeContainers = mediaContainer.querySelectorAll('.data-container.active');
+        if (activeContainers.length > 0) {
+            for (const container of activeContainers) {
+                container.classList.remove('active');
+                const element = container.querySelector('img, iframe, video, initial');
+                const id = element ? parseInt(element.getAttribute('id'), 10) : null;
+                if (id) {
+                    await updateActiveState(db, id, false).catch(err => {
+                        alert(`Update failed for id ${id}: ${err}`);
+                    });
+                }
+            }
+        }
+
+        newMedia.reverse();
+        for (const { id, timestamp, blob, base64Data, isVideo } of newMedia) {
+            const element = document.createElement('div');
+            element.className = 'data-container';
+            element.setAttribute('tooltip', '');
+            element.setAttribute('oncontextmenu', 'return false;');
+
+            let video;
+            let img;
+
+            if (isVideo) {
+                let tooltip = null;
+                if (dataBaseObjectStoreName === 'inputs') {
+                    tooltip = document.createElement('div');
+                    tooltip.className = 'tooltip tooltip-fast cursor';
+                    tooltip.textContent = 'Loading...';
+                    tooltip.style.display = 'none';
+                    tooltip.style.position = 'fixed';
+                    function updateTooltipPosition(event) {
+                        tooltip.style.left = `${event.clientX}px`;
+                        tooltip.style.top = `${event.clientY - 15}px`;
+                    }
+                    element.addEventListener('mouseenter', () => document.addEventListener('mousemove', updateTooltipPosition));
+                    element.addEventListener('mouseleave', () => document.removeEventListener('mousemove', updateTooltipPosition));
+                    element.appendChild(tooltip);
+                }
+
+                video = document.createElement('video');
+                video.controls = false;
+                video.setAttribute('timestamp', timestamp);
+                video.id = id;
+                video.preload = "auto";
+                video.muted = true;
+                video.playsInline = true;
+                try { video.disablePictureInPicture = true; } catch (e) { }
+
+                const playbackSrc = blob ? URL.createObjectURL(blob) : (base64Data != null ? base64Data : '');
+                if (playbackSrc) video.src = playbackSrc;
+
+                try {
+                    video.load();
+                    video.pause();
+                } catch (e) { }
+
+                const del = document.createElement('div');
+                del.className = 'delete-icon';
+
+                const set = document.createElement('div');
+                set.className = 'settings-mark';
+
+                element.appendChild(video);
+                element.appendChild(del);
+                element.appendChild(set);
+                handleContextMenu(element);
+
+                if (dataBaseObjectStoreName === 'inputs') {
+                    const keepFPS = document.getElementById('keepFPS');
+                    const fpsSlider = document.getElementById("fps-slider");
+                    const removeBanner = document.getElementById("removeBanner");
+
+                    function handleMetadataUpdate(dataFps, dataDuration) {
+                        const tooltip = element.querySelector('.tooltip');
+                        if (tooltip && dataFps) {
+                            tooltip.style.display = 'flex';
+                            const fpsSliderValue = keepFPS && !keepFPS.checked ? fpsSlider.value : 60;
+                            const fps = Math.min(fpsSliderValue, dataFps);
+                            const videoDurationTotalFrames = Math.floor(dataDuration * fps);
+                            const singleCreditForTotalFrameAmount = 120;
+                            const removeBannerStateMultiplier = removeBanner && removeBanner.checked ? 2 : 1;
+                            const neededCredits = Math.floor(
+                                Math.max(1, videoDurationTotalFrames / singleCreditForTotalFrameAmount) *
+                                removeBannerStateMultiplier
+                            );
+                            tooltip.textContent = pageName === 'art-generator' ? 'Free!' : `${neededCredits} Credits`;
+                        }
+                    }
+
+                    calculateMetadata(video, handleMetadataUpdate);
+
+                    video.addEventListener('loadedmetadata', async () => {
+                        await calculateMetadata(video, handleMetadataUpdate);
+                    });
+
+                    [keepFPS, fpsSlider, removeBanner].forEach(el => {
+                        if (el) {
+                            el.addEventListener('change', async () => {
+                                const dataFps = video.getAttribute('data-fps');
+                                handleMetadataUpdate(dataFps, video.duration);
+                            });
+                        }
+                    });
+                }
+            } else {
+                img = document.createElement('img');
+                img.setAttribute('timestamp', timestamp);
+                img.id = id;
+                img.src = blob ? URL.createObjectURL(blob) : (base64Data != null ? base64Data : '');
+                img.alt = 'Loading...';
+
+                const del = document.createElement('div');
+                del.className = 'delete-icon';
+
+                const set = document.createElement('div');
+                set.className = 'settings-mark';
+
+                if (dataBaseObjectStoreName === 'inputs') {
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'tooltip tooltip-fast cursor';
+                    tooltip.textContent = 'Loading...';
+                    tooltip.style.display = 'none';
+                    tooltip.style.position = 'fixed';
+                    function updateTooltipPosition(event) {
+                        tooltip.style.left = `${event.clientX}px`;
+                        tooltip.style.top = `${event.clientY - 15}px`;
+                    }
+                    element.addEventListener('mouseenter', () => document.addEventListener('mousemove', updateTooltipPosition));
+                    element.addEventListener('mouseleave', () => document.removeEventListener('mousemove', updateTooltipPosition));
+                    element.appendChild(tooltip);
+
+                    if (pageName === 'face-swap') {
+                        const removeBanner = document.getElementById("removeBanner");
+                        function handleMetadataUpdate() {
+                            const t = element.querySelector('.tooltip');
+                            if (t) {
+                                t.style.display = 'flex';
+                                let neededCredits = removeBanner && removeBanner.checked ? 2 : 1;
+                                t.textContent = `${neededCredits} Credits`;
+                            }
+                        }
+                        handleMetadataUpdate();
+                        if (removeBanner) removeBanner.addEventListener('change', () => handleMetadataUpdate());
+                        calculateMetadata(img, null);
+                    }
+                }
+
+                element.appendChild(img);
+                element.appendChild(del);
+                element.appendChild(set);
+                handleContextMenu(element);
+            }
+
+            wrapper.appendChild(element);
+
+            if (id === newMedia[0].id) {
+                element.classList.add('active');
+                if (id) {
+                    if (pageName === 'face-swap') displayStoredData(element, dataBaseObjectStoreName);
+                    await updateActiveState(db, id, true).catch(err => {
+                        alert(`Update failed for id ${id}: ${err}`);
+                    });
+                }
+            }
+            else if (blob) {
+                if (img) {
+                    img.addEventListener('load', () => URL.revokeObjectURL(img.src), { once: true });
+                } else if (video) {
+                    video.addEventListener('loadeddata', () => {
+                        URL.revokeObjectURL(video.src);
+                    }, { once: true });
+                }
+            }
+        }
+
+        mediaContainer.insertBefore(wrapper, mediaContainer.firstChild);
+        localStorage.setItem(`${pageName}_${dataBaseObjectStoreName}-count`, await countInDB(db));
+    } catch (error) {
+        alert(`Upload failed: ${error.message || error}`);
+    }
+};
 
 export const setupFileUpload = async ({
     buttonId,
@@ -14334,6 +14626,7 @@ export const setupFileUpload = async ({
 
     [...buttons].forEach(button => {
         button.addEventListener('click', e => {
+            console.log(modal);
             e.stopPropagation();
             modal.classList.toggle('hidden');
             if (!modal.classList.contains('hidden')) {
@@ -14382,7 +14675,7 @@ export const setupFileUpload = async ({
             document.getElementById(`upload-link-${inputId}`).classList.add('hidden');
             linkInput.focus();
         });
-    /*const linkInput = document.getElementById(`link-upload-${inputId}`);
+    const linkInput = document.getElementById(`link-upload-${inputId}`);
     linkInput.addEventListener('keydown', async e => {
         if (e.key !== 'Enter') return;
         const urlRaw = e.target.value.trim();
@@ -14489,39 +14782,21 @@ export const setupFileUpload = async ({
             await countInDB(db)
         );
     });
-    */
+
     input.addEventListener('change', async e => {
         await changeHandler(e, dataBaseIndexName, dataBaseObjectStoreName, databases);
     });
 };
+
 export async function setClientStatus(message) {
     const outputs = document.querySelector('.outputs');
     if (outputs && outputs.firstChild) {
         const processTextElement = outputs.firstChild.querySelector('.process-text');
         if (processTextElement) {
-            processTextElement.textContent = message;
+            processTextElement.textContent = message
         }
     }
-
-    if (/exceeded/i.test(message) && /quota/i.test(message)) {
-        alert(
-            `Storage quota exceeded.
-
-Possible fixes:
-• Update your browser
-• Try different browser
-• Third-party cookie/storage blocking
-• Open disk space on the device
-• Clear site data (Application → Storage → Clear site data)
-• Enable persistent storage
-• Avoid incognito/private mode
-• OS/browser storage restrictions (enterprise policies, iOS limits)
-• Close other tabs using heavy storage
-• Try another browser/profile`
-        );
-    }
 }
-
 export const setProcessText = (element, message) => {
     const processTextElement = element.querySelector('.process-text');
     if (processTextElement)
@@ -14545,15 +14820,20 @@ function updateGenerateButtonText() {
         handleProcessBtn.disabled = false;
     }
 
-    if (pageName === 'video-generator' || pageName === 'video-extender' || pageName === 'inpaint' || pageName === 'art-generator') {
+    if (pageName === 'video-generator' || pageName === 'inpaint' || pageName === 'art-generator') {
         const quality = getCheckedCheckboxIdFromCombobox('quality', 3);
         const duration = getCheckedCheckboxIdFromCombobox('duration', 3);
         const model = getCheckedCheckboxIdFromCombobox('model', '1.5');
-        const removeBanner = document.getElementById('removeBanner')?.checked || true;
+        const removeBanner = document.getElementById('removeBanner').checked;
+        const audioContainer = document.getElementById('audioContainer');
+        if (audioContainer) {
+            const generateAudio = document.getElementById('generateAudio').checked;
+            audioContainer.style.display = !generateAudio ? 'none' : 'unset';
+        }
 
         let neededCredits = 1;
 
-        const activeInput = document.querySelector(".inputs .data-container.active")?.querySelector('[original="true"]');
+        const activeVideoInput = document.querySelector(".inputs .data-container.active video");
         const referenceImageCheckbox = document.getElementById('referenceImageMethod');
         if (referenceImageCheckbox) {
             /*const promptMethodCheckbox = document.getElementById('promptMethod');
@@ -14572,14 +14852,14 @@ function updateGenerateButtonText() {
             referenceImageCheckbox.checked = false;
         }
 
-        if (pageName === 'video-generator' || pageName === 'video-extender' || activeInput?.tagName.toLowerCase() === 'video') {
+        if (pageName === 'video-generator' || activeVideoInput) {
             neededCredits *= Number(duration);
             neededCredits *= 1 + (Number(quality) - 1) * 0.5;
         }
 
         if (removeBanner) neededCredits *= 2;
 
-        if (pageName === 'video-generator' || pageName === 'video-extender')
+        if (pageName === 'video-generator')
             neededCredits /= 2;
         neededCredits = Math.max(1, Math.round(neededCredits));
 
@@ -14628,10 +14908,10 @@ export async function checkServerStatus(databases = null, userId = null) {
     const dbKey = `${pageName}_databases`;
     const userKey = `${pageName}_userId`;
 
-    if (databases)
+    if (databases) 
         localStorage.setItem(dbKey, JSON.stringify(databases));
 
-    if (userId)
+    if (userId) 
         localStorage.setItem(userKey, userId);
 
     const dbKeyStored = localStorage.getItem(dbKey);
@@ -14723,8 +15003,6 @@ export async function checkServerStatus(databases = null, userId = null) {
     });
 
     const results = await Promise.all(serverPromises);
-    console.log(results);
-
     if (serverListContainer) {
         serverListContainer.innerHTML = '';
         results.forEach((serverData, serverIndex) => {
@@ -14744,8 +15022,8 @@ export async function checkServerStatus(databases = null, userId = null) {
 
     updateGenerateButtonText();
 
-    if (pageName === 'video-generator' || pageName === 'video-extender' || pageName === 'inpaint' || pageName === 'art-generator') {
-        ['removeBanner', 'enhanceResolution', 'enhanceDetails'].forEach(id => {
+    if (pageName === 'video-generator' || pageName === 'inpaint' || pageName === 'art-generator') {
+        ['removeBanner', 'enhanceResolution', 'enhanceDetails', 'generateAudio'].forEach(id => {
             if (id) {
                 const el = document.getElementById(id);
                 if (el) el.addEventListener('change', updateGenerateButtonText);
@@ -14767,54 +15045,17 @@ export async function checkServerStatus(databases = null, userId = null) {
     }
 
     function updateActiveModels(results) {
-        // 1) compute first active per type from results (normalized)
-        const firstActiveByType = {};
-        for (const r of results) {
-            if (!r.currentModel) continue;
-            const parts = String(r.currentModel).trim().split(/\s+/); // ["realistic", "XL-Master.safetensors"]
-            const type = parts[0].toLowerCase();
-            if (!firstActiveByType[type]) firstActiveByType[type] = r.currentModel;
-        }
-
         const allCheckboxes = document.querySelectorAll('.rectangle-container input[type="checkbox"]');
-
         allCheckboxes.forEach(checkbox => {
-            const parent = checkbox.closest('label') || checkbox.parentElement || checkbox;
-            // find the rectangle that contains this checkbox (scoped type)
-            const rectangle = checkbox.closest('.rectangle');
-            // fallback: try deriving from checkbox id (legacy)
-            const fallbackType = (checkbox.id || '').trim().split(/\s+/)[0] || '';
-            const checkboxType = (rectangle?.id?.split(/\s+/)[0] || fallbackType).toLowerCase();
-
-            // store original id once so we can restore it later
-            if (!checkbox.dataset.originalId) {
-                checkbox.dataset.originalId = checkbox.id ?? '';
-            }
-
-            const originalId = checkbox.dataset.originalId;
-
-            // if original contains lastUsedModel (space or dash variants), we'll attempt to override
-            const isLastUsed = /lastUsedModel$/i.test(originalId) || /\blastUsedModel\b/i.test(originalId);
-
-            // determine resolved id (firstActive model for this checkbox's type)
-            const resolvedForType = firstActiveByType[checkboxType] ?? null;
-
-            // apply resolved id if available, otherwise restore original
-            if (isLastUsed && resolvedForType) {
-                // set the actual DOM id to the resolved model id
-                checkbox.id = resolvedForType;
-            } else {
-                // restore original id (if we had overridden it previously)
-                checkbox.id = originalId;
-            }
-
-            // now decide active state based on the current effective id
-            const effectiveId = checkbox.id;
-
-            const isActive = results.some(r => r.currentModel === effectiveId);
-
-            // update/check visual status-dot and container (same logic as you had)
+            const parent = checkbox.parentElement;
             const container = parent.querySelector('.model-container');
+
+            const isActive = results.some(r => {
+                if (!r.currentModel)
+                    return false;
+                return r.currentModel === checkbox.id;
+            });
+
             if (isActive) {
                 let wrapper = container;
                 if (!wrapper) {
@@ -14833,22 +15074,19 @@ export async function checkServerStatus(databases = null, userId = null) {
                     dot.textContent = '●';
                     wrapper.appendChild(dot);
                 }
-                // optionally mark checkbox checked if it's active
-                // checkbox.checked = true;
             } else {
                 if (container) {
                     const modelSpan = container.querySelector('.model-name');
                     if (modelSpan) parent.appendChild(modelSpan);
                     container.remove();
                 }
-                // checkbox.checked = false; // optional
             }
         });
     }
 
     updateActiveModels(results);
 
-    if (!didCallStatus)
+    if (!didCallStatus) 
         showDailyCredits();
     didCallStatus = true;
 
@@ -14899,22 +15137,19 @@ export async function checkServerStatus(databases = null, userId = null) {
         }
     }
 }
-
 function has24HoursPassed(lastCreditEarned, currentTime) {
     return currentTime - lastCreditEarned >= 24 * 60 * 60 * 1000;
 }
 
-export function getCheckedCheckboxIdFromCombobox(comboboxId, defaultValue) {
+export function getCheckedCheckboxIdFromCombobox(comboboxId, callback) {
     const container = document.getElementById(comboboxId);
-    if (!container) return defaultValue;
+    if (!container) return callback;
 
     const checkedItem = container.querySelector('li.item.checked');
-    if (!checkedItem) return defaultValue;
+    if (!checkedItem) return callback;
 
     const checkbox = checkedItem.querySelector('input[type="checkbox"]');
-    if (!checkbox || checkbox.disabled) return defaultValue;
-
-    return checkbox.id;
+    return checkbox ? checkbox.id : callback;
 }
 
 export function cannotBeBanned(userDoc) {
@@ -15360,7 +15595,7 @@ export async function handleLastOutputDownload(lastOutput, databases) {
             db: await openDB(`outputDB-${pageName}`, 'outputs'),
             url: lastOutput.url,
             timestamp: lastOutput.timestamp,
-            container: document.querySelector('.outputs').firstChild,
+            element: document.querySelector('.outputs').firstChild,
             id: lastOutput.id,
             active: lastOutput.active,
         }, databases)

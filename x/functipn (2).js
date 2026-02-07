@@ -283,7 +283,7 @@ export function showSidebar(sidebar, hamburgerMenu, setUser = null, setAuthentic
             return;
         createUserData(sidebar, screenMode, setAuthentication, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot);
         createSideBarData(sidebar);
-        ['exploreButton', 'profileButton', 'premiumButton', 'faceSwapButton', 'inpaintButton', 'artGeneratorButton', 'videoGeneratorButton', 'videoExtenderButton', 'userLayout', 'faqLink', 'policiesLink', 'guidelinesLink', 'contactUsLink'].forEach(id => {
+        ['exploreButton', 'profileButton', 'premiumButton', 'faceSwapButton', 'inpaintButton', 'artGeneratorButton', 'videoGeneratorButton', 'userLayout', 'faqLink', 'policiesLink', 'guidelinesLink', 'contactUsLink'].forEach(id => {
             const element = document.getElementById(id);
             if (element) {
                 element.addEventListener('click', () => localStorage.setItem('sidebarState', 'removeSidebar'))
@@ -1129,7 +1129,7 @@ export function serverID() {
     if (pageName.includes('face-swap')) return 'DF';
     if (pageName.includes('inpaint')) return 'DN';
     if (pageName.includes('art-generator')) return 'DA';
-    if (pageName.includes('video-generator') || pageName.includes('video-extender')) return 'DV';
+    if (pageName.includes('video-generator')) return 'DV';
     return null;
 }
 
@@ -1140,7 +1140,6 @@ export function documentID() {
 
     return 'serverAdress-' + serverId;
 }
-let fetchAllServerAddressesInFlight = null;
 
 export async function fetchAllServerAddresses(snapshotPromise, useCache = true) {
     const ttl = 7 * 24 * 60 * 60 * 1000;
@@ -1161,40 +1160,28 @@ export async function fetchAllServerAddresses(snapshotPromise, useCache = true) 
         return cachedAddresses;
     }
 
-    // ✅ Already fetching → await same promise
-    if (fetchAllServerAddressesInFlight) {
-        console.log('[fetchAllServerAddresses] awaiting in-flight request');
-        return fetchAllServerAddressesInFlight;
-    }
-
     console.log('[fetchAllServerAddresses] cache miss → fetching snapshot');
+    const snapshot = await snapshotPromise();
 
-    fetchAllServerAddressesInFlight = (async () => {
-        const snapshot = await snapshotPromise();
-
-        const serverAddresses = [];
-        snapshot.docs.forEach(doc => {
-            const data = doc.data();
-            for (const key in data) {
-                if (data.hasOwnProperty(key)) {
-                    const value = data[key];
-                    if (typeof value === 'string' && value.includes('://')) {
-                        serverAddresses.push(value);
-                    }
+    // Extract all server fields from each doc
+    const serverAddresses = [];
+    snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        for (const key in data) {
+            if (data.hasOwnProperty(key)) {
+                const value = data[key];
+                // Optional: filter by string containing your domain or /download-output/
+                if (typeof value === 'string' && value.includes('://')) {
+                    serverAddresses.push(value);
                 }
             }
-        });
+        }
+    });
 
-        console.log('[fetchAllServerAddresses] fetched addresses (all servers):', serverAddresses);
-        setCache(cacheKey, serverAddresses, ttl);
-        return serverAddresses;
-    })();
+    console.log('[fetchAllServerAddresses] fetched addresses (all servers):', serverAddresses);
 
-    try {
-        return await fetchAllServerAddressesInFlight;
-    } finally {
-        fetchAllServerAddressesInFlight = null;
-    }
+    setCache(cacheKey, serverAddresses, ttl);
+    return serverAddresses;
 }
 
 export async function fetchServerAddresses(snapshotPromise, filter = true, serverType = null, useCache = true, pageNameCustom = null) {
@@ -1736,8 +1723,6 @@ export function showNotification(message, featureChange, type) {
 }
 
 let persistentRequested = false;
-let persistentAllowed = false;
-
 const dbCache = Object.create(null);
 const dbOpenPromises = Object.create(null);
 
@@ -1822,36 +1807,14 @@ export const closeDB = (databaseName) => {
     }
 };
 
-/*let deferredPrompt = null;
-
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-});*/
-
 const requestPersistentStorage = async () => {
-    if (!navigator.storage?.persist) return false;
-
-    persistentAllowed = await navigator.storage.persisted();
-    if (persistentAllowed) return true;
-
-    persistentAllowed = await navigator.storage.persist();
-    console.log(`Persistent storage granted: ${persistentAllowed}`);
-
-    //if (!persistentAllowed && deferredPrompt) {
-        //showPwaInstallPrompt();
-    //}
-
-    return persistentAllowed;
+    if (navigator.storage && navigator.storage.persist) {
+        const isPersisted = await navigator.storage.persist();
+        console.log(`Persistent storage granted: ${isPersisted}`);
+        return isPersisted;
+    }
+    return false;
 };
-
-/*const showPwaInstallPrompt = async () => {
-    if (!deferredPrompt) return;
-
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    deferredPrompt = null;
-};*/
 
 const checkStorageQuota = async () => {
     if (navigator.storage && navigator.storage.estimate) {
@@ -1879,7 +1842,7 @@ export const openDB = (databaseName, objectStoreName, useCache = false) => {
     return new Promise(async (resolve, reject) => {
         if (!persistentRequested) {
             persistentRequested = true;
-             await requestPersistentStorage();
+            await requestPersistentStorage();
         }
         if (!window.indexedDB) return reject("IndexedDB is not supported.");
 
@@ -1932,7 +1895,7 @@ export const openDB = (databaseName, objectStoreName, useCache = false) => {
             }
             // Quota exceeded
             else if (error?.name === "QuotaExceededError") {
-                reject("Storage quota exceeded. Clear space and try again. | IMPORTANT: Make sure your browser is up to date!");
+                reject("Storage quota exceeded. Clear space and try again.");
             }
             // Security restrictions
             else if (error?.name === "SecurityError") {
@@ -2044,11 +2007,11 @@ export const addToDB = (db, data, active = false) => {
             let errorMsg = 'Error adding to DB: ';
 
             if (err.name === 'QuotaExceededError') {
-                errorMsg += 'Storage quota exceeded. Please delete old media. | IMPORTANT: Make sure your browser is up to date!';
+                errorMsg += 'Storage quota exceeded. Please delete old media.';
             } else if (err.name === 'UnknownError') {
-                errorMsg += 'Storage unavailable (possibly private browsing or quota issue) | IMPORTANT: Make sure your browser is up to date!';
+                errorMsg += 'Storage unavailable (possibly private browsing or quota issue)';
             } else if (String(err).includes('Blob')) {
-                errorMsg += err + ' | (possible private/incognito limitation) | IMPORTANT: Make sure your browser is up to date!';
+                errorMsg += err + ' | (possible private/incognito limitation)';
             } else {
                 errorMsg += err;
             }
@@ -2208,44 +2171,54 @@ export const appendChunkToDB = (db, url, chunk) => {
     });
 };
 
-export const updateInDB = async (db, matcher, updates = {}) => {
-    if (!persistentRequested) {
-        persistentRequested = true;
-        await requestPersistentStorage();
-    }
+export const updateInDB = (db, matcher, blob = null, thumbnailBlob = null, base64 = null) => {
+    return new Promise(async (resolve, reject) => {
+        // Request persistence once
+        if (!persistentRequested) {
+            persistentRequested = true;
+            await requestPersistentStorage();
+        }
 
-    const hasSpace = await checkStorageQuota();
-    if (!hasSpace) throw new Error('Storage quota exceeded');
+        // Check quota before writing
+        const hasSpace = await checkStorageQuota();
+        if (!hasSpace) {
+            return reject(new Error('Storage quota exceeded'));
+        }
+        const transaction = db.transaction([db.objectStoreNames[0]], 'readwrite');
+        const objectStore = transaction.objectStore(db.objectStoreNames[0]);
+        const request = objectStore.openCursor();
 
-    return new Promise((resolve, reject) => {
-        const tx = db.transaction([db.objectStoreNames[0]], 'readwrite');
-        const store = tx.objectStore(db.objectStoreNames[0]);
-        const req = store.openCursor();
+        request.onsuccess = async (event) => {
+            const cursor = event.target.result;
+            if (cursor) {
+                if (cursor.value.url === matcher || cursor.value.timestamp === matcher || cursor.value.id === matcher) {
+                    // Update blob and optional thumbnail
+                    if (blob !== null && blob instanceof Blob)
+                        cursor.value.blob = blob;
 
-        req.onerror = e => reject(e.target.error);
+                    if (thumbnailBlob !== null && thumbnailBlob instanceof Blob)
+                        cursor.value.thumbnailBlob = thumbnailBlob;
 
-        req.onsuccess = e => {
-            const cursor = e.target.result;
-            if (!cursor) return reject(new Error('No matching record found'));
+                    if (base64 !== null && typeof base64 === 'string' && base64.startsWith('data:')) {
+                        cursor.value.base64 = base64;
+                    }
 
-            const { value } = cursor;
+                    cursor.value.chunks = [];
 
-            if (
-                value.url === matcher ||
-                value.timestamp === matcher ||
-                value.id === matcher
-            ) {
-                if (updates.blob instanceof Blob) { value.blob = updates.blob; value.chunks = []; }
-                if (updates.thumbnailBlob instanceof Blob) value.thumbnailBlob = updates.thumbnailBlob;
-                if (typeof updates.base64 === 'string' && updates.base64.startsWith('data:')) value.base64 = updates.base64;
-
-                const updateReq = cursor.update(value);
-                updateReq.onsuccess = () => resolve();
-                updateReq.onerror = e => reject(e.target.error);
-                return;
+                    const updateRequest = cursor.update(cursor.value);
+                    updateRequest.onsuccess = () => resolve();
+                    updateRequest.onerror = (event) =>
+                        reject(`Error updating photo in database: ${event.target.error}`);
+                } else {
+                    cursor.continue();
+                }
+            } else {
+                reject(`No record found with url: ${url}`);
             }
+        };
 
-            cursor.continue();
+        request.onerror = (event) => {
+            reject(`Error opening cursor in database: ${event.target.error}`);
         };
     });
 };
@@ -2486,93 +2459,8 @@ export async function customFetch(url, options, onProgress) {
     })
 }
 
-
-async function awaitMediaLoadedWithRetries(element, maxRetries = 3, retryDelay = 3000) {
-    if (!element) return { success: false, reason: 'No element provided' };
-    let attempt = 0;
-
-    while (attempt < maxRetries) {
-        while (document.visibilityState !== "visible") {
-            await new Promise(resolve => {
-                const onVisible = () => {
-                    if (document.visibilityState === "visible") {
-                        document.removeEventListener("visibilitychange", onVisible);
-                        resolve();
-                    }
-                };
-                document.addEventListener("visibilitychange", onVisible);
-            });
-        }
-
-        try {
-            await new Promise((resolve, reject) => {
-                if (
-                    (element.tagName.toLowerCase() === "video" && element.readyState >= 2) ||
-                    (element instanceof HTMLVideoElement && element.readyState >= 2) ||
-                    (element.tagName.toLowerCase() === "img" && element.complete && element.naturalWidth !== 0) ||
-                    (element instanceof HTMLImageElement && element.complete && element.naturalWidth !== 0)
-                ) return resolve();
-
-                const onLoaded = () => resolve();
-                const onError = (e) => reject(e);
-
-                if (element.tagName.toLowerCase() === "video" || element instanceof HTMLVideoElement) {
-                    element.addEventListener('loadeddata', onLoaded, { once: true });
-                    element.addEventListener('error', onError, { once: true });
-                    try { element.load(); } catch (e) { /* ignore */ }
-                } else if (element.tagName.toLowerCase() === "img" || element instanceof HTMLImageElement) {
-                    element.addEventListener('load', onLoaded, { once: true });
-                    element.addEventListener('error', onError, { once: true });
-                }
-            });
-
-            return { success: true };
-        } catch (err) {
-            attempt++;
-            if (attempt >= maxRetries) {
-                let extraInfo = {
-                    src: element.src || element.currentSrc || null,
-                    tag: element.tagName,
-                    error: err?.message || err,
-                };
-
-                if (element instanceof HTMLVideoElement) {
-                    extraInfo.networkState = element.networkState;
-                    extraInfo.readyState = element.readyState;
-                    if (element.error) {
-                        extraInfo.videoError = {
-                            code: element.error.code,
-                            message: element.error.message
-                        };
-                    }
-                }
-
-                if (element instanceof HTMLImageElement) {
-                    extraInfo.complete = element.complete;
-                    extraInfo.naturalWidth = element.naturalWidth;
-                }
-
-                console.warn(`${element.tagName} failed to load after ${maxRetries} attempts.`, extraInfo);
-                return { success: false, reason: extraInfo };
-            }
-
-            await new Promise(resolve => {
-                const timeoutId = setTimeout(resolve, retryDelay);
-                const onHidden = () => {
-                    if (document.visibilityState !== "visible") {
-                        clearTimeout(timeoutId);
-                        document.removeEventListener("visibilitychange", onHidden);
-                        resolve();
-                    }
-                };
-                document.addEventListener("visibilitychange", onHidden);
-            });
-        }
-    }
-}
-
 async function displayStoredData(element, dataBaseObjectStoreName) {
-    if (pageName !== 'face-swap' && pageName !== 'video-generator' && pageName !== 'video-extender' && pageName !== 'inpaint' && pageName !== 'art-generator')
+    if (pageName !== 'face-swap' && pageName !== 'video-generator' && pageName !== 'inpaint' && pageName !== 'art-generator')
         return;
 
     if (element === 'loader') {
@@ -2654,7 +2542,7 @@ async function displayStoredData(element, dataBaseObjectStoreName) {
         const imgElement = afterInitContainer.querySelector('img');
         const videoOrImg = videoElement || imgElement;
         const containerElement = videoOrImg || frameElement;
-        if (containerElement?.getAttribute('src') && targetElement?.getAttribute('src') && containerElement?.getAttribute('src') === targetElement?.getAttribute('src')) {
+        if (containerElement?.src && targetElement?.src && containerElement?.src === targetElement?.src) {
             if (loadingSpinner) loadingSpinner.remove();
             afterInitContainer.style.display = 'flex';
             const existingTimeline = document.querySelector(`.${dataBaseObjectStoreName}_timelineContainer`);
@@ -2672,23 +2560,124 @@ async function displayStoredData(element, dataBaseObjectStoreName) {
         }
     }
 
+    function getCachedBlobUrl(el) {
+        if (!el) return null;
+        if (el.dataset && el.dataset.blobUrl) return el.dataset.blobUrl;
+        try {
+            const src = el.currentSrc || el.src || null;
+            if (src && src.startsWith && src.startsWith('blob:')) {
+                el.dataset.blobUrl = src;
+                return src;
+            }
+        } catch (e) { }
+        return null;
+    }
+
+    function cacheBlobUrlOnElement(el, blobOrUrl) {
+        if (!el) return null;
+        if (blobOrUrl instanceof Blob) {
+            if (!el.dataset.blobUrl) {
+                el.dataset.blobUrl = URL.createObjectURL(blobOrUrl);
+            }
+            return el.dataset.blobUrl;
+        }
+        if (typeof blobOrUrl === 'string') {
+            el.dataset.blobUrl = blobOrUrl;
+            return blobOrUrl;
+        }
+        return null;
+    }
+
+    async function awaitMediaLoadedWithRetries(element, maxRetries = 3, retryDelay = 3000) {
+        if (!element) return { success: false, reason: 'No element provided' };
+
+        let attempt = 0;
+
+        while (attempt < maxRetries) {
+            while (document.visibilityState !== "visible") {
+                await new Promise(resolve => {
+                    const onVisible = () => {
+                        if (document.visibilityState === "visible") {
+                            document.removeEventListener("visibilitychange", onVisible);
+                            resolve();
+                        }
+                    };
+                    document.addEventListener("visibilitychange", onVisible);
+                });
+            }
+
+            try {
+                await new Promise((resolve, reject) => {
+                    if (
+                        (element.tagName.toLowerCase() === "video" && element.readyState >= 2) ||
+                        (element instanceof HTMLVideoElement && element.readyState >= 2) ||
+                        (element.tagName.toLowerCase() === "img" && element.complete && element.naturalWidth !== 0) ||
+                        (element instanceof HTMLImageElement && element.complete && element.naturalWidth !== 0)
+                    ) return resolve();
+
+                    const onLoaded = () => resolve();
+                    const onError = (e) => reject(e);
+
+                    if (element.tagName.toLowerCase() === "video" || element instanceof HTMLVideoElement) {
+                        element.addEventListener('loadeddata', onLoaded, { once: true });
+                        element.addEventListener('error', onError, { once: true });
+                        // don't call load() blindly if the src is a blob URL and the element already loaded
+                        try { element.load(); } catch (e) { /* ignore */ }
+                    } else if (element.tagName.toLowerCase() === "img" || element instanceof HTMLImageElement) {
+                        element.addEventListener('load', onLoaded, { once: true });
+                        element.addEventListener('error', onError, { once: true });
+                    }
+                });
+
+                return { success: true };
+            } catch (err) {
+                attempt++;
+                if (attempt >= maxRetries) {
+                    let extraInfo = {
+                        src: element.src || element.currentSrc || null,
+                        tag: element.tagName,
+                        error: err?.message || err,
+                    };
+
+                    if (element instanceof HTMLVideoElement) {
+                        extraInfo.networkState = element.networkState;
+                        extraInfo.readyState = element.readyState;
+                        if (element.error) {
+                            extraInfo.videoError = {
+                                code: element.error.code,
+                                message: element.error.message
+                            };
+                        }
+                    }
+
+                    if (element instanceof HTMLImageElement) {
+                        extraInfo.complete = element.complete;
+                        extraInfo.naturalWidth = element.naturalWidth;
+                    }
+
+                    console.warn(`${element.tagName} failed to load after ${maxRetries} attempts.`, extraInfo);
+                    return { success: false, reason: extraInfo };
+                }
+
+                await new Promise(resolve => {
+                    const timeoutId = setTimeout(resolve, retryDelay);
+                    const onHidden = () => {
+                        if (document.visibilityState !== "visible") {
+                            clearTimeout(timeoutId);
+                            document.removeEventListener("visibilitychange", onHidden);
+                            resolve();
+                        }
+                    };
+                    document.addEventListener("visibilitychange", onHidden);
+                });
+            }
+        }
+    }
+
     const result = await awaitMediaLoadedWithRetries(targetElement);
     if (!result.success) {
-        alert(`Media could not be loaded.
-
-Possible fixes:
-• Update your browser
-• Try different browser
-• Third-party cookie/storage blocking
-• Open disk space on the device
-• Clear site data (Application → Storage → Clear site data)
-• Enable persistent storage
-• Avoid incognito/private mode
-• OS/browser storage restrictions (enterprise policies, iOS limits)
-• Close other tabs using heavy storage
-• Try another browser/profile.\n` + JSON.stringify(result.reason, null, 2)
-        );
-        //location.reload();
+        alert('Media could not be loaded.\n' + JSON.stringify(result.reason, null, 2));
+        location.reload();
         return;
     }
 
@@ -2705,6 +2694,9 @@ Possible fixes:
         async function loadMedia(element) {
             return await awaitMediaLoadedWithRetries(element, 3, 1000);
         }
+
+        // Try to reuse any cached blob URL already stored on the source element
+        const cachedUrl = getCachedBlobUrl(targetElement); // may be null
 
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
             try {
@@ -2728,7 +2720,15 @@ Possible fixes:
                 fgClone.style.zIndex = '2';
 
                 // If we have a cached blob URL use it; otherwise keep the cloned src (network or existing)
-                try { fgClone.src = targetElement.src; } catch (e) { /* ignore */ }
+                if (cachedUrl) {
+                    try { fgClone.src = cachedUrl; } catch (e) { /* ignore */ }
+                } else {
+                    // if the target element's src is a blob URL, cache it for future clones
+                    const src = targetElement.currentSrc || targetElement.src || null;
+                    if (src && src.startsWith && src.startsWith('blob:')) {
+                        cacheBlobUrlOnElement(targetElement, src);
+                    }
+                }
 
                 if (isVideo) {
                     fgClone.preload = "auto";
@@ -2754,6 +2754,10 @@ Possible fixes:
 
                 const loaded = await loadMedia(fgClone);
                 if (!loaded) throw new Error('Foreground failed to load');
+
+                if (!getCachedBlobUrl(targetElement) && targetElement.__blob instanceof Blob) {
+                    cacheBlobUrlOnElement(targetElement, targetElement.__blob);
+                }
 
                 if (isLowEndDevice() && shouldCreateBG) {
                     const canvas = document.createElement('canvas');
@@ -2781,7 +2785,10 @@ Possible fixes:
                         bgClone = targetElement.cloneNode(true);
 
                         // ensure bgClone uses cached blob URL if available
-                        try { bgClone.src = targetElement.src; } catch (e) { /* ignore */ }
+                        const bgCached = getCachedBlobUrl(targetElement);
+                        if (bgCached) {
+                            try { bgClone.src = bgCached; } catch (e) { /* ignore */ }
+                        }
 
                         bgClone.style.position = 'absolute';
                         bgClone.style.top = '0';
@@ -3288,23 +3295,39 @@ Possible fixes:
         generateTimeline();
     }
 }
+
+export async function waitForMediaLoad(mediaElement) {
+    return new Promise((resolve, reject) => {
+        if (mediaElement.tagName.toLowerCase() === "img") {
+            if (mediaElement.complete && mediaElement.naturalWidth > 0) {
+                return resolve();
+            }
+            mediaElement.addEventListener('load', () => resolve(), { once: true });
+            mediaElement.addEventListener('error', () => reject(new Error('Image failed to load')), { once: true });
+        } else if (mediaElement.tagName.toLowerCase() === "video") {
+            if (mediaElement.readyState >= 2) { // HAVE_CURRENT_DATA
+                return resolve();
+            }
+            mediaElement.addEventListener('loadeddata', () => resolve(), { once: true });
+            mediaElement.addEventListener('error', () => reject(new Error('Video failed to load')), { once: true });
+        } else {
+            resolve();
+        }
+    });
+}
+
 let addedContextCSS = false;
-export function handleContextMenu(parent, previous = true) {
-    let element = parent.querySelector('[original="true"]') || parent.querySelector('initial');
-    let isBadFile = element === parent.querySelector('initial');
+export function handleContextMenu(parent) {
+    let element = parent.querySelector('[original="true"]');
     let thumbnail = parent.querySelector('[original="false"]');
     let timestamp = element?.getAttribute('timestamp');
     let container = parent?.parentElement;
 
-    const old = document.getElementById(timestamp + 'previous');
-    if (old) old.remove();
-
     const contextMenu = document.createElement('div');
     contextMenu.className = 'background-container background-container-absolute';
-    contextMenu.id = timestamp + 'previous';
     contextMenu.innerHTML = `
   <div class="background-dot-container overflow-hidden">
-    <div class="background-dot-container-content" style='overflow: auto;padding-right: calc(1vh * var(--scale-factor-h));'>
+    <div class="background-dot-container-content" style='overflow: auto;justify-content: space-between;padding-right: calc(1vh * var(--scale-factor-h));'>
       <div class="small-box unreversed" data-action="display" id="${timestamp}_display">
         <span class="menu-icon">↗</span>
         <span>Display</span>
@@ -3397,25 +3420,9 @@ export function handleContextMenu(parent, previous = true) {
     }
 
     function showContextMenu(e) {
-        if (!element) element = parent.querySelector('[original="true"]') || parent.querySelector('initial');
-        isBadFile = element === parent.querySelector('initial');
-        if (!thumbnail) thumbnail = parent.querySelector('[original="false"]');
-        if (!timestamp) timestamp = element?.getAttribute('timestamp');
-        if (!container) container = parent?.parentElement;
-        if (!dataBaseObjectStoreName) dataBaseObjectStoreName = container?.className;
-        if (!dataBaseIndexName) dataBaseIndexName = dataBaseObjectStoreName ? dataBaseObjectStoreName.replace(/s$/, '') + `DB-${pageName}` : '';
-
-        if (isBadFile) {
-            contextMenu.querySelector('.small-box[data-action="copy-browser-url"]').style.display = 'none';
-            contextMenu.querySelector('.small-box[data-action="download-browser"]').style.display = 'none';
-            contextMenu.querySelector('.small-box[data-action="save"]').style.display = 'none';
-            contextMenu.querySelector('.small-box[data-action="activate"]').style.display = 'none';
-            contextMenu.querySelector('.small-box[data-action="open"]').style.display = 'none';
-            contextMenu.querySelector('.small-box[data-action="display"]').style.display = 'none';
-        }
-
         const downloadUrl = element?.getAttribute('url');
         if (!downloadUrl || downloadUrl === 'null') {
+            contextMenu.querySelector('.small-box[data-action="use-generation-data"]').style.display = 'none';
             contextMenu.querySelector('.small-box[data-action="copy-download-url"]').style.display = 'none';
             contextMenu.querySelector('.small-box[data-action="download-server"]').style.display = 'none';
         }
@@ -3515,66 +3522,33 @@ export function handleContextMenu(parent, previous = true) {
         const originalSrc = element?.src;
         const originalPoster = element?.poster;
 
-        const action = menuItem.getAttribute('data-action');
-        const url = element?.querySelector('source')?.src || element?.getAttribute('src');
-        const downloadUrl = element?.getAttribute('url');
-
-        if (action !== 'use-generation-data' && action !== 'copy-download-url' && action !== 'delete' && action !== 'download-server') {
-            if (!element.getAttribute('src')) {
-                try {
-                    element = await loadMedia(element, item?.blob);
-                } catch (err) {
-                    if (item?.base64) {
-                        element = await loadMedia(element, item?.base64);
-                    }
-                    else if (item?.blob) {
-                        try {
-                            console.log('Creating base64 from blob...');
-                            const base64 = await blobToBase64(item?.blob);
-                            await updateInDB(db, url, { base64 });
-                            item.base64 = base64;
-                            element = await loadMedia(element, base64);
-                        } catch (err2) {
-                            console.error('Failed to create base64 from blob, reloading page', err2);
-                            location.reload();
-                        }
-                    } else {
-                        location.reload();
-                    }
-                }
-            }
-
-            if (!thumbnail.getAttribute('src')) {
-                try {
-                    thumbnail = await loadMedia(thumbnail, item?.thumbnailBlob);
-                } catch (err) {
-                    if (item?.thumbnailBase64) {
-                        thumbnail = await loadMedia(thumbnail, item?.thumbnailBase64);
-                    }
-                    else if (item?.thumbnailBlob) {
-                        try {
-                            console.log('Creating thumbnail...');
-                            const thumb = await createThumbnail(item?.thumbnailBlob);
-                            if (thumb) {
-                                thumbnail.src = URL.createObjectURL(thumb);
-                                await updateInDB(db, url, { thumbnailBlob: thumb });
-                            }
-
-                            console.log('Creating base64 from blob...');
-                            const base64Thumb = await blobToBase64(item?.thumbnailBlob);
-                            item.thumbnailBase64 = base64Thumb;
-                            await updateInDB(db, url, { base64: base64Thumb });
-                            thumbnail = await loadMedia(thumbnail, base64Thumb);
-                        } catch (err2) {
-                            console.error('Failed to create thumbnail/base64, reloading page', err2);
-                            location.reload();
-                        }
-                    } else {
-                        location.reload();
-                    }
+        if (!element.src) {
+            try {
+                element = await loadMedia(element, item.blob);
+            } catch (err) {
+                if (item.base64) {
+                    element = await loadMedia(element, item.base64);
+                } else {
+                    location.reload();
                 }
             }
         }
+
+        if (!thumbnail.src) {
+            try {
+                thumbnail = await loadMedia(thumbnail, item.thumbnailBlob);
+            } catch (err) {
+                if (item.base64) {
+                    thumbnail = await loadMedia(thumbnail, item.thumbnailBase64);
+                } else {
+                    location.reload();
+                }
+            }
+        }
+
+        const action = menuItem.getAttribute('data-action');
+        const url = element?.querySelector('source')?.src || element?.src;
+        const downloadUrl = element?.getAttribute('url');
 
         // Your existing switch case for actions remains exactly the same
         switch (action) {
@@ -3586,13 +3560,10 @@ export function handleContextMenu(parent, previous = true) {
 
                     const idx = parseInt(element.getAttribute('id'));
                     if (!isNaN(idx)) {
-                        if (pageName === 'inpaint' || pageName === 'art-generator' || pageName === 'face-swap' || pageName === 'video-extender' || dataBaseObjectStoreName === 'outputs') {
+                        if (pageName === 'inpaint' || pageName === 'art-generator' || pageName === 'face-swap' || dataBaseObjectStoreName === 'outputs') {
                             displayStoredData(null, pageName === 'inpaint' ? 'outputs' : dataBaseObjectStoreName);
                         }
-
-                        updateActiveState(db, idx, false).catch(err => {
-                            console.error(`Failed to update active state for id=${elId}`, err);
-                        });
+                        await updateActiveState(db, idx, false);
                     }
                 }
                 else {
@@ -3608,7 +3579,7 @@ export function handleContextMenu(parent, previous = true) {
                     const idx = parseInt(element.getAttribute('id'));
                     if (!isNaN(idx)) {
                         try {
-                            if (pageName === 'inpaint' || pageName === 'art-generator' || pageName === 'face-swap' || pageName === 'video-extender' || dataBaseObjectStoreName === 'outputs') {
+                            if (pageName === 'inpaint' || pageName === 'art-generator' || pageName === 'face-swap' || dataBaseObjectStoreName === 'outputs') {
                                 displayStoredData(parent, pageName === 'inpaint' ? 'outputs' : dataBaseObjectStoreName);
                             }
                         } catch (err) {
@@ -3616,9 +3587,7 @@ export function handleContextMenu(parent, previous = true) {
                             location.reload();
                         }
 
-                        updateActiveState(db, idx, true).catch(err => {
-                            console.error(`Failed to update active state for id=${elId}`, err);
-                        });
+                        await updateActiveState(db, idx, true);
                     }
                 }
                 break;
@@ -3658,44 +3627,31 @@ export function handleContextMenu(parent, previous = true) {
                 if (element.tagName.toLowerCase() === "video") {
                     mediaElement = document.createElement('video');
                     mediaElement.controls = true;
-                    mediaElement.src = element?.querySelector('source')?.src || element?.getAttribute('src');
+                    mediaElement.src = element?.querySelector('source')?.src || element?.src;
                     mediaElement.style.maxWidth = '100vw';
                     mediaElement.style.maxHeight = '94vh';
                     mediaElement.style.borderRadius = 'var(--border-radius)';
                     mediaElement.style.objectFit = 'cover';
                 } else if (element.tagName.toLowerCase() === "img") {
                     mediaElement = document.createElement('img');
-                    mediaElement.src = element?.getAttribute('src');
+                    mediaElement.src = element.src;
                     mediaElement.style.maxWidth = '100vw';
                     mediaElement.style.maxHeight = '94vh';
                     mediaElement.style.borderRadius = 'var(--border-radius)';
                     mediaElement.style.objectFit = 'cover';
                 }
 
-                if (!mediaElement.getAttribute('src')) {
+                if (!mediaElement.src) {
                     wrapper.remove();
                     alert('Media source not found.');
                     return;
                 }
 
-                const result = await awaitMediaLoadedWithRetries(mediaElement);
-                if (!result.success) {
-                    alert(
-                        `Media could not be loaded.
-
-Possible fixes:
-• Update your browser
-• Try different browser
-• Third-party cookie/storage blocking
-• Open disk space on the device
-• Clear site data (Application → Storage → Clear site data)
-• Enable persistent storage
-• Avoid incognito/private mode
-• OS/browser storage restrictions (enterprise policies, iOS limits)
-• Close other tabs using heavy storage
-• Try another browser/profile.\n` + JSON.stringify(result.reason, null, 2)
-                    );
+                try {
+                    await waitForMediaLoad(mediaElement);
+                } catch (e) {
                     wrapper.remove();
+                    alert(e.message);
                     return;
                 }
 
@@ -3955,46 +3911,38 @@ Possible fixes:
                 break;
         }
 
-        if (action !== 'use-generation-data' && action !== 'copy-download-url' && action !== 'delete' && action !== 'download-server') { 
         const allElements = [...container.querySelectorAll('.data-container img, .data-container video')]
             .filter(el => el.getAttribute('id') !== element.getAttribute('id'));
 
-            for (const otherElements of allElements) {
-                if (otherElements?.parentElement?.classList.contains('active')) {
-                    otherElements?.parentElement?.classList.remove('active');
-                    const idx = parseInt(otherElements?.getAttribute('id'));
-                    if (!isNaN(idx)) {
-                        updateActiveState(db, idx, false).catch(err => {
-                            console.error(`Failed to update active state for id=${idx}`, err);
-                        });
+        for (const otherElements of allElements) {
+            otherElements.parentElement.classList.remove('active');
+            const idx = parseInt(otherElements?.getAttribute('id'));
+            if (!isNaN(idx)) await updateActiveState(db, idx, false);
+            if (otherElements && otherElements?.src?.startsWith('blob:')) {
+                const revoke = () => {
+                    setTimeout(() => {
+                        if (otherElements.getAttribute('blobRevoke') === 'false') {
+                            //URL.revokeObjectURL(otherElements.src);
+                            //otherElements.setAttribute('blobRevoke', 'true');
+                        }
+                        otherElements.removeEventListener('load', revoke);
+                        otherElements.removeEventListener('loadeddata', revoke);
+                    }, 100);
+                };
+
+                if (otherElements.tagName.toLowerCase() === "img") {
+                    if (otherElements.complete) {
+                        revoke();
+                    } else {
+                        otherElements.addEventListener('load', revoke, { once: true });
+                    }
+                } else if (otherElements.tagName.toLowerCase() === "video") {
+                    if (otherElements.readyState >= 2) {
+                        revoke();
+                    } else {
+                        otherElements.addEventListener('loadeddata', revoke, { once: true });
                     }
                 }
-                /*if (otherElements && otherElements?.src?.startsWith('blob:')) {
-                    const revoke = () => {
-                        setTimeout(() => {
-                            if (otherElements.getAttribute('blobRevoke') === 'false') {
-                                //URL.revokeObjectURL(otherElements.src);
-                                //otherElements.setAttribute('blobRevoke', 'true');
-                            }
-                            otherElements.removeEventListener('load', revoke);
-                            otherElements.removeEventListener('loadeddata', revoke);
-                        }, 100);
-                    };
-    
-                    if (otherElements.tagName.toLowerCase() === "img") {
-                        if (otherElements.complete) {
-                            revoke();
-                        } else {
-                            otherElements.addEventListener('load', revoke, { once: true });
-                        }
-                    } else if (otherElements.tagName.toLowerCase() === "video") {
-                        if (otherElements.readyState >= 2) {
-                            revoke();
-                        } else {
-                            otherElements.addEventListener('loadeddata', revoke, { once: true });
-                        }
-                    }
-                }*/
             }
         }
 
@@ -4134,29 +4082,22 @@ Possible fixes:
         }
 
         const parseId = filename => filename.split('_')[3];
-        const clickTarget = (selector, filename) => {
+        const toggleActive = (selector, filename) => {
             if (typeof filename !== 'string') return;
             const targetId = parseId(filename);
-
             document.querySelectorAll(selector).forEach(dc => {
-                const originalEl = dc.querySelector('[original="true"]');
-                if (!originalEl) return;
-
-                const id = originalEl.getAttribute('id');
-                const isParentActive = dc.classList.contains('active');
-
-                // Click only if this is the target and not already active
-                if (id === targetId && !isParentActive) {
-                    originalEl.click();
-                }
+                const img = dc.querySelector('img');
+                const id = img?.getAttribute('id');
+                const active = id === targetId;
+                dc.classList.toggle('active', active);
+                if (img) img.setAttribute('active', active.toString());
             });
         };
 
-        // Example usage:
-        clickTarget('.inputs .data-container', config.portraitFileName);
-        clickTarget('.inputs .data-container', config.inputFileName);
-        clickTarget('.start-frames .data-container', config.startFrameFileName);
-        clickTarget('.last-frames .data-container', config.lastFrameFileName);
+        toggleActive('.inputs .data-container', config.portraitFileName);
+        toggleActive('.inputs .data-container', config.inputFileName);
+        toggleActive('.start-frames .data-container', config.startFrameFileName);
+        toggleActive('.last-frames .data-container', config.lastFrameFileName);
     }
 
     // Client-side: extract generationData (no external deps)
@@ -4330,13 +4271,14 @@ const detectMimeFromBlob = (blob) => {
 };
 
 // helper: convert blob to base64 (return only base64 string without data: prefix)
-const blobToBase64 = blob =>
-    new Promise((resolve, reject) => {
+function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result);
         reader.onerror = reject;
         reader.readAsDataURL(blob);
     });
+}
 
 /*async function cleanupLocalStorage(snapshotPromise) {
     const allServers = await fetchAllServerAddresses(snapshotPromise);
@@ -4575,517 +4517,6 @@ let loadingSpinnerInit = null;
 let activeDBInits = 0;
 let startedDBInits = 0;
 
-async function resolveMediaSource({ blob = null, base64 = null, url = null } = {}) {
-    let src = null;
-    let mime = null;
-
-    try {
-        if (blob instanceof Blob) {
-            mime = blob.type || null;
-
-            if (!mime && typeof detectMimeFromBlob === 'function') {
-                try {
-                    const detected = await detectMimeFromBlob(blob);
-                    if (detected) mime = detected;
-                } catch { }
-            }
-
-            try {
-                src = URL.createObjectURL(blob);
-            } catch { }
-
-            if (!src) {
-                try {
-                    const b64 = await blobToBase64(blob);
-                    const fallbackMime = mime || 'application/octet-stream';
-                    src = `data:${fallbackMime};base64,${b64}`;
-                    mime = mime || fallbackMime;
-                } catch { }
-            }
-        }
-        else if (typeof base64 === 'string' && base64.startsWith('data:')) {
-            src = base64;
-            const idx = base64.indexOf(';');
-            if (idx > 5) mime = base64.slice(5, idx);
-        }
-        else if (url) {
-            src = url;
-        }
-    } catch {
-        src = null;
-        mime = null;
-    }
-
-    // Extension-based fallback
-    if (!mime && typeof src === 'string' && src.startsWith('http')) {
-        const extMatch = src.split('?')[0].match(/\.([a-zA-Z0-9]+)$/);
-        if (extMatch) {
-            const ext = extMatch[1].toLowerCase();
-            if (ext === 'gif') mime = 'image/gif';
-            else if (ext === 'png') mime = 'image/png';
-            else if (ext === 'jpg' || ext === 'jpeg') mime = 'image/jpeg';
-            else if (ext === 'webp') mime = 'image/webp';
-            else if (ext === 'mp4' || ext === 'mov') mime = 'video/mp4';
-            else if (ext === 'webm') mime = 'video/webm';
-        }
-    }
-
-    const isGif = mime === 'image/gif' || blob?.type === 'image/gif';
-    const isVideo = (mime && mime.startsWith('video')) || blob?.type?.startsWith('video');
-    const isImage = (mime && mime.startsWith('image')) || blob?.type?.startsWith('image');
-
-    return {
-        src,
-        mime,
-        isGif,
-        isVideo,
-        isImage,
-        blob,
-        base64,
-        url
-    };
-}
-
-export const handleUpload = async (event, dataBaseIndexName, dataBaseObjectStoreName, databases) => {
-    try {
-        if (!window.indexedDB) {
-            alert('Your browser does not support IndexedDB.');
-            return;
-        }
-
-        const db = await openDB(dataBaseIndexName, dataBaseObjectStoreName).catch((error) => {
-            if (error.name === 'QuotaExceededError') {
-                alert('Storage limit exceeded. Please free up space or clear cache.');
-            } else if (error.name === 'SecurityError') {
-                alert('Database access is restricted. Please check browser settings or disable private mode.');
-            } else if (error.message && error.message.includes('BlobURLs')) {
-                alert(
-                    'It seems there is an issue with Blob URLs not being supported in your browser or environment.\n\n' +
-                    'To resolve this:\n' +
-                    '- Ensure your browser is updated to the latest version (Chrome, Firefox, Edge).\n' +
-                    '- Avoid using the application in private/incognito mode.\n' +
-                    '- Disable browser extensions that may block IndexedDB or Blob URLs.\n\n' +
-                    'If the problem persists, try switching to a different browser or device.'
-                );
-            } else if (error.message && error.message.includes('backing store')) {
-                alert(
-                    'It seems there is an issue with the browser\'s IndexedDB storage. Please follow these steps to resolve it:\n\n' +
-                    '1. Open Chrome Developer Tools:\n   - Right-click anywhere on the page and select "Inspect", or press "Ctrl+Shift+I" (Windows) / "Cmd+Option+I" (Mac).\n' +
-                    '2. Go to the "Application" tab.\n' +
-                    '3. Under "Storage", click on "IndexedDB".\n' +
-                    '4. Right-click on the database causing the issue and select "Delete".\n\n' +
-                    'Additional Suggestions:\n' +
-                    '- Disable any browser extensions that might restrict IndexedDB access.\n' +
-                    '- Ensure your browser is updated to the latest version.\n' +
-                    '- If the problem persists, try using a fresh Chrome profile or a different browser.'
-                );
-            } else {
-                alert(`Opening media database failed: ${error.message || error}`);
-            }
-            return null;
-        });
-        if (!db) return;
-
-        const files = Array.from(event.target.files).filter((file) => {
-            if (dataBaseObjectStoreName === 'faces')
-                return file.type.startsWith('image/') && file.type !== 'image/gif';
-            return file.type.startsWith('image/') || file.type.startsWith('video/');
-        });
-
-        if (files.length === 0) {
-            alert('No valid files found for upload.');
-            return;
-        }
-
-        const mediaContainer = document.querySelector(`.${dataBaseObjectStoreName}`);
-        const newMedia = [];
-
-        const processFile = async (file) => {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = async (e) => {
-                    try {
-                        const arrayBuffer = e.target.result;
-                        const blob = new Blob([arrayBuffer], { type: file.type });
-                        const payload = { blob };
-
-                        let thumb = null;
-                        try {
-                            thumb = await createThumbnail(file, arrayBuffer);
-                        } catch (err) { }
-                        if (thumb) payload.thumbnailBlob = thumb;
-
-                        const { id, timestamp } = await addToDB(db, payload);
-
-                        newMedia.push({
-                            id,
-                            timestamp,
-                            blobData: blob,
-                            thumbnailBlob: payload.thumbnailBlob || null,
-                            base64Data: payload.base64 || null,
-                            thumbnailBase64: payload.thumbnailBase64 || null,
-                        });
-
-                        resolve({ id, timestamp });
-                    } catch (err) {
-                        reject(err);
-                    }
-                };
-                reader.onerror = reject;
-                reader.readAsArrayBuffer(file);
-            });
-        };
-        
-        let progressOverlay = null;
-
-        if (files.length === 1) {
-            const simpleSpinner = document.createElement('div');
-            simpleSpinner.className = 'loading-screen';
-            document.documentElement.appendChild(simpleSpinner);
-            document.querySelectorAll('body main').forEach(main => {
-                if (main) main.style.filter = 'brightness(50%)';
-            });
-
-            progressOverlay = {
-                element: simpleSpinner,
-                setProgress: () => { },
-                remove: () => {
-                    simpleSpinner.remove();
-                    document.querySelectorAll('body main').forEach(main => {
-                        if (main) main.style.filter = 'none';
-                    });
-                }
-            };
-        } else if (files.length > 1) {
-            // Multi-file ring-style progress circle with smooth interpolation
-            const overlay = document.createElement('div');
-            overlay.style.position = 'fixed';
-            overlay.style.left = '50%';
-            overlay.style.top = '50%';
-            overlay.style.transform = 'translate(-50%, -50%)';
-            overlay.style.width = '50px';
-            overlay.style.height = '50px';
-            overlay.style.zIndex = '999999';
-            overlay.style.background = 'transparent';
-
-            const canvas = document.createElement('canvas');
-            canvas.width = 50;
-            canvas.height = 50;
-            overlay.appendChild(canvas);
-            document.documentElement.appendChild(overlay);
-
-            // Dim page
-            document.querySelectorAll('body main').forEach(main => {
-                if (main) main.style.filter = 'brightness(50%)';
-            });
-
-            const ctx = canvas.getContext('2d');
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
-            const radius = 22;
-            const lineWidth = 3;
-
-            let currentProgress = 0;   // internal interpolated value
-            let targetProgress = 0;    // progress we want to reach
-
-            function drawRing(progressFraction) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                // Background circle
-                ctx.beginPath();
-                ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
-                ctx.strokeStyle = '#f3f3f3';
-                ctx.lineWidth = lineWidth;
-                ctx.stroke();
-
-                // Foreground progress
-                const startAngle = -Math.PI / 2;
-                const endAngle = startAngle + progressFraction * 2 * Math.PI;
-                ctx.beginPath();
-                ctx.arc(cx, cy, radius, startAngle, endAngle);
-                ctx.strokeStyle = '#ff7300';
-                ctx.lineWidth = lineWidth;
-                ctx.lineCap = 'round';
-                ctx.stroke();
-            }
-
-            // Animation loop for interpolation
-            function animate() {
-                if (currentProgress < targetProgress) {
-                    // simple linear easing
-                    currentProgress += (targetProgress - currentProgress) * 0.2;
-                    if (Math.abs(currentProgress - targetProgress) < 0.001) currentProgress = targetProgress;
-                    drawRing(currentProgress);
-                } else if (currentProgress > targetProgress) {
-                    currentProgress += (targetProgress - currentProgress) * 0.2;
-                    drawRing(currentProgress);
-                }
-                if (currentProgress !== targetProgress) requestAnimationFrame(animate);
-            }
-
-            // Set progress smoothly
-            function setProgress(fraction) {
-                targetProgress = Math.max(0, Math.min(1, fraction));
-                requestAnimationFrame(animate);
-            }
-
-            // initial draw
-            drawRing(0);
-
-            progressOverlay = {
-                element: overlay,
-                setProgress, // use setProgress(fraction)
-                remove: () => {
-                    overlay.remove();
-                    document.querySelectorAll('body main').forEach(main => {
-                        if (main) main.style.filter = 'none';
-                    });
-                }
-            };
-        }
-
-        for (let i = 0; i < files.length; i++) {
-            await processFile(files[i]);
-            if (progressOverlay && files.length > 1) {
-                progressOverlay.setProgress((i + 1) / files.length);
-            }
-        }
-
-        if (progressOverlay) progressOverlay.remove();
-
-        (async () => {
-            await saveCountIndex(databases);
-        })();
-
-        if (progressOverlay) progressOverlay.remove();
-        document.querySelectorAll('body main').forEach(main => {
-            if (main) main.style.filter = 'none';
-        });
-        event.target.value = null;
-
-        // -- the remainder of your original DOM-build and insertion logic follows unchanged --
-        const activeContainers = mediaContainer.querySelectorAll('.data-container.active');
-        if (activeContainers.length > 0) {
-            for (const container of activeContainers) {
-                container.classList.remove('active');
-                const element = container.querySelector('img, iframe, video, initial');
-                const id = element ? parseInt(element.getAttribute('id'), 10) : null;
-                if (id) {
-                    (async () => {
-                        updateActiveState(db, id, false).catch(err => {
-                            console.error(`Failed to update active state for id=${idx}`, err);
-                        });
-                    })();
-                }
-            }
-        }
-
-        for (const { id, timestamp, blobData, thumbnailBlob, thumbnailBase64, base64Data } of newMedia) {
-            const active = id === newMedia[newMedia.length - 1].id;
-            const blob = blobData && (active || !thumbnailBlob) ? blobData : thumbnailBlob;
-            const base64 = base64Data && (active || !thumbnailBase64) ? base64Data : thumbnailBase64;
-
-            const container = document.createElement('div');
-            container.className = 'data-container';
-            container.setAttribute('tooltip', '');
-            container.setAttribute('oncontextmenu', 'return false;');
-
-            // Always
-            let vars = null;
-            vars = await resolveMediaSource({ blob, base64 });
-
-            // Only if not active
-            let inactiveVars = null;
-            if (!active) {
-                inactiveVars = await resolveMediaSource({ blob: blobData, base64: base64Data });
-            } else inactiveVars = vars;
-
-            // now create DOM element(s) as before if we have a valid src and type
-            if (vars.src && (vars.isVideo || vars.isImage || vars.isGif)) {
-                let thumbnail;
-                let img;
-                let video;
-
-                video = document.createElement('video');
-                video.style.display = "none";
-                video.setAttribute('timestamp', timestamp || '');
-                video.id = id;
-
-                img = document.createElement('img');
-                img.style.display = "none";
-                img.setAttribute('timestamp', timestamp || '');
-                img.id = id;
-
-                thumbnail = document.createElement('img');
-                thumbnail.style.display = "none";
-                thumbnail.setAttribute('original', "false");
-                thumbnail.setAttribute('timestamp', timestamp || '');
-                thumbnail.id = id;
-
-                if (vars.isVideo && !vars.isGif) {
-                    if (pageName === 'face-swap' && dataBaseObjectStoreName === 'inputs') {
-                        const tooltip = document.createElement('div');
-                        tooltip.className = 'tooltip tooltip-fast cursor';
-                        tooltip.textContent = 'Loading...';
-                        tooltip.style.display = 'none';
-                        tooltip.style.position = 'fixed';
-                        function updateTooltipPosition(event) {
-                            tooltip.style.left = `${event.clientX}px`;
-                            tooltip.style.top = `${event.clientY - 15}px`;
-                        }
-                        container.addEventListener('mouseenter', () => document.addEventListener('mousemove', updateTooltipPosition));
-                        container.addEventListener('mouseleave', () => document.removeEventListener('mousemove', updateTooltipPosition));
-                        container.appendChild(tooltip);
-                    }
-                    video.preload = "auto";
-                    video.muted = true;
-                    video.playsInline = true;
-                    video.style.display = "unset";
-                    try { video.disablePictureInPicture = true; } catch (e) { }
-                    if (vars.src) video.src = vars.src;
-
-                    if (pageName === 'face-swap' && dataBaseObjectStoreName === 'inputs') {
-                        const keepFPS = document.getElementById('keepFPS');
-                        const fpsSlider = document.getElementById("fps-slider");
-                        const removeBanner = document.getElementById("removeBanner");
-
-                        function handleMetadataUpdate(dataFps, dataDuration) {
-                            if (pageName === 'face-swap') {
-                                const tooltip = container.querySelector('.tooltip');
-                                if (tooltip && dataFps) {
-                                    tooltip.style.display = 'flex';
-                                    const fpsSliderValue = keepFPS && !keepFPS.checked ? fpsSlider.value : 60;
-                                    const fps = Math.min(fpsSliderValue, dataFps);
-                                    const videoDurationTotalFrames = Math.floor(dataDuration * fps);
-                                    const singleCreditForTotalFrameAmount = 120;
-                                    const removeBannerStateMultiplier = removeBanner && removeBanner.checked ? 2 : 1;
-                                    const neededCredits = Math.floor(
-                                        Math.max(1, videoDurationTotalFrames / singleCreditForTotalFrameAmount) *
-                                        removeBannerStateMultiplier
-                                    );
-                                    if (pageName === 'face-swap')
-                                        tooltip.textContent = `${neededCredits} Credits`;
-                                }
-                            }
-                        }
-
-                        calculateMetadata(video, handleMetadataUpdate);
-
-                        video.addEventListener('loadedmetadata', async () => {
-                            await calculateMetadata(video, handleMetadataUpdate);
-                        });
-
-                        [keepFPS, fpsSlider, removeBanner].forEach(el => {
-                            if (el) {
-                                el.addEventListener('change', async () => {
-                                    const dataFps = video.getAttribute('data-fps');
-                                    handleMetadataUpdate(dataFps, video.duration);
-                                });
-                            }
-                        });
-                    }
-
-                    try {
-                        video.load();
-                        video.pause();
-                    } catch (e) { }
-                } else {
-                    if (active) {
-                        img.style.display = "unset";
-                        if (vars.src) img.src = vars.src;
-                    } else {
-                        thumbnail.style.display = "unset";
-                        if (vars.src) thumbnail.src = vars.src;
-                    }
-
-                    if (pageName === 'face-swap' && dataBaseObjectStoreName === 'inputs') {
-                        const tooltip = document.createElement('div');
-                        tooltip.className = 'tooltip tooltip-fast cursor';
-                        tooltip.textContent = 'Loading...';
-                        tooltip.style.display = 'none';
-                        tooltip.style.position = 'fixed';
-
-                        function updateTooltipPosition(event) {
-                            tooltip.style.left = `${event.clientX}px`;
-                            tooltip.style.top = `${event.clientY - 15}px`;
-                        }
-
-                        container.addEventListener('mouseenter', () => document.addEventListener('mousemove', updateTooltipPosition));
-                        container.addEventListener('mouseleave', () => document.removeEventListener('mousemove', updateTooltipPosition));
-                        container.appendChild(tooltip);
-
-                        if (pageName === 'face-swap') {
-                            const removeBanner = document.getElementById("removeBanner");
-                            function handleMetadataUpdate() {
-                                const t = container.querySelector('.tooltip');
-                                if (t && pageName !== 'video-generator' && pageName !== 'video-extender' && pageName !== 'inpaint' && pageName !== 'art-generator') {
-                                    t.style.display = 'flex';
-                                    let neededCredits = removeBanner && removeBanner.checked ? 2 : 1;
-                                    if (pageName === 'face-swap')
-                                        t.textContent = `${neededCredits} Credits`;
-                                }
-                            }
-                            handleMetadataUpdate();
-                            if (removeBanner) {
-                                removeBanner.addEventListener('change', () => handleMetadataUpdate());
-                            }
-                            calculateMetadata(img, null);
-                        }
-                    }
-                }
-
-                if (inactiveVars.isVideo && !inactiveVars.isGif) {
-                    video.setAttribute('original', "true");
-                    container.appendChild(video);
-                } else {
-                    img.setAttribute('original', "true");
-                    container.appendChild(img);
-                }
-
-                container.appendChild(thumbnail);
-
-                const del = document.createElement('div');
-                del.className = 'delete-icon';
-                container.appendChild(del);
-
-                const settings = document.createElement('div');
-                settings.className = 'settings-mark';
-                container.appendChild(settings);
-
-                if (active) {
-                    container.classList.add('active');
-                    if (pageName === 'face-swap' || pageName === 'video-extender' || pageName === 'inpaint') displayStoredData(container, dataBaseObjectStoreName);
-                    (async () => {
-                        updateActiveState(db, id, true).catch(err => {
-                            console.error(`Failed to update active state for id=${idx}`, err);
-                        });
-                    })();
-                }
-                else if (blob) {
-                    if (thumbnail) {
-                        //img.addEventListener('load', () => URL.revokeObjectURL(img.src), { once: true });
-                        //thumbnail.setAttribute('blobRevoke', 'true');
-                    } else if (video) {
-                        video.addEventListener('loadeddata', () => {
-                            //URL.revokeObjectURL(video.src);
-                        }, { once: true });
-                        //video.setAttribute('blobRevoke', 'true');
-                    }
-                }
-            }
-
-            mediaContainer.insertBefore(container, mediaContainer.firstChild);
-            handleContextMenu(container);
-        }
-
-        localStorage.setItem(`${pageName}_${dataBaseObjectStoreName}-count`, await countInDB(db));
-    } catch (error) {
-        alert(`Upload failed: ${error.message || error}`);
-        console.error(error);
-    }
-};
-
-
 export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleDownload, databases, cacheAvailable = false) => {
     try {
         let db = openDB(dataBaseIndexName, dataBaseObjectStoreName, true);
@@ -5187,6 +4618,77 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
                     }
                     container.innerHTML = '';
 
+                    async function resolveMediaSource({ blob, base64, url } = {}) {
+                        let src = null;
+                        let mime = null;
+
+                        try {
+                            if (blob instanceof Blob) {
+                                mime = blob.type || null;
+
+                                if (!mime && typeof detectMimeFromBlob === 'function') {
+                                    try {
+                                        const detected = await detectMimeFromBlob(blob);
+                                        if (detected) mime = detected;
+                                    } catch { }
+                                }
+
+                                try {
+                                    src = URL.createObjectURL(blob);
+                                } catch { }
+
+                                if (!src) {
+                                    try {
+                                        const b64 = await blobToBase64(blob);
+                                        const fallbackMime = mime || 'application/octet-stream';
+                                        src = `data:${fallbackMime};base64,${b64}`;
+                                        mime = mime || fallbackMime;
+                                    } catch { }
+                                }
+                            }
+                            else if (typeof base64 === 'string' && base64.startsWith('data:')) {
+                                src = base64;
+                                const idx = base64.indexOf(';');
+                                if (idx > 5) mime = base64.slice(5, idx);
+                            }
+                            else if (url) {
+                                src = url;
+                            }
+                        } catch {
+                            src = null;
+                            mime = null;
+                        }
+
+                        // Extension-based fallback
+                        if (!mime && typeof src === 'string' && src.startsWith('http')) {
+                            const extMatch = src.split('?')[0].match(/\.([a-zA-Z0-9]+)$/);
+                            if (extMatch) {
+                                const ext = extMatch[1].toLowerCase();
+                                if (ext === 'gif') mime = 'image/gif';
+                                else if (ext === 'png') mime = 'image/png';
+                                else if (ext === 'jpg' || ext === 'jpeg') mime = 'image/jpeg';
+                                else if (ext === 'webp') mime = 'image/webp';
+                                else if (ext === 'mp4' || ext === 'mov') mime = 'video/mp4';
+                                else if (ext === 'webm') mime = 'video/webm';
+                            }
+                        }
+
+                        const isGif = mime === 'image/gif' || blob?.type === 'image/gif';
+                        const isVideo = (mime && mime.startsWith('video')) || blob?.type?.startsWith('video');
+                        const isImage = (mime && mime.startsWith('image')) || blob?.type?.startsWith('image');
+
+                        return {
+                            src,
+                            mime,
+                            isGif,
+                            isVideo,
+                            isImage,
+                            blob,
+                            base64,
+                            url
+                        };
+                    }
+
                     // Always
                     let vars = null;
                     vars = await resolveMediaSource({ blob, base64, url });
@@ -5197,41 +4699,54 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
                         inactiveVars = await resolveMediaSource({ blob: item.blob, base64: item.base64, url });
                     } else inactiveVars = vars;
 
-                    (async () => {
-                        const originalBlob = item.blob;
-                        if (originalBlob && !thumbnailBlob) {
-                            const blob = item.blob;
+                    // NEW: create thumbnail and base64 if missing but we have blob
+                    const originalBase64 = item.base64;
+                    const originalBlob = item.blob;
 
-                            try {
-                                let thumb = thumbnailBlob || null;
+                    if (originalBlob && (!thumbnailBlob || !originalBase64)) {
+                        const blob = item.blob;
 
-                                // create thumbnail if missing
-                                if (!thumb) {
-                                    try {
-                                        thumb = await createThumbnail(blob);
-                                    } catch (err) {
-                                        console.warn('Failed to create thumbnail:', err);
-                                    }
+                        try {
+                            let thumb = thumbnailBlob || null;
+                            let base64 = originalBase64 || null;
+
+                            // create thumbnail if missing
+                            if (!thumb) {
+                                try {
+                                    thumb = await createThumbnail(blob);
+                                } catch (err) {
+                                    console.warn('Failed to create thumbnail:', err);
                                 }
+                            }
 
-                                // persist to DB when we created at least one new field
-                                if (thumb) {
-                                    if (timestamp) {
-                                        try {
-                                            await updateInDB(db, timestamp, { blob, thumbnailBlob: thumb });
-                                        } catch (updErr) {
-                                            // fallback to id
-                                            if (id != null) {
-                                                await updateInDB(db, id, { blob, thumbnailBlob: thumb });
-                                            }
+                            // create base64 if missing
+                            const base64Forced = localStorage.getItem(FORCE_BASE64_KEY) === 'true';
+                            if ((base64Forced /*|| window.isMobileDevice()*/) && !base64) {
+                                try {
+                                    base64 = await blobToBase64(blob);
+                                } catch (err) {
+                                    console.warn('Failed to create base64:', err);
+                                }
+                            }
+
+                            // persist to DB when we created at least one new field
+                            if (thumb || base64) {
+                                if (timestamp) {
+                                    try {
+                                        await updateInDB(db, timestamp, blob || null, thumb || null, base64 || null);
+                                    } catch (updErr) {
+                                        // fallback to id
+                                        if (id != null) {
+                                            await updateInDB(db, id, blob || null, thumb || null, base64 || null);
                                         }
                                     }
                                 }
-                            } catch (err) {
-                                console.error('Error during thumbnail/base64 creation:', err);
                             }
+
+                        } catch (err) {
+                            console.error('Error during thumbnail/base64 creation:', err);
                         }
-                    })();
+                    }
 
                     // now create DOM element(s) as before if we have a valid src and type
                     if (vars.src && (vars.isVideo || vars.isImage || vars.isGif)) {
@@ -5279,7 +4794,12 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
                             video.style.display = "unset";
                             try { video.disablePictureInPicture = true; } catch (e) { }
                             if (vars.src) video.src = vars.src;
-
+                            const del = document.createElement('div');
+                            del.className = 'delete-icon';
+                            const settings = document.createElement('div');
+                            settings.className = 'settings-mark';
+                            container.appendChild(del);
+                            container.appendChild(settings);
                             if (dataBaseObjectStoreName === 'inputs') {
                                 const keepFPS = document.getElementById('keepFPS');
                                 const fpsSlider = document.getElementById("fps-slider");
@@ -5300,7 +4820,7 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
                                                 removeBannerStateMultiplier
                                             );
                                             if (pageName === 'face-swap')
-                                            tooltip.textContent = `${neededCredits} Credits`;
+                                                tooltip.textContent = `${neededCredits} Credits`;
                                         }
                                     }
                                 }
@@ -5334,6 +4854,12 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
                                 if (vars.src) thumbnail.src = vars.src;
                             }
 
+                            const del = document.createElement('div');
+                            del.className = 'delete-icon';
+
+                            const settings = document.createElement('div');
+                            settings.className = 'settings-mark';
+
                             if (dataBaseObjectStoreName === 'inputs') {
                                 const tooltip = document.createElement('div');
                                 tooltip.className = 'tooltip tooltip-fast cursor';
@@ -5354,11 +4880,11 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
                                     const removeBanner = document.getElementById("removeBanner");
                                     function handleMetadataUpdate() {
                                         const t = container.querySelector('.tooltip');
-                                        if (t && pageName !== 'video-generator' && pageName !== 'video-extender' && pageName !== 'inpaint' && pageName !== 'art-generator') {
+                                        if (t && pageName !== 'video-generator' && pageName !== 'inpaint' && pageName !== 'art-generator') {
                                             t.style.display = 'flex';
                                             let neededCredits = removeBanner && removeBanner.checked ? 2 : 1;
                                             if (pageName === 'face-swap')
-                                            t.textContent = `${neededCredits} Credits`;
+                                                t.textContent = `${neededCredits} Credits`;
                                         }
                                     }
                                     handleMetadataUpdate();
@@ -5368,6 +4894,9 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
                                     calculateMetadata(img, null);
                                 }
                             }
+
+                            container.appendChild(del);
+                            container.appendChild(settings);
                         }
 
                         if (inactiveVars.isVideo && !inactiveVars.isGif) {
@@ -5380,17 +4909,9 @@ export const initDB = async (dataBaseIndexName, dataBaseObjectStoreName, handleD
 
                         container.appendChild(thumbnail);
 
-                        const del = document.createElement('div');
-                        del.className = 'delete-icon';
-                        container.appendChild(del);
-
-                        const settings = document.createElement('div');
-                        settings.className = 'settings-mark';
-                        container.appendChild(settings);
-
                         if (active) {
                             container.classList.add('active');
-                            if (pageName === 'face-swap' || pageName === 'video-extender' || dataBaseObjectStoreName === 'outputs')
+                            if (pageName === 'face-swap' || dataBaseObjectStoreName === 'outputs')
                                 displayStoredData(container, dataBaseObjectStoreName);
                         }
                         else if (blob) {
@@ -6038,48 +5559,16 @@ async function loadGoogleAdScript(_0x18b7dc, userData, userDoc, hideAds) {
 })();
 
 (async () => {
-    let userData = await getUserData();
-    if (!userData) {
-        return;
-    }
-
-    if (localStorage.getItem('og') !== 'true') {
-        const userDocData = await getUserDoc();
-        const totalProcessCount =
-            (userDocData?.successfulDA || 0) +
-            (userDocData?.successfulDV || 0) +
-            (userDocData?.successfulDN || 0) +
-            (userDocData?.successfulDF || 0);
-
-        const accountTimestamp = userDocData?.createdAt || userDocData?.currentTime;
-
-        let accountCreatedAt;
-
-        if (accountTimestamp) {
-            if (typeof accountTimestamp.toDate === 'function') {
-                accountCreatedAt = accountTimestamp.toDate();
-            } else if (typeof accountTimestamp === 'number') {
-                accountCreatedAt = new Date(accountTimestamp);
-            } else if (accountTimestamp.seconds) {
-                accountCreatedAt = new Date(accountTimestamp.seconds * 1000);
-            } else {
-                accountCreatedAt = null;
-            }
-        }
-
-        const threeMonthsAgo = new Date();
-        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-
-        const isOlderThanThreeMonths = accountCreatedAt && accountCreatedAt <= threeMonthsAgo;
-        const isSafe = (userDocData?.paid >= 25 && totalProcessCount >= 100) || isOlderThanThreeMonths;
-        localStorage.setItem('og', isSafe);
-    }
-
     const params = new URLSearchParams(window.location.search);
     const paymentSuccess = params.has('payment-redirect');
     const orderId = params.get('orderId');
 
     if (!paymentSuccess || !orderId) return;
+
+    let userData = await getUserData();
+    if (!userData) {
+        return;
+    }
 
     const storageKey = `payment-verified-${orderId}`;
     const alreadyVerified = localStorage.getItem(storageKey);
@@ -6469,7 +5958,6 @@ export async function createVerificationFormSection(getFirebaseModules) {
                 </button>
             `;
     const sendVerificationEmail = document.getElementById("sendVerificationEmail");
-    simulateFullClick(sendVerificationEmail);
 
     sendVerificationEmail.addEventListener('click', async () => {
         sendVerificationEmail.disabled = true;
@@ -6477,7 +5965,7 @@ export async function createVerificationFormSection(getFirebaseModules) {
         const isResend = !(/receive/i.test(sendVerificationEmail.textContent));
 
         try {
-            if (!isResend) {
+            if (isResend) {
                 const server = await getServerAddressAPI();
                 const { auth } = await getFirebaseModules(true);
                 const user = auth.currentUser;
@@ -7597,7 +7085,7 @@ export async function getStoredEmail() {
     }
 }
 
-export async function handleLoggedOutState(retrieveImageFromURL, getFirebaseModules) {
+async function handleLoggedOutState(retrieveImageFromURL, getFirebaseModules) {
     const userLayoutContainer = document.getElementById("userLayoutContainer");
     if (userLayoutContainer)
         userLayoutContainer.style.display = 'none';
@@ -8318,7 +7806,7 @@ export async function createUserData(sidebar, screenMode, setAuthentication, ret
                 return
             }
             sidebar.insertAdjacentHTML('afterbegin', `
-                    <div id="signContainer" style="display: flex; gap: calc(1vh * var(--scale-factor-h)); flex-direction: row;">
+                    <div id="signContainer" style="display: flex; gap: 1vh; flex-direction: row;">
                         <button style="justify-content: center;" class="openSignUpContainer" id="openSignUpContainer">
                             <svg style="width: 3vh;margin-right: 0.3vh;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M296.591495 650.911274c-12.739762 0-23.555429 10.629793-23.555429 23.766886 0 13.226033 10.558841 23.757892 23.555429 23.757892l428.151713 0c12.764346 0 23.579013-10.620799 23.579013-23.757892 0-13.232029-10.531859-23.766886-23.579013-23.766886L296.591495 650.911274zM724.743208 532.090235l-428.151713 0c-12.739762 0-23.555429 10.630792-23.555429 23.768885 0 13.222035 10.558841 23.757892 23.555429 23.757892l428.151713 0c12.764346 0 23.579013-10.629793 23.579013-23.757892C748.322222 542.627091 737.790362 532.090235 724.743208 532.090235zM296.728402 460.793774l166.485723 0c13.090125 0 23.694935-10.646781 23.694935-23.771883 0-13.218438-10.60481-23.762889-23.694935-23.762889l-166.485723 0c-13.086128 0-23.692337 10.642784-23.692337 23.762889C273.036066 450.240929 283.642474 460.793774 296.728402 460.793774zM655.311483 270.894925c0 12.820708 10.630792 23.545036 23.741903 23.545036l19.717631 0c13.206046 0 23.741903-10.535857 23.741903-23.545036L722.51292 175.40047c0-12.823306-10.629793-23.545036-23.741903-23.545036l-19.717631 0c-13.205047 0-23.741903 10.537256-23.741903 23.545036L655.311483 270.894925zM298.847565 270.894925c0 12.820708 10.629793 23.545036 23.738905 23.545036l19.718031 0c13.229031 0 23.741303-10.535857 23.741303-23.545036L366.045805 175.40047c0-12.823306-10.629793-23.545036-23.741303-23.545036l-19.718031 0c-13.226432 0-23.738905 10.537256-23.738905 23.545036L298.847565 270.894925zM843.331405 199.38361l-71.242498 0 0 61.060401 57.759839 0 0 543.285253L191.512139 803.729264 191.512139 260.444011l57.760638 0L249.272777 199.38361 178.028681 199.38361c-26.433078 0-47.577143 21.186635-47.577143 37.087255l0 570.740038c0 36.173474 21.280972 57.574764 47.577143 57.574764l665.302725 0c26.458061 0 47.576543-21.207421 47.576543-57.574764L890.907948 236.470865C890.908148 220.767112 869.601594 199.38361 843.331405 199.38361zM415.616996 199.38361 605.739293 199.38361l0 61.060401-190.122097 0L415.617196 199.38361zM744.23899 346.039777c-9.332672-9.342066-24.297526-9.294698-33.553251-0.042971l-83.874933 83.856945-34.807401-34.845775c-9.286704-9.273113-24.276541-9.342066-33.609213 0.007995-9.278709 9.273113-9.373645 24.250958-0.017988 33.605615l49.010571 48.99778c0.72251 1.000722 1.531961 1.951677 2.43435 2.859461 9.334671 9.327676 24.299525 9.286104 33.558048 0.042971l100.907385-100.923774C753.42776 370.466216 753.520697 355.321484 744.23899 346.039777z"/></svg>
                             Sign Up
@@ -8338,7 +7826,7 @@ function createSideBarData(sidebar) {
     const exploreButton = document.getElementById("exploreButton");
     if (!exploreButton) {
         let sideBar = `
-				<div style="flex: 1; justify-content: space-between;gap: calc(2vh );">
+				<div style="flex: 1; justify-content: space-between;">
                     <div style="display: flex;gap: 1vh;">
                         <a class="button" id="exploreButton" href=".?v=${version}">
                             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -8360,38 +7848,26 @@ function createSideBarData(sidebar) {
                             Premium
                         </a>
                     </div>
-                    <div style="display: flex;flex-direction: row;margin: 0;">
-                        <small style="white-space: nowrap;padding-right: 1vh;">Services</small>
-                        <div class="line"></div>
+                    <div class="line" style="margin: 0;"></div>
+                    <div style="display: flex;gap: 1vh;">
+                        <a class="button" id="faceSwapButton" href="face-swap?v=${version}">
+                            <svg style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M848 64h-84c-7.2 0-14.3 2.7-19.8 8.2-5.5 5.5-8.2 12.6-8.2 19.8 0 7.2 2.7 14.3 8.2 19.8 5.5 5.5 12.6 8.2 19.8 8.2h84v84c0 7.2 2.7 14.3 8.2 19.8 5.5 5.5 12.6 8.2 19.8 8.2s14.3-2.7 19.8-8.2c5.5-5.5 8.2-12.6 8.2-19.8v-84c0-30.9-25.1-56-56-56zM876 512c-7.2 0-14.3 2.7-19.8 8.2-5.5 5.5-8.2 12.6-8.2 19.8v84h-84c-7.2 0-14.3 2.7-19.8 8.2-1.5 1.5-2.3 3.4-3.4 5.2-31.6-30.4-67.1-55.4-106.4-72C714.2 517.7 764.7 426 749.2 323c-14.6-96.7-89.6-177.5-185.3-197.5-17.6-3.7-35-5.4-51.9-5.4-132.6 0-240 107.4-240 240 0 87.6 47.5 163.5 117.6 205.4-39.2 16.6-74.8 41.6-106.4 72-1.1-1.8-1.9-3.7-3.4-5.2-5.5-5.5-12.6-8.2-19.8-8.2h-84v-84c0-7.2-2.7-14.3-8.2-19.8-5.5-5.5-12.6-8.2-19.8-8.2s-14.3 2.7-19.8 8.2c-5.5 5.5-8.2 12.6-8.2 19.8v84c0 30.9 25.1 56 56 56h69c-46.8 60.6-79.3 136.5-89.5 221.3-3.8 31.2 21.1 58.7 52.5 58.7h608c31.4 0 56.2-27.6 52.5-58.7-10.2-84.9-42.7-160.8-89.5-221.4h69c30.9 0 56-25.1 56-56v-84c0-7.2-2.7-14.3-8.2-19.8-5.5-5.5-12.6-8.2-19.8-8.2zM211.5 905c16.9-132.8 93.3-242.9 199.9-288 19.4-8.2 32.6-26.7 34.1-47.7 1.5-21.1-9-41.1-27.2-52C361.8 483.6 328 424.7 328 360c0-101.5 82.5-184 184-184 13.4 0 27 1.4 40.4 4.3 72.1 15.1 130.3 77.2 141.4 151.1 11.4 75.5-22.4 146.8-88.2 186-18.1 10.8-28.6 30.9-27.2 52 1.5 21.1 14.6 39.5 34.1 47.7C719 661.9 795.3 771.7 812.4 904l-600.9 1zM148 232c7.2 0 14.3-2.7 19.8-8.2 5.5-5.5 8.2-12.6 8.2-19.8v-84h84c7.2 0 14.3-2.7 19.8-8.2 5.5-5.5 8.2-12.6 8.2-19.8 0-7.2-2.7-14.3-8.2-19.8-5.5-5.5-12.6-8.2-19.8-8.2h-84c-30.9 0-56 25.1-56 56v84c0 7.2 2.7 14.3 8.2 19.8 5.5 5.5 12.6 8.2 19.8 8.2z" fill="white"/></svg>
+                            Face Swap
+                        </a>
+                        <a class="button" id="videoGeneratorButton" href="video-generator?v=${version}">
+                            <svg style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M512 1024C229.888 1024 0 794.112 0 512S229.888 0 512 0s512 229.888 512 512c0 104.96-44.544 180.736-132.096 225.28-52.736 26.624-109.056 29.696-159.232 31.744-60.928 3.072-99.328 6.144-117.76 37.376-13.312 22.528-3.584 41.984 12.8 71.68 15.36 27.136 36.352 65.024 7.168 100.352-33.28 40.448-82.944 45.568-122.88 45.568z m0-970.24c-252.928 0-458.24 205.824-458.24 458.24s205.824 458.24 458.24 458.24c41.984 0 66.56-7.68 81.408-26.112 5.12-6.144 2.56-13.312-12.288-40.448-16.384-29.696-41.472-74.752-12.288-124.928 33.792-57.856 98.304-60.928 161.28-63.488 46.592-2.048 94.72-4.608 137.216-26.112 69.12-35.328 102.912-93.184 102.912-177.664 0-252.416-205.312-457.728-458.24-457.728z" fill="white" /><path d="M214.016 455.68m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M384 244.736m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M645.12 229.376m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M804.352 426.496m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white"/></svg>
+                            Video Generator
+                        </a>
+                        <a class="button" id="inpaintButton" href="inpaint?v=${version}">
+                            <svg style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M991.776 535.2c0-25.632-9.984-49.76-28.064-67.872L588.992 92.128c-36.256-36.288-99.488-36.288-135.744-0.032L317.408 227.808c-37.408 37.408-37.44 98.336-0.032 135.776l374.656 375.136c18.144 18.144 42.24 28.128 67.936 28.128 25.632 0 49.728-9.984 67.84-28.096l35.328-35.296 26.112 26.144c12.512 12.512 12.512 32.768 1.856 43.584l-95.904 82.048c-12.448 12.544-32.736 12.48-45.248 0l-245.536-245.824 0 0-3.2-3.2c-37.44-37.408-98.336-37.472-135.744-0.096l-9.632 9.632L294.4 554.336c-6.24-6.24-14.432-9.376-22.624-9.376-8.192 0-16.384 3.136-22.656 9.376 0 0 0 0.032-0.032 0.032l-22.56 22.56c0 0 0 0 0 0l-135.872 135.712c-37.408 37.408-37.44 98.304-0.032 135.776l113.12 113.184c18.688 18.688 43.296 28.064 67.872 28.064 24.576 0 49.152-9.344 67.904-28.032l135.808-135.712c0.032-0.032 0.032-0.096 0.064-0.128l22.528-22.496c6.016-6.016 9.376-14.112 9.376-22.624 0-8.48-3.36-16.64-9.344-22.624l-96.896-96.96 9.6-9.6c12.48-12.544 32.768-12.48 45.248 0.032l0-0.032 3.2 3.2 0 0.032 245.568 245.856c18.944 18.912 43.872 28.256 68.544 28.256 24.032 0 47.808-8.896 65.376-26.56l95.904-82.048c37.44-37.408 37.472-98.336 0.032-135.808l-26.112-26.112 55.232-55.168C981.76 584.928 991.776 560.832 991.776 535.2zM362.144 848.544c-0.032 0.032-0.032 0.096-0.064 0.128l-67.776 67.712c-12.48 12.416-32.864 12.448-45.312 0L135.904 803.2c-12.48-12.48-12.48-32.768 0-45.28l67.904-67.84 0 0 67.936-67.84 158.336 158.432L362.144 848.544zM918.368 557.824l-135.808 135.68c-12.064 12.096-33.152 12.096-45.216-0.032L362.656 318.368c-12.48-12.512-12.48-32.8 0-45.28l135.84-135.712C504.544 131.328 512.576 128 521.12 128s16.608 3.328 22.624 9.344l374.688 375.2c6.016 6.016 9.344 14.048 9.344 22.592C927.776 543.712 924.448 551.744 918.368 557.824z" fill="white"/><path d="M544.448 186.72c-12.352-12.672-32.64-12.832-45.248-0.48-12.64 12.384-12.832 32.64-0.48 45.248l322.592 329.216c6.24 6.368 14.528 9.6 22.848 9.6 8.096 0 16.16-3.04 22.4-9.152 12.64-12.352 12.8-32.608 0.448-45.248L544.448 186.72z" fill="white"/></svg>
+                            Inpaint Anything
+                        </a>
+                        <a class="button" id="artGeneratorButton" href="art-generator?v=${version}">
+                            <svg style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M512 1024C229.888 1024 0 794.112 0 512S229.888 0 512 0s512 229.888 512 512c0 104.96-44.544 180.736-132.096 225.28-52.736 26.624-109.056 29.696-159.232 31.744-60.928 3.072-99.328 6.144-117.76 37.376-13.312 22.528-3.584 41.984 12.8 71.68 15.36 27.136 36.352 65.024 7.168 100.352-33.28 40.448-82.944 45.568-122.88 45.568z m0-970.24c-252.928 0-458.24 205.824-458.24 458.24s205.824 458.24 458.24 458.24c41.984 0 66.56-7.68 81.408-26.112 5.12-6.144 2.56-13.312-12.288-40.448-16.384-29.696-41.472-74.752-12.288-124.928 33.792-57.856 98.304-60.928 161.28-63.488 46.592-2.048 94.72-4.608 137.216-26.112 69.12-35.328 102.912-93.184 102.912-177.664 0-252.416-205.312-457.728-458.24-457.728z" fill="white" /><path d="M214.016 455.68m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M384 244.736m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M645.12 229.376m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M804.352 426.496m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white"/></svg>
+                            Art Generator
+                        </a>
                     </div>
-                    <div style="flex: unset;">
-                        <div style="display: flex;gap: 1vh;overflow: auto;max-height: calc(21vh );padding-right: calc(0.5vh );">
-                            <a class="button" id="faceSwapButton" href="face-swap?v=${version}">
-                                <svg style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M848 64h-84c-7.2 0-14.3 2.7-19.8 8.2-5.5 5.5-8.2 12.6-8.2 19.8 0 7.2 2.7 14.3 8.2 19.8 5.5 5.5 12.6 8.2 19.8 8.2h84v84c0 7.2 2.7 14.3 8.2 19.8 5.5 5.5 12.6 8.2 19.8 8.2s14.3-2.7 19.8-8.2c5.5-5.5 8.2-12.6 8.2-19.8v-84c0-30.9-25.1-56-56-56zM876 512c-7.2 0-14.3 2.7-19.8 8.2-5.5 5.5-8.2 12.6-8.2 19.8v84h-84c-7.2 0-14.3 2.7-19.8 8.2-1.5 1.5-2.3 3.4-3.4 5.2-31.6-30.4-67.1-55.4-106.4-72C714.2 517.7 764.7 426 749.2 323c-14.6-96.7-89.6-177.5-185.3-197.5-17.6-3.7-35-5.4-51.9-5.4-132.6 0-240 107.4-240 240 0 87.6 47.5 163.5 117.6 205.4-39.2 16.6-74.8 41.6-106.4 72-1.1-1.8-1.9-3.7-3.4-5.2-5.5-5.5-12.6-8.2-19.8-8.2h-84v-84c0-7.2-2.7-14.3-8.2-19.8-5.5-5.5-12.6-8.2-19.8-8.2s-14.3 2.7-19.8 8.2c-5.5 5.5-8.2 12.6-8.2 19.8v84c0 30.9 25.1 56 56 56h69c-46.8 60.6-79.3 136.5-89.5 221.3-3.8 31.2 21.1 58.7 52.5 58.7h608c31.4 0 56.2-27.6 52.5-58.7-10.2-84.9-42.7-160.8-89.5-221.4h69c30.9 0 56-25.1 56-56v-84c0-7.2-2.7-14.3-8.2-19.8-5.5-5.5-12.6-8.2-19.8-8.2zM211.5 905c16.9-132.8 93.3-242.9 199.9-288 19.4-8.2 32.6-26.7 34.1-47.7 1.5-21.1-9-41.1-27.2-52C361.8 483.6 328 424.7 328 360c0-101.5 82.5-184 184-184 13.4 0 27 1.4 40.4 4.3 72.1 15.1 130.3 77.2 141.4 151.1 11.4 75.5-22.4 146.8-88.2 186-18.1 10.8-28.6 30.9-27.2 52 1.5 21.1 14.6 39.5 34.1 47.7C719 661.9 795.3 771.7 812.4 904l-600.9 1zM148 232c7.2 0 14.3-2.7 19.8-8.2 5.5-5.5 8.2-12.6 8.2-19.8v-84h84c7.2 0 14.3-2.7 19.8-8.2 5.5-5.5 8.2-12.6 8.2-19.8 0-7.2-2.7-14.3-8.2-19.8-5.5-5.5-12.6-8.2-19.8-8.2h-84c-30.9 0-56 25.1-56 56v84c0 7.2 2.7 14.3 8.2 19.8 5.5 5.5 12.6 8.2 19.8 8.2z" fill="white"/></svg>
-                                Face Swap
-                            </a>
-                            <a class="button" id="videoGeneratorButton" href="video-generator?v=${version}">
-                                <svg style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M512 1024C229.888 1024 0 794.112 0 512S229.888 0 512 0s512 229.888 512 512c0 104.96-44.544 180.736-132.096 225.28-52.736 26.624-109.056 29.696-159.232 31.744-60.928 3.072-99.328 6.144-117.76 37.376-13.312 22.528-3.584 41.984 12.8 71.68 15.36 27.136 36.352 65.024 7.168 100.352-33.28 40.448-82.944 45.568-122.88 45.568z m0-970.24c-252.928 0-458.24 205.824-458.24 458.24s205.824 458.24 458.24 458.24c41.984 0 66.56-7.68 81.408-26.112 5.12-6.144 2.56-13.312-12.288-40.448-16.384-29.696-41.472-74.752-12.288-124.928 33.792-57.856 98.304-60.928 161.28-63.488 46.592-2.048 94.72-4.608 137.216-26.112 69.12-35.328 102.912-93.184 102.912-177.664 0-252.416-205.312-457.728-458.24-457.728z" fill="white" /><path d="M214.016 455.68m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M384 244.736m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M645.12 229.376m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M804.352 426.496m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white"/></svg>
-                                Video Generator
-                            </a>
-                            <a class="button" id="videoExtenderButton" href="video-extender?v=${version}">
-                                <svg style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M512 1024C229.888 1024 0 794.112 0 512S229.888 0 512 0s512 229.888 512 512c0 104.96-44.544 180.736-132.096 225.28-52.736 26.624-109.056 29.696-159.232 31.744-60.928 3.072-99.328 6.144-117.76 37.376-13.312 22.528-3.584 41.984 12.8 71.68 15.36 27.136 36.352 65.024 7.168 100.352-33.28 40.448-82.944 45.568-122.88 45.568z m0-970.24c-252.928 0-458.24 205.824-458.24 458.24s205.824 458.24 458.24 458.24c41.984 0 66.56-7.68 81.408-26.112 5.12-6.144 2.56-13.312-12.288-40.448-16.384-29.696-41.472-74.752-12.288-124.928 33.792-57.856 98.304-60.928 161.28-63.488 46.592-2.048 94.72-4.608 137.216-26.112 69.12-35.328 102.912-93.184 102.912-177.664 0-252.416-205.312-457.728-458.24-457.728z" fill="white" /><path d="M214.016 455.68m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M384 244.736m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M645.12 229.376m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M804.352 426.496m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white"/></svg>
-                                Video Extender
-                            </a>
-                            <a class="button" id="inpaintButton" href="inpaint?v=${version}">
-                                <svg style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M991.776 535.2c0-25.632-9.984-49.76-28.064-67.872L588.992 92.128c-36.256-36.288-99.488-36.288-135.744-0.032L317.408 227.808c-37.408 37.408-37.44 98.336-0.032 135.776l374.656 375.136c18.144 18.144 42.24 28.128 67.936 28.128 25.632 0 49.728-9.984 67.84-28.096l35.328-35.296 26.112 26.144c12.512 12.512 12.512 32.768 1.856 43.584l-95.904 82.048c-12.448 12.544-32.736 12.48-45.248 0l-245.536-245.824 0 0-3.2-3.2c-37.44-37.408-98.336-37.472-135.744-0.096l-9.632 9.632L294.4 554.336c-6.24-6.24-14.432-9.376-22.624-9.376-8.192 0-16.384 3.136-22.656 9.376 0 0 0 0.032-0.032 0.032l-22.56 22.56c0 0 0 0 0 0l-135.872 135.712c-37.408 37.408-37.44 98.304-0.032 135.776l113.12 113.184c18.688 18.688 43.296 28.064 67.872 28.064 24.576 0 49.152-9.344 67.904-28.032l135.808-135.712c0.032-0.032 0.032-0.096 0.064-0.128l22.528-22.496c6.016-6.016 9.376-14.112 9.376-22.624 0-8.48-3.36-16.64-9.344-22.624l-96.896-96.96 9.6-9.6c12.48-12.544 32.768-12.48 45.248 0.032l0-0.032 3.2 3.2 0 0.032 245.568 245.856c18.944 18.912 43.872 28.256 68.544 28.256 24.032 0 47.808-8.896 65.376-26.56l95.904-82.048c37.44-37.408 37.472-98.336 0.032-135.808l-26.112-26.112 55.232-55.168C981.76 584.928 991.776 560.832 991.776 535.2zM362.144 848.544c-0.032 0.032-0.032 0.096-0.064 0.128l-67.776 67.712c-12.48 12.416-32.864 12.448-45.312 0L135.904 803.2c-12.48-12.48-12.48-32.768 0-45.28l67.904-67.84 0 0 67.936-67.84 158.336 158.432L362.144 848.544zM918.368 557.824l-135.808 135.68c-12.064 12.096-33.152 12.096-45.216-0.032L362.656 318.368c-12.48-12.512-12.48-32.8 0-45.28l135.84-135.712C504.544 131.328 512.576 128 521.12 128s16.608 3.328 22.624 9.344l374.688 375.2c6.016 6.016 9.344 14.048 9.344 22.592C927.776 543.712 924.448 551.744 918.368 557.824z" fill="white"/><path d="M544.448 186.72c-12.352-12.672-32.64-12.832-45.248-0.48-12.64 12.384-12.832 32.64-0.48 45.248l322.592 329.216c6.24 6.368 14.528 9.6 22.848 9.6 8.096 0 16.16-3.04 22.4-9.152 12.64-12.352 12.8-32.608 0.448-45.248L544.448 186.72z" fill="white"/></svg>
-                                Inpaint Anything
-                            </a>
-                            <a class="button" id="artGeneratorButton" href="art-generator?v=${version}">
-                                <svg style="fill: currentColor;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M512 1024C229.888 1024 0 794.112 0 512S229.888 0 512 0s512 229.888 512 512c0 104.96-44.544 180.736-132.096 225.28-52.736 26.624-109.056 29.696-159.232 31.744-60.928 3.072-99.328 6.144-117.76 37.376-13.312 22.528-3.584 41.984 12.8 71.68 15.36 27.136 36.352 65.024 7.168 100.352-33.28 40.448-82.944 45.568-122.88 45.568z m0-970.24c-252.928 0-458.24 205.824-458.24 458.24s205.824 458.24 458.24 458.24c41.984 0 66.56-7.68 81.408-26.112 5.12-6.144 2.56-13.312-12.288-40.448-16.384-29.696-41.472-74.752-12.288-124.928 33.792-57.856 98.304-60.928 161.28-63.488 46.592-2.048 94.72-4.608 137.216-26.112 69.12-35.328 102.912-93.184 102.912-177.664 0-252.416-205.312-457.728-458.24-457.728z" fill="white" /><path d="M214.016 455.68m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M384 244.736m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M645.12 229.376m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white" /><path d="M804.352 426.496m-70.144 0a70.144 70.144 0 1 0 140.288 0 70.144 70.144 0 1 0-140.288 0Z" fill="white"/></svg>
-                                Art Generator
-                            </a>
-                        </div>
-                    </div>
-                    <div style="display: flex;flex-direction: row;margin: 0;">
-                        <small style="white-space: nowrap;padding-right: 1vh;">Socials</small>
-                        <div class="line"></div>
-                    </div>
+                    <div class="line" style="margin: 0;"></div>
                     <div style="display: flex;gap: 1vh;">
 						<a class="button" id="discordButton" translate="no" href="https://discord.gg/VvHAj2eBCS" target="_blank">
 							<svg  viewBox="0 0 127.14 96.36" xmlns="http://www.w3.org/2000/svg">
@@ -8409,17 +7885,17 @@ function createSideBarData(sidebar) {
 							<svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 24 24"><path d="M14.238 15.348c.085.084.085.221 0 .306-.465.462-1.194.687-2.231.687l-.008-.002-.008.002c-1.036 0-1.766-.225-2.231-.688-.085-.084-.085-.221 0-.305.084-.084.222-.084.307 0 .379.377 1.008.561 1.924.561l.008.002.008-.002c.915 0 1.544-.184 1.924-.561.085-.084.223-.084.307 0zm-3.44-2.418c0-.507-.414-.919-.922-.919-.509 0-.923.412-.923.919 0 .506.414.918.923.918.508.001.922-.411.922-.918zm13.202-.93c0 6.627-5.373 12-12 12s-12-5.373-12-12 5.373-12 12-12 12 5.373 12 12zm-5-.129c0-.851-.695-1.543-1.55-1.543-.417 0-.795.167-1.074.435-1.056-.695-2.485-1.137-4.066-1.194l.865-2.724 2.343.549-.003.034c0 .696.569 1.262 1.268 1.262.699 0 1.267-.566 1.267-1.262s-.568-1.262-1.267-1.262c-.537 0-.994.335-1.179.804l-2.525-.592c-.11-.027-.223.037-.257.145l-.965 3.038c-1.656.02-3.155.466-4.258 1.181-.277-.255-.644-.415-1.05-.415-.854.001-1.549.693-1.549 1.544 0 .566.311 1.056.768 1.325-.03.164-.05.331-.05.5 0 2.281 2.805 4.137 6.253 4.137s6.253-1.856 6.253-4.137c0-.16-.017-.317-.044-.472.486-.261.82-.766.82-1.353zm-4.872.141c-.509 0-.922.412-.922.919 0 .506.414.918.922.918s.922-.412.922-.918c0-.507-.413-.919-.922-.919z" fill="white"/></svg>
 							Reddit
 						</a>
-                        <div style="display: flex;gap: calc(1vh );flex-direction: row;justify-content: center;">
-                            <a id="faqLink" style="font-size: calc((1.75vh));" style="cursor: pointer;">
+                        <div style="display: flex;gap: 1vh;flex-direction: row;justify-content: center;">
+                            <a id="faqLink" style="font-size: calc((1.75vh* var(--scale-factor-h)));" style="cursor: pointer;">
                                 • FAQ
                             </a>
-                            <a id="policiesLink" style="font-size: calc((1.75vh));" style="cursor: pointer;">
+                            <a id="policiesLink" style="font-size: calc((1.75vh* var(--scale-factor-h)));" style="cursor: pointer;">
                                 • Policy
                             </a>
-                            <a id="guidelinesLink" style="font-size: calc((1.75vh));" style="cursor: pointer;">
+                            <a id="guidelinesLink" style="font-size: calc((1.75vh* var(--scale-factor-h)));" style="cursor: pointer;">
                                 • TOS
                             </a>
-                            <a id="contactUsLink" style="font-size: calc((1.75vh));" style="cursor: pointer;" onclick="window.location.href='mailto:official@deepany.ai';">
+                            <a id="contactUsLink" style="font-size: calc((1.75vh* var(--scale-factor-h)));" style="cursor: pointer;" onclick="window.location.href='mailto:official@deepany.ai';">
                                 • Help
                             </a>
 					    </div>
@@ -9253,12 +8729,11 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
 								<li><a class="text" href="character-swap?v=${version}" disabled>Full-Body Swap</a></li>
                                 <div style="display: flex;align-items: center;padding-top: 0.5vh;padding-left: 1vh;padding-right: 1vh;"><small style="white-space: nowrap;padding-right: 1vh;line-height: 0;">Video</small><div class="line" style=""></div></div>
 								<li><a class="text" href="video-generator?v=${version}">Generate</a></li>
-                                <li><a class="text" href="video-extender?v=${version}">Extend</a></li>
                                 <div style="display: flex;align-items: center;padding-top: 0.5vh;padding-left: 1vh;padding-right: 1vh;"><small style="white-space: nowrap;padding-right: 1vh;line-height: 0;">Inpaint</small><div class="line" style=""></div></div>
 								<li><a class="text" href="inpaint?v=${version}">Inpaint Anything</a></li>
 								<li><a class="text" href="qwen-editor?v=${version}" disabled>Qwen Edit</a></li>
                                 <div style="display: flex;align-items: center;padding-top: 0.5vh;padding-left: 1vh;padding-right: 1vh;"><small style="white-space: nowrap;padding-right: 1vh;line-height: 0;">Image</small><div class="line" style=""></div></div>
-								<li><a class="text" href="art-generator?v=${version}">Generate (Free!)</a></li>
+								<li><a class="text" href="art-generator?v=${version}">Generate</a></li>
 								<li><a class="text" href="image-editor?v=${version}" disabled>Edit</a></li>
 								<li><a class="text" href="image-upscaler?v=${version}" disabled>Upscale</a></li>
 								<li><a class="text" href="image-colorizer?v=${version}" disabled>Colorize</a></li>
@@ -10265,25 +9740,14 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
         }
     })();
 
-    function loadLZString() {
-        return new Promise((resolve, reject) => {
-            if (window.LZString) return resolve();
-            const script = document.createElement("script");
-            script.src = "https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js";
-            script.onload = () => resolve();
-            script.onerror = () => reject(new Error("Failed to load LZ-String"));
-            document.head.appendChild(script);
-        });
-    }
-
     async function autoComplete() {
         (async function () {
             const TEXTAREA_ID = "positivePrompt";
             const CSV_PATH = "./danbooru_tags.csv";
-            const TAGS_VERSION = "v1.3";
+            const TAGS_VERSION = "v1.0";
 
             const textarea = document.getElementById(TEXTAREA_ID);
-            if (!textarea || pageName === 'video-generator' || pageName === 'video-extender') {
+            if (!textarea || pageName === 'video-generator') {
                 return;
             }
 
@@ -10358,23 +9822,10 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
 
             async function getTags() {
                 const cacheKey = `danbooru_tags_${TAGS_VERSION}`;
-                let cached = null;
-
-                try {
-                    const compressed = localStorage.getItem(cacheKey);
-                    if (compressed) {
-                        const decompressed = LZString.decompress(compressed);
-                        if (decompressed) {
-                            cached = JSON.parse(decompressed);
-                        }
-                    }
-                } catch (e) {
-                    console.warn("Failed to load cached tags, will fetch CSV", e);
-                }
-
+                const cached = localStorage.getItem(cacheKey);
                 if (cached) {
                     console.log("✅ Loaded tags from localStorage");
-                    return cached; // Already parsed
+                    return JSON.parse(cached);
                 }
 
                 console.log("⬇️ Fetching tags from CSV...");
@@ -10398,16 +9849,7 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
                 }
 
                 arr.sort((a, b) => b.count - a.count);
-                try {
-                    localStorage.setItem(cacheKey, LZString.compress(JSON.stringify(arr)));
-                } catch (e) {
-                    console.warn("Failed to save tags", e);
-                    if (e.name === "QuotaExceededError") {
-                        console.warn("LocalStorage full, skipping cache.");
-                    } else {
-                        throw e;
-                    }
-                }
+                localStorage.setItem(cacheKey, JSON.stringify(arr));
                 return arr;
             }
 
@@ -10567,9 +10009,7 @@ export function loadPageContent(setUser, retrieveImageFromURL, getUserInternetPr
         })();
     }
 
-    loadLZString().then(() => {
-        autoComplete();
-    }).catch(err => console.error(err));
+    autoComplete();
 
     async function autoTranslate() {
         const CACHE_KEY = `translationCache_${pageName}_${version}`;
@@ -11164,6 +10604,8 @@ export async function saveCountIndex(databases) {
         localStorage.setItem(`${pageName}_${dbConfig.objectStore}-count`, photoCount)
     }
 }
+// download-manager.js (replace your existing code with this)
+
 let globalDownloadCancelled = false; // fallback global flag (for compatibility)
 const downloadCancelledMap = new Map();   // id -> boolean
 const abortControllers = new Map();       // id -> AbortController
@@ -11323,31 +10765,37 @@ export const handleDownload = async ({
 
     if (!(db && url && container && id && timestamp)) {
         console.error('Output not found!');
+        setDownloadCancelled(true, id);
+        downloadCancelledMap.set(id, true);
+        return;
+    }
+
+    let element = container.querySelector('[original="true"]');
+    if (element?.src || container.querySelector('initial')?.getAttribute('downloading') === 'true') {
+        console.error('Output already exists or already downloading!');
         return;
     }
 
     // initialize per-id state and controller
-    setDownloadCancelled(false, id);
+    setDownloadCancelled(false, id); // per-id explicit resume
     downloadCancelledMap.set(id, false);
     const processText = msg => setProcessText(container, msg);
 
-    if (active && !container.classList.contains('active')) {
+    /*if (active && !container.classList.contains('active')) {
         container.classList.add('active');
-    }
+        showNotification(`Activating the video as download has finished!`, 'Activation', 'default');
+    }*/
 
-    container.innerHTML = `<initial url="${url}" id="${id}" timestamp="${timestamp}" active="${active}">
-        <div class="process-text">Downloading...</div>
-        <div class="delete-icon"></div>
-        <div class="settings-mark"></div>
-    </initial>`;
+    container.innerHTML = `<initial downloading="true" url="${url}" id="${id}" timestamp="${timestamp}" active="${active}"><div class="process-text">Downloading...</div><div class="delete-icon"></div><div class="settings-mark"></div></initial>`;
 
+    // delete icon should cancel this specific download (per-id)
     container.querySelector('.delete-icon').addEventListener('click', async () => {
         setDownloadCancelled(true, id, true);
-        try { await updateChunksInDB(db, url, []); } catch { }
-        try { deleteDownloadData(timestamp, id, url); } catch { }
+        try { await updateChunksInDB(db, url, []); } catch (e) { console.warn('updateChunksInDB failed', e); }
+        try { deleteDownloadData(timestamp, id, url); } catch (e) { console.warn('deleteDownloadData failed', e); }
     });
 
-    handleContextMenu(container, false);
+    handleContextMenu(container);
 
     if (!(id in progressMap)) progressMap[id] = 0;
     lastProgress = progressMap[id];
@@ -11355,7 +10803,6 @@ export const handleDownload = async ({
     let isMobile = null;
     const activeDataContainer = document.querySelector(".outputs .data-container.active");
     const dataContainerActive = activeDataContainer ? activeDataContainer : null;
-
     const downloadOutput = document.getElementById('downloadOutput');
     if (downloadOutput) {
         downloadOutput.textContent = "Pause";
@@ -11385,8 +10832,9 @@ export const handleDownload = async ({
 
     const previousData = await getFromDB(db);
     const entry = previousData.find(item => parseInt(item.id) === parseInt(id));
-    const chunks = entry ? entry.chunks.slice() : [];
+    const chunks = entry ? entry.chunks.slice() : []; // copy if present
 
+    // main loop (attempt/resume until cancelled)
     while (!downloadCancelledMap.get(id) && !signal.aborted) {
         try {
             const headers = downloadedBytes ? { 'Range': `bytes=${downloadedBytes}-` } : {};
@@ -11422,7 +10870,6 @@ export const handleDownload = async ({
 
                 const { done, value } = readResult;
                 if (done) break;
-
                 downloadedBytes += value.length;
                 chunks.push(value);
 
@@ -11434,6 +10881,7 @@ export const handleDownload = async ({
                 if (totalBytes > 0) {
                     lastProgress = (downloadedBytes / totalBytes) * 100;
                 } else {
+                    // unknown total - approximate progress as 0..100 by saved progress
                     lastProgress = progressMap[id] || 0;
                 }
 
@@ -11445,137 +10893,99 @@ export const handleDownload = async ({
                 }
 
                 processText(`Downloaded: ${lastProgress.toFixed(0)}%`);
-            }
+            } // end inner read loop
 
             if (downloadCancelledMap.get(id) || signal.aborted) {
-                try { reader.cancel(); } catch { }
+                // cleanup reader if necessary then return
+                try { reader.cancel(); } catch (e) { /* ignore */ }
                 return;
             }
 
             const isGif = contentType === 'image/gif';
             const isVideo = url.slice(-1) === '0' && !isGif;
-            const initialEl = container.querySelector('initial');
 
-            processText(`Processing: Clearing memory...`);
-            const otherContainers = document.querySelectorAll('.outputs .data-container');
-            for (const otherContainer of otherContainers) {
-                if (otherContainer === container) continue;
-
-                const otherMedia = otherContainer.querySelector('[original="true"]');
-                if (otherMedia && otherMedia.src?.startsWith('blob:')) {
-                    if (otherMedia.tagName.toLowerCase() === 'video') {
-                        otherMedia.pause();
-                    }
-                    URL.revokeObjectURL(otherMedia.src);
-                    otherMedia.src = '';
-                    otherMedia.style.display = 'none';
-                    displayStoredData(null, 'outputs');
-                }
-                const otherThumb = otherContainer.querySelector('img[original="false"]');
-                if (otherThumb && !otherThumb.getAttribute('src')) {
-                    const entry = previousData.find(item => parseInt(item.id) === parseInt(otherThumb.id));
-                    const thumbnailBlob = entry?.thumbnailBlob;
-                    if (thumbnailBlob instanceof Blob) {
-                        const vars = await resolveMediaSource({ blob: thumbnailBlob });
-                        otherThumb.src = vars.src;
-                    }
-                }
-                if (otherThumb && otherThumb.src?.startsWith('blob:')) {
-                    otherThumb.style.display = 'unset';
-                }
-            }
-
-            processText(`Processing: Creating media...`);
-            const blob = new Blob(chunks, { type: contentType });
-
-            if (totalBytes > 0 && Math.abs(blob.size - totalBytes) > Math.max(1, totalBytes * 0.01)) {
-                alert(`Warning: The downloaded file size (${blob.size} bytes) differs significantly from expected size (${totalBytes} bytes).`);
-                chunks.length = 0; // release immediately
-                await updateChunksInDB(db, url, []);
-                deleteDownloadData(timestamp, id);
-                break;
-            }
-
-            if (blob.size === 0) {
-                alert('Warning: Media not displayable');
-                chunks.length = 0;
-                await updateChunksInDB(db, url, []);
-                deleteDownloadData(timestamp, id);
-                break;
-            }
-
-            chunks.length = 0;
-
-            const isMobileDevice = window.isMobileDevice() || window.isLowEndDevice();
-            if (isMobileDevice)
-                await new Promise(resolve => setTimeout(resolve, 1));
-
-            processText(`Processing: Preparing display...`);
-
-            const thumbnail = document.createElement('img');
-            thumbnail.setAttribute('url', url);
-            thumbnail.setAttribute('timestamp', timestamp);
+            let thumbnail;
+            thumbnail = document.createElement('img');
+            thumbnail.setAttribute('url', url || '');
+            thumbnail.setAttribute('timestamp', timestamp || '');
+            thumbnail.setAttribute('active', active || '');
             thumbnail.setAttribute('original', 'false');
-            thumbnail.setAttribute('active', active);
             thumbnail.id = id;
             thumbnail.style.display = "none";
 
+            // create media element but do not set src until blobUrl/base64 is ready
             const media = isVideo ? document.createElement('video') : document.createElement('img');
             media.setAttribute('url', url || '');
             media.setAttribute('timestamp', timestamp || '');
-            media.setAttribute('original', 'true');
             media.setAttribute('active', active || '');
-            media.setAttribute('blobrevoke', 'false');
+            media.setAttribute('original', 'true');
             media.style.display = "unset";
+            //media.setAttribute('blobRevoke', 'false');
             media.id = id;
 
             if (isVideo) {
                 media.preload = "metadata";
                 media.muted = true;
                 media.playsInline = true;
-                try { media.disablePictureInPicture = true; } catch { }
+                try { media.disablePictureInPicture = true; } catch (e) { /* ignore */ }
             }
 
             const del = document.createElement('div');
             del.className = 'delete-icon';
             const set = document.createElement('div');
             set.className = 'settings-mark';
-
             const frag = document.createDocumentFragment();
             frag.appendChild(thumbnail);
             frag.appendChild(media);
             frag.appendChild(del);
             frag.appendChild(set);
 
-            if (initialEl) container.replaceChild(frag, initialEl);
-            else container.append(thumbnail, media, del, set);
-
-            if (active && !container.classList.contains('active')) {
-                container.classList.add('active');
+            let initialEl = container.querySelector('initial');
+            if (initialEl) {
+                container.replaceChild(frag, initialEl);
+            } else {
+                container.appendChild(thumbnail);
+                container.appendChild(media);
+                container.appendChild(del);
+                container.appendChild(set);
             }
 
-            processText(`Processing: Loading preview...`);
-            if (isMobileDevice)
-                await new Promise(resolve => setTimeout(resolve, 1));
-
+            // assembled blob
+            const blob = new Blob(chunks.map(chunk => new Uint8Array(chunk)), { type: contentType });
             const blobUrl = URL.createObjectURL(blob);
 
-            requestAnimationFrame(() => {
-                media.src = blobUrl;
-                //media.onerror = () => {
-                    //alert('Media failed to load from blob URL. Incognito?');
-                    //URL.revokeObjectURL(blobUrl);
-                //};
+            // size check
+            if (totalBytes > 0 && Math.abs(blob.size - totalBytes) > Math.max(1, totalBytes * 0.01)) {
+                alert(`Warning: The downloaded file size (${blob.size} bytes) differs significantly from expected size (${totalBytes} bytes).`);
+                await updateChunksInDB(db, url, []);
+                deleteDownloadData(timestamp, id);
+                break;
+            }
 
-                if (isVideo) {
-                    media.onloadeddata = () => {
-                        if (media.videoWidth === 0 || media.videoHeight === 0) {
-                            alert('Video decoded but has zero dimensions');
-                        }
-                    };
+            // set media src AFTER we have blobUrl
+            if (blobUrl) media.src = blobUrl;
+
+            const base64Url = chunksToBase64(chunks, contentType);
+            const fallbackToBase64 = async () => {
+                try {
+                    media.src = base64Url;
+                } catch (e) {
+                    console.warn('fallbackToBase64 failed', e);
                 }
-            });
+            };
 
+            if (isVideo) {
+                media.load();
+                media.pause();
+                media.onerror = fallbackToBase64;
+                media.onloadeddata = () => {
+                    if (media.videoWidth === 0 || media.videoHeight === 0) fallbackToBase64();
+                };
+            } else {
+                media.onerror = fallbackToBase64;
+            }
+
+            // make other active containers inactive
             const activeContainers = document.querySelectorAll('.outputs .data-container.active');
             if (activeContainers.length > 0) {
                 for (const activeContainer of activeContainers) {
@@ -11583,71 +10993,111 @@ export const handleDownload = async ({
                     const el = activeContainer.querySelector('img, iframe, video, initial');
                     const elId = el ? parseInt(el.getAttribute('id')) : NaN;
                     if (elId) {
-                        updateActiveState(db, elId, false).catch(err => {
-                            console.error(`Failed to update active state for id=${idx}`, err);
+                        await updateActiveState(db, elId, false).catch(err => {
+                            alert(`Update failed for id ${elId}: ${err}`);
                         });
                     }
                 }
             }
 
+            showNotification(`Automatically activated the output as the download has finished.`, 'Activation', 'default');
             container.classList.add('active');
             if (id) {
-                updateActiveState(db, id, true).catch(err => {
-                    console.error(`Failed to update active state for id=${idx}`, err);
+                await updateActiveState(db, id, true).catch(err => {
+                    alert(`Update failed for id ${id}: ${err}`);
                 });
             }
 
-            (async () => {
-                console.log(`Processing: Updating DB...`);
-                await Promise.all([
-                    updateInDB(db, url, { blob }),
-                    saveCountIndex(databases)
-                ]);
+            if (blob.size === 0) {
+                alert('Warning: Media not displayable');
+                await updateChunksInDB(db, url, []);
+                deleteDownloadData(timestamp, id);
+                break;
+            }
 
+            let thumb = null;
+            let base64 = null;
+
+            if (!thumb) {
                 try {
-                    if (isMobileDevice)
-                        await new Promise(r => setTimeout(r, 50));
-
-                    console.log(`Processing: Creating thumbnail...`);
-                    const thumb = await createThumbnail(blob);
-                    console.log(`Processing: Updating DB...`);
-                    await Promise.all([
-                        updateInDB(db, url, { thumbnailBlob: thumb }),
-                        saveCountIndex(databases)
-                    ]);
-
-                    if (thumb) {
-                        requestAnimationFrame(() => {
-                            thumbnail.src = URL.createObjectURL(thumb);
-                        });
-                    }
+                    thumb = await createThumbnail(blob);
                 } catch (err) {
                     console.warn('Failed to create thumbnail:', err);
                 }
+            }
 
-                deleteDownloadData(timestamp, id);
-            })();
+            if (thumb) thumbnail.src = URL.createObjectURL(thumb);
+
+            const base64Forced = localStorage.getItem(FORCE_BASE64_KEY) === 'true';
+            if ((base64Forced /*|| window.isMobileDevice()*/)) {
+                try {
+                    base64 = base64Url || null;
+                    if (!base64)
+                        base64 = await blobToBase64(blob);
+                } catch (err) {
+                    console.warn('Failed to create base64:', err);
+                }
+            }
+
+            await Promise.all([updateInDB(db, url, blob, thumb, base64), saveCountIndex(databases)]);
+            deleteDownloadData(timestamp, id);
 
             const snapshotPromise = () => getDocsSnapshot('servers');
             setFetchableServerAdresses((await fetchServerAddresses(snapshotPromise)).reverse());
             displayStoredData(container, 'outputs');
+
+            // revoke other blob urls
+            const otherContainers = document.querySelectorAll('.outputs .data-container');
+            if (otherContainers.length > 0) {
+                for (const activeEl of otherContainers) {
+                    const el = activeEl.querySelector('img, iframe, video, initial');
+                    if (el !== container && el.src !== blobUrl && el.src?.startsWith('blob:')) {
+                        if (el?.tagName.toLowerCase() === "video") el.pause();
+                        const revoke = () => {
+                            //try { URL.revokeObjectURL(el.src); } catch (e) { /* ignore */ }
+                            //el.setAttribute('blobRevoke', 'true');
+                            el.removeEventListener('load', revoke);
+                            el.removeEventListener('loadeddata', revoke);
+                        };
+
+                        if (el.tagName.toLowerCase() === 'img') {
+                            if (el.complete) {
+                                revoke();
+                            } else {
+                                el.addEventListener('load', revoke, { once: true });
+                            }
+                        } else if (el.tagName.toLowerCase() === 'video') {
+                            if (el.readyState >= 2) {
+                                revoke();
+                            } else {
+                                el.addEventListener('loadeddata', revoke, { once: true });
+                            }
+                        }
+                    }
+                }
+            }
+
+            // mark finished for this id + cleanup controller
             setDownloadCancelled(true, id);
-            resetAbortControllerFor(id);
+            resetAbortControllerFor(id); // remove controller and cancelled state (cleanup)
             processText(``);
             return;
+
         } catch (error) {
             if (error && error.name === 'AbortError') {
                 processText(`Paused: ${error.message || 'Operation was aborted'}`);
                 return;
             }
             console.warn('[handleDownload] error, will retry:', error);
-            processText(`Error: ${error.message}.`);
-            await new Promise(resolve => setTimeout(resolve, 1));
+            processText(`Error: ${error.message}. Retrying...`);
+            // small delay to avoid tight retry loop
+            await new Promise(resolve => setTimeout(resolve, 800));
         } finally {
+            console.log("added");
             handleContextMenu(container);
         }
-    }
-};
+    } // end outer while
+}; // end handleDownload
 export const handleDelete = async (dataBaseIndexName, dataBaseObjectStoreName, parent, container, databases) => {
     try {
         console.log('[handleDelete] call');
@@ -11712,7 +11162,7 @@ export const handleDelete = async (dataBaseIndexName, dataBaseObjectStoreName, p
 };
 
 async function replaceWithLowResolution(element, scale = 0.25, quality = 0.5) {
-    if (!element || !element.getAttribute('src') || element.getAttribute('resized') === 'true') return;
+    if (!element || !element.src || element.getAttribute('resized') === 'true') return;
 
     const tag = element.tagName.toLowerCase();
 
@@ -11942,7 +11392,7 @@ const loadMedia = async (element, data) => {
             if (!stopCounting) {
                 localStorage.setItem(BLOB_FAIL_KEY, JSON.stringify(fails));
 
-                if (fails.length > 1 && !base64Forced) {
+                if (fails.length > 5 && !base64Forced) {
                     const accept = confirm(
                         "Media failed to load several times. " +
                         "Do you want to enable Base64 fallback to reduce errors?\n\n" +
@@ -11990,9 +11440,6 @@ const loadMedia = async (element, data) => {
     return element;
 };
 
-// Track last click time
-let deleteClickTimestamps = [];
-
 export const handleFileContainerEvents = async (event, dataBaseIndexName, dataBaseObjectStoreName, container, databases) => {
     const parent = event.target.closest('.data-container');
     if (!parent) return;
@@ -12002,40 +11449,7 @@ export const handleFileContainerEvents = async (event, dataBaseIndexName, dataBa
     }
 
     if (event.target.classList.contains('delete-icon')) {
-        const now = Date.now();
-        const TIME_WINDOW = 1000; // 1.5 seconds
-
-        // Remove timestamps older than TIME_WINDOW
-        deleteClickTimestamps = deleteClickTimestamps.filter(ts => now - ts < TIME_WINDOW);
-
-        // Add current click
-        deleteClickTimestamps.push(now);
-
-        // If 3 or more clicks in the window → confirm delete all
-        if (deleteClickTimestamps.length >= 5) {
-            const confirmAll = confirm(
-                'You are clicking rapidly!\nDo you want to delete ALL items in this database?'
-            );
-            if (confirmAll) {
-                const db = await openDB(dataBaseIndexName, dataBaseObjectStoreName);
-                const items = await getFromDB(db);
-                for (const item of items) {
-                    await deleteFromDB(db, item.id);
-                    deleteDownloadData(item.timestamp, item.id, item.url);
-                }
-                container.innerHTML = ''; // Clear all visually
-                updateGenerateButtonText();
-                deleteClickTimestamps = []; // reset counter
-                return;
-            } else {
-                // If canceled, also reset counter
-                deleteClickTimestamps = [];
-            }
-        }
-
-        // Normal delete
-        await handleDelete(dataBaseIndexName, dataBaseObjectStoreName, parent, container, databases);
-        return;
+        return await handleDelete(dataBaseIndexName, dataBaseObjectStoreName, parent, container, databases);
     }
 
     if (dataBaseObjectStoreName === 'outputs') {
@@ -12063,26 +11477,7 @@ export async function showFrameSelector(element) {
     const targetElement = videoElement || imgElement;
     const isVideo = targetElement && targetElement.tagName.toLowerCase() === "video" || targetElement instanceof HTMLVideoElement;
 
-    const result = await awaitMediaLoadedWithRetries(targetElement);
-    if (!result.success) {
-        alert(
-            `Media could not be loaded.
-
-Possible fixes:
-• Update your browser
-• Try different browser
-• Third-party cookie/storage blocking
-• Open disk space on the device
-• Clear site data (Application → Storage → Clear site data)
-• Enable persistent storage
-• Avoid incognito/private mode
-• OS/browser storage restrictions (enterprise policies, iOS limits)
-• Close other tabs using heavy storage
-• Try another browser/profile.\n` + JSON.stringify(result.reason, null, 2)
-        );
-        return;
-    }
-
+    await waitForMediaLoad(targetElement);
     const fps = parseFloat(targetElement.getAttribute('data-fps')) || 0;
 
     if (isVideo) {
@@ -12882,7 +12277,6 @@ Possible fixes:
             formData.append('face', activeFile);
             formData.append('userId', userData.uid);
             formData.append('fileOutputId', fileOutputId);
-            formData.append('og', localStorage.getItem('og') || false);
             formData.append('enableEnhancedLandmarks', document.getElementById("enableEnhancedLandmarks").checked);
             formData.append('enableEnhancedAnalyzer', document.getElementById("enableEnhancedAnalyzer").checked);
             formData.append('referencePosition', selectedPerson);
@@ -13073,15 +12467,15 @@ export async function showCanvas(imgElement) {
         <a class="background-dot-container">
             <div class="background-dot-container-content">
                 <div id="innerContainer" class="background-container" style="display: contents;">
-                    <div style="display: flex; flex-direction: column; justify-content: space-around; gap: calc(1vh * var(--scale-factor-h));">
+                    <div style="display: flex; flex-direction: column; justify-content: space-around; gap: 1vh;">
                          <div style="display: flex;flex-direction: row;justify-content: space-around;gap: calc(1.5vh* var(--scale-factor-h));">
                             <button class="wide" id="startProcessCanvas">Save Canvas & Start Process</button>
                          </div>
-                         <div id="colorMatchingSettings" style="display: flex !important; flex-direction: column !important; justify-content: space-around !important; gap: calc(1vh * var(--scale-factor-h)); !important">
+                         <div id="colorMatchingSettings" style="display: flex !important; flex-direction: column !important; justify-content: space-around !important; gap: 1vh; !important">
                              <div class="line"></div>
                              <div>
                                 <!-- Updated combobox HTML -->
-                                <div id="objectDetectionMethodComboBox" class="combobox" tooltip style="gap: calc(1vh * var(--scale-factor-h));">
+                                <div id="objectDetectionMethodComboBox" class="combobox" tooltip style="gap: 1vh;">
                                   <!-- Updated tooltip text -->
                                   <div class="tooltip">Select the object detection method (only one can be active at a time).</div>
                                   <!-- This span will display the currently selected method -->
@@ -13115,7 +12509,7 @@ export async function showCanvas(imgElement) {
                                   </ul>
                                 </div>
                             </div>
-                            <div style="display: flex;gap: calc(1vh * var(--scale-factor-h));">
+                            <div style="display: flex;gap: 1vh;">
                                 <label class="checkbox" style="display: flex; align-items: center; gap: calc(1vh); justify-content: space-between;">
                                     <div style="display: flex; flex-direction: row; gap: calc(1vh); width: 100%; align-items: center;">
                                         <input type="range" min="1" max="100" step="1" value="25" class="slider" id="tolerance-slider">
@@ -14319,6 +13713,369 @@ function arrayBufferToBase64(buffer) {
     return btoa(binary);
 }
 
+export const handleUpload = async (event, dataBaseIndexName, dataBaseObjectStoreName, databases) => {
+    try {
+        if (!window.indexedDB) {
+            alert('Your browser does not support IndexedDB.');
+            return;
+        }
+
+        const db = await openDB(dataBaseIndexName, dataBaseObjectStoreName).catch((error) => {
+            if (error.name === 'QuotaExceededError') {
+                alert('Storage limit exceeded. Please free up space or clear cache.');
+            } else if (error.name === 'SecurityError') {
+                alert('Database access is restricted. Please check browser settings or disable private mode.');
+            } else if (error.message && error.message.includes('BlobURLs')) {
+                alert(
+                    'It seems there is an issue with Blob URLs not being supported in your browser or environment.\n\n' +
+                    'To resolve this:\n' +
+                    '- Ensure your browser is updated to the latest version (Chrome, Firefox, Edge).\n' +
+                    '- Avoid using the application in private/incognito mode.\n' +
+                    '- Disable browser extensions that may block IndexedDB or Blob URLs.\n\n' +
+                    'If the problem persists, try switching to a different browser or device.'
+                );
+            } else if (error.message && error.message.includes('backing store')) {
+                alert(
+                    'It seems there is an issue with the browser\'s IndexedDB storage. Please follow these steps to resolve it:\n\n' +
+                    '1. Open Chrome Developer Tools:\n   - Right-click anywhere on the page and select "Inspect", or press "Ctrl+Shift+I" (Windows) / "Cmd+Option+I" (Mac).\n' +
+                    '2. Go to the "Application" tab.\n' +
+                    '3. Under "Storage", click on "IndexedDB".\n' +
+                    '4. Right-click on the database causing the issue and select "Delete".\n\n' +
+                    'Additional Suggestions:\n' +
+                    '- Disable any browser extensions that might restrict IndexedDB access.\n' +
+                    '- Ensure your browser is updated to the latest version.\n' +
+                    '- If the problem persists, try using a fresh Chrome profile or a different browser.'
+                );
+            } else {
+                alert(`Opening media database failed: ${error.message || error}`);
+            }
+            return null;
+        });
+        if (!db) return;
+
+        const files = Array.from(event.target.files).filter((file) => {
+            if (dataBaseObjectStoreName === 'faces')
+                return file.type.startsWith('image/') && file.type !== 'image/gif';
+            return file.type.startsWith('image/') || file.type.startsWith('video/');
+        });
+
+        if (files.length === 0) {
+            alert('No valid files found for upload.');
+            return;
+        }
+
+        const mediaContainer = document.querySelector(`.${dataBaseObjectStoreName}`);
+        const newMedia = [];
+
+        const processFile = async (file) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const arrayBuffer = e.target.result;
+                        const blob = new Blob([arrayBuffer], { type: file.type });
+                        const payload = { blob };
+
+                        let thumb = null;
+                        try {
+                            thumb = await createThumbnail(file, arrayBuffer);
+                        } catch (err) { }
+                        if (thumb) payload.thumbnailBlob = thumb;
+
+                        const base64Forced = localStorage.getItem(FORCE_BASE64_KEY) === 'true';
+                        if (base64Forced /*|| window.isMobileDevice()*/) {
+                            const base64 = await new Promise((resolve, reject) => {
+                                const fr = new FileReader();
+                                fr.onload = () => resolve(fr.result);
+                                fr.onerror = reject;
+                                fr.readAsDataURL(file);
+                            });
+                            payload.base64 = base64;
+                        }
+
+                        let savedData;
+                        try {
+                            // First attempt with current payload
+                            savedData = await addToDB(db, payload);
+                        } catch (dbError) {
+                            console.warn('First attempt failed, retrying without base64:', dbError);
+
+                            // Second attempt: remove base64, keep blob and thumbnail
+                            try {
+                                delete payload.base64;
+                                savedData = await addToDB(db, payload);
+                            } catch (retryError) {
+                                alert(`Failed to save "${file.name}". Possible causes:\n- Storage quota exceeded\n- Private browsing mode\n- File too large\n\nThis file will be skipped.`);
+                                throw retryError;
+                            }
+                        }
+
+                        const { id, timestamp } = savedData;
+                        await saveCountIndex(databases);
+
+                        newMedia.push({
+                            id,
+                            timestamp,
+                            blobData: blob,
+                            thumbnailBlob: payload.thumbnailBlob || null,
+                            base64Data: payload.base64 || null,
+                            isVideo: file.type.startsWith('video/')
+                        });
+
+                        resolve({ id, timestamp });
+                    } catch (err) {
+                        reject(err);
+                    }
+                };
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(file);
+            });
+        };
+
+        let loadingSpinner = document.createElement('div');
+        loadingSpinner.className = 'loading-screen';
+        loadingSpinner.style.position = 'absolute';
+
+        document.querySelectorAll('body main').forEach(main => {
+            if (main)
+                main.style.filter = 'brightness(50%)';
+        });
+
+        document.documentElement.appendChild(loadingSpinner);
+
+        for (const file of files) {
+            await processFile(file);
+        }
+
+        loadingSpinner.remove();
+        document.querySelectorAll('body main').forEach(main => {
+            if (main)
+                main.style.filter = 'none';
+        });
+        event.target.value = null;
+
+        const activeContainers = mediaContainer.querySelectorAll('.data-container.active');
+        if (activeContainers.length > 0) {
+            for (const container of activeContainers) {
+                container.classList.remove('active');
+                const element = container.querySelector('img, iframe, video, initial');
+                const id = element ? parseInt(element.getAttribute('id'), 10) : null;
+                if (id) {
+                    await updateActiveState(db, id, false).catch(err => {
+                        alert(`Update failed for id ${id}: ${err}`);
+                    });
+                }
+            }
+        }
+
+        newMedia.reverse();
+        for (const { id, timestamp, blobData, thumbnailBlob, base64Data, isVideo } of newMedia) {
+            console.log(id);
+            const active = id === newMedia[0].id;
+            const baseBlob = blobData && (active || !thumbnailBlob) ? blobData : thumbnailBlob;
+            const base64 = base64Data;
+            const container = document.createElement('div');
+            container.className = 'data-container';
+            container.setAttribute('tooltip', '');
+            container.setAttribute('oncontextmenu', 'return false;');
+
+            let thumbnail;
+            let img;
+            let video;
+
+            video = document.createElement('video');
+            video.style.display = "none";
+
+            img = document.createElement('img');
+            img.style.display = "none";
+
+            thumbnail = document.createElement('img');
+            thumbnail.style.display = "none";
+
+            if (isVideo) {
+                let tooltip = null;
+                if (dataBaseObjectStoreName === 'inputs') {
+                    tooltip = document.createElement('div');
+                    tooltip.className = 'tooltip tooltip-fast cursor';
+                    tooltip.textContent = 'Loading...';
+                    tooltip.style.display = 'none';
+                    tooltip.style.position = 'fixed';
+                    function updateTooltipPosition(event) {
+                        tooltip.style.left = `${event.clientX}px`;
+                        tooltip.style.top = `${event.clientY - 15}px`;
+                    }
+                    container.addEventListener('mouseenter', () => document.addEventListener('mousemove', updateTooltipPosition));
+                    container.addEventListener('mouseleave', () => document.removeEventListener('mousemove', updateTooltipPosition));
+                    container.appendChild(tooltip);
+                }
+
+                video = document.createElement('video');
+                video.controls = false;
+                video.preload = "auto";
+                video.muted = true;
+                video.playsInline = true;
+                try { video.disablePictureInPicture = true; } catch (e) { }
+
+                const playbackSrc = baseBlob ? URL.createObjectURL(baseBlob) : (base64 != null ? base64 : '');
+                if (playbackSrc) video.src = playbackSrc;
+                //video.setAttribute('blobRevoke', 'false');
+
+                try {
+                    video.load();
+                    video.pause();
+                } catch (e) { }
+
+                const del = document.createElement('div');
+                del.className = 'delete-icon';
+
+                const set = document.createElement('div');
+                set.className = 'settings-mark';
+
+                container.appendChild(del);
+                container.appendChild(set);
+
+                if (dataBaseObjectStoreName === 'inputs') {
+                    const keepFPS = document.getElementById('keepFPS');
+                    const fpsSlider = document.getElementById("fps-slider");
+                    const removeBanner = document.getElementById("removeBanner");
+
+                    function handleMetadataUpdate(dataFps, dataDuration) {
+                        const tooltip = container.querySelector('.tooltip');
+                        if (tooltip && dataFps) {
+                            tooltip.style.display = 'flex';
+                            const fpsSliderValue = keepFPS && !keepFPS.checked ? fpsSlider.value : 60;
+                            const fps = Math.min(fpsSliderValue, dataFps);
+                            const videoDurationTotalFrames = Math.floor(dataDuration * fps);
+                            const singleCreditForTotalFrameAmount = 120;
+                            const removeBannerStateMultiplier = removeBanner && removeBanner.checked ? 2 : 1;
+                            const neededCredits = Math.floor(
+                                Math.max(1, videoDurationTotalFrames / singleCreditForTotalFrameAmount) *
+                                removeBannerStateMultiplier
+                            );
+                            if (pageName === 'face-swap')
+                                tooltip.textContent = `${neededCredits} Credits`;
+                        }
+                    }
+
+                    calculateMetadata(video, handleMetadataUpdate);
+
+                    video.addEventListener('loadedmetadata', async () => {
+                        await calculateMetadata(video, handleMetadataUpdate);
+                    });
+
+                    [keepFPS, fpsSlider, removeBanner].forEach(el => {
+                        if (el) {
+                            el.addEventListener('change', async () => {
+                                const dataFps = video.getAttribute('data-fps');
+                                handleMetadataUpdate(dataFps, video.duration);
+                            });
+                        }
+                    });
+                }
+            } else {
+                const src = baseBlob ? URL.createObjectURL(baseBlob) : (base64 != null ? base64 : '');
+                //img.setAttribute('blobRevoke', 'false');
+
+                if (active) {
+                    img.style.display = "unset";
+                    if (src) img.src = src;
+                } else {
+                    thumbnail.style.display = "unset";
+                    if (src) thumbnail.src = src;
+                }
+
+                const del = document.createElement('div');
+                del.className = 'delete-icon';
+
+                const set = document.createElement('div');
+                set.className = 'settings-mark';
+
+                if (dataBaseObjectStoreName === 'inputs') {
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'tooltip tooltip-fast cursor';
+                    tooltip.textContent = 'Loading...';
+                    tooltip.style.display = 'none';
+                    tooltip.style.position = 'fixed';
+                    function updateTooltipPosition(event) {
+                        tooltip.style.left = `${event.clientX}px`;
+                        tooltip.style.top = `${event.clientY - 15}px`;
+                    }
+                    container.addEventListener('mouseenter', () => document.addEventListener('mousemove', updateTooltipPosition));
+                    container.addEventListener('mouseleave', () => document.removeEventListener('mousemove', updateTooltipPosition));
+                    container.appendChild(tooltip);
+
+                    if (pageName === 'face-swap') {
+                        const removeBanner = document.getElementById("removeBanner");
+                        function handleMetadataUpdate() {
+                            const t = container.querySelector('.tooltip');
+                            if (t) {
+                                t.style.display = 'flex';
+                                let neededCredits = removeBanner && removeBanner.checked ? 2 : 1;
+                                if (pageName === 'face-swap')
+                                    t.textContent = `${neededCredits} Credits`;
+                            }
+                        }
+                        handleMetadataUpdate();
+                        if (removeBanner) removeBanner.addEventListener('change', () => handleMetadataUpdate());
+                        calculateMetadata(img, null);
+                    }
+                }
+
+                container.appendChild(img);
+                container.appendChild(del);
+                container.appendChild(set);
+            }
+
+            if (isVideo) {
+                video.setAttribute('original', "true");
+                video.setAttribute('timestamp', timestamp || '');
+                video.id = id;
+                container.appendChild(video);
+            } else {
+                img.setAttribute('original', "true");
+                img.setAttribute('timestamp', timestamp || '');
+                img.id = id;
+                container.appendChild(img);
+            }
+
+            thumbnail.setAttribute('original', "false");
+            thumbnail.setAttribute('timestamp', timestamp || '');
+            thumbnail.id = id;
+            container.appendChild(thumbnail);
+
+            if (id === newMedia[0].id) {
+                showNotification(`Activated the last input.`, 'Activation', 'default');
+                container.classList.add('active');
+                if (id) {
+                    if (pageName === 'face-swap') displayStoredData(container, dataBaseObjectStoreName);
+                    await updateActiveState(db, id, true).catch(err => {
+                        alert(`Update failed for id ${id}: ${err}`);
+                    });
+                }
+            }
+            else if (blobData) {
+                if (img) {
+                    //img.addEventListener('load', () => URL.revokeObjectURL(img.src), { once: true });
+                    //img.setAttribute('blobRevoke', 'true');
+                } else if (video) {
+                    video.addEventListener('loadeddata', () => {
+                        //URL.revokeObjectURL(video.src);
+                    }, { once: true });
+                    //video.setAttribute('blobRevoke', 'true');
+                }
+            }
+
+            mediaContainer.insertBefore(container, mediaContainer.firstChild);
+            handleContextMenu(container);
+        }
+
+        localStorage.setItem(`${pageName}_${dataBaseObjectStoreName}-count`, await countInDB(db));
+    } catch (error) {
+        alert(`Upload failed: ${error.message || error}`);
+        console.error(error);
+    }
+};
+
 export const setupFileUpload = async ({
     buttonId,
     inputId,
@@ -14494,34 +14251,16 @@ export const setupFileUpload = async ({
         await changeHandler(e, dataBaseIndexName, dataBaseObjectStoreName, databases);
     });
 };
+
 export async function setClientStatus(message) {
     const outputs = document.querySelector('.outputs');
     if (outputs && outputs.firstChild) {
         const processTextElement = outputs.firstChild.querySelector('.process-text');
         if (processTextElement) {
-            processTextElement.textContent = message;
+            processTextElement.textContent = message
         }
     }
-
-    if (/exceeded/i.test(message) && /quota/i.test(message)) {
-        alert(
-            `Storage quota exceeded.
-
-Possible fixes:
-• Update your browser
-• Try different browser
-• Third-party cookie/storage blocking
-• Open disk space on the device
-• Clear site data (Application → Storage → Clear site data)
-• Enable persistent storage
-• Avoid incognito/private mode
-• OS/browser storage restrictions (enterprise policies, iOS limits)
-• Close other tabs using heavy storage
-• Try another browser/profile`
-        );
-    }
 }
-
 export const setProcessText = (element, message) => {
     const processTextElement = element.querySelector('.process-text');
     if (processTextElement)
@@ -14545,15 +14284,20 @@ function updateGenerateButtonText() {
         handleProcessBtn.disabled = false;
     }
 
-    if (pageName === 'video-generator' || pageName === 'video-extender' || pageName === 'inpaint' || pageName === 'art-generator') {
+    if (pageName === 'video-generator' || pageName === 'inpaint' || pageName === 'art-generator') {
         const quality = getCheckedCheckboxIdFromCombobox('quality', 3);
         const duration = getCheckedCheckboxIdFromCombobox('duration', 3);
         const model = getCheckedCheckboxIdFromCombobox('model', '1.5');
-        const removeBanner = document.getElementById('removeBanner')?.checked || true;
+        const removeBanner = document.getElementById('removeBanner').checked;
+        const audioContainer = document.getElementById('audioContainer');
+        if (audioContainer) {
+            const generateAudio = document.getElementById('generateAudio').checked;
+            audioContainer.style.display = !generateAudio ? 'none' : 'unset';
+        }
 
         let neededCredits = 1;
 
-        const activeInput = document.querySelector(".inputs .data-container.active")?.querySelector('[original="true"]');
+        const activeVideoInput = document.querySelector(".inputs .data-container.active video");
         const referenceImageCheckbox = document.getElementById('referenceImageMethod');
         if (referenceImageCheckbox) {
             /*const promptMethodCheckbox = document.getElementById('promptMethod');
@@ -14572,14 +14316,14 @@ function updateGenerateButtonText() {
             referenceImageCheckbox.checked = false;
         }
 
-        if (pageName === 'video-generator' || pageName === 'video-extender' || activeInput?.tagName.toLowerCase() === 'video') {
+        if (pageName === 'video-generator' || activeVideoInput) {
             neededCredits *= Number(duration);
             neededCredits *= 1 + (Number(quality) - 1) * 0.5;
         }
 
         if (removeBanner) neededCredits *= 2;
 
-        if (pageName === 'video-generator' || pageName === 'video-extender')
+        if (pageName === 'video-generator')
             neededCredits /= 2;
         neededCredits = Math.max(1, Math.round(neededCredits));
 
@@ -14723,8 +14467,6 @@ export async function checkServerStatus(databases = null, userId = null) {
     });
 
     const results = await Promise.all(serverPromises);
-    console.log(results);
-
     if (serverListContainer) {
         serverListContainer.innerHTML = '';
         results.forEach((serverData, serverIndex) => {
@@ -14744,8 +14486,8 @@ export async function checkServerStatus(databases = null, userId = null) {
 
     updateGenerateButtonText();
 
-    if (pageName === 'video-generator' || pageName === 'video-extender' || pageName === 'inpaint' || pageName === 'art-generator') {
-        ['removeBanner', 'enhanceResolution', 'enhanceDetails'].forEach(id => {
+    if (pageName === 'video-generator' || pageName === 'inpaint' || pageName === 'art-generator') {
+        ['removeBanner', 'enhanceResolution', 'enhanceDetails', 'generateAudio'].forEach(id => {
             if (id) {
                 const el = document.getElementById(id);
                 if (el) el.addEventListener('change', updateGenerateButtonText);
@@ -14767,54 +14509,17 @@ export async function checkServerStatus(databases = null, userId = null) {
     }
 
     function updateActiveModels(results) {
-        // 1) compute first active per type from results (normalized)
-        const firstActiveByType = {};
-        for (const r of results) {
-            if (!r.currentModel) continue;
-            const parts = String(r.currentModel).trim().split(/\s+/); // ["realistic", "XL-Master.safetensors"]
-            const type = parts[0].toLowerCase();
-            if (!firstActiveByType[type]) firstActiveByType[type] = r.currentModel;
-        }
-
         const allCheckboxes = document.querySelectorAll('.rectangle-container input[type="checkbox"]');
-
         allCheckboxes.forEach(checkbox => {
-            const parent = checkbox.closest('label') || checkbox.parentElement || checkbox;
-            // find the rectangle that contains this checkbox (scoped type)
-            const rectangle = checkbox.closest('.rectangle');
-            // fallback: try deriving from checkbox id (legacy)
-            const fallbackType = (checkbox.id || '').trim().split(/\s+/)[0] || '';
-            const checkboxType = (rectangle?.id?.split(/\s+/)[0] || fallbackType).toLowerCase();
-
-            // store original id once so we can restore it later
-            if (!checkbox.dataset.originalId) {
-                checkbox.dataset.originalId = checkbox.id ?? '';
-            }
-
-            const originalId = checkbox.dataset.originalId;
-
-            // if original contains lastUsedModel (space or dash variants), we'll attempt to override
-            const isLastUsed = /lastUsedModel$/i.test(originalId) || /\blastUsedModel\b/i.test(originalId);
-
-            // determine resolved id (firstActive model for this checkbox's type)
-            const resolvedForType = firstActiveByType[checkboxType] ?? null;
-
-            // apply resolved id if available, otherwise restore original
-            if (isLastUsed && resolvedForType) {
-                // set the actual DOM id to the resolved model id
-                checkbox.id = resolvedForType;
-            } else {
-                // restore original id (if we had overridden it previously)
-                checkbox.id = originalId;
-            }
-
-            // now decide active state based on the current effective id
-            const effectiveId = checkbox.id;
-
-            const isActive = results.some(r => r.currentModel === effectiveId);
-
-            // update/check visual status-dot and container (same logic as you had)
+            const parent = checkbox.parentElement;
             const container = parent.querySelector('.model-container');
+
+            const isActive = results.some(r => {
+                if (!r.currentModel)
+                    return false;
+                return r.currentModel === checkbox.id;
+            });
+
             if (isActive) {
                 let wrapper = container;
                 if (!wrapper) {
@@ -14833,15 +14538,12 @@ export async function checkServerStatus(databases = null, userId = null) {
                     dot.textContent = '●';
                     wrapper.appendChild(dot);
                 }
-                // optionally mark checkbox checked if it's active
-                // checkbox.checked = true;
             } else {
                 if (container) {
                     const modelSpan = container.querySelector('.model-name');
                     if (modelSpan) parent.appendChild(modelSpan);
                     container.remove();
                 }
-                // checkbox.checked = false; // optional
             }
         });
     }
@@ -14904,17 +14606,15 @@ function has24HoursPassed(lastCreditEarned, currentTime) {
     return currentTime - lastCreditEarned >= 24 * 60 * 60 * 1000;
 }
 
-export function getCheckedCheckboxIdFromCombobox(comboboxId, defaultValue) {
+export function getCheckedCheckboxIdFromCombobox(comboboxId, callback) {
     const container = document.getElementById(comboboxId);
-    if (!container) return defaultValue;
+    if (!container) return callback;
 
     const checkedItem = container.querySelector('li.item.checked');
-    if (!checkedItem) return defaultValue;
+    if (!checkedItem) return callback;
 
     const checkbox = checkedItem.querySelector('input[type="checkbox"]');
-    if (!checkbox || checkbox.disabled) return defaultValue;
-
-    return checkbox.id;
+    return checkbox ? checkbox.id : callback;
 }
 
 export function cannotBeBanned(userDoc) {

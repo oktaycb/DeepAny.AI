@@ -38,14 +38,14 @@
         }
     </style>
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-    <link rel="shortcut icon" href="/favicon.ico?v=5.4.7" />
+    <link rel="shortcut icon" href="/favicon.ico?v=8.7.6.5" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="stylesheet" href="css/styles.css?v=5.4.7">
+    <link rel="stylesheet" href="css/styles.css?v=8.7.6.5">
     <script>
         (() => {
             if (!localStorage.getItem('version')) {
-                localStorage.setItem('version', '5.4.7');
+                localStorage.setItem('version', '8.7.6.5');
                 return;
             }
 
@@ -98,13 +98,13 @@
             };
 
             checkVersion(); //.then(() => history.replaceState(null, '', location.pathname + location.search.replace(/([?&])v=[^&]*(&|$)/, (m, sep, end) => sep === '?' && end ? '?' : sep === '&' && end ? '' : '')));
-            setInterval(checkVersion, 1 * 60 * 1000);
+            setInterval(checkVersion, 3 * 60 * 1000);
         })();
     </script>
 </head>
 <body lang="en">
     <script type="module" defer>
-        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '5.4.7';
+        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '8.7.6.5';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -266,9 +266,11 @@
                                                             <p>3.1. The Customer may purchase a subscription or credits via the DeepAny website using specified payment methods.</p>
                                                             <p>3.2. During the subscription, the Customer is entitled to unlimited use of our services.</p>
                                                             <p>3.3. Credits purchased have no limited usage period and can be used across services.</p>
-                                                            <p>3.4. Users can only have a singular main account.</p>
+                                                            <p>3.4. Users may only maintain one main account. Creating or operating multiple accounts may result in restrictions or suspension of all associated accounts.</p>
                                                             <p><strong>4. REFUND AND REIMBURSEMENT</strong></p>
-                                                            <p>4.1. No refunds are provided for purchased subscriptions and credits.</p>
+                                                            <p>4.1. While subscriptions and credits are generally non-refundable, we want every user to have a positive experience.
+                                                            If you encounter a technical issue or believe you were charged in error, please contact us and we will work with you to resolve the situation.
+                                                            Depending on the circumstances, this may include issuing a refund, extending your subscription, or restoring missing purchase details.</p>
                                                             <p>4.2. Credits may be refunded in case of poor results, subject to evaluations by DeepAny.</p>
                                                             <p><strong>5. USE OF SERVICES</strong></p>
                                                             <p>5.1. To use services, the Customer must adhere to rules on the DeepAny website.</p>
@@ -285,7 +287,7 @@
                                                         <div class="faq-section">
                                                             <h3 class="bold">PRIVACY POLICY</h3>
                                                             <p><strong>1. INFORMATION COLLECTION</strong></p>
-                                                            <p>We collect personal information when you use our services, including but not limited to name, email address, and usage data. This information is used to provide, improve, and personalize your experience with our services.</p>
+                                                            <p>We collect a small amount of personal information—such as your email address and basic usage data—so we can operate the service, keep your account secure, and improve your overall experience. We only collect what is necessary and never use your information for unrelated purposes.</p>
                                                             <p><strong>2. DATA USAGE</strong></p>
                                                             <p>Your data may be used for customer support, communication, and marketing purposes. We do not sell your personal data to third parties.</p>
                                                             <p><strong>3. DATA SECURITY</strong></p>
@@ -325,23 +327,36 @@
 
                                                             <h4 class="bold">Guidelines for Usage</h4>
                                                             <ul>
-                                                              <li>Only use media for which you have legal rights.</li>
+                                                              <li>Only use media for which you have legal rights and permissions.</li>
                                                               <li>Do not violate the privacy or rights of individuals without explicit consent.</li>
-                                                              <li>Users are solely responsible for their creations.</li>
-                                                              <li>No pornographic, erotic, or explicit sexual content may be generated or should be uploaded. Any attempts to create such content will be blocked.</li>
+                                                              <li>Users are solely responsible for the content they create or upload.</li>
+                                                              <li>
+                                                                Absolutely <strong>no child sexual abuse material (CSAM)</strong> may be generated, uploaded, or requested.
+                                                                This includes any sexualized depiction of a minor, real or fictional.
+                                                                Attempts to create, upload, or manipulate content involving minors in a sexual context will be blocked and reported when required by law.
+                                                              </li>
                                                             </ul>
 
                                                             <h4 class="bold">Content Review &amp; Moderation</h4>
-                                                            <p>We employ both automated filters and manual review to enforce our content policy. Any upload or generation request that is flagged as prohibited (including nudity or explicit acts) will be rejected and removed.</p>
-                                                            <p>Violations of this policy may result in suspension or termination of your account. We reserve the right to refuse service for any user-generated content that breaches these terms.</p>
-                                                            <p>If you request a refund for a standard processing failure (poor quality, technical errors), you will receive a full refund of the process cost. Refunds are not issued for content-policy violations.</p>
+                                                            <p>
+                                                              We employ automated systems and prevent CSAM.
+                                                              Any upload or generation request that is flagged as involving minors in a sexualized manner will be immediately rejected and removed.
+                                                            </p>
+                                                            <p>
+                                                              Violations of this policy may result in account suspension or termination.
+                                                              We reserve the right to refuse service for any content that breaches these terms, especially anything related to CSAM.
+                                                            </p>
+                                                            <p>
+                                                              If you request a refund for standard processing issues (poor quality, technical errors), you will receive a full refund of the process cost.
+                                                              Refunds are not issued for CSAM-related violations.
+                                                            </p>
 
                                                             <h4 class="bold">Data Retention &amp; Privacy</h4>
-                                                            <p>Your uploads and generated outputs are stored for up to two days for processing and potential review. Data is encrypted and accessible only by our moderation team unless you grant further permission.</p>
+                                                            <p>Your uploads and generated outputs are stored for up to 6 hours to two days for processing and potential review. Data is encrypted and accessible only by our moderation team unless you grant further permission.</p>
 
                                                             <h4 class="bold">Intellectual Property</h4>
-                                                            <p>You retain ownership of the content you upload. We obtain no rights to your original media beyond what is necessary to provide services.</p>
-                                                            <p>If you ever lose access to your files, please contact an administrator within two days for retrieval assistance.</p>
+                                                            <p>You retain ownership of the media you upload. We obtain no rights to your content beyond what is necessary to provide the service.</p>
+                                                            <p>If you lose access to your files, please contact an administrator within two days for retrieval assistance.</p>
 
                                                             <h4 class="bold">Disclaimer</h4>
                                                             <p>This platform is provided "as is." We make no warranties regarding accuracy, reliability, or availability of the AI technology. We are not responsible for misuse or harm resulting from generated content.</p>
@@ -352,14 +367,14 @@
 
                                                           <div class="contact-info">
                                                             <h3 class="bold">Contact Information</h3>
-                                                            <p><strong>Operated by:</strong> DeepAny LLC</p>
-                                                            <p><strong>Address:</strong><br>
+                                                            <p style="display: unset;"><strong>Operated by:</strong> DeepAny LLC</p>
+                                                            <p style="display: unset;"><strong>Address:</strong><br>
                                                               1209 Mountain Road Pl NE, Ste N<br>
                                                               Albuquerque, NM 87110<br>
                                                               United States
                                                             </p>
                                                             <p><strong>Email:</strong> official@deepany.ai</p>
-                                                            <p><strong>Phone:</strong> +1 585 684 3593</p>
+                                                            <p style="display: unset;"><strong>Phone:</strong> +1 585 684 3593</p>
                                                           </div>
                                                         </div>
                                                     </div>

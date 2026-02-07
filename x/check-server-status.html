@@ -16,7 +16,7 @@
     <script>
         (() => {
             if (!localStorage.getItem('version')) {
-                localStorage.setItem('version', '5.4.7');
+                localStorage.setItem('version', '8.7.6.5');
                 return;
             }
 
@@ -69,7 +69,7 @@
             };
 
             checkVersion(); //.then(() => history.replaceState(null, '', location.pathname + location.search.replace(/([?&])v=[^&]*(&|$)/, (m, sep, end) => sep === '?' && end ? '?' : sep === '&' && end ? '' : '')));
-            setInterval(checkVersion, 1 * 60 * 1000);
+            setInterval(checkVersion, 3 * 60 * 1000);
         })();
     </script>
 </head>
@@ -80,7 +80,7 @@
     <script type="module" defer>
         const version = new URLSearchParams(window.location.search).get('version')
             || localStorage.getItem('version')
-            || '5.4.7';
+            || '8.7.6.5';
         const pageName = 'check-server-status'; // Adjust if different
 
         async function loadModule(url) {
@@ -110,10 +110,12 @@
 
             async function cancelProcess(showAlertion, userSrv) {
                 try {
-                    const processToken = localStorage.getItem('processToken');
-                    console.log(userData.uid);
-                    console.log(processToken);
-                    console.log(userSrv);
+                    const userToken = localStorage.getItem('userToken');
+                    const processToken = userToken;
+                    if (processToken === 'null') {
+                        alert(`Token expired, please login again to confirm ownership of the account.`, 'Upload', 'information');
+                        return;
+                    }
 
                     try {
                         const response = await fetchWithRandom(`${userSrv}/cancel-process`, {

@@ -169,15 +169,15 @@
             ]
         }
     </script>
-    <link rel="stylesheet" href="css/styles.css?v=5.4.7">
+    <link rel="stylesheet" href="css/styles.css?v=8.7.6.5">
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-    <link rel="shortcut icon" href="/favicon.ico?v=5.4.7" />
+    <link rel="shortcut icon" href="/favicon.ico?v=8.7.6.5" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <script>
         (() => {
             if (!localStorage.getItem('version')) {
-                localStorage.setItem('version', '5.4.7');
+                localStorage.setItem('version', '8.7.6.5');
                 return;
             }
 
@@ -230,14 +230,14 @@
             };
 
             checkVersion(); //.then(() => history.replaceState(null, '', location.pathname + location.search.replace(/([?&])v=[^&]*(&|$)/, (m, sep, end) => sep === '?' && end ? '?' : sep === '&' && end ? '' : '')));
-            setInterval(checkVersion, 1 * 60 * 1000);
+            setInterval(checkVersion, 3 * 60 * 1000);
         })();
     </script>
 </head>
 <body lang="en">
     <div id="paymentContainer" style="margin: 0; padding: 0; overflow: hidden; display: none; width: 100%; height: 100vh; position: absolute; z-index: 99999;"></div>
     <script type="module" defer>
-        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '5.4.7';
+        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '8.7.6.5';
 
         async function loadModule(url) {
             return import(`${url}?v=${version}`);
@@ -245,7 +245,7 @@
 
         document.addEventListener('DOMContentLoaded', async function () {
             const functions = await loadModule('./scripts/functions.js');
-            const { fetchWithRandom, showNotification, createSectionAndElements, getUserData, setCache, getCache, getPageName, setUser, setAuthentication, fetchConversionRates, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol } = functions;
+            const { fetchWithRandom, fetchPricingDataInBackground, showNotification, createSectionAndElements, getUserData, setCache, getCache, getPageName, setUser, setAuthentication, fetchConversionRates, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, loadPageContent, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol } = functions;
 
             const pageName = getPageName();
 
@@ -270,31 +270,30 @@
                                                                                                                                                                  <li class="item">
                                                                                                                                                                      <label class="checkbox" tooltip>
                                                                                                                                                                          <input type="checkbox" value="allInOne"><span>All in one</span>
-                                                                                                                                                                         <div class="tooltip" style="width: max-content;">You can use every product with this plan.</div>
                                                                                                                                                                      </label>
                                                                                                                                                                  </li>
                                                                                                                                                                  <li class="item">
                                                                                                                                                                      <label class="checkbox" tooltip>
-                                                                                                                                                                         <input type="checkbox" value="faceSwap"><span>Face Swap</span>
-                                                                                                                                                                         <div class="tooltip" style="width: max-content;">You can only use face swap with this plan.</div>
+                                                                                                                                                                         <input type="checkbox" value="faceSwap"><span>Swap</span>
+                                                                                                                                                                         <div class="tooltip" style="width: max-content;">For Face Swap, Full-Body Swap tasks.</div>
                                                                                                                                                                      </label>
                                                                                                                                                                  </li>
                                                                                                                                                                  <li class="item">
                                                                                                                                                                      <label class="checkbox" tooltip>
-                                                                                                                                                                         <input type="checkbox" value="videoGenerator"><span>Video Generator</span>
-                                                                                                                                                                         <div class="tooltip" style="width: max-content;">You can only use video generator with this plan.</div>
+                                                                                                                                                                         <input type="checkbox" value="videoGenerator"><span>Video</span>
+                                                                                                                                                                         <div class="tooltip" style="width: max-content;">For Video Generation tasks.</div>
                                                                                                                                                                      </label>
                                                                                                                                                                  </li>
                                                                                                                                                                  <li class="item">
                                                                                                                                                                      <label class="checkbox" tooltip>
-                                                                                                                                                                         <input type="checkbox" value="inpaint"><span>Inpainter</span>
-                                                                                                                                                                         <div class="tooltip" style="width: max-content;">You can only use inpainter with this plan.</div>
+                                                                                                                                                                         <input type="checkbox" value="inpaint"><span>Inpaint</span>
+                                                                                                                                                                         <div class="tooltip" style="width: max-content;">For Inpaint Anything, Qwen Edit tasks.</div>
                                                                                                                                                                      </label>
                                                                                                                                                                  </li>
                                                                                                                                                                  <li class="item">
                                                                                                                                                                      <label class="checkbox" tooltip>
-                                                                                                                                                                         <input type="checkbox" value="artGenerator"><span>Art Generator</span>
-                                                                                                                                                                         <div class="tooltip" style="width: max-content;">You can only use art generator with this plan.</div>
+                                                                                                                                                                         <input type="checkbox" value="artGenerator"><span>Image</span>
+                                                                                                                                                                         <div class="tooltip" style="width: max-content;">For Art Generator, Edit, Upscale, Colorize tasks.</div>
                                                                                                                                                                      </label>
                                                                                                                                                                  </li>
                                                                                                                                                              </ul>
@@ -303,7 +302,7 @@
 
                                                                                                                                                 <div class="background-container">
                                                                                                                                                     <p class="background-dot-container-option" payment-provider="STRIPE" translate="no">Stripe</p>
-                                                                                                                                                    <p class="background-dot-container-option not-available" payment-provider="PAYPAL" translate="no">Paypal</p>
+                                                                                                                                                    <p class="background-dot-container-option" payment-provider="PAYBLIS" translate="no">Payblis</p>
                                                                                                                                                     <p class="background-dot-container-option" payment-provider="COINBASE" translate="no">Coinbase</p>
                                                                                                                                                 </div>
 
@@ -318,7 +317,7 @@
                                                                                                                                     <div class="background-container" style="display: flex;flex-direction: column;align-items: stretch;height: 100%;">
                                                                                                                                         <div style="display: flex; gap: calc((1vh* var(--scale-factor-h) + 2vw / 2 * var(--scale-factor-w)));height: 100%;">
                                                                                                                                             <a class="background-dot-container">
-                                                                                                                                                <div class="background-dot-container-content" style="min-width: calc((50vh* var(--scale-factor-h) + 50vw / 2 * var(--scale-factor-w)));">
+                                                                                                                                                <div class="background-dot-container-content" id="pricingSectionContainer" style="min-width: calc((75vh* var(--scale-factor-h) + 50vw / 2 * var(--scale-factor-w)));max-width: 100%;">
                                                                                                                                                     <div class="background-container" style="grid: unset; display: grid;grid-template-columns: 1fr 1fr;">
                                                                                                                                                         <input type="range" id="slider" min="1" max="9" step="1" value="1"></input>
                                                                                                                                                         <p class="slider-value">1 day</p>
@@ -355,6 +354,7 @@
                                                                                                                                                                 <p id="fps-value">30 faceSwapFPS</p>
                                                                                                                                                             </div>
                                                                                                                                                         <ul id="capability-list" style="display: flow;background: transparent;"></ul>
+                                                                                                                                                        <div class="line"></div>
                                                                                                                                                     </div>
                                                                                                                                                 </div>
                                                                                                                                             </a>
@@ -371,7 +371,23 @@
             let pricingData = {};
 
             function setPricingData(data) {
-                pricingData = data || [];
+                const normalized = data && data.data ? data.data : data;
+                if (!normalized || typeof normalized !== 'object' || Array.isArray(normalized)) {
+                    console.warn('setPricingData: received invalid pricing data, using empty default.', data);
+                    return;
+                }
+
+                const existing = JSON.stringify(pricingData);
+                const incoming = JSON.stringify(normalized);
+
+                if ((pricingData && typeof pricingData !== 'object' && Array.isArray(pricingData)) && existing !== incoming) {
+                    console.warn("Pricing changed — reloading page...");
+                    pricingData = normalized;
+                    setTimeout(() => location.reload(), 100);
+                    return;
+                }
+
+                pricingData = normalized;
             }
 
             const serverDocSnapshot = () => getDocSnapshot('servers', '3090-1');
@@ -388,6 +404,7 @@
                     setPricingData(cachedData);
                 } else {
                     try {
+                        console.log('Waiting response!');
                         const response = await fetchWithRandom(`${serverAddressPayment}/get-pricing`, {
                             method: 'POST',
                             headers: {
@@ -399,6 +416,7 @@
                         if (!response.ok) {
                             throw new Error(`HTTP error! status: ${response.status}`);
                         }
+                        console.log('Got response!');
 
                         const responseData = await response.json();
                         setCache(cacheKey, responseData.data, 1 * 24 * 60 * 60 * 1000);
@@ -408,32 +426,15 @@
                     }
                 }
 
-                fetchPricingDataInBackground();
-            }
-
-            async function fetchPricingDataInBackground() {
-                try {
-                    const response = await fetchWithRandom(`${serverAddressPayment}/get-pricing`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({})
-                    });
-
-                    if (response.ok) {
-                        const responseData = await response.json();
-                        setCache(`pricingData_${version}`, responseData.data, 1 * 24 * 60 * 60 * 1000);
-                        setPricingData(responseData.data);
-                    }
-                } catch (error) {
-                    alert('Error while refreshing the pricing data: ' + error.message);
-                }
+                (async () => {
+                    const data = await fetchPricingDataInBackground(serverAddressPayment);
+                    setPricingData(data);
+                })();
             }
 
             await getPricingData();
 
-            let conversionRates = await fetchConversionRates();
+            let conversionRates = 1; // await fetchConversionRates();
 
             window.addEventListener('beforeunload', () => {
                 if (!conversionRates)
@@ -550,9 +551,8 @@
 
                 /*----------------------------------------------
                  * Constants for Video Generator Capability
-                 * (Using new logic: 1s = 2 credits and 16 frames per second)
                  ----------------------------------------------*/
-                const videoCreditsPerSecond = 2;
+                const videoCreditsPerSecond = 1;
 
                 /*----------------------------------------------
                  * Credit multipliers for other features
@@ -610,9 +610,9 @@
                     const remainingSeconds = Math.floor(durationSeconds % secondsPerMinute);
                     const totalFrames = durationSeconds * videoFPS;
                     if (shortDescription) {
-                        return `${durationMinutes} mins ${remainingSeconds} sec (${videoFPS} fps)`;
+                        return `${durationMinutes} mins ${remainingSeconds} sec`;
                     } else {
-                        return `${credits} credits → ${totalFrames} frames at ${videoFPS} fps (${durationMinutes} mins ${remainingSeconds} sec)`;
+                        return `${credits} credits → ${totalFrames} frames (${durationMinutes} mins ${remainingSeconds} sec)`;
                     }
                 };
 
@@ -671,7 +671,7 @@
                     // Art Generation capability.
                     if (selectedPackage === 'allInOne' || selectedPackage === 'artGenerator') {
                         capabilities.artGeneration = {
-                            name: "Art Generator",
+                            name: "Image Tasks",
                             formula: credits => getArtFormula(shortDescription, credits)
                         };
                     }
@@ -740,14 +740,55 @@
                 return checkbox ? checkbox.value : 'allInOne';
             }
 
+            // Replace original getPricing() with this safe wrapper
             function getPricing() {
-                return pricingData[getSelectedPlan()];
+                const planKey = getSelectedPlan();
+
+                // safe defaults (these minimal arrays match how UI expects lengths)
+                const defaultPlan = {
+                    prices: ['Error', 'Error', 'Error', 'Error', 'Error', 'Error', 'Error', 'Error', 'Error'],
+                    discountedSubprices: ['Error', 'Error', 'Error', 'Error', 'Error', 'Error', 'Error', 'Error', 'Error'],
+                    subprices: ['Error', 'Error', 'Error', 'Error', 'Error', 'Error', 'Error', 'Error', 'Error'],
+                    credits: ['Error', 'Error', 'Error', 'Error', 'Error', 'Error', 'Error', 'Error', 'Error'],
+                    durations: ['Error', 'Error', 'Error', 'Error', 'Error', 'Error', 'Error', 'Error', 'Error'],
+                    durationsInDays: ['Error', 'Error', 'Error', 'Error', 'Error', 'Error', 'Error', 'Error', 'Error']
+                };
+
+                console.log(pricingData);
+                const p = (pricingData && pricingData[planKey]) ? pricingData[planKey] : null;
+                if (!p) {
+                    return defaultPlan;
+                }
+
+                // make sure arrays exist; if not, fill with defaults so index access is safe
+                return {
+                    prices: Array.isArray(p.prices) ? p.prices : defaultPlan.prices,
+                    discountedSubprices: Array.isArray(p.discountedSubprices) ? p.discountedSubprices : defaultPlan.discountedSubprices,
+                    subprices: Array.isArray(p.subprices) ? p.subprices : defaultPlan.subprices,
+                    credits: Array.isArray(p.credits) ? p.credits : defaultPlan.credits,
+                    durations: Array.isArray(p.durations) ? p.durations : defaultPlan.durations,
+                    durationsInDays: Array.isArray(p.durationsInDays) ? p.durationsInDays : defaultPlan.durationsInDays
+                };
             }
 
-            function calculatePrice(value) { return getPricing().prices[value - 1]; }
-            function calculateDiscountSubPrice(value) { return getPricing().discountedSubprices[value - 1]; }
-            function calculateSubPrice(value) { return getPricing().subprices[value - 1]; }
-            function calculateCredit(value) { return getPricing().credits[value - 1]; }
+
+            function calculatePrice(value) {
+                const pricing = getPricing();
+                return pricing.prices[value - 1] ?? 0;
+            }
+            function calculateDiscountSubPrice(value) {
+                const pricing = getPricing();
+                return pricing.discountedSubprices[value - 1] ?? 0;
+            }
+            function calculateSubPrice(value) {
+                const pricing = getPricing();
+                return pricing.subprices[value - 1] ?? 0;
+            }
+            function calculateCredit(value) {
+                const pricing = getPricing();
+                return pricing.credits[value - 1] ?? 0;
+            }
+
 
             function updatePlan(plan) {
                 document.getElementById('plan-name').textContent = plan.name;
@@ -826,13 +867,25 @@
             const ACTUAL = 0;
             const DISCOUNT = 1;
 
+            const ScreenMode = Object.freeze({
+                PHONE: 3,
+                PC: 1,
+            });
+
+            // function to unset min-width and max-width on mobile
+            function unsetPricingSectionMobile() {
+                const container = document.getElementById('pricingSectionContainer');
+                if (!container) return;
+
+                if (getScreenMode() === ScreenMode.PHONE) {
+                    container.style.minWidth = '';
+                    container.style.maxWidth = '';
+                }
+            }
+
             async function createPayment() {
                 createSectionAndElements();
-
-                const ScreenMode = Object.freeze({
-                    PHONE: 3,
-                    PC: 1,
-                });
+                unsetPricingSectionMobile();
 
                 const baseContainer = document.getElementById('baseContainer');
                 if (baseContainer)
@@ -843,7 +896,7 @@
 
                 const selectedPaymentProviderElement = document.querySelector('.background-dot-container-option.selected[payment-provider]');
                 let selectedPaymentProvider = selectedPaymentProviderElement ? selectedPaymentProviderElement.getAttribute('payment-provider') : 'PAYTR';
-                let taxAmt = selectedPaymentProvider === 'PAYTR' ? 3.59 : 1.01;
+                let taxAmt = selectedPaymentProvider === 'STRIPE' ? 7.0 : selectedPaymentProvider === 'STRIPE' ? 2.89 : 0.01;
 
                 const sliderElement = document.getElementById("slider");
                 const subscriptionMode = document.getElementById("subscription-mode");
@@ -961,7 +1014,7 @@
 
                             const selectedPaymentProviderElement = document.querySelector('.background-dot-container-option.selected[payment-provider]');
                             selectedPaymentProvider = selectedPaymentProviderElement ? selectedPaymentProviderElement.getAttribute('payment-provider') : 'PAYTR';
-                            taxAmt = selectedPaymentProvider === 'STRIPE' ? 2.89 : 0.01;
+                            taxAmt = selectedPaymentProvider === 'PAYBLIS' ? 7.0 : selectedPaymentProvider === 'STRIPE' ? 2.89 : 0.01;
                             const centsFee = selectedPaymentProvider === 'STRIPE' ? ' + 30¢ + VAT' : '';
 
                             currencySymbol = getCurrencySymbol(selectedCurrency);
@@ -1058,7 +1111,7 @@
 
                             const selectedPaymentProviderElement = document.querySelector('.background-dot-container-option.selected[payment-provider]');
                             selectedPaymentProvider = selectedPaymentProviderElement ? selectedPaymentProviderElement.getAttribute('payment-provider') : 'PAYTR';
-                            taxAmt = selectedPaymentProvider === 'STRIPE' ? 2.89 : 0.01;
+                            taxAmt = selectedPaymentProvider === 'PAYBLIS' ? 10.0 : selectedPaymentProvider === 'STRIPE' ? 2.89 : 0.01;
                             const centsFee = selectedPaymentProvider === 'STRIPE' ? ' + 30¢ + VAT' : '';
 
                             currencySymbol = getCurrencySymbol(selectedCurrency);
@@ -1168,12 +1221,32 @@
                 }
 
                 function updateSliderRange() {
-                    if (creditsMode.classList.contains("selected"))
-                        sliderElement.max = getPricing().credits.length;
-                    else sliderElement.max = getPricing().durations.length;
+                    try {
+                        const pricing = getPricing();
+                        if (!pricing) {
+                            console.warn('updateSliderRange: pricing not available yet; leaving slider max unchanged.');
+                            return;
+                        }
 
-                    if (sliderElement.value > sliderElement.max)
-                        sliderElement.value = sliderElement.max;
+                        if (creditsMode.classList.contains("selected")) {
+                            sliderElement.max = Array.isArray(pricing.credits) ? pricing.credits.length : (pricing.credits ? pricing.credits.length : 9);
+                        } else {
+                            // prefer durations array; fallback to durationsInDays; fallback to 9
+                            if (Array.isArray(pricing.durations)) {
+                                sliderElement.max = pricing.durations.length;
+                            } else if (Array.isArray(pricing.durationsInDays)) {
+                                sliderElement.max = pricing.durationsInDays.length;
+                            } else {
+                                sliderElement.max = 9;
+                            }
+                        }
+
+                        if (Number(sliderElement.value) > Number(sliderElement.max)) {
+                            sliderElement.value = sliderElement.max;
+                        }
+                    } catch (err) {
+                        console.error('updateSliderRange failed:', err);
+                    }
                 }
 
                 function updateSliderValue() {
@@ -1241,8 +1314,6 @@
                     }
 
                     const selectedMode = subscriptionMode.classList.contains("selected") ? 'subscription' : 'credits';
-                    const isPaypal = selectedPaymentProvider === 'PAYPAL';
-
                     const requestData = {
                         userId: userData.uid,
                         userEmail: userData.email,
@@ -1253,7 +1324,7 @@
                     };
 
                     const isBTC = selectedPaymentProvider === 'COINBASE';
-                    const backendURL = isBTC ? `${serverAddressAPI}/create-charge` : `${serverAddressPayment}/create-charge`;
+                    const backendURL = isBTC ? `${serverAddressAPI}/create-charge` : selectedPaymentProvider === 'PAYBLIS' ? `${serverAddressPayment}/create-charge-payblis` : `${serverAddressPayment}/create-charge`;
 
                     const response = await fetchWithRandom(backendURL, {
                         method: 'POST',
