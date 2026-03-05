@@ -1,909 +1,485 @@
 <!DOCTYPE html>
-<html lang="en" style="background: rgba(24, 24, 24, 1);" class="loading-screen">
+
+<html class="dark" lang="en">
+
 <head>
-    <link rel="dns-prefetch" href="//deepany.ai">
-    <link rel="preconnect" href="https://deepany.ai" crossorigin>
-
-    <title>DeepAny.AI: Introducing The Best Free Online AI Tools Site</title>
-    <link rel="canonical" href="https://deepany.ai">
-
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="DeepAny.AI is your go-to platform for advanced AI solutions and services, accessible to everyone. Explore our innovative technology and cutting-edge tools to transform your projects. Deep Any AI Service Solutions!">
-    <meta name="keywords" content="ai, deepany, deep, any, deep any, any ai, deep any ai, bodyswap, art generator, face swap, inpaint, bodyswap, deepfake, art generator">
-    <meta name="apple-mobile-web-app-title" content="DeepAny" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="mobile-web-app-capable" content="yes">
-
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://deepany.ai">
-    <meta property="og:locale" content="en_US">
-    <meta property="og:site_name" content="DeepAny.AI">
-    <meta property="og:title" content="DeepAny.AI | AI Service Solutions">
-    <meta property="og:description" content="DeepAny.AI is your go-to platform for advanced AI solutions and services, accessible to everyone!">
-    <meta property="og:image" content="https://deepany.ai/assets/brand.png">
-    <meta property="og:image:alt" content="DeepAny.AI | Brand Logo">
-
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://deepany.ai">
-    <meta property="twitter:title" content="DeepAny.AI | AI Service Solutions">
-    <meta property="twitter:description" content="DeepAny.AI is your go-to platform for advanced AI solutions and services, accessible to everyone!">
-    <meta property="twitter:image" content="https://deepany.ai/assets/brand.png">
-
-    <style id="loading-stylesheet">
-        .loading-screen {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #ff7300;
-            z-index: 999999;
-            border-radius: 50%;
-            width: 50px !important;
-            height: 50px !important;
-            animation: spin 2s linear infinite;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: translate(-50%, -50%) rotate(0deg);
-            }
-
-            100% {
-                transform: translate(-50%, -50%) rotate(360deg);
-            }
-        }
-    </style>
-    <script defer>
-        (function () {
-            if (localStorage.getItem('preloadDone') || window.innerWidth / window.innerHeight <= 4 / 3) {
-                document.currentScript.remove();
-                return;
-            }
-
-            const links = [
-                'assets/resize-large-1.webp',
-                'assets/resize-long-1.webp',
-                'assets/resize-middle-1.webp'
-            ];
-
-            links.forEach(href => {
-                const link = document.createElement('link');
-                link.rel = 'preload';
-                link.href = href;
-                link.as = 'image';
-                document.head.appendChild(link);
-            });
-
-            localStorage.setItem('preloadDone', 'true');
-        })();
-    </script>
-    <link rel="stylesheet" href="css/styles.css?v=8.7.6.5">
-    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-    <link rel="shortcut icon" href="/favicon.ico?v=8.7.6.5" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <link rel="manifest" href="/site.webmanifest" />
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Tensomar | Industrial Rope Tension Monitoring</title>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Tensomar" />
+    <link rel="apple-touch-icon" href="/assets/images/tensomar-logo.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#1152d4" />
     <script>
-        (() => {
-            if (!localStorage.getItem('version')) {
-                localStorage.setItem('version', '8.7.6.5');
-                return;
-            }
-
-            let version = localStorage.getItem('version');
-            let url = new URL(window.location.href);
-            let urlParams = url.searchParams;
-            let urlVersionEncoded = urlParams.get('v');
-
-            if (!urlVersionEncoded || urlVersionEncoded !== version) {
-                urlParams.set('v', version);
-                url.search = urlParams.toString();
-                window.history.replaceState(null, '', url.toString());
-            }
-
-            let checkEnabled = true;
-            let isInitialLoad = true;
-
-            const checkVersion = async () => {
-                if (!checkEnabled) return;
-
-                try {
-                    version = localStorage.getItem('version');
-
-                    const response = await fetch(`${window.location.origin}/version?nocache=${Math.random()}`, { cache: 'no-store' });
-                    const fetchedVersion = (await response.text()).trim();
-
-                    localStorage.setItem('version', fetchedVersion);
-
-                    if (!urlVersionEncoded || urlVersionEncoded != fetchedVersion || version != fetchedVersion) {
-                        if (isInitialLoad) {
-                            urlParams.set('v', fetchedVersion);
-                            url.search = urlParams.toString();
-                            window.location.href = url.toString();
-                        } else {
-                            const confirmed = confirm(`New version available (${fetchedVersion}). Would you like to reload now?`);
-                            if (confirmed) {
-                                urlParams.set('v', fetchedVersion);
-                                url.search = urlParams.toString();
-                                window.location.href = url.toString();
-                            } else {
-                                checkEnabled = false;
-                            }
-                        }
-                    }
-                } catch (err) {
-                    console.error('Version check failed:', err);
-                }
-
-                isInitialLoad = false;
-            };
-
-            checkVersion(); //.then(() => history.replaceState(null, '', location.pathname + location.search.replace(/([?&])v=[^&]*(&|$)/, (m, sep, end) => sep === '?' && end ? '?' : sep === '&' && end ? '' : '')));
-            setInterval(checkVersion, 3 * 60 * 1000);
-        })();
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1152d4",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
     </script>
     <style>
-        .main-container {
-            display: grid;
-            grid-template-rows: 1fr auto;
-            gap: calc(4vh* var(--scale-factor-h));
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .hero-glow {
+            background: radial-gradient(circle at center, rgba(17, 82, 212, 0.15) 0%, transparent 70%);
         }
     </style>
-    <script type="application/ld+json">
-        {
-            "@context": "https://schema.org",
-            "@type": "Review",
-            "itemReviewed": {
-                "@type": "Product",
-                "name": "Deepany AI Services",
-                "url": "https://deepany.ai",
-                "brand": {
-                    "@type": "Organization",
-                    "name": "DeepAny AI",
-                    "url": "https://deepany.ai"
-                },
-                "image": "DeepAny.AI.png",
-                "description": "Check our Trustpilot page for user reviews and experiences.",
-                "aggregateRating": {
-                    "@type": "AggregateRating",
-                    "ratingValue": "4.9",
-                    "reviewCount": "179"
-                },
-                "offers": [
-                    {
-                        "@type": "Offer",
-                        "priceCurrency": "USD",
-                        "price": "9.99",
-                        "shippingDetails": "10 Minutes Or Less.",
-                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
-                        "availability": "https://schema.org/InStock",
-                        "url": "https://deepany.ai/pricing",
-                        "name": "100 Credits",
-                        "priceValidUntil": "2099-12-31",
-                        "shippingRate": {
-                            "@type": "MonetaryAmount",
-                            "value": "0.00",
-                            "currency": "USD"
-                        },
-                        "shippingDestination": {
-                            "@type": "Place",
-                            "name": "User Account"
-                        },
-                        "deliveryTime": {
-                            "@type": "DeliveryTime",
-                            "duration": "PT10M"
-                        }
-                    },
-                    {
-                        "@type": "Offer",
-                        "priceCurrency": "USD",
-                        "price": "19.99",
-                        "shippingDetails": "10 Minutes Or Less.",
-                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
-                        "availability": "https://schema.org/InStock",
-                        "url": "https://deepany.ai/pricing",
-                        "name": "250 Credits",
-                        "priceValidUntil": "2099-12-31",
-                        "shippingRate": {
-                            "@type": "MonetaryAmount",
-                            "value": "0.00",
-                            "currency": "USD"
-                        },
-                        "shippingDestination": {
-                            "@type": "Place",
-                            "name": "User Account"
-                        },
-                        "deliveryTime": {
-                            "@type": "DeliveryTime",
-                            "duration": "PT10M"
-                        }
-                    },
-                    {
-                        "@type": "Offer",
-                        "priceCurrency": "USD",
-                        "price": "24.99",
-                        "shippingDetails": "10 Minutes Or Less.",
-                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
-                        "availability": "https://schema.org/InStock",
-                        "url": "https://deepany.ai/pricing",
-                        "name": "500 Credits",
-                        "priceValidUntil": "2099-12-31",
-                            "shippingRate": {
-                                "@type": "MonetaryAmount",
-                                "value": "0.00",
-                                "currency": "USD"
-                            },
-                            "shippingDestination": {
-                                "@type": "Place",
-                                "name": "User Account"
-                            },
-                            "deliveryTime": {
-                                "@type": "DeliveryTime",
-                                "duration": "PT10M"
-                            }
-                    },
-                    {
-                        "@type": "Offer",
-                        "priceCurrency": "USD",
-                        "price": "44.99",
-                        "shippingDetails": "10 Minutes Or Less.",
-                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
-                        "availability": "https://schema.org/InStock",
-                        "url": "https://deepany.ai/pricing",
-                        "name": "1000 Credits",
-                        "priceValidUntil": "2099-12-31",
-                            "shippingRate": {
-                                "@type": "MonetaryAmount",
-                                "value": "0.00",
-                                "currency": "USD"
-                            },
-                            "shippingDestination": {
-                                "@type": "Place",
-                                "name": "User Account"
-                            },
-                            "deliveryTime": {
-                                "@type": "DeliveryTime",
-                                "duration": "PT10M"
-                            }
-                    },
-                    {
-                        "@type": "Offer",
-                        "priceCurrency": "USD",
-                        "price": "99.99",
-                        "shippingDetails": "10 Minutes Or Less.",
-                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
-                        "availability": "https://schema.org/InStock",
-                        "url": "https://deepany.ai/pricing",
-                        "name": "2500 Credits",
-                        "priceValidUntil": "2099-12-31",
-                            "shippingRate": {
-                                "@type": "MonetaryAmount",
-                                "value": "0.00",
-                                "currency": "USD"
-                            },
-                            "shippingDestination": {
-                                "@type": "Place",
-                                "name": "User Account"
-                            },
-                            "deliveryTime": {
-                                "@type": "DeliveryTime",
-                                "duration": "PT10M"
-                            }
-                    },
-                    {
-                        "@type": "Offer",
-                        "priceCurrency": "USD",
-                        "price": "174.99",
-                        "shippingDetails": "10 Minutes Or Less.",
-                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
-                        "availability": "https://schema.org/InStock",
-                        "url": "https://deepany.ai/pricing",
-                        "name": "5000 Credits",
-                        "priceValidUntil": "2099-12-31",
-                            "shippingRate": {
-                                "@type": "MonetaryAmount",
-                                "value": "0.00",
-                                "currency": "USD"
-                            },
-                            "shippingDestination": {
-                                "@type": "Place",
-                                "name": "User Account"
-                            },
-                            "deliveryTime": {
-                                "@type": "DeliveryTime",
-                                "duration": "PT10M"
-                            }
-                    },
-                    {
-                        "@type": "Offer",
-                        "priceCurrency": "USD",
-                        "price": "299.99",
-                        "shippingDetails": "10 Minutes Or Less.",
-                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
-                        "availability": "https://schema.org/InStock",
-                        "url": "https://deepany.ai/pricing",
-                        "name": "10000 Credits",
-                        "priceValidUntil": "2099-12-31",
-                            "shippingRate": {
-                                "@type": "MonetaryAmount",
-                                "value": "0.00",
-                                "currency": "USD"
-                            },
-                            "shippingDestination": {
-                                "@type": "Place",
-                                "name": "User Account"
-                            },
-                            "deliveryTime": {
-                                "@type": "DeliveryTime",
-                                "duration": "PT10M"
-                            }
-                    },
-                    {
-                        "@type": "Offer",
-                        "priceCurrency": "USD",
-                        "price": "624.99",
-                        "shippingDetails": "10 Minutes Or Less.",
-                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
-                        "availability": "https://schema.org/InStock",
-                        "url": "https://deepany.ai/pricing",
-                        "name": "25000 Credits",
-                        "priceValidUntil": "2099-12-31",
-                            "shippingRate": {
-                                "@type": "MonetaryAmount",
-                                "value": "0.00",
-                                "currency": "USD"
-                            },
-                            "shippingDestination": {
-                                "@type": "Place",
-                                "name": "User Account"
-                            },
-                            "deliveryTime": {
-                                "@type": "DeliveryTime",
-                                "duration": "PT10M"
-                            }
-                    },
-                    {
-                        "@type": "Offer",
-                        "priceCurrency": "USD",
-                        "price": "999.99",
-                        "shippingDetails": "10 Minutes Or Less.",
-                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
-                        "availability": "https://schema.org/InStock",
-                        "url": "https://deepany.ai/pricing",
-                        "name": "50000 Credits",
-                        "priceValidUntil": "2099-12-31",
-                            "shippingRate": {
-                                "@type": "MonetaryAmount",
-                                "value": "0.00",
-                                "currency": "USD"
-                            },
-                            "shippingDestination": {
-                                "@type": "Place",
-                                "name": "User Account"
-                            },
-                            "deliveryTime": {
-                                "@type": "DeliveryTime",
-                                "duration": "PT10M"
-                            }
-                    },
-                    {
-                        "@type": "Offer",
-                        "priceCurrency": "USD",
-                        "price": "19.99",
-                        "shippingDetails": "10 Minutes Or Less.",
-                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
-                        "availability": "https://schema.org/InStock",
-                        "url": "https://deepany.ai/pricing",
-                        "name": "1 Day Subscription",
-                        "priceValidUntil": "2099-12-31",
-                            "shippingRate": {
-                                "@type": "MonetaryAmount",
-                                "value": "0.00",
-                                "currency": "USD"
-                            },
-                            "shippingDestination": {
-                                "@type": "Place",
-                                "name": "User Account"
-                            },
-                            "deliveryTime": {
-                                "@type": "DeliveryTime",
-                                "duration": "PT10M"
-                            }
-                    },
-                    {
-                        "@type": "Offer",
-                        "priceCurrency": "USD",
-                        "price": "69.99",
-                        "shippingDetails": "10 Minutes Or Less.",
-                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
-                        "availability": "https://schema.org/InStock",
-                        "url": "https://deepany.ai/pricing",
-                        "name": "7 Day Subscription",
-                        "priceValidUntil": "2099-12-31",
-                            "shippingRate": {
-                                "@type": "MonetaryAmount",
-                                "value": "0.00",
-                                "currency": "USD"
-                            },
-                            "shippingDestination": {
-                                "@type": "Place",
-                                "name": "User Account"
-                            },
-                            "deliveryTime": {
-                                "@type": "DeliveryTime",
-                                "duration": "PT10M"
-                            }
-                    },
-                    {
-                        "@type": "Offer",
-                        "priceCurrency": "USD",
-                        "price": "149.99",
-                        "shippingDetails": "10 Minutes Or Less.",
-                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
-                        "availability": "https://schema.org/InStock",
-                        "url": "https://deepany.ai/pricing",
-                        "name": "30 Day Subscription",
-                        "priceValidUntil": "2099-12-31",
-                            "shippingRate": {
-                                "@type": "MonetaryAmount",
-                                "value": "0.00",
-                                "currency": "USD"
-                            },
-                            "shippingDestination": {
-                                "@type": "Place",
-                                "name": "User Account"
-                            },
-                            "deliveryTime": {
-                                "@type": "DeliveryTime",
-                                "duration": "PT10M"
-                            }
-                    },
-                    {
-                        "@type": "Offer",
-                        "priceCurrency": "USD",
-                        "price": "269.99",
-                        "shippingDetails": "10 Minutes Or Less.",
-                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
-                        "availability": "https://schema.org/InStock",
-                        "url": "https://deepany.ai/pricing",
-                        "name": "90 Day Subscription",
-                        "priceValidUntil": "2099-12-31",
-                            "shippingRate": {
-                                "@type": "MonetaryAmount",
-                                "value": "0.00",
-                                "currency": "USD"
-                            },
-                            "shippingDestination": {
-                                "@type": "Place",
-                                "name": "User Account"
-                            },
-                            "deliveryTime": {
-                                "@type": "DeliveryTime",
-                                "duration": "PT10M"
-                            }
-                    },
-                    {
-                        "@type": "Offer",
-                        "priceCurrency": "USD",
-                        "price": "726.99",
-                        "shippingDetails": "10 Minutes Or Less.",
-                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
-                        "availability": "https://schema.org/InStock",
-                        "url": "https://deepany.ai/pricing",
-                        "name": "1 Year Subscription",
-                        "priceValidUntil": "2099-12-31",
-                            "shippingRate": {
-                                "@type": "MonetaryAmount",
-                                "value": "0.00",
-                                "currency": "USD"
-                            },
-                            "shippingDestination": {
-                                "@type": "Place",
-                                "name": "User Account"
-                            },
-                            "deliveryTime": {
-                                "@type": "DeliveryTime",
-                                "duration": "PT10M"
-                            }
-                    },
-                    {
-                        "@type": "Offer",
-                        "priceCurrency": "USD",
-                        "price": "1399.99",
-                        "shippingDetails": "10 Minutes Or Less.",
-                        "hasMerchantReturnPolicy": "Credit refunds are made for bad results.",
-                        "availability": "https://schema.org/InStock",
-                        "url": "https://deepany.ai/pricing",
-                        "name": "Lifetime Subscription",
-                        "priceValidUntil": "2099-12-31",
-                            "shippingRate": {
-                                "@type": "MonetaryAmount",
-                                "value": "0.00",
-                                "currency": "USD"
-                            },
-                            "shippingDestination": {
-                                "@type": "Place",
-                                "name": "User Account"
-                            },
-                            "deliveryTime": {
-                                "@type": "DeliveryTime",
-                                "duration": "PT10M"
-                            }
-                    }
-                ]
-            },
-            "author": {
-                "@type": "Organization",
-                "name": "Trustpilot",
-                "url": "https://www.trustpilot.com/review/deepany.ai"
-            },
-            "datePublished": "2024-10-15",
-            "reviewBody": "A very useful tool for creating content that isn’t available elsewhere on the internet. It is accessible to those who need it and easy to use.",
-            "reviewRating": {
-                "@type": "Rating",
-                "ratingValue": "5",
-                "bestRating": "5"
-            },
-            "publisher": {
-                "@type": "Organization",
-                "name": "Deepany",
-                "url": "https://deepany.ai"
-            },
-            "potentialAction": {
-                "@type": "Action",
-                "name": "Read more reviews",
-                "url": "https://www.trustpilot.com/review/deepany.ai"
-            }
-        }
-    </script>
-    <script type="application/ld+json">
-        {
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            "mainEntity":
-            [
-                {
-                    "@type": "Question",
-                    "name": "What services does Deepany offer?",
-                    "acceptedAnswer": {
-                        "@type": "Answer",
-                        "text": "Deepany offers AI-powered tools for face swapping, inpainting images & videos, generating arts, and more."
-                    }
-                },
-                {
-                    "@type": "Question",
-                    "name": "How can I purchase credits on Deepany?",
-                    "acceptedAnswer": {
-                        "@type": "Answer",
-                        "text": "You can purchase credits directly on our website using various payment options available such as credit cards, bitcoin, and more."
-                    }
-                },
-                {
-                    "@type": "Question",
-                    "name": "Is there a free trial available?",
-                    "acceptedAnswer": {
-                        "@type": "Answer",
-                        "text": "Yes, Deepany offers a limited free trial for new users to experience our services before committing."
-                    }
-                },
-                {
-                    "@type": "Question",
-                    "name": "How do I contact customer support?",
-                    "acceptedAnswer": {
-                        "@type": "Answer",
-                        "text": "You can contact our customer support via the contact form on our website or by emailing official@deepany.ai."
-                    }
-                },
-                {
-                    "@type": "Question",
-                    "name": "What are the system requirements for using Deepany's services?",
-                    "acceptedAnswer": {
-                        "@type": "Answer",
-                        "text": "Deepany's services are web-based and can be accessed on any modern browser. For the best experience, we recommend using the latest versions of Chrome, Firefox, or Safari."
-                    }
-                },
-                {
-                    "@type": "Question",
-                    "name": "Can I use Deepany's services on mobile devices?",
-                    "acceptedAnswer": {
-                        "@type": "Answer",
-                        "text": "Yes, Deepany's services are mobile-friendly and can be accessed from smartphones and tablets. For optimal performance, we recommend using a stable internet connection."
-                    }
-                },
-                {
-                    "@type": "Question",
-                    "name": "Are there any restrictions on the type of images I can use?",
-                    "acceptedAnswer": {
-                        "@type": "Answer",
-                        "text": "Users should avoid uploading images that violate copyright or contain offensive content. For more details, please refer to our terms of service."
-                    }
-                },
-                {
-                    "@type": "Question",
-                    "name": "How long does it take to process to complete?",
-                    "acceptedAnswer": {
-                        "@type": "Answer",
-                        "text": "Processing times vary depending on the complexity of the task and the input size. Generally, most tasks are completed faster than our any other competitor."
-                    }
-                },
-                {
-                    "@type": "Question",
-                    "name": "What payment methods are accepted on Deepany?",
-                    "acceptedAnswer": {
-                        "@type": "Answer",
-                        "text": "Deepany accepts various payment methods, including credit/debit cards, and cryptocurrencies like Bitcoin. Paypal is not available for purchasing."
-                    }
-                },
-                {
-                    "@type": "Question",
-                    "name": "How can I reset my password?",
-                    "acceptedAnswer": {
-                        "@type": "Answer",
-                        "text": "If you need to reset your password, go to the login page and click on 'Forgot Password?' Follow the instructions in the email you receive to reset your password."
-                    }
-                },
-                {
-                    "@type": "Question",
-                    "name": "How does Deepany protect my privacy and data?",
-                    "acceptedAnswer": {
-                        "@type": "Answer",
-                        "text": "At Deepany, we are committed to safeguarding your privacy and data. We implement industry-standard encryption and security measures to protect your information. Your data typically remains on our servers for up to 2 days, after which it is deleted. However, thanks to browser caching and storage mechanisms, your files will still be accessible to you even after this period, which will not be accesible to us. Your data will not be looked up until you give permission during 2 days storage in our servers. We retain this information to assist you in case you accidentally delete files from your local storage on our site, allowing us to help you recover lost files. For more details, please refer to our Privacy Policy."
-                    }
-                }
-            ]
-        }
-    </script>
 </head>
-<body lang="en">
-    <script type="module" defer>
-        const version = new URLSearchParams(window.location.search).get('version') || localStorage.getItem('version') || '8.7.6.5';
 
-        async function loadModule(url) {
-            return import(`${url}?v=${version}`);
-        }
-
-        document.addEventListener('DOMContentLoaded', async function () {
-            const functions = await loadModule('./scripts/functions.js');
-            const { getUserDoc, fetchWithRandom, setUser, setAuthentication, getFirebaseModules, getDocSnapshot, loadPageContent, retrieveImages, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, getSizeCache, retrieveImageFromURL, fetchServerAddress, ensureUniqueId, getUserInternetProtocol } = functions;
-
-            let sizeCache = [];
-
-            if (!Object.keys(sizeCache).length)
-                sizeCache = getSizeCache();
-
-            const getImageSrc = (key) => {
-                if (Object.keys(sizeCache).length && sizeCache[key] !== null && sizeCache[key].src !== null)
-                    return sizeCache[key].src;
-
-                return `./assets/${key}-1.webp`;
-            };
-
-            function updateMainContent(screenMode, pageContent) {
-                pageContent.length = 0;
-                if (screenMode !== 1) {
-                    pageContent.push(
-                        `
-                                                                                        <div class="start-content" id="hover-div">
-                                                                                            <p class="subtext">Discover the leading AI platform since 2023, renowned for its ease and excellence.</p>
-                                                                                            <h1 class="text-gradient" id="dynamic-text">AI-Powered Services</h1>
-                                                                                            <ul class="styled-list">
-                                                                                                <li><strong>Daily Free Trial:</strong><span>&nbsp;</span><span>Experience our full-featured services without cost.</span></li>
-                                                                                                <li><strong>Security & Support:</strong><span>&nbsp;</span><span>Your data is protected, with 24/7 support available.</span></li>
-                                                                                                <li><strong>High Ratings:</strong><span>&nbsp;</span><span>Trusted by users with high rating on<span>&nbsp;</span><a class="trusted-link" href="https://www.trustpilot.com/review/deepany.ai" target="_blank" rel="noopener noreferrer" translate="no">Trustpilot</a>.</li>
-                                                                                                <li><strong>Cost-Effective:</strong><span>&nbsp;</span><span>Only 1 credit per image & 120 frames.</li>
-                                                                                                <li><strong>Fast Processing:</strong><span>&nbsp;</span><span>RTX PRO 6000 GPUs in our servers for optimal performance.</span></li>
-                                                                                                <li><strong>Pricing:</strong><span>&nbsp;</span><span>Dynamic plans tailored to every budget.</span></li>
-                                                                                            </ul>
-                                                                                            <p class="subtext" style="padding-bottom: 0.5vh;">Unlock the potential of AI for your projects with our reliable and affordable services.</p>
-                                                                                            <div class="button-container">
-                                                                                                <button id="callOutText" class="openSignInContainer">Try Now</button>
-                                                                                                <a class="button important" href="pricing?v=${version}">Purchase</a>
-                                                                                           </div>
-                                                                                    </div>
-                                                                                    <div class="card-container card-container-small">
-                                                                                        <div class="background"></div>
-                                                                                        <a href="face-swap?v=${version}" class="card">
-                                                                                            <div class="card-content card-content-small">
-                                                                                                <div class="card-title">Face Swap</div>
-                                                                                                <div class="card-link">Try Face Swap</div>
-                                                                                            </div>
-                                                                                        </a>
-                                                                                        <a href="video-generator?v=${version}" class="card">
-                                                                                            <div class="card-content card-content-small">
-                                                                                                <div  class="card-title">Video Generator</div>
-                                                                                                <div class="card-link">Create Video</div>
-                                                                                            </div>
-                                                                                        </a>
-                                                                                        <a href="inpaint?v=${version}" class="card">
-                                                                                            <div class="card-content card-content-small">
-                                                                                                <div class="card-title">Inpaint Anything</div>
-                                                                                                <div class="card-link">Try Inpaint</div>
-                                                                                            </div>
-                                                                                        </a>
-                                                                                        <a href="art-generator?v=${version}" class="card">
-                                                                                            <div class="card-content card-content-small">
-                                                                                                <div  class="card-title">Art Generator</div>
-                                                                                                <div class="card-link">Create Art</div>
-                                                                                            </div>
-                                                                                        </a>
-                                                                                        <a href="media-upscaler?v=${version}" class="card disabled">
-                                                                                            <div class="card-content card-content-small disabled">
-                                                                                                <div  class="card-title disabled">Media Upscaler</div>
-                                                                                                <div class="card-link disabled">Try Upscaler</div>
-                                                                                            </div>
-                                                                                        </a>
-                                                                                    </div>
-                                                                                `);
-                } else {
-                    pageContent.push(
-                        `
-                                                                                    <div class="start-content-container">
-                                                                                        <div class="start-content" id="hover-div">
-                                                                                            <p class="subtext">Discover the leading AI platform since 2023, renowned for its ease and excellence.</p>
-                                                                                            <h2 class="text-gradient" id="dynamic-text">AI-Powered Services</h2>
-                                                                                            <ul class="styled-list">
-                                                                                                <li><strong>Daily Free Trial:</strong><span>&nbsp;</span><span>Experience our full-featured services without cost.</span></li>
-                                                                                                <li><strong>Security & Support:</strong><span>&nbsp;</span><span>Your data is protected, with 24/7 support available.</span></li>
-                                                                                                <li><strong>High Ratings:</strong><span>&nbsp;</span><span>Trusted by users with high rating on</span><span>&nbsp;</span><a class="trusted-link" href="https://www.trustpilot.com/review/deepany.ai" target="_blank" rel="noopener noreferrer">Trustpilot</a>.</li>
-                                                                                                <li><strong>Cost-Effective:</strong><span>&nbsp;</span><span>1 credit for 2 seconds of face swap or image processes.</span></span></li>
-                                                                                                <li><strong>Fast Processing:</strong><span>&nbsp;</span><span>RTX PRO 6000 GPUs in our servers for optimal performance.</span></li>
-                                                                                                <li><strong>Pricing:</strong><span>&nbsp;</span>Dynamic plans tailored to every budget.</span></li>
-                                                                                            </ul>
-                                                                                            <p class="subtext" style="padding-bottom: 0.5vh;">Unlock the potential of AI for your projects with our reliable and affordable services.</p>
-                                                                                            <div class="button-container">
-                                                                                                <button id="callOutText" class="openSignInContainer">Try Now</button>
-                                                                                                <a class="button important" href="pricing?v=${version}">Purchase</a>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                        <div class="end-content">
-                                                                                            <img src="${getImageSrc('resize-large')}" id="resize-large" loading="eager" alt="Wide Image Example">
-                                                                                            <img src="${getImageSrc('resize-middle')}" id="resize-middle" loading="eager" alt="Medium Image Example">
-                                                                                            <img src="${getImageSrc('resize-long')}" id="resize-long" loading="eager" alt="Long Image Example">
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <div style="display: flex;align-items: center;gap: var(--card-gap);">
-                                                                                        <button id="button-left" style="width: 4vh; height: 4vh;">&lt;</button>
-                                                                                        <div class="card-container card-container-small">
-                                                                                            <div class="background"></div>
-                                                                                            <a href="face-swap?v=${version}" class="card">
-                                                                                                <div class="card-content card-content-small">
-                                                                                                    <div>
-                                                                                                        <div class="card-title">Face Swap</div>
-                                                                                                        <div class="card-description">Swap faces in your inputs with ease.</div>
-                                                                                                    </div>
-                                                                                                    <div class="card-link">Try Face Swap</div>
-                                                                                                </div>
-                                                                                            </a>
-                                                                                            <a href="video-generator?v=${version}" class="card">
-                                                                                                <div class="card-content card-content-small">
-                                                                                                    <div>
-                                                                                                        <div class="card-title">Video Generator</div>
-                                                                                                        <div class="card-description">Create stunning digital videos.</div>
-                                                                                                    </div>
-                                                                                                    <div class="card-link">Create Video</div>
-                                                                                                </div>
-                                                                                            </a>
-                                                                                            <a href="inpaint?v=${version}" class="card">
-                                                                                                <div class="card-content card-content-small">
-                                                                                                    <div>
-                                                                                                        <div class="card-title">Inpaint Anything</div>
-                                                                                                        <div class="card-description">Remove, add or change elements in your images & videos.</div>
-                                                                                                    </div>
-                                                                                                    <div class="card-link">Try Inpaint</div>
-                                                                                                </div>
-                                                                                            </a>
-                                                                                            <a href="art-generator?v=${version}" class="card">
-                                                                                                <div class="card-content card-content-small">
-                                                                                                    <div>
-                                                                                                        <div class="card-title">Art Generator</div>
-                                                                                                        <div class="card-description">Create stunning digital artworks.</div>
-                                                                                                    </div>
-                                                                                                    <div class="card-link">Create Art</div>
-                                                                                                </div>
-                                                                                            </a>
-                                                                                            <a href="media-upscaler?v=${version}" class="card disabled">
-                                                                                                <div class="card-content card-content-small disabled">
-                                                                                                    <div>
-                                                                                                        <div class="card-title disabled">Media Upscaler</div>
-                                                                                                        <div class="card-description disabled">Enhance your media files with ease.</div>
-                                                                                                    </div>
-                                                                                                    <div class="card-link disabled">Try Upscaler</div>
-                                                                                                </div>
-                                                                                            </a>
-                                                                                        </div>
-                                                                                        <button id="button-right" style="width: 4vh; height: 4vh;">&gt;</button>
-                                                                                    </div>
-                                                                                    `);
-                }
-            }
-
-            loadPageContent(setUser, retrieveImageFromURL, getUserInternetProtocol, ensureUniqueId, fetchServerAddress, getFirebaseModules, getDocSnapshot, getScreenMode, getCurrentMain, updateContent, createPages, setNavbar, setSidebar, showSidebar, removeSidebar, getSidebarActive, moveMains, setupMainSize, loadScrollingAndMain, showZoomIndicator, setScaleFactors, clamp, setAuthentication, updateMainContent);
-
-            let previousScreenMode = null;
-
-            async function sizeBasedElements() {
-                const screenMode = getScreenMode();
-                const shouldUpdate = previousScreenMode !== screenMode;
-                previousScreenMode = screenMode;
-                if (shouldUpdate && screenMode === 1 && !Object.keys(sizeCache).length) {
-                    retrieveImages('resize-middle');
-                    retrieveImages('resize-long');
-                    retrieveImages('resize-large');
-                }
-
-                const button = document.getElementById("callOutText");
-
-                let userDoc = await getUserDoc();
-                if (!userDoc) {
-                    button.textContent = "Try Now";
-                    button.removeAttribute("data-link");
-                }
-                else {
-                    const defaultText = "Try Now";
-                    const options = [
-                        { text: "Swap Faces", link: "/face-swap" },
-                        { text: "Create Video", link: "/video-generator" },
-                        { text: "Inpaint Now", link: "/inpaint" },
-                        { text: "Create Art", link: "/art-generator" }
-                    ];
-
-                    let index = 0;
-
-                    button.textContent = defaultText;
-
-                    button.addEventListener("mouseenter", function () {
-                        const currentOption = options[index];
-                        button.textContent = currentOption.text;
-                        button.setAttribute("data-link", currentOption.link);
-
-                        index = (index + 1) % options.length; // Cycle through the options
-                    });
-
-                    button.addEventListener("mouseleave", function () {
-                        button.textContent = defaultText;
-                        button.removeAttribute("data-link");
-                    });
-
-                    button.addEventListener("click", function () {
-                        const link = button.getAttribute("data-link");
-                        if (link) {
-                            window.location.href = link;
-                        }
-                    });
-                }
-
-                const container = document.querySelector('.card-container');
-                const leftBtn = document.getElementById('button-left');
-                const rightBtn = document.getElementById('button-right');
-
-                if (container) {
-                    container.addEventListener('wheel', (e) => {
-                        if (e.deltaY !== 0) {
-                            e.preventDefault();
-                            container.scrollBy({ left: -e.deltaY, behavior: 'smooth' });
-                        }
-                    }, { passive: false });
-
-                    const scrollAmount = 400;
-
-                    if (leftBtn) {
-                        leftBtn.addEventListener('click', () => {
-                            container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-                        });
-                    }
-
-                    if (rightBtn) {
-                        rightBtn.addEventListener('click', () => {
-                            container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-                        });
-                    }
-                }
-            }
-
-            sizeBasedElements();
-
-            window.addEventListener('resize', sizeBasedElements);
-        });
-    </script>
+<body
+    class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 selection:bg-primary selection:text-white">
+    <!-- Navigation -->
+    <nav
+        class="sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-10">
+                <a class="flex items-center gap-2 nav-logo-link" href="#">
+                    <img alt="Tensomar Logo" class="h-8 w-auto" loading="lazy"
+                        data-alt="Tensomar industrial geometric logo symbol" src="/assets/images/tensomar-logo.png" />
+                    <span class="text-xl font-bold tracking-tight">Tensomar</span>
+                </a>
+                <div class="hidden md:flex items-center gap-8">
+                    <a class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors"
+                        href="#features">Features</a>
+                    <a class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors"
+                        href="#how-it-works">How It Works</a>
+                    <a class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors"
+                        href="#safety">Safety</a>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <button id="btn-theme-toggle"
+                    class="p-2 flex text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                    <span class="material-symbols-outlined text-[20px]">dark_mode</span>
+                </button>
+                <div class="hidden sm:flex items-center gap-3">
+                    <button id="nav-sign-in"
+                        class="px-4 py-2 text-sm font-semibold hover:text-primary transition-colors">Sign
+                        In</button>
+                    <button id="nav-sign-up"
+                        class="bg-primary hover:bg-primary/90 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-lg shadow-primary/20 transition-all">Sign
+                        Up</button>
+                </div>
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-btn"
+                    class="sm:hidden p-2 flex text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                    <span class="material-symbols-outlined text-[24px]">menu</span>
+                </button>
+            </div>
+        </div>
+        <!-- Mobile Dropdown -->
+        <div id="mobile-menu"
+            class="hidden sm:hidden border-t border-slate-200 dark:border-slate-800 bg-background-light dark:bg-background-dark px-6 py-4 space-y-4 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] absolute w-full left-0 top-full">
+            <a href="/auth/sign-in"
+                class="block w-full text-center py-3 text-slate-700 dark:text-slate-300 font-semibold border border-slate-200 dark:border-slate-700 rounded-lg">Sign
+                In</a>
+            <a href="/auth/sign-up"
+                class="block w-full text-center py-3 bg-primary text-white font-bold rounded-lg shadow-lg shadow-primary/20">Sign
+                Up</a>
+        </div>
+    </nav>
+    <!-- Hero Section -->
+    <section class="relative pt-20 pb-32 overflow-hidden">
+        <div class="absolute inset-0 hero-glow -z-10"></div>
+        <div class="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center">
+            <div class="flex flex-col gap-8">
+                <div
+                    class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-widest w-fit">
+                    <span class="relative flex h-2 w-2">
+                        <span
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                    </span>
+                    Now Available for Pre-Order
+                </div>
+                <h1 class="text-5xl lg:text-7xl font-black leading-[1.1] tracking-tight text-slate-900 dark:text-white">
+                    Measure. <br />
+                    <span class="text-primary">Prevent.</span> <br />
+                    Protect.
+                </h1>
+                <p class="text-xl text-slate-600 dark:text-slate-400 max-w-lg leading-relaxed">
+                    The world's most precise real-time rope tension monitoring system. Engineered for high-stakes
+                    industrial operations.
+                </p>
+                <div class="flex flex-wrap gap-4 pt-4">
+                    <a href="/auth/sign-up"
+                        class="bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-xl text-base font-bold shadow-xl shadow-primary/25 transition-all inline-flex items-center justify-center">
+                        Get Early Access
+                    </a>
+                    <button
+                        class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white px-8 py-4 rounded-xl text-base font-bold transition-all flex items-center gap-2 border border-slate-200 dark:border-slate-700">
+                        <span class="material-symbols-outlined">play_circle</span>
+                        See How It Works
+                    </button>
+                </div>
+                <div class="flex items-center gap-6 mt-4 text-sm text-slate-500">
+                    <div class="flex -space-x-2">
+                        <div class="w-8 h-8 rounded-full border-2 border-background-dark bg-slate-400 overflow-hidden"
+                            data-alt="User avatar 1"
+                            style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAO1oW0Sr-x1AT07UMQPjoImJGKsCRQiv8oHiY20MKUhFsnd379ZQ1CO-hur-PXxczouAj6JhIrHv9tjbTj_CV1xUtDudmYLkmmy8cHyA6FdyHNbZAIgmNaGwb2j307JPDRR7DmE-lldraOYU07PecVZFS2bjHZjPsop4n2dGRiNt-WTqG4h_esLnHxogT73sym4wqg8BeO1FD6n_hfJmMGISCFQFEcYwD0CzqMumxMEr4npSU3j0hBTPYjWPu3a-4spd9f78AoqKpp')">
+                        </div>
+                        <div class="w-8 h-8 rounded-full border-2 border-background-dark bg-slate-500 overflow-hidden"
+                            data-alt="User avatar 2"
+                            style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDxqfCIcErskUHl4tQWmGqms0KV0dLTFf7Cws56MMsaDQp8dpvNru2b7zjcbxPPSUf5-jzDPyPZ5zqfPh3QSeRlk8OU3nWAcoWk7oA08zvYWCJAk8A0T8wAZy4ASKQAMhhI-bsyK3_K51jNxOtLDSby8pwTkvIt2IbjlDUvrWUPYjJZTdxNCSsFTXmGIpCF9DgrxgvPU0i4Qxtm3xFrvyetVot6B9N6tgqgQZUdqh3mlHaku-IGgJStA2mpRb-MVexfUGJPX-d7_iVr')">
+                        </div>
+                        <div class="w-8 h-8 rounded-full border-2 border-background-dark bg-slate-600 overflow-hidden"
+                            data-alt="User avatar 3"
+                            style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDIYwqtCd0ulAwS7-GsgN4vzJw0hNWHaYr2rvzXnwhw_w6pxcbWRpDdpV8QY8X070QIvq2_lbxmPQF0V9a7FR5iDpYdLlpgd64rrPoOHWRVgOlHdpjcp1RcgO-QRcPGgzvIXiwVdABkv6U1Yf-JpyKsyS3jobSUTGmmwH-ptO1yllRMjLSvmf6BlhJx5-x5BD-Q33VsxNmjtI9WS9WC49sOFo0F3_qSvKZcEul_jdCiFUeZNyAw3bWbv5wV6s-AkJGS4xsOvRrU8uLu')">
+                        </div>
+                    </div>
+                    <span>Trusted by 500+ Engineering Teams</span>
+                </div>
+            </div>
+            <div class="relative" style="display: none;">
+                <div class="absolute -inset-4 bg-primary/20 blur-3xl rounded-full opacity-30"></div>
+                <img alt="Tensomar Device" class="relative z-10 w-full h-auto drop-shadow-2xl rounded-2xl"
+                    loading="lazy" data-alt="Tensomar hardware device attached to heavy duty rope"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPuIoUpOBPpKkd0tK7WoX69vVtjEbV19TEBGX0ucbBhNA5Vq4GNOL-_Nkr2xTbNRjoLVYl2xKXcoIVquu4V43kIPlXs7VGJNN4er1zntGyF198gnfAVDrNzBGdEK49eMskWJ5NJEs2DnW4lXr9dyNMzBvXr6ItwbM6uyx62NQoDEA2BQ0ZJgRiHKtWBWMYHKrcmlKqqJ44ja4nguopdcj9pjJoGj71evDekzmAgHFrs8sEzuFPFxD0oMjeMqXCgwp0bcsRsqcAXhbV" />
+            </div>
+        </div>
+    </section>
+    <!-- Core Problem Section -->
+    <section class="py-24 bg-slate-50 dark:bg-slate-900/50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-3xl font-bold mb-4">Mitigate High-Stakes Risks</h2>
+                <p class="text-slate-500">Ignoring tension variables leads to catastrophic failure. Tensomar identifies
+                    and alerts you to the four critical failure modes before they happen.</p>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div
+                    class="glass-panel p-8 rounded-2xl flex flex-col gap-4 border border-slate-200 dark:border-slate-800">
+                    <div class="w-12 h-12 rounded-lg bg-orange-500/10 text-orange-500 flex items-center justify-center">
+                        <span class="material-symbols-outlined">trending_up</span>
+                    </div>
+                    <h3 class="text-lg font-bold">Overstretching</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">Structural weakening and sudden failure risk due
+                        to extreme load peaks.</p>
+                </div>
+                <div
+                    class="glass-panel p-8 rounded-2xl flex flex-col gap-4 border border-slate-200 dark:border-slate-800">
+                    <div class="w-12 h-12 rounded-lg bg-red-500/10 text-red-500 flex items-center justify-center">
+                        <span class="material-symbols-outlined">thermostat</span>
+                    </div>
+                    <h3 class="text-lg font-bold">Friction &amp; Heating</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">Internal fiber damage and degradation caused by
+                        repetitive friction stress.</p>
+                </div>
+                <div
+                    class="glass-panel p-8 rounded-2xl flex flex-col gap-4 border border-slate-200 dark:border-slate-800">
+                    <div class="w-12 h-12 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                        <span class="material-symbols-outlined">link_off</span>
+                    </div>
+                    <h3 class="text-lg font-bold">Connection Failure</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">Instant anchor or coupling failure detection with
+                        sub-millisecond response.</p>
+                </div>
+                <div
+                    class="glass-panel p-8 rounded-2xl flex flex-col gap-4 border border-slate-200 dark:border-slate-800">
+                    <div class="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                        <span class="material-symbols-outlined">warning</span>
+                    </div>
+                    <h3 class="text-lg font-bold">Whiplash Effect</h3>
+                    <p class="text-sm text-slate-500 leading-relaxed">Detection of energy buildup to prevent recoil
+                        danger and personnel risk.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- How It Works Section -->
+    <section class="py-24" id="how-it-works">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid lg:grid-cols-2 gap-20 items-center">
+                <div class="space-y-12">
+                    <div>
+                        <h2 class="text-4xl font-bold mb-6 tracking-tight">Simple Deployment. <br />Enterprise Power.
+                        </h2>
+                        <p class="text-slate-500 text-lg">Setup in minutes, protect for years. Our hardware is designed
+                            to be plug-and-play in any industrial environment.</p>
+                    </div>
+                    <div class="space-y-10">
+                        <div class="flex gap-6">
+                            <div
+                                class="flex-none w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">
+                                1</div>
+                            <div>
+                                <h4 class="font-bold text-lg mb-2">Attach &amp; Secure</h4>
+                                <p class="text-slate-500">Snap the Tensomar sensor onto any synthetic or steel rope
+                                    system. Tool-free installation in seconds.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-6">
+                            <div
+                                class="flex-none w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">
+                                2</div>
+                            <div>
+                                <h4 class="font-bold text-lg mb-2">Real-time Sync</h4>
+                                <p class="text-slate-500">Device instantly begins broadcasting encrypted tension data to
+                                    the cloud dashboard via Mesh network.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-6">
+                            <div
+                                class="flex-none w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">
+                                3</div>
+                            <div>
+                                <h4 class="font-bold text-lg mb-2">Monitor &amp; Alert</h4>
+                                <p class="text-slate-500">Receive instant push notifications or SMS when tension exceeds
+                                    safety thresholds or anomalous patterns appear.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative rounded-3xl overflow-hidden shadow-2xl bg-slate-800" style="display: none;">
+                    <img alt="Process diagram" class="w-full h-auto opacity-90" loading="lazy"
+                        data-alt="Infographic showing step by step installation of the device"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7oJpFMWgwsHXAE-jnYHiL6yji7Oa5tqJVx3L_wT_cZxmEECPjsVwpZcq9AnVQc-x8MknXSEI4kubApm4fRrw34CLNIuT9vuw9UIC5aoX4Eh79pclFAUr6YZDgsMYwvaQWfJosvdKh_GZrdCdFoQaH0lWEChBEqcZ-ywtoA1A80LlPNJGf3HygE5y0TmEZrq5HhjhQ4Mywl89fpUh91-xIKKiOPnuvgUajTicbGpkFlrTwRznGp5usyQLLlueigQHzR1OvbWrz8IlR" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-background-dark/80 to-transparent"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Features Section -->
+    <section class="py-24 bg-slate-900 border-y border-slate-800" id="features">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-end gap-6 mb-16">
+                <div class="max-w-xl">
+                    <h2 class="text-3xl font-bold text-white mb-4">Precision Engineered Features</h2>
+                    <p class="text-slate-400">Advanced technology built into every sensor and pixel of our software
+                        interface.</p>
+                </div>
+                <button class="text-primary font-bold flex items-center gap-1 hover:underline underline-offset-4">
+                    Download technical specs <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                </button>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="p-8 bg-slate-800/50 rounded-2xl border border-slate-700/50">
+                    <span class="material-symbols-outlined text-primary text-4xl mb-4">sensors</span>
+                    <h4 class="text-white font-bold mb-2">Real-time Monitoring</h4>
+                    <p class="text-sm text-slate-400">Sub-second latency data visualization of tension loads across your
+                        entire operation.</p>
+                </div>
+                <div class="p-8 bg-slate-800/50 rounded-2xl border border-slate-700/50">
+                    <span class="material-symbols-outlined text-primary text-4xl mb-4">bolt</span>
+                    <h4 class="text-white font-bold mb-2">Smart Alert System</h4>
+                    <p class="text-sm text-slate-400">Customizable multi-channel alerts based on load percentages or
+                        specific tension values.</p>
+                </div>
+                <div class="p-8 bg-slate-800/50 rounded-2xl border border-slate-700/50">
+                    <span class="material-symbols-outlined text-primary text-4xl mb-4">shield</span>
+                    <h4 class="text-white font-bold mb-2">Industrial Durability</h4>
+                    <p class="text-sm text-slate-400">IP68 waterproof and shock-resistant casing. Built to thrive in the
+                        harshest environments.</p>
+                </div>
+                <div class="p-8 bg-slate-800/50 rounded-2xl border border-slate-700/50">
+                    <span class="material-symbols-outlined text-primary text-4xl mb-4">dashboard</span>
+                    <h4 class="text-white font-bold mb-2">Cloud Dashboard</h4>
+                    <p class="text-sm text-slate-400">Access your data from anywhere. Manage thousands of devices from a
+                        single centralized hub.</p>
+                </div>
+                <div class="p-8 bg-slate-800/50 rounded-2xl border border-slate-700/50">
+                    <span class="material-symbols-outlined text-primary text-4xl mb-4">history</span>
+                    <h4 class="text-white font-bold mb-2">Historical Logs</h4>
+                    <p class="text-sm text-slate-400">Automatically archived data for insurance compliance, forensic
+                        analysis, and performance auditing.</p>
+                </div>
+                <div class="p-8 bg-slate-800/50 rounded-2xl border border-slate-700/50">
+                    <span class="material-symbols-outlined text-primary text-4xl mb-4">hub</span>
+                    <h4 class="text-white font-bold mb-2">Seamless Integration</h4>
+                    <p class="text-sm text-slate-400">Open API for easy integration with existing SCADA or ERP systems.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Safety Section -->
+    <section class="py-24 overflow-hidden" id="safety">
+        <div class="max-w-7xl mx-auto px-6">
+            <div
+                class="bg-primary rounded-[2rem] p-12 lg:p-20 flex flex-col lg:flex-row gap-12 items-center text-white relative">
+                <div class="absolute top-0 right-0 w-1/2 h-full opacity-10 pointer-events-none">
+                    <svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 100 100">
+                        <path d="M0,0 L100,0 L100,100 Z" fill="white"></path>
+                    </svg>
+                </div>
+                <div class="flex-1 space-y-8 relative z-10">
+                    <h2 class="text-4xl lg:text-5xl font-black leading-tight">Safety is not a luxury. It's an
+                        obligation.</h2>
+                    <p class="text-xl text-primary-100/80 leading-relaxed">Tensomar helps companies achieve a 98%
+                        reduction in rope-related accidents by moving from reactive maintenance to proactive monitoring.
+                    </p>
+                    <div class="grid grid-cols-2 gap-8 pt-4">
+                        <div>
+                            <div class="text-4xl lg:text-5xl font-black mb-1">98%</div>
+                            <div class="text-sm font-bold uppercase tracking-widest text-primary-100/60">Risk Reduction
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-4xl lg:text-5xl font-black mb-1">24/7</div>
+                            <div class="text-sm font-bold uppercase tracking-widest text-primary-100/60">Protection
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-1 lg:pl-12 relative z-10">
+                    <div class="bg-white/10 backdrop-blur-md p-8 rounded-2xl border border-white/20">
+                        <blockquote class="text-lg italic mb-6 text-white/90 leading-relaxed">
+                            "Since implementing Tensomar, our downtime related to cable failure has dropped to zero.
+                            It's the most critical safety investment we've made this decade."
+                        </blockquote>
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-white/20" data-alt="Head of Safety portrait"
+                                style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCXwvF6Nydpxmkc6hto382n7pIKJhXJTYeyRtmDxDTDUhTi9EtvxT-8mDGecnztm2DCq6U3VEl9l_I37dGcEi9sm5SsqrIwJoR6WhLt5bZEqsvPxZ9_9Fp7NqRlnIBBl4BK_UaaDA3Ou7BCFPbRcwnpt_cswmetv2WW1ZYea9KvTBrqhw6LhH8cXqszFAjXWEwyNFltr4qhfbvLEXtQcLvdWv3GwpxyNVWiH9e1yost3CHU5xbe0JpgtJ-jSBGjfcIbkudZIvIIHlPq')">
+                            </div>
+                            <div>
+                                <div class="font-bold">Robert Chen</div>
+                                <div class="text-xs text-white/60 font-bold uppercase tracking-widest">Head of
+                                    Operations, Global Marine</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Footer -->
+    <footer class="bg-slate-50 dark:bg-slate-950 pt-20 pb-10 border-t border-slate-200 dark:border-slate-800">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 mb-16">
+                <div class="col-span-2">
+                    <p class="text-slate-500 max-w-sm mb-6">Setting the global standard for industrial tension
+                        monitoring and safety analytics.</p>
+                    <div class="flex gap-4">
+                        <a class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center hover:bg-primary hover:text-white transition-all"
+                            href="#">
+                            <svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+                                <path
+                                    d="M22.46,6C21.69,6.35,20.86,6.58,20,6.69C20.88,6.16,21.56,5.32,21.88,4.31C21.05,4.81,20.13,5.16,19.16,5.36C18.37,4.5,17.26,4,16,4C13.65,4,11.73,5.92,11.73,8.29C11.73,8.63,11.77,8.96,11.84,9.27C8.28,9.09,5.11,7.38,3,4.79C2.63,5.42,2.42,6.16,2.42,6.94C2.42,8.43,3.17,9.75,4.33,10.5C3.62,10.5,2.96,10.3,2.38,10C2.38,10,2.38,10,2.38,10.03C2.38,12.11,3.86,13.85,5.82,14.24C5.46,14.34,5.08,14.39,4.69,14.39C4.42,14.39,4.15,14.36,3.89,14.31C4.43,16,6,17.26,7.89,17.29C6.43,18.45,4.58,19.13,2.56,19.13C2.22,19.13,1.88,19.11,1.54,19.07C3.44,20.29,5.7,21,8.12,21C16,21,20.33,14.46,20.33,8.79C20.33,8.6,20.33,8.42,20.32,8.23C21.16,7.63,21.88,6.87,22.46,6Z">
+                                </path>
+                            </svg>
+                        </a>
+                        <a class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center hover:bg-primary hover:text-white transition-all"
+                            href="#">
+                            <svg class="w-5 h-5 fill-current" viewbox="0 0 24 24">
+                                <path
+                                    d="M19,3A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V5A2,2 0 0,1 5,3H19M18.5,18.5V13.2A3.26,3.26 0 0,0 15.24,9.94C13.93,9.94 13.46,10.66 13.12,11.2V10.13H10.13V18.5H13.12V13.43C13.12,12.18 13.33,11.39 14.25,11.39C15.17,11.39 15.4,12.14 15.4,13.43V18.5H18.5M7.14,10.13H10.13V18.5H7.14V10.13M8.63,5.17A1.5,1.5 0 0,0 7.13,6.67A1.5,1.5 0 0,0 8.63,8.17A1.5,1.5 0 0,0 10.13,6.67A1.5,1.5 0 0,0 8.63,5.17Z">
+                                </path>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+                <div>
+                    <h5 class="font-bold mb-4">Product</h5>
+                    <ul class="space-y-3 text-sm text-slate-500">
+                        <li><a class="hover:text-primary transition-colors" href="#">Features</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">Hardware</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">Buy Now</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="font-bold mb-4">Company</h5>
+                    <ul class="space-y-3 text-sm text-slate-500">
+                        <li><a class="hover:text-primary transition-colors" href="#">About Us</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="/contact">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div
+                class="pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-xs text-slate-500">© 2026 Tensomar Systems Inc. All rights reserved.</p>
+                <div class="flex gap-8">
+                    <a class="text-xs text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+                        href="/privacy-policy">Privacy Policy</a>
+                    <a class="text-xs text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+                        href="/terms-of-service">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
 </body>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(btn => {
+            if (btn.id === 'nav-sign-in') {
+                btn.addEventListener('click', e => {
+                    e.preventDefault();
+                    window.location.href = '/auth/sign-in';
+                });
+            } else if (btn.id === 'nav-sign-up') {
+                btn.addEventListener('click', e => {
+                    e.preventDefault();
+                    window.location.href = '/auth/sign-up';
+                });
+            }
+        });
+
+        const mobileBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        if (mobileBtn && mobileMenu) {
+            mobileBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+    });
+</script>
+<script type="module">
+    import { getUserDoc, setupThemeToggle, setupLogoRouting } from './scripts/functions.js?v=5';
+
+    setupThemeToggle('btn-theme-toggle');
+    setupLogoRouting();
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const userDoc = await getUserDoc();
+        console.log(userDoc);
+
+        // Redirect to dashboard if already logged in via cached data
+        if (userDoc) {
+            window.location.href = '/dashboard/panel';
+        }
+    });
+</script>
+
 </html>

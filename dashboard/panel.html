@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Tensomar | Industrial Monitoring Dashboard</title>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Tensomar" />
+    <link rel="apple-touch-icon" href="/assets/images/tensomar-logo.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#1152d4" />
+    <script>
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1152d4",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+
+        .dark .glass-panel {
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: none;
+        }
+
+        .tension-gradient {
+            background: linear-gradient(90deg, #10b981 0%, #f59e0b 75%, #ef4444 100%);
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+    <!-- Top Navigation Bar -->
+    <header
+        class="flex items-center justify-between whitespace-nowrap border-b border-slate-200 dark:border-slate-800 px-6 py-4 bg-background-light dark:bg-background-dark sticky top-0 z-10">
+        <a class="flex items-center gap-4 nav-logo-link transition-opacity hover:opacity-80" href="#">
+            <div class="size-8 text-primary">
+                <img alt="Tensomar Logo" class="w-full h-full object-contain" loading="lazy"
+                    data-alt="Tensomar company logo blue abstract icon" src="/assets/images/tensomar-logo.png" />
+            </div>
+            <h2 class="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-tight">Tensomar
+            </h2>
+        </a>
+        <div class="flex flex-1 justify-end gap-4 items-center">
+            <button id="btn-theme-toggle"
+                class="p-2 flex text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                <span class="material-symbols-outlined text-[20px]">dark_mode</span>
+            </button>
+            <!-- Notifications Dropdown Container -->
+            <div class="relative">
+                <button id="btn-notifications"
+                    class="flex items-center justify-center rounded-lg h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+                    <span class="material-symbols-outlined">notifications</span>
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div id="notifications-dropdown"
+                    class="absolute right-0 mt-2 w-72 sm:w-80 bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl z-50 overflow-hidden opacity-0 invisible transition-all duration-200 transform origin-top-right scale-95 pointer-events-none">
+                    <div
+                        class="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                        <span class="font-bold text-sm">Notifications</span>
+                        <button id="btn-notifications-clear"
+                            class="text-[10px] uppercase font-bold text-primary hover:underline">Mark all read</button>
+                    </div>
+                    <div class="p-6 text-center flex flex-col items-center justify-center">
+                        <div
+                            class="size-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3">
+                            <span
+                                class="material-symbols-outlined text-slate-400 dark:text-slate-500">notifications_paused</span>
+                        </div>
+                        <p class="text-sm font-medium text-slate-900 dark:text-white">You're all caught up</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Check back later for new alerts.</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Avatar Dropdown Container -->
+            <div class="relative">
+                <button id="header-avatar"
+                    class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-slate-200 dark:border-slate-700 hover:ring-2 hover:ring-primary hover:ring-offset-2 dark:hover:ring-offset-slate-900 transition-all cursor-pointer block"
+                    data-alt="User profile avatar header"
+                    style='background-image: url("https://www.gravatar.com/avatar/?s=200&d=mp");'>
+                </button>
+
+                <!-- Avatar Dropdown Menu -->
+                <div id="avatar-dropdown"
+                    class="absolute right-0 mt-2 w-48 bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl z-50 overflow-hidden opacity-0 invisible transition-all duration-200 transform origin-top-right scale-95 pointer-events-none">
+                    <div class="py-1">
+                        <a href="profile"
+                            class="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                            <span class="material-symbols-outlined text-[18px]">person</span>
+                            My Profile
+                        </a>
+                        <div class="h-px bg-slate-200 dark:bg-slate-800 my-1"></div>
+                        <button id="btn-header-sign-out"
+                            class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 dark:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left">
+                            <span class="material-symbols-outlined text-[18px]">logout</span>
+                            Sign Out
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Loading Overlay -->
+    <div id="device-loading-overlay"
+        class="fixed inset-0 z-50 bg-background-light dark:bg-background-dark flex flex-col items-center justify-center">
+        <span class="material-symbols-outlined animate-spin text-primary text-6xl mb-4">progress_activity</span>
+        <p class="text-lg font-bold text-primary animate-pulse">Establishing Secure Connection...</p>
+        <p class="text-sm text-slate-500 mt-2">Checking for registered devices</p>
+    </div>
+
+    <!-- Main Content (Hidden Initially) -->
+    <main id="main-content" class="flex-1 px-4 md:px-8 lg:px-10 py-10 pb-24 md:pb-10 hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Sidebar Navigation (Desktop only) -->
+            <aside class="hidden lg:block lg:col-span-3 space-y-2">
+                <div class="mb-6">
+                    <h1 class="text-slate-900 dark:text-white text-lg font-bold">Device Monitoring</h1>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm">Real-time telemetry for <span
+                            id="sidebar-device-name" class="text-primary font-medium">--</span></p>
+                </div>
+                <nav class="flex flex-col gap-1">
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-primary/10 text-primary font-bold"
+                        href="panel">
+                        <span class="material-symbols-outlined text-primary">dashboard</span>
+                        <span class="text-sm font-medium">Dashboard</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        href="profile">
+                        <span class="material-symbols-outlined">person</span>
+                        <span class="text-sm font-medium">Profile</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        href="settings">
+                        <span class="material-symbols-outlined">settings</span>
+                        <span class="text-sm font-medium">Settings</span>
+                    </a>
+                </nav>
+                <div class="mt-8 flex flex-col pt-4 border-t border-slate-200 dark:border-slate-800">
+                    <span class="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 mb-2">System
+                        Status</span>
+                    <div class="flex items-center gap-2">
+                        <span class="relative flex h-2 w-2">
+                            <span
+                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <span class="text-xs font-medium text-emerald-500">Operational</span>
+                    </div>
+                </div>
+            </aside>
+            <!-- Main Active Area -->
+            <div class="lg:col-span-9 space-y-8">
+                <!-- Tension Primary Gauge -->
+                <section class="glass-panel rounded-xl p-8 shadow-xl">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="material-symbols-outlined text-primary">dynamic_feed</span>
+                                <h3
+                                    class="text-lg font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                    Primary Tension
+                                    Load</h3>
+                            </div>
+                            <div class="flex items-baseline gap-2">
+                                <span id="metric-tension"
+                                    class="text-6xl font-black tabular-nums tracking-tighter">684.2</span>
+                                <span class="text-2xl font-medium text-slate-500">kg</span>
+                            </div>
+                            <div class="mt-6">
+                                <div class="flex justify-between text-xs font-bold mb-2 uppercase text-slate-500">
+                                    <span>0 kg</span>
+                                    <span id="metric-limit-label" class="text-red-500">Limit: 500 kg</span>
+                                    <span>1000 kg</span>
+                                </div>
+                                <div
+                                    class="h-4 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden flex">
+                                    <div id="metric-tension-bar" class="tension-gradient h-full" style="width: 68.4%;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            class="flex flex-col gap-4 border-l border-slate-200 dark:border-slate-800 pl-6 min-w-[200px]">
+                            <div>
+                                <p class="text-xs text-slate-500 uppercase font-bold">24h Peak</p>
+                                <p id="metric-peak-tension" class="text-xl font-bold">712.5 kg</p>
+                            </div>
+                            <div id="metric-safe-margin-container">
+                                <p class="text-xs text-slate-500 uppercase font-bold">Safe Margin</p>
+                                <p id="metric-safe-margin" class="text-xl font-bold text-emerald-500">-- kg</p>
+                            </div>
+                            <div id="metric-status-container"
+                                class="px-3 py-2 rounded bg-primary/10 border border-primary/20">
+                                <p id="metric-status" class="text-xs text-primary font-bold">Status: WAITING</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <!-- Metrics Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Temperature Card -->
+                    <div class="glass-panel rounded-xl p-6 flex flex-col justify-between">
+                        <div class="flex items-center justify-between mb-4">
+                            <div
+                                class="size-10 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-500">
+                                <span class="material-symbols-outlined">thermostat</span>
+                            </div>
+                            <span
+                                class="text-[10px] font-bold px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">CELSIUS</span>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">Temperature</p>
+                            <h4 id="metric-temp" class="text-3xl font-bold tabular-nums">24.8&deg;</h4>
+                        </div>
+                        <div class="mt-4 flex items-center gap-1 text-emerald-500 text-xs font-bold"
+                            id="metric-temp-trend">
+                            <span class="material-symbols-outlined text-sm">horizontal_rule</span>
+                            <span>--</span>
+                        </div>
+                    </div>
+                    <!-- Moisture Card -->
+                    <div class="glass-panel rounded-xl p-6 flex flex-col justify-between">
+                        <div class="flex items-center justify-between mb-4">
+                            <div
+                                class="size-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
+                                <span class="material-symbols-outlined">humidity_percentage</span>
+                            </div>
+                            <span
+                                class="text-[10px] font-bold px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">RELATIVE</span>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">Moisture</p>
+                            <h4 id="metric-moisture" class="text-3xl font-bold tabular-nums">12.2%</h4>
+                        </div>
+                        <div class="mt-4 flex items-center gap-1 text-slate-500 text-xs font-bold"
+                            id="metric-moisture-trend">
+                            <span class="material-symbols-outlined text-sm">horizontal_rule</span>
+                            <span>--</span>
+                        </div>
+                    </div>
+                    <!-- Rope Angle Card -->
+                    <div class="glass-panel rounded-xl p-6 flex flex-col justify-between">
+                        <div class="flex items-center justify-between mb-4">
+                            <div
+                                class="size-10 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500">
+                                <span class="material-symbols-outlined">architecture</span>
+                            </div>
+                            <span
+                                class="text-[10px] font-bold px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">DEGREES</span>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">Rope Angle</p>
+                            <h4 id="metric-angle" class="text-3xl font-bold tabular-nums">15.4&deg;</h4>
+                        </div>
+                        <div class="mt-4 flex items-center gap-1 text-red-500 text-xs font-bold"
+                            id="metric-angle-trend">
+                            <span class="material-symbols-outlined text-sm">horizontal_rule</span>
+                            <span>--</span>
+                        </div>
+                    </div>
+                    <!-- Acceleration Card -->
+                    <div class="glass-panel rounded-xl p-6 flex flex-col justify-between">
+                        <div class="flex items-center justify-between mb-4">
+                            <div
+                                class="size-10 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-500">
+                                <span class="material-symbols-outlined">speed</span>
+                            </div>
+                            <span
+                                class="text-[10px] font-bold px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">G-FORCE</span>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">Acceleration</p>
+                            <h4 id="metric-accel" class="text-3xl font-bold tabular-nums">0.24g</h4>
+                        </div>
+                        <div class="mt-4 flex items-center gap-1 text-emerald-500 text-xs font-bold"
+                            id="metric-accel-trend">
+                            <span class="material-symbols-outlined text-sm">horizontal_rule</span>
+                            <span>--</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Visualization Area -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Main Chart Area -->
+                    <div class="lg:col-span-2 glass-panel rounded-xl p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="font-bold">Live Tension History</h3>
+                            <div class="flex gap-2" id="chart-time-selectors">
+                                <button data-view="LIVE"
+                                    class="hist-btn px-3 py-1 text-xs font-bold rounded bg-primary text-white">LIVE</button>
+                                <button data-view="1D"
+                                    class="hist-btn px-3 py-1 text-xs font-bold rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">1D</button>
+                                <button data-view="1M"
+                                    class="hist-btn px-3 py-1 text-xs font-bold rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">1M</button>
+                                <button data-view="1Y"
+                                    class="hist-btn px-3 py-1 text-xs font-bold rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400">1Y</button>
+                            </div>
+                        </div>
+                        <!-- Mock Chart Container -->
+                        <div id="history-bars-container"
+                            class="relative h-64 w-full bg-slate-100 dark:bg-slate-900/50 rounded-lg flex items-end p-4 gap-1 border border-slate-300 dark:border-slate-800 overflow-hidden">
+                            <div
+                                class="absolute inset-0 opacity-10 flex flex-col justify-between p-4 pointer-events-none">
+                                <div class="w-full border-t border-slate-900 dark:border-white"></div>
+                                <div class="w-full border-t border-slate-900 dark:border-white"></div>
+                                <div class="w-full border-t border-slate-900 dark:border-white"></div>
+                                <div class="w-full border-t border-slate-900 dark:border-white"></div>
+                            </div>
+                            <!-- Bars representing a trend will be injected here -->
+                        </div>
+                        <div id="chart-time-labels"
+                            class="mt-4 flex justify-between text-[10px] text-slate-500 font-bold uppercase">
+                            <span>-30s</span>
+                            <span>-20s</span>
+                            <span>-10s</span>
+                            <span>-5s</span>
+                            <span>Now</span>
+                        </div>
+                    </div>
+                    <!-- Device Info Sidebar -->
+                    <div class="glass-panel rounded-xl p-6 flex flex-col">
+                        <h3 class="font-bold mb-4">Device Info</h3>
+                        <div class="space-y-6 flex-1">
+                            <div class="flex items-center gap-4">
+                                <div class="size-12 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0"
+                                    data-alt="Technical line drawing of a monitoring sensor device">
+                                    <span class="material-symbols-outlined text-slate-400">developer_board</span>
+                                </div>
+                                <div class="w-full min-w-0">
+                                    <select id="device-selector"
+                                        class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded text-sm font-bold p-2 focus:ring-2 focus:ring-primary truncate appearance-none cursor-pointer">
+                                        <option value="">Loading...</option>
+                                    </select>
+                                    <p id="device-mac-label" class="text-xs text-slate-500 font-mono mt-1 truncate">MAC:
+                                        --</p>
+                                </div>
+                            </div>
+                            <div class="space-y-3">
+                                <div
+                                    class="flex justify-between items-center py-2 border-b border-slate-200 dark:border-slate-800">
+                                    <span class="text-xs text-slate-500 font-medium">Battery Level</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-bold">84%</span>
+                                        <span
+                                            class="material-symbols-outlined text-emerald-500 text-sm">battery_5_bar</span>
+                                    </div>
+                                </div>
+                                <div
+                                    class="flex justify-between items-center py-2 border-b border-slate-200 dark:border-slate-800">
+                                    <span class="text-xs text-slate-500 font-medium">Signal Strength</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-bold">-42 dBm</span>
+                                        <span
+                                            class="material-symbols-outlined text-primary text-sm">signal_cellular_alt</span>
+                                    </div>
+                                </div>
+                                <div
+                                    class="flex justify-between items-center py-2 border-b border-slate-200 dark:border-slate-800">
+                                    <span class="text-xs text-slate-500 font-medium">Last Sync</span>
+                                    <span class="text-xs font-bold">2m ago</span>
+                                </div>
+                                <!-- Location removed since device is close -->
+                            </div>
+                            <div class="pt-4">
+                                <button id="btn-export-data"
+                                    class="w-full py-3 bg-primary hover:bg-primary/90 text-white rounded-lg font-bold text-sm transition-all shadow-lg shadow-primary/20">
+                                    Export Session Data
+                                </button>
+                                <a href="settings"
+                                    class="block text-center w-full mt-2 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white rounded-lg font-bold text-sm transition-all">
+                                    Device Settings
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Recent Alerts Section -->
+                <section class="space-y-4 pb-10">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-bold">Recent System Alerts</h3>
+                        <button onclick="clearAlerts()" class="text-primary text-sm font-bold hover:underline">Clear
+                            all</button>
+                    </div>
+                    <div id="recent-alerts-container" class="space-y-3">
+                        <!-- Dynamic alerts will go here -->
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer Section -->
+    <footer class="mt-auto border-t border-slate-200 dark:border-slate-800 py-6 px-10 text-center pb-24 md:pb-6">
+        <p class="text-slate-500 dark:text-slate-500 text-xs">
+            © 2026 Tensomar Industrial Systems. Secure Communication Protocol Enabled.
+        </p>
+    </footer>
+
+    <!-- Mobile Sticky Footer Navigator -->
+    <nav
+        class="fixed bottom-0 w-full bg-white dark:bg-background-dark border-t border-slate-200 dark:border-slate-800 flex justify-around items-center h-16 lg:hidden z-50 px-2 pb-safe">
+        <a href="panel" class="flex flex-col items-center justify-center w-full h-full text-primary transition-colors">
+            <span class="material-symbols-outlined mb-1">dashboard</span>
+            <span class="text-[10px] font-bold">Panel</span>
+        </a>
+        <a href="settings"
+            class="flex flex-col items-center justify-center w-full h-full text-slate-500 hover:text-primary transition-colors">
+            <span class="material-symbols-outlined mb-1">settings</span>
+            <span class="text-[10px] font-medium">Settings</span>
+        </a>
+        <a href="profile"
+            class="flex flex-col items-center justify-center w-full h-full text-slate-500 hover:text-primary transition-colors">
+            <span class="material-symbols-outlined mb-1">person</span>
+            <span class="text-[10px] font-medium">Profile</span>
+        </a>
+    </nav>
+    </div>
+
+    <script src="../scripts/device-simulator.js"></script>
+
+    <script type="module">
+        import { getUserDoc, checkAuthState, setupThemeToggle, setupNotificationsDropdown, setupAvatarDropdown, setupLogoRouting } from '../scripts/functions.js?v=5';
+
+        setupThemeToggle('btn-theme-toggle');
+        setupNotificationsDropdown('btn-notifications', 'notifications-dropdown');
+        setupAvatarDropdown('header-avatar', 'avatar-dropdown', 'btn-header-sign-out');
+        setupLogoRouting();
+
+        const getGravatarUrl = async (email) => {
+            if (!email) return "https://www.gravatar.com/avatar/00000000000000000000000000000000?s=200&d=mp";
+            const msgUint8 = new TextEncoder().encode(email.trim().toLowerCase());
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return `https://www.gravatar.com/avatar/${hashHex}?s=200&d=identicon`;
+        };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!(await getUserDoc())) {
+                window.location.href = '/auth/sign-in'; return;
+            }
+
+            let currentDeviceId = null;
+
+            // --- Device Connection Checks ---
+            const checkDeviceConnectivity = () => {
+                setTimeout(() => {
+                    const stored = localStorage.getItem('tensomar_mock_devices');
+                    const devices = stored ? JSON.parse(stored) : [];
+                    if (devices.length === 0) {
+                        // Redirect to settings if no device is connected
+                        window.location.href = 'profile';
+                    } else {
+                        // Display the dashboard
+                        document.getElementById('device-loading-overlay').classList.add('hidden');
+                        document.getElementById('main-content').classList.remove('hidden');
+
+                        // Populate Device Selector
+                        const selector = document.getElementById('device-selector');
+                        selector.innerHTML = ''; // clear loading state
+                        devices.forEach(d => {
+                            const opt = document.createElement('option');
+                            opt.value = d.id;
+                            opt.textContent = d.name;
+                            selector.appendChild(opt);
+                        });
+
+                        // Set initial state
+                        currentDeviceId = devices[0].id;
+                        document.getElementById('sidebar-device-name').textContent = devices[0].name;
+
+                        const updateDashboardSettings = () => {
+                            const settingsRaw = localStorage.getItem(`tensomar_mock_settings_${currentDeviceId}`);
+                            const config = settingsRaw ? JSON.parse(settingsRaw) : {};
+                            const limit = config.intensity || 500;
+                            document.getElementById('metric-limit-label').textContent = `Limit: ${limit} kg`;
+                        };
+                        updateDashboardSettings();
+
+                        // Listen for manual device switching
+                        selector.addEventListener('change', (e) => {
+                            currentDeviceId = e.target.value;
+
+                            // Update sidebar text
+                            const selectedDevice = devices.find(d => d.id === currentDeviceId);
+                            if (selectedDevice) {
+                                document.getElementById('sidebar-device-name').textContent = selectedDevice.name;
+                            }
+
+                            updateDashboardSettings();
+
+                            document.getElementById('metric-tension').textContent = '--';
+                            document.getElementById('metric-peak-tension').textContent = '-- kg';
+                            document.getElementById('metric-temp').innerHTML = '--&deg;';
+                            document.getElementById('metric-moisture').textContent = '--%';
+                            document.getElementById('metric-angle').innerHTML = '--&deg;';
+                            document.getElementById('metric-accel').textContent = '--g';
+                        });
+                    }
+                }, 1500); // 1.5 second simulated handshake
+            };
+
+            checkDeviceConnectivity();
+
+            // --- Alerts System ---
+            const loadAlerts = () => {
+                const container = document.getElementById('recent-alerts-container');
+                const storedAlerts = localStorage.getItem('tensomar_mock_alerts');
+                let alerts = storedAlerts ? JSON.parse(storedAlerts) : [];
+
+                // Add a welcome info alert if empty for demonstration
+                if (alerts.length === 0) {
+                    alerts = [{
+                        id: 'welcome', type: 'info', icon: 'info', title: 'System Online', message: 'Tensomar Dashboard initialized and ready.', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    }];
+                }
+
+                container.innerHTML = alerts.map(alert => `
+                    <div class="glass-panel p-4 rounded-lg flex items-center gap-4 ${alert.type === 'warning' ? 'border-l-4 border-l-red-500' : 'border-l-4 border-l-blue-500'}">
+                        <span class="material-symbols-outlined ${alert.type === 'warning' ? 'text-red-500' : 'text-blue-500'}">${alert.icon}</span>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-bold truncate">${alert.title}</p>
+                            <p class="text-xs text-slate-500 truncate">${alert.message}</p>
+                        </div>
+                        <span class="text-[10px] text-slate-500 font-bold uppercase whitespace-nowrap">${alert.time}</span>
+                    </div>
+                `).join('');
+            };
+
+            window.clearAlerts = () => {
+                localStorage.setItem('tensomar_mock_alerts', JSON.stringify([]));
+                loadAlerts(); // Will just show the welcome message now based on above logic
+            };
+
+            // Audio Context for synthentic alarms
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const playAlarmBeep = () => {
+                if (localStorage.getItem('tensomar_sound_enabled') === 'false') return;
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.type = 'triangle';
+                oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); // 800 Hz beep
+                oscillator.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1); // Ramp up to 1200 Hz
+                gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.05); // Fade in
+                gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5); // Fade out
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.5);
+            };
+
+            // Listen for notification alerts
+            window.addEventListener('device_alert', () => {
+                loadAlerts();
+                playAlarmBeep(); // Trigger audio alarm whenever an alert fires
+            });
+
+            loadAlerts();
+
+            // --- Export Session Data Mock ---
+            document.getElementById('btn-export-data').addEventListener('click', () => {
+                const btn = document.getElementById('btn-export-data');
+                const originalText = btn.textContent;
+                btn.textContent = 'Exporting...';
+
+                setTimeout(() => {
+                    const csvContent = "data:text/csv;charset=utf-8,Timestamp,Tension(kg),Temperature(C),Moisture(%),Angle(deg),Accel(g)\n2025-10-10 14:00:00,684.2,24.8,12.2,15.4,0.24";
+                    const encodedUri = encodeURI(csvContent);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    link.setAttribute("download", "tensomar_session_export.csv");
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    btn.textContent = 'Downloaded CSV';
+                    btn.classList.add('bg-emerald-500');
+                    btn.classList.remove('bg-primary');
+
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                        btn.classList.add('bg-primary');
+                        btn.classList.remove('bg-emerald-500');
+                    }, 2000);
+                }, 1000);
+            });
+
+            // SIMULATOR: Listen to Bluetooth PUB/SUB events
+            let oldTelemetryState = {}; // Used to track diffs for trends
+
+            window.addEventListener('device_data_update', (event) => {
+                const data = event.detail;
+
+                // Ignore telemetry payloads not related to our currently pinned dashboard device
+                if (data.deviceId !== currentDeviceId) return;
+
+                document.getElementById('metric-tension').textContent = data.tension;
+                document.getElementById('metric-tension-bar').style.width = Math.min((data.tension / 1000) * 100, 100) + '%';
+                document.getElementById('metric-peak-tension').textContent = data.peakTension + ' kg';
+
+                document.getElementById('metric-temp').innerHTML = data.temp + '&deg;';
+                document.getElementById('metric-moisture').textContent = data.moisture + '%';
+                document.getElementById('metric-angle').innerHTML = data.angle + '&deg;';
+                document.getElementById('metric-accel').textContent = data.accel + 'g';
+
+                document.getElementById('device-mac-label').textContent = `MAC: ${data.deviceMac}`;
+
+                // --- Safe Margin & Status Calcs ---
+                const settingsRaw = localStorage.getItem(`tensomar_mock_settings_${currentDeviceId}`);
+                const config = settingsRaw ? JSON.parse(settingsRaw) : {};
+                const limit = config.intensity || 500;
+
+                const margin = limit - data.tension;
+                const marginLabel = document.getElementById('metric-safe-margin');
+                const statusLabel = document.getElementById('metric-status');
+                const statusContainer = document.getElementById('metric-status-container');
+
+                if (margin < 0) {
+                    marginLabel.textContent = Math.abs(margin).toFixed(1) + ' kg OVER';
+                    marginLabel.className = 'text-xl font-bold text-red-500';
+                    statusLabel.textContent = 'Status: CRITICAL ALARM';
+                    statusLabel.className = 'text-xs text-red-600 font-bold';
+                    statusContainer.className = 'px-3 py-2 rounded bg-red-500/10 border border-red-500/20 shadow-[-1px_1px_20px_0px_rgba(239,68,68,0.2)]';
+                } else {
+                    marginLabel.textContent = margin.toFixed(1) + ' kg';
+                    marginLabel.className = 'text-xl font-bold text-emerald-500';
+                    statusLabel.textContent = 'Status: WITHIN LIMITS';
+                    statusLabel.className = 'text-xs text-primary font-bold';
+                    statusContainer.className = 'px-3 py-2 rounded bg-primary/10 border border-primary/20';
+                }
+
+                // --- Live Charting ---
+                const renderChart = (historyArray) => {
+                    const barsContainer = document.getElementById('history-bars-container');
+
+                    // Remove all children except the background line grids (first 4 divs)
+                    Array.from(barsContainer.children).forEach(child => {
+                        if (!child.classList.contains('absolute')) barsContainer.removeChild(child);
+                    });
+
+                    // Highest chart scale based on current limit, minimum 1000 to keep it steady
+                    const scaleMax = Math.max(limit * 1.2, 1000);
+
+                    historyArray.forEach(val => {
+                        const hPercentage = Math.min((val / scaleMax) * 100, 100);
+                        let colorClass = window.currentHistoryView === 'LIVE' ? 'bg-primary/50' : 'bg-slate-500/50'; // Dimmer color for historical mock data
+                        if (val > limit) colorClass = 'bg-red-500/80';
+                        else if (val > limit * 0.8) colorClass = 'bg-amber-500/80';
+
+                        const bar = document.createElement('div');
+                        bar.className = `flex-1 ${colorClass} rounded-t-sm transition-all duration-300`;
+                        bar.style.height = `${hPercentage}%`;
+                        barsContainer.appendChild(bar);
+                    });
+                };
+
+                // Keep latest data payload readily accessible for chart view swaps
+                window.latestTelemetryData = data;
+                window.latestDeviceLimit = limit;
+
+                if (window.currentHistoryView === 'LIVE') {
+                    renderChart(data.history || []);
+                } else {
+                    // If looking at a mock historical view, re-render the mock using real time limit scaling
+                    renderChart(window.getMockHistory(window.currentHistoryView, data.tension));
+                }
+
+                // --- Sub-Metric Differentials ---
+                const updateTrend = (id, currentVal, oldVal, labelSuffix, reverseGoodBad = false) => {
+                    const target = document.getElementById(id);
+                    if (!oldVal || currentVal === oldVal) {
+                        target.innerHTML = `<span class="material-symbols-outlined text-sm">horizontal_rule</span><span>Stable</span>`;
+                        target.className = 'mt-4 flex items-center gap-1 text-slate-500 text-xs font-bold transition-all';
+                        return;
+                    }
+                    const diff = parseFloat((currentVal - oldVal).toFixed(2));
+                    const isUp = diff > 0;
+
+                    // Default logic: up is slightly bad (red/amber), down is good (emerald). Reverse for certain metrics.
+                    let good = isUp ? false : true;
+                    if (reverseGoodBad) good = !good;
+
+                    target.innerHTML = `
+                        <span class="material-symbols-outlined text-sm">${isUp ? 'trending_up' : 'trending_down'}</span>
+                        <span>${diff > 0 ? '+' : ''}${diff}${labelSuffix} diff</span>
+                    `;
+                    target.className = `mt-4 flex items-center gap-1 ${good ? 'text-emerald-500' : 'text-amber-500'} text-xs font-bold transition-all`;
+                };
+
+                updateTrend('metric-temp-trend', data.temp, oldTelemetryState.temp, '°', false);
+                updateTrend('metric-moisture-trend', data.moisture, oldTelemetryState.moisture, '%', false);
+                updateTrend('metric-angle-trend', data.angle, oldTelemetryState.angle, '°', false);
+                // Acceleration (vibration) - high is bad, low is good
+                updateTrend('metric-accel-trend', data.accel, oldTelemetryState.accel, 'g', false);
+
+                // Save old state for next tick comparative math
+                oldTelemetryState = { ...data };
+            });
+
+            // --- History Chart Selection Logic ---
+            window.currentHistoryView = 'LIVE';
+            window.latestTelemetryData = null; // Store latest tick to re-render chart immediately on view swap
+            window.latestDeviceLimit = 500;
+
+            // Mock Data Generator for historical views
+            window.getMockHistory = (view, currentBaseTension) => {
+                const arr = [];
+                // Generate 15 points
+                for (let i = 0; i < 15; i++) {
+                    let variance = 0;
+                    if (view === '1D') variance = (Math.random() * 80) - 40; // High hourly variance
+                    if (view === '1M') variance = (Math.random() * 150) - 75; // Higher daily variance
+                    if (view === '1Y') variance = (Math.random() * 300) - 150; // Extreme monthly variance
+
+                    // Keep numbers vaguely positive
+                    let val = currentBaseTension + variance;
+                    if (val < 100) val = 100 + Math.random() * 50;
+
+                    // Force the last bar to be somewhat close to current to blend beautifully
+                    if (i === 14) val = currentBaseTension;
+
+                    arr.push(val);
+                }
+                return arr;
+            };
+
+            const histBtns = document.querySelectorAll('.hist-btn');
+            const timeLabels = document.getElementById('chart-time-labels');
+
+            histBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const targetView = e.target.getAttribute('data-view');
+                    window.currentHistoryView = targetView;
+
+                    // Update Button Styles
+                    histBtns.forEach(b => {
+                        b.className = 'hist-btn px-3 py-1 text-xs font-bold rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400';
+                    });
+                    e.target.className = 'hist-btn px-3 py-1 text-xs font-bold rounded bg-primary text-white';
+
+                    // Update Time Labels
+                    if (targetView === 'LIVE') {
+                        timeLabels.innerHTML = `<span>-30s</span><span>-20s</span><span>-10s</span><span>-5s</span><span>Now</span>`;
+                    } else if (targetView === '1D') {
+                        timeLabels.innerHTML = `<span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>Now</span>`;
+                    } else if (targetView === '1M') {
+                        timeLabels.innerHTML = `<span>Day 1</span><span>Day 8</span><span>Day 15</span><span>Day 22</span><span>Now</span>`;
+                    } else if (targetView === '1Y') {
+                        timeLabels.innerHTML = `<span>Jan</span><span>Apr</span><span>Jul</span><span>Oct</span><span>Now</span>`;
+                    }
+
+                    // Force an immediate re-render of the chart if we have data, otherwise wait for next tick
+                    if (window.latestTelemetryData) {
+                        const limit = window.latestDeviceLimit;
+                        const data = window.latestTelemetryData;
+
+                        let dataToRender = [];
+                        if (targetView === 'LIVE') dataToRender = data.history || [];
+                        else dataToRender = window.getMockHistory(targetView, data.tension);
+
+                        const barsContainer = document.getElementById('history-bars-container');
+                        Array.from(barsContainer.children).forEach(child => {
+                            if (!child.classList.contains('absolute')) barsContainer.removeChild(child);
+                        });
+                        const scaleMax = Math.max(limit * 1.2, 1000);
+
+                        dataToRender.forEach(val => {
+                            const hPercentage = Math.min((val / scaleMax) * 100, 100);
+                            let colorClass = targetView === 'LIVE' ? 'bg-primary/50' : 'bg-slate-500/50';
+                            if (val > limit) colorClass = 'bg-red-500/80';
+                            else if (val > limit * 0.8) colorClass = 'bg-amber-500/80';
+
+                            const bar = document.createElement('div');
+                            bar.className = `flex-1 ${colorClass} rounded-t-sm transition-all duration-300`;
+                            bar.style.height = `${hPercentage}%`;
+                            barsContainer.appendChild(bar);
+                        });
+                    }
+                });
+            });
+
+            /*checkAuthState(async (user) => {
+                const headerAvatarNode = document.getElementById('header-avatar');
+                if (headerAvatarNode) {
+                    let photoUrl = user.photoURL || (user.email ? await getGravatarUrl(user.email) : "https://www.gravatar.com/avatar/00000000000000000000000000000000?s=200&d=mp");
+                    headerAvatarNode.style.backgroundImage = `url("${photoUrl}")`;
+                }
+            }, () => { window.location.href = '/auth/sign-in'; });*/
+        });
+    </script>
+</body>
+
+</html>

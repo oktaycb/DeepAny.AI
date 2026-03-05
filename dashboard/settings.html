@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Settings | Tensomar</title>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Tensomar" />
+    <link rel="apple-touch-icon" href="/assets/images/tensomar-logo.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#1152d4" />
+    <script>
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1152d4",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+
+        .dark .glass-panel {
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: none;
+        }
+
+        .tension-gradient {
+            background: linear-gradient(90deg, #10b981 0%, #f59e0b 75%, #ef4444 100%);
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #1152d4;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            box-shadow: 0 0 10px rgba(17, 82, 212, 0.4);
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+    <!-- Top Navigation Bar -->
+    <header
+        class="flex items-center justify-between whitespace-nowrap border-b border-slate-200 dark:border-slate-800 px-6 py-4 bg-background-light dark:bg-background-dark sticky top-0 z-10">
+        <a class="flex items-center gap-4 nav-logo-link transition-opacity hover:opacity-80" href="#">
+            <div class="size-8 text-primary">
+                <img alt="Tensomar Logo" class="w-full h-full object-contain" loading="lazy"
+                    data-alt="Tensomar company logo blue abstract icon" src="/assets/images/tensomar-logo.png" />
+            </div>
+            <h2 class="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-tight">Tensomar</h2>
+        </a>
+        <div class="flex flex-1 justify-end gap-4 items-center">
+            <button id="btn-theme-toggle"
+                class="p-2 flex text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                <span class="material-symbols-outlined text-[20px]">dark_mode</span>
+            </button>
+            <!-- Notifications Dropdown Container -->
+            <div class="relative">
+                <button id="btn-notifications"
+                    class="flex items-center justify-center rounded-lg h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+                    <span class="material-symbols-outlined">notifications</span>
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div id="notifications-dropdown"
+                    class="absolute right-0 mt-2 w-72 sm:w-80 bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl z-50 overflow-hidden opacity-0 invisible transition-all duration-200 transform origin-top-right scale-95 pointer-events-none">
+                    <div
+                        class="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                        <span class="font-bold text-sm">Notifications</span>
+                        <button id="btn-notifications-clear"
+                            class="text-[10px] uppercase font-bold text-primary hover:underline">Mark all read</button>
+                    </div>
+                    <div class="p-6 text-center flex flex-col items-center justify-center">
+                        <div
+                            class="size-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3">
+                            <span
+                                class="material-symbols-outlined text-slate-400 dark:text-slate-500">notifications_paused</span>
+                        </div>
+                        <p class="text-sm font-medium text-slate-900 dark:text-white">You're all caught up</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Check back later for new alerts.</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Avatar Dropdown Container -->
+            <div class="relative">
+                <button id="header-avatar"
+                    class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-slate-200 dark:border-slate-700 hover:ring-2 hover:ring-primary hover:ring-offset-2 dark:hover:ring-offset-slate-900 transition-all cursor-pointer block"
+                    data-alt="User profile avatar header"
+                    style='background-image: url("https://placeholder.pics/svg/300");'>
+                </button>
+
+                <!-- Avatar Dropdown Menu -->
+                <div id="avatar-dropdown"
+                    class="absolute right-0 mt-2 w-48 bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl z-50 overflow-hidden opacity-0 invisible transition-all duration-200 transform origin-top-right scale-95 pointer-events-none">
+                    <div class="py-1">
+                        <a href="profile"
+                            class="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                            <span class="material-symbols-outlined text-[18px]">person</span>
+                            My Profile
+                        </a>
+                        <div class="h-px bg-slate-200 dark:bg-slate-800 my-1"></div>
+                        <button id="btn-header-sign-out"
+                            class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 dark:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left">
+                            <span class="material-symbols-outlined text-[18px]">logout</span>
+                            Sign Out
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main class="flex-1 px-4 md:px-8 lg:px-10 py-10 pb-24 md:pb-10">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Sidebar Navigation -->
+            <aside class="hidden lg:block lg:col-span-3 space-y-2">
+                <div class="mb-6">
+                    <h1 class="text-slate-900 dark:text-white text-lg font-bold">System Settings</h1>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm mb-2">Configuration for</p>
+                    <select id="device-selector"
+                        class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded text-sm font-bold p-2 focus:ring-2 focus:ring-primary truncate appearance-none cursor-pointer">
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+                <nav class="flex flex-col gap-1">
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        href="panel">
+                        <span class="material-symbols-outlined">dashboard</span>
+                        <span class="text-sm font-medium">Dashboard</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        href="profile">
+                        <span class="material-symbols-outlined">person</span>
+                        <span class="text-sm font-medium">Profile</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-primary/10 text-primary font-bold"
+                        href="settings">
+                        <span class="material-symbols-outlined text-primary">settings</span>
+                        <span class="text-sm font-medium">Settings</span>
+                    </a>
+                </nav>
+                <div class="mt-8 flex flex-col pt-4 border-t border-slate-200 dark:border-slate-800">
+                    <span class="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 mb-2">System
+                        Status</span>
+                    <div class="flex items-center gap-2">
+                        <span class="relative flex h-2 w-2">
+                            <span
+                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <span class="text-xs font-medium text-emerald-500">Operational</span>
+                    </div>
+                </div>
+            </aside>
+            <!-- Main Active Area -->
+            <div class="lg:col-span-9 space-y-8">
+                <section class="space-y-6">
+                    <h2 class="text-xl font-bold">Notifications</h2>
+                    <div
+                        class="glass-panel rounded-xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div class="flex flex-col gap-1">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary">sms</span>
+                                <p class="font-bold">SMS Notifications</p>
+                            </div>
+                            <p class="text-sm text-slate-500">Receive high-priority alerts for threshold breaches
+                                directly to your registered device.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input id="setting-sms-notification" checked="" class="sr-only peer" type="checkbox"
+                                value="" />
+                            <div
+                                class="w-11 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                            </div>
+                        </label>
+                    </div>
+
+                    <div
+                        class="glass-panel rounded-xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-4">
+                        <div class="flex flex-col gap-1">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-emerald-500">notifications_active</span>
+                                <p class="font-bold">Push Notifications</p>
+                            </div>
+                            <p class="text-sm text-slate-500">Receive native desktop/mobile alerts when app running in
+                                background.</p>
+                        </div>
+                        <div class="flex flex-col sm:flex-row items-end sm:items-center gap-4">
+                            <div class="flex flex-col gap-1 items-end sm:items-start text-right sm:text-left">
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Rate Limit
+                                    (Cooldown)</label>
+                                <select id="setting-cooldown"
+                                    class="bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm p-2 focus:ring-2 focus:ring-primary font-medium w-full sm:w-auto">
+                                    <option value="5000">5 Seconds</option>
+                                    <option value="60000">1 Minute</option>
+                                    <option value="300000" selected="">5 Minutes</option>
+                                    <option value="900000">15 Minutes</option>
+                                </select>
+                            </div>
+                            <button id="btn-request-push"
+                                class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-sm font-bold rounded-lg transition-colors border border-slate-200 dark:border-slate-700 whitespace-nowrap">
+                                Request Access
+                            </button>
+                        </div>
+                    </div>
+
+                    <div
+                        class="glass-panel rounded-xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-4">
+                        <div class="flex flex-col gap-1">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-rose-500">volume_up</span>
+                                <p class="font-bold">Warning Sound</p>
+                            </div>
+                            <p class="text-sm text-slate-500">Play an audible beep when tension thresholds are exceeded.
+                            </p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input id="setting-warning-sound" checked="" class="sr-only peer" type="checkbox"
+                                value="" />
+                            <div
+                                class="w-11 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                            </div>
+                        </label>
+                    </div>
+                </section>
+                <section class="space-y-6">
+                    <h2 class="text-xl font-bold">Threshold Configuration</h2>
+                    <div class="glass-panel rounded-xl p-8 space-y-10">
+                        <div class="flex items-center justify-between">
+                            <div class="flex flex-col">
+                                <p class="font-bold text-lg">Intensity Threshold</p>
+                                <p class="text-sm text-slate-500">System triggers alert when load exceeds this value.
+                                </p>
+                            </div>
+                            <div class="bg-primary/10 border border-primary/30 rounded-lg px-6 py-3 shadow-inner">
+                                <span id="setting-intensity-label"
+                                    class="text-primary font-mono font-bold text-2xl">500<small
+                                        class="ml-1 opacity-70 text-sm">kg</small></span>
+                            </div>
+                        </div>
+                        <div class="space-y-6">
+                            <div class="relative">
+                                <input id="setting-intensity"
+                                    class="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-primary"
+                                    max="1000" min="1" type="range" value="500" />
+                                <div
+                                    class="absolute -bottom-8 left-0 right-0 flex justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                                    <span>1kg</span>
+                                    <span>250kg</span>
+                                    <span>500kg</span>
+                                    <span>750kg</span>
+                                    <span>1000kg</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            class="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-10 border-t border-slate-200 dark:border-slate-800">
+                            <div class="flex flex-col gap-3">
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Alert
+                                    Delay</label>
+                                <select id="setting-delay"
+                                    class="bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm p-3.5 focus:ring-2 focus:ring-primary font-medium">
+                                    <option>Instant (0s)</option>
+                                    <option>Delayed (5s)</option>
+                                    <option>Persistent (10s)</option>
+                                </select>
+                            </div>
+                            <div class="flex flex-col gap-3">
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Priority
+                                    Level</label>
+                                <select id="setting-priority"
+                                    class="bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm p-3.5 focus:ring-2 focus:ring-primary font-medium">
+                                    <option>Low</option>
+                                    <option selected="">Standard</option>
+                                    <option>Critical</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <div class="flex justify-end gap-4 pb-10">
+                    <button id="btn-discard-settings"
+                        class="px-8 py-3 rounded-lg text-sm font-bold border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Discard
+                        Changes</button>
+                    <button id="btn-apply-settings"
+                        class="px-8 py-3 rounded-lg text-sm font-bold bg-primary text-white hover:bg-primary/90 shadow-xl shadow-primary/25 transition-all">Apply
+                        Configuration</button>
+                </div>
+            </div>
+        </div>
+    </main>
+    <!-- Footer Section -->
+    <footer class="mt-auto border-t border-slate-200 dark:border-slate-800 py-6 px-10 text-center pb-24 md:pb-6">
+        <p class="text-slate-500 dark:text-slate-500 text-xs">
+            © 2026 Tensomar Industrial Systems. Secure Communication Protocol Enabled.
+        </p>
+    </footer>
+    <!-- Mobile Sticky Footer Navigator -->
+    <nav
+        class="fixed bottom-0 w-full bg-white dark:bg-background-dark border-t border-slate-200 dark:border-slate-800 flex justify-around items-center h-16 lg:hidden z-50 px-2 pb-safe">
+        <a class="flex flex-col items-center justify-center w-full h-full text-slate-500 hover:text-primary transition-colors"
+            href="panel">
+            <span class="material-symbols-outlined mb-1">dashboard</span>
+            <span class="text-[10px] font-medium">Panel</span>
+        </a>
+        <a class="flex flex-col items-center justify-center w-full h-full text-primary transition-colors"
+            href="settings">
+            <span class="material-symbols-outlined mb-1">settings</span>
+            <span class="text-[10px] font-bold">Settings</span>
+        </a>
+        <a class="flex flex-col items-center justify-center w-full h-full text-slate-500 hover:text-primary transition-colors"
+            href="profile">
+            <span class="material-symbols-outlined mb-1">person</span>
+            <span class="text-[10px] font-medium">Profile</span>
+        </a>
+    </nav>
+    <script src="../scripts/device-simulator.js"></script>
+
+    <script type="module">
+        import { getUserDoc, checkAuthState, setupThemeToggle, setupNotificationsDropdown, setupAvatarDropdown, setupLogoRouting, showToast } from '../scripts/functions.js?v=7';
+
+        setupThemeToggle('btn-theme-toggle');
+        setupNotificationsDropdown('btn-notifications', 'notifications-dropdown');
+        setupAvatarDropdown('header-avatar', 'avatar-dropdown', 'btn-header-sign-out');
+        setupLogoRouting();
+
+        // Initialize Warning Sound Settings
+        const soundToggle = document.getElementById('setting-warning-sound');
+        if (soundToggle) {
+            if (localStorage.getItem('tensomar_sound_enabled') === 'false') {
+                soundToggle.checked = false;
+            }
+            soundToggle.addEventListener('change', (e) => {
+                localStorage.setItem('tensomar_sound_enabled', e.target.checked ? 'true' : 'false');
+                showToast('Settings Saved', 'Warning sound preference updated.', 'success');
+            });
+        }
+
+        const getGravatarUrl = async (email) => {
+            if (!email) return "https://www.gravatar.com/avatar/00000000000000000000000000000000?s=200&d=mp";
+            const msgUint8 = new TextEncoder().encode(email.trim().toLowerCase());
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return `https://www.gravatar.com/avatar/${hashHex}?s=200&d=identicon`;
+        };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!(await getUserDoc())) {
+                window.location.href = '/auth/sign-in'; return;
+            }
+
+            /*checkAuthState(async (user) => {
+                const headerAvatarNode = document.getElementById('header-avatar');
+                if (headerAvatarNode) {
+                    let photoUrl = user.photoURL || (user.email ? await getGravatarUrl(user.email) : "https://www.gravatar.com/avatar/00000000000000000000000000000000?s=200&d=mp");
+                    headerAvatarNode.style.backgroundImage = `url("${photoUrl}")`;
+                }
+            }, () => { window.location.href = '/auth/sign-in'; });*/
+
+            // --- Settings Logic ---
+            let isDirty = false;
+            let currentDeviceId = null;
+
+            const defaultSettings = {
+                smsNotification: true,
+                intensity: "500",
+                delay: "Instant (0s)",
+                priority: "Standard",
+                cooldown: "300000"
+            };
+
+            const loadSettings = () => {
+                if (!currentDeviceId) return;
+                const saved = JSON.parse(localStorage.getItem(`tensomar_mock_settings_${currentDeviceId}`)) || defaultSettings;
+                document.getElementById('setting-sms-notification').checked = saved.smsNotification;
+                document.getElementById('setting-intensity').value = saved.intensity;
+                document.getElementById('setting-intensity-label').innerHTML = saved.intensity + '<small class="ml-1 opacity-70 text-sm">kg</small>';
+                document.getElementById('setting-delay').value = saved.delay;
+                document.getElementById('setting-priority').value = saved.priority;
+                document.getElementById('setting-cooldown').value = saved.cooldown || "300000";
+                isDirty = false; // Reset dirty state on load
+            };
+
+            // Device Initialization and Selector Logic
+            const stored = localStorage.getItem('tensomar_mock_devices');
+            const devices = stored ? JSON.parse(stored) : [];
+            if (devices.length === 0) {
+                window.location.href = 'profile'; // Redirect if no devices
+            } else {
+                const selector = document.getElementById('device-selector');
+                selector.innerHTML = '';
+                devices.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d.id;
+                    opt.textContent = d.name;
+                    selector.appendChild(opt);
+                });
+
+                currentDeviceId = devices[0].id;
+
+                selector.addEventListener('change', (e) => {
+                    if (isDirty) {
+                        if (!confirm("You have unsaved changes. Discard them and switch device?")) {
+                            e.target.value = currentDeviceId; // revert selection
+                            return;
+                        }
+                    }
+                    currentDeviceId = e.target.value;
+                    loadSettings();
+                });
+
+                loadSettings();
+            }
+
+            // Track changes in inputs
+            const markDirty = () => { isDirty = true; };
+            document.getElementById('setting-sms-notification').addEventListener('change', markDirty);
+            document.getElementById('setting-delay').addEventListener('change', markDirty);
+            document.getElementById('setting-priority').addEventListener('change', markDirty);
+            document.getElementById('setting-cooldown').addEventListener('change', markDirty);
+
+            document.getElementById('setting-intensity').addEventListener('input', (e) => {
+                document.getElementById('setting-intensity-label').innerHTML = e.target.value + '<small class="ml-1 opacity-70 text-sm">kg</small>';
+                markDirty();
+            });
+
+            document.getElementById('btn-apply-settings').addEventListener('click', () => {
+                if (!currentDeviceId) return;
+                const config = {
+                    smsNotification: document.getElementById('setting-sms-notification').checked,
+                    intensity: document.getElementById('setting-intensity').value,
+                    delay: document.getElementById('setting-delay').value,
+                    priority: document.getElementById('setting-priority').value,
+                    cooldown: document.getElementById('setting-cooldown').value
+                };
+                localStorage.setItem(`tensomar_mock_settings_${currentDeviceId}`, JSON.stringify(config));
+                isDirty = false;
+
+                // Show a quick visual confirmation
+                const btn = document.getElementById('btn-apply-settings');
+                const originalText = btn.textContent;
+                btn.textContent = 'Saved!';
+                btn.classList.add('bg-emerald-500');
+                btn.classList.remove('bg-primary');
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.classList.remove('bg-emerald-500');
+                    btn.classList.add('bg-primary');
+                }, 2000);
+            });
+
+            document.getElementById('btn-discard-settings').addEventListener('click', () => {
+                loadSettings();
+            });
+
+            // Handle Web Push Notification Request
+            const updatePushBtnState = () => {
+                const btn = document.getElementById('btn-request-push');
+                if (!("Notification" in window)) {
+                    btn.textContent = "Unsupported Browser";
+                    btn.disabled = true;
+                    btn.classList.add("opacity-50", "cursor-not-allowed");
+                } else if (Notification.permission === "granted") {
+                    btn.textContent = "Access Granted";
+                    btn.classList.replace("bg-slate-100", "bg-emerald-500/10");
+                    btn.classList.replace("dark:bg-slate-800", "bg-emerald-500/10");
+                    btn.classList.add("text-emerald-500", "border-emerald-500/30");
+                    btn.disabled = true;
+                } else if (Notification.permission === "denied") {
+                    btn.textContent = "Access Denied";
+                    btn.classList.add("text-red-500");
+                    btn.disabled = true;
+                }
+            };
+
+            document.getElementById('btn-request-push').addEventListener('click', () => {
+                if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+                    Notification.requestPermission().then(permission => {
+                        updatePushBtnState();
+                        if (permission === 'granted') {
+                            new Notification("Tensomar Web Push", { body: "Push notifications successfully enabled!" });
+                        }
+                    });
+                }
+            });
+
+            updatePushBtnState();
+
+            // Prevent user from leaving the page if changes are unsaved
+            window.addEventListener('beforeunload', (e) => {
+                if (isDirty) {
+                    const msg = "You have unsaved changes. Are you sure you want to leave without applying the configuration?";
+                    e.returnValue = msg; // Standard method for showing generic browser leave prompt
+                    return msg;
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Sign Up | Tensomar</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1152d4",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        select {
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+        }
+    </style>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Tensomar" />
+    <link rel="apple-touch-icon" href="/assets/images/tensomar-logo.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#1152d4" />
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col font-display">
+    <!-- Top Navigation -->
+    <!-- Navigation -->
+    <nav
+        class="sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800 bg-background-light/80 dark:bg-slate-900/80 backdrop-blur-md w-full">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-10">
+                <a class="flex items-center gap-2 nav-logo-link hover:opacity-80 transition-opacity" href="/">
+                    <img alt="Tensomar Logo" class="h-8 w-auto text-primary" loading="lazy"
+                        data-alt="Tensomar industrial geometric logo symbol" src="/assets/images/tensomar-logo.png" />
+                    <span class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Tensomar</span>
+                </a>
+            </div>
+            <div class="flex items-center gap-4 md:gap-6">
+                <button id="btn-theme-toggle"
+                    class="p-2 flex text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">dark_mode</span>
+                </button>
+                <span class="text-sm text-slate-400 hidden md:block">Already have an account?</span>
+                <a class="px-5 py-2 rounded-lg text-sm font-semibold hover:text-primary transition-colors border border-slate-700 hover:border-primary"
+                    href="/auth/sign-in">Sign In</a>
+            </div>
+        </div>
+    </nav>
+    <!-- Main Content -->
+    <main class="flex-1 flex items-center justify-center px-4 py-12">
+        <div class="w-full max-w-[540px]">
+            <!-- Card -->
+            <div class="glass-panel rounded-xl p-8 md:p-10 shadow-2xl">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-extrabold tracking-tight mb-2">Create your account</h2>
+                    <p class="text-slate-400 text-base">Industrial-grade security for your project data.</p>
+                </div>
+                <form id="sign-up-form" class="space-y-5">
+                    <!-- Name Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-1.5">
+                            <label class="text-sm font-medium text-slate-300 ml-1">First Name</label>
+                            <input id="firstName" name="firstName"
+                                class="w-full bg-slate-800/50 border-slate-700/50 rounded-lg h-12 px-4 focus:ring-2 focus:ring-primary focus:border-transparent transition-all placeholder:text-slate-500"
+                                placeholder="John" type="text" required />
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-sm font-medium text-slate-300 ml-1">Last Name</label>
+                            <input id="lastName" name="lastName"
+                                class="w-full bg-slate-800/50 border-slate-700/50 rounded-lg h-12 px-4 focus:ring-2 focus:ring-primary focus:border-transparent transition-all placeholder:text-slate-500"
+                                placeholder="Doe" type="text" required />
+                        </div>
+                    </div>
+                    <!-- Email -->
+                    <div class="space-y-1.5">
+                        <label class="text-sm font-medium text-slate-300 ml-1">Work Email</label>
+                        <input id="email" name="email"
+                            class="w-full bg-slate-800/50 border-slate-700/50 rounded-lg h-12 px-4 focus:ring-2 focus:ring-primary focus:border-transparent transition-all placeholder:text-slate-500"
+                            placeholder="name@company.com" type="email" />
+                    </div>
+                    <!-- Passwords -->
+                    <div class="space-y-1.5">
+                        <label class="text-sm font-medium text-slate-300 ml-1">Password</label>
+                        <div class="relative">
+                            <input id="password" name="password"
+                                class="w-full bg-slate-800/50 border-slate-700/50 rounded-lg h-12 px-4 focus:ring-2 focus:ring-primary focus:border-transparent transition-all placeholder:text-slate-500 pr-10"
+                                placeholder="••••••••" type="password" required />
+                            <button id="toggle-password"
+                                class="absolute right-3 top-3 text-slate-500 hover:text-slate-300" type="button">
+                                <span id="toggle-password-icon"
+                                    class="material-symbols-outlined text-xl">visibility</span>
+                            </button>
+                        </div>
+                        <!-- Strength Indicator -->
+                        <div class="pt-2">
+                            <div class="flex gap-1 h-1 w-full rounded-full overflow-hidden bg-slate-800">
+                                <div id="pw-bar-1" class="w-1/4 bg-slate-700 transition-colors"></div>
+                                <div id="pw-bar-2" class="w-1/4 bg-slate-700 transition-colors"></div>
+                                <div id="pw-bar-3" class="w-1/4 bg-slate-700 transition-colors"></div>
+                                <div id="pw-bar-4" class="w-1/4 bg-slate-700 transition-colors"></div>
+                            </div>
+                            <p class="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
+                                <span class="material-symbols-outlined text-xs">info</span>
+                                <span id="pw-text">Strength: Very Weak.</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-sm font-medium text-slate-300 ml-1">Confirm Password</label>
+                        <div class="relative">
+                            <input id="confirmPassword" name="confirmPassword"
+                                class="w-full bg-slate-800/50 border-slate-700/50 rounded-lg h-12 px-4 focus:ring-2 focus:ring-primary focus:border-transparent transition-all placeholder:text-slate-500 pr-10"
+                                placeholder="••••••••" type="password" required />
+                            <button id="toggle-confirm-password"
+                                class="absolute right-3 top-3 text-slate-500 hover:text-slate-300" type="button">
+                                <span id="toggle-confirm-password-icon"
+                                    class="material-symbols-outlined text-xl">visibility</span>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- CTA -->
+                    <div class="pt-4 space-y-4">
+                        <button id="sign-up-btn"
+                            class="w-full bg-primary hover:bg-primary/90 text-white font-semibold h-12 rounded-lg transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+                            type="submit">
+                            <span id="sign-up-text">Create Account</span>
+                            <span class="material-symbols-outlined text-xl">arrow_forward</span>
+                        </button>
+                        <div class="flex items-center justify-center gap-2 py-2">
+                            <span class="material-symbols-outlined text-primary text-lg">verified_user</span>
+                            <span class="text-xs text-slate-400 uppercase tracking-widest font-medium">Your data is
+                                encrypted and securely stored.</span>
+                        </div>
+                    </div>
+                </form>
+                <div class="mt-8 pt-8 border-t border-slate-800 flex flex-col gap-4">
+                    <div class="flex justify-center gap-8">
+                        <div
+                            class="flex items-center gap-2 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all cursor-default">
+                            <span class="material-symbols-outlined text-xl">security</span>
+                            <span class="text-[11px] font-bold">SOC2 TYPE II</span>
+                        </div>
+                        <div
+                            class="flex items-center gap-2 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all cursor-default">
+                            <span class="material-symbols-outlined text-xl">lock</span>
+                            <span class="text-[11px] font-bold">AES-256</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Footer links -->
+            <div class="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-slate-500">
+                <a class="hover:text-slate-300 transition-colors" href="/">Home</a>
+                <a class="hover:text-slate-300 transition-colors" href="/auth/forgot-password">Forgot Password?</a>
+            </div>
+            <!-- Mobile secondary link -->
+            <div class="md:hidden mt-6 text-center">
+                <span class="text-sm text-slate-400">Already have an account?</span>
+                <a class="text-sm font-semibold text-primary ml-1" href="/auth/sign-in">Sign In</a>
+            </div>
+        </div>
+    </main>
+    <!-- Background Decoration -->
+    <div class="fixed top-0 left-0 w-full h-full -z-10 overflow-hidden pointer-events-none">
+        <div class="absolute -top-[10%] -right-[10%] w-[40%] h-[40%] bg-primary/10 blur-[120px] rounded-full"></div>
+        <div class="absolute -bottom-[10%] -left-[10%] w-[30%] h-[30%] bg-primary/5 blur-[100px] rounded-full"></div>
+    </div>
+
+    <script type="module">
+        import { signUpWithEmail, getUserDoc, setCurrentUserDoc, setupLogoRouting, showToast, setupThemeToggle } from '../scripts/functions.js?v=6';
+
+        setupLogoRouting();
+        setupThemeToggle('btn-theme-toggle');
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (await getUserDoc()) {
+                window.location.href = '/dashboard/panel';
+                return;
+            }
+
+            const form = document.getElementById('sign-up-form');
+            const firstNameInput = document.getElementById('firstName');
+            const lastNameInput = document.getElementById('lastName');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const confirmPasswordInput = document.getElementById('confirmPassword');
+            const errorMsg = document.getElementById('error-message');
+            const submitBtn = document.getElementById('sign-up-btn');
+            const submitBtnText = document.getElementById('sign-up-text');
+
+            // Password Strength Vars
+            const pwBars = [
+                document.getElementById('pw-bar-1'),
+                document.getElementById('pw-bar-2'),
+                document.getElementById('pw-bar-3'),
+                document.getElementById('pw-bar-4')
+            ];
+            const pwText = document.getElementById('pw-text');
+
+            // Visibility Toggles
+            const togglePasswordBtn = document.getElementById('toggle-password');
+            const togglePasswordIcon = document.getElementById('toggle-password-icon');
+            const toggleConfirmPasswordBtn = document.getElementById('toggle-confirm-password');
+            const toggleConfirmPasswordIcon = document.getElementById('toggle-confirm-password-icon');
+
+            togglePasswordBtn.addEventListener('click', () => {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                togglePasswordIcon.textContent = type === 'password' ? 'visibility' : 'visibility_off';
+            });
+
+            toggleConfirmPasswordBtn.addEventListener('click', () => {
+                const type = confirmPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                confirmPasswordInput.setAttribute('type', type);
+                toggleConfirmPasswordIcon.textContent = type === 'password' ? 'visibility' : 'visibility_off';
+            });
+
+            const showError = (msg) => {
+                showToast(msg, 'error');
+            };
+
+            // Password Event Listener
+            passwordInput.addEventListener('input', (e) => {
+                const val = e.target.value;
+                let score = 0;
+
+                if (val.length > 5) score += 1;
+                if (val.length > 8) score += 1;
+                if (/[A-Z]/.test(val) && /[0-9]/.test(val)) score += 1;
+                if (/[^A-Za-z0-9]/.test(val)) score += 1;
+
+                // Reset bars
+                pwBars.forEach(b => b.className = 'w-1/4 bg-slate-700 transition-colors');
+
+                if (val.length === 0) {
+                    pwText.textContent = "Strength: Very Weak.";
+                } else if (score <= 1) {
+                    pwBars[0].classList.replace('bg-slate-700', 'bg-red-500');
+                    pwText.textContent = "Strength: Weak. Use 6+ chars.";
+                } else if (score === 2) {
+                    pwBars[0].classList.replace('bg-slate-700', 'bg-amber-500');
+                    pwBars[1].classList.replace('bg-slate-700', 'bg-amber-500');
+                    pwText.textContent = "Strength: Fair. Add caps & numbers.";
+                } else if (score === 3) {
+                    pwBars[0].classList.replace('bg-slate-700', 'bg-primary');
+                    pwBars[1].classList.replace('bg-slate-700', 'bg-primary');
+                    pwBars[2].classList.replace('bg-slate-700', 'bg-primary');
+                    pwText.textContent = "Strength: Good. Add a symbol for max.";
+                } else {
+                    pwBars.forEach(b => b.classList.replace('bg-slate-700', 'bg-emerald-500'));
+                    pwText.textContent = "Strength: Excellent.";
+                }
+            });
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const email = emailInput.value.trim();
+                const password = passwordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
+
+                if (!email) {
+                    showError("Please enter your email address.");
+                    return;
+                }
+
+                if (password !== confirmPassword) {
+                    showError("Passwords do not match.");
+                    return;
+                }
+
+                if (password.length < 6) {
+                    showError("Password should be at least 6 characters.");
+                    return;
+                }
+
+                try {
+                    submitBtn.disabled = true;
+                    submitBtnText.textContent = "Processing...";
+
+                    const userData = {
+                        firstName: firstNameInput.value.trim(),
+                        lastName: lastNameInput.value.trim()
+                    };
+
+                    await signUpWithEmail(email, password, userData);
+                    await setCurrentUserDoc();
+                    window.location.href = '/dashboard/panel';
+
+                } catch (error) {
+                    let friendlyError = "Registration failed.";
+                    if (error.code === 'auth/email-already-in-use') friendlyError = "Email already in use.";
+                    if (error.code === 'auth/invalid-email') friendlyError = "Invalid email formatting.";
+                    showError(friendlyError);
+                    submitBtnText.textContent = "Create Account";
+                } finally {
+                    submitBtn.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

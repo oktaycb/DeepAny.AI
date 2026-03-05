@@ -1,0 +1,10 @@
+{
+  "version": "0.2.1",
+  "tasks": [
+    {
+      "taskLabel": "g\u00F6rev-functions",
+      "appliesTo": "scripts/functions.js",
+      "type": "launch"
+    }
+  ]
+}

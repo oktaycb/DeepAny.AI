@@ -1,0 +1,252 @@
+<html class="dark">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1152d4",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Tensomar" />
+    <link rel="apple-touch-icon" href="/assets/images/tensomar-logo.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#1152d4" />
+</head>
+
+<body class="bg-background-light dark:bg-background-dark font-display antialiased">
+    <div class="relative flex min-h-screen w-full flex-col items-center justify-center overflow-x-hidden p-4">
+        <!-- Top Navigation (Minimal for Auth) -->
+        <!-- Navigation -->
+        <nav
+            class="absolute top-0 left-0 right-0 z-50 border-b border-slate-200 dark:border-slate-800 bg-background-light/80 dark:bg-slate-900/80 backdrop-blur-md w-full">
+            <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+                <div class="flex items-center gap-10">
+                    <a class="flex items-center gap-2 nav-logo-link hover:opacity-80 transition-opacity" href="/">
+                        <img alt="Tensomar Logo" class="h-8 w-auto text-primary" loading="lazy"
+                            data-alt="Tensomar company logo blue abstract icon"
+                            src="/assets/images/tensomar-logo.png" />
+                        <span class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Tensomar</span>
+                    </a>
+                </div>
+                <div class="flex items-center gap-4 md:gap-6">
+                    <button id="btn-theme-toggle"
+                        class="p-2 flex text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">dark_mode</span>
+                    </button>
+                    <span class="text-sm text-slate-400 hidden md:block">Don't have an account?</span>
+                    <a class="bg-primary hover:bg-primary/90 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-lg shadow-primary/20 transition-all border border-transparent"
+                        href="/auth/sign-up">Sign Up</a>
+                </div>
+            </div>
+        </nav>
+        <!-- Main Auth Card -->
+        <main class="w-full max-w-md">
+            <div
+                class="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl p-8 md:p-10 backdrop-blur-sm">
+                <!-- Security Icon & Header -->
+                <div class="flex flex-col items-center mb-8">
+                    <div class="bg-primary/10 p-3 rounded-full mb-4">
+                        <span class="material-symbols-outlined text-primary text-3xl">lock</span>
+                    </div>
+                    <h1 class="text-slate-900 dark:text-slate-100 text-3xl font-bold text-center tracking-tight">Sign In
+                    </h1>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm mt-2 text-center">Enter your credentials to
+                        access your secure dashboard</p>
+                </div>
+                <!-- Sign In Form -->
+                <form id="sign-in-form" class="space-y-6">
+                    <div>
+                        <label class="block text-slate-700 dark:text-slate-300 text-sm font-medium mb-2"
+                            for="identifier">
+                            Email or Phone Number
+                        </label>
+                        <div class="relative">
+                            <input
+                                class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg py-3 px-4 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                                id="identifier" name="identifier" placeholder="name@company.com" type="text" required />
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <label class="block text-slate-700 dark:text-slate-300 text-sm font-medium" for="password">
+                                Password
+                            </label>
+                            <a class="text-primary text-xs font-semibold hover:underline" href="#">Forgot password?</a>
+                        </div>
+                        <div class="relative">
+                            <input
+                                class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg py-3 px-4 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all pr-10"
+                                id="password" name="password" placeholder="••••••••" type="password" />
+                            <button id="toggle-password"
+                                class="absolute right-3 top-3.5 text-slate-400 hover:text-slate-200" type="button">
+                                <span id="toggle-password-icon"
+                                    class="material-symbols-outlined text-xl">visibility</span>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- CTA Button -->
+                    <button id="sign-in-btn"
+                        class="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3.5 rounded-lg shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2"
+                        type="submit">
+                        <span id="sign-in-text">Sign In</span>
+                        <span class="material-symbols-outlined text-lg">login</span>
+                    </button>
+                </form>
+                <!-- Footer Links -->
+                <div class="mt-8 text-center">
+                    <p class="text-slate-500 dark:text-slate-400 text-sm">
+                        Don't have an account?
+                        <a class="text-primary font-semibold hover:underline ml-1" href="/auth/sign-up">Create
+                            Account</a>
+                    </p>
+                </div>
+            </div>
+            <!-- Trust Badges / Footer Info -->
+            <div class="mt-8 flex flex-col items-center gap-4">
+                <div class="flex gap-4 text-[10px] uppercase tracking-widest text-slate-500 font-medium">
+                    <a class="hover:text-primary" href="/">Home</a>
+                    <span>•</span>
+                    <a class="hover:text-primary" href="/auth/forgot-password">Help Center</a>
+                </div>
+            </div>
+        </main>
+        <!-- Decorative elements -->
+        <div class="fixed -z-10 top-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 blur-[120px] rounded-full"></div>
+        <div class="fixed -z-10 bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 blur-[120px] rounded-full"></div>
+    </div>
+
+    <script type="module">
+        import { signInWithEmail, sendPhoneCode, verifyPhoneCode, getUserDoc, setCurrentUserDoc, setupLogoRouting, showToast, setupThemeToggle } from '../scripts/functions.js?v=6';
+
+        setupLogoRouting();
+        setupThemeToggle('btn-theme-toggle');
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Redirect if already logged in
+            if (await getUserDoc()) {
+                window.location.href = '/dashboard/panel';
+                return;
+            }
+
+            const form = document.getElementById('sign-in-form');
+            const identifierInput = document.getElementById('identifier');
+            const passwordInput = document.getElementById('password');
+            const errorMsg = document.getElementById('error-message');
+            const submitBtnText = document.getElementById('sign-in-text');
+            const submitBtn = document.getElementById('sign-in-btn');
+
+            const togglePasswordBtn = document.getElementById('toggle-password');
+            const togglePasswordIcon = document.getElementById('toggle-password-icon');
+
+            togglePasswordBtn.addEventListener('click', () => {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                togglePasswordIcon.textContent = type === 'password' ? 'visibility' : 'visibility_off';
+            });
+
+            let isWaitingForCode = false;
+
+            const showError = (msg) => {
+                showToast(msg, 'error');
+            };
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const identifier = identifierInput.value.trim();
+                const password = passwordInput.value;
+
+                if (!identifier) {
+                    showError("Please enter email or phone number");
+                    return;
+                }
+
+                // Simple check: if starts with '+' or numbers, assume phone
+                const isPhone = /^\+?[0-9\s\-\(\)]+$/.test(identifier);
+
+                try {
+                    submitBtn.disabled = true;
+                    submitBtnText.textContent = "Processing...";
+
+                    if (isPhone) {
+                        if (!isWaitingForCode) {
+                            // Step 1: Send SMS
+                            await sendPhoneCode(identifier, 'sign-in-btn');
+                            isWaitingForCode = true;
+                            passwordInput.placeholder = "Enter SMS Code";
+                            passwordInput.value = "";
+                            passwordInput.type = "text";
+                            document.querySelector('label[for="password"]').textContent = "SMS Verification Code";
+                            submitBtnText.textContent = "Verify Code";
+                            showToast("Code sent! Check your phone.", "success");
+                        } else {
+                            // Step 2: Verify Code
+                            if (!password) {
+                                showError("Please enter the SMS code");
+                                submitBtn.disabled = false;
+                                submitBtnText.textContent = "Verify Code";
+                                return;
+                            }
+                            await verifyPhoneCode(password);
+                            await setCurrentUserDoc();
+                            window.location.href = '/dashboard/panel';
+                        }
+                    } else {
+                        // Email Sign In
+                        if (!password) {
+                            showError("Please enter your password");
+                            submitBtn.disabled = false;
+                            submitBtnText.textContent = "Sign In";
+                            return;
+                        }
+                        await signInWithEmail(identifier, password);
+                        await setCurrentUserDoc();
+                        window.location.href = '/dashboard/panel';
+                    }
+                } catch (error) {
+                    let friendlyError = "Authentication failed.";
+                    if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                        friendlyError = "Invalid credentials. Redirecting to password reset...";
+                        showError(friendlyError);
+                        setTimeout(() => {
+                            window.location.href = '/auth/forgot-password';
+                        }, 2000);
+                        return;
+                    }
+                    if (error.code === 'auth/invalid-verification-code') friendlyError = "Invalid SMS code.";
+                    if (error.code === 'auth/too-many-requests') friendlyError = "Too many attempts. Try again later.";
+                    showError(friendlyError);
+                    submitBtnText.textContent = isWaitingForCode ? "Verify Code" : "Sign In";
+                } finally {
+                    submitBtn.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
